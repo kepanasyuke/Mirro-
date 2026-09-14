@@ -1,0 +1,13 @@
+{
+  "calls": 207,
+  "clusters_used": {
+    "design": 10,
+    "general": 43,
+    "ru": 148,
+    "code": 5,
+    "knowledge": 1
+  },
+  "sources_count": 0,
+  "total_examples": 2810402,
+  "clusters_loaded": 11
+}
