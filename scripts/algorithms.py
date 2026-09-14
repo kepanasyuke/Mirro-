@@ -18,6 +18,7 @@ import json, math, re as _re, collections, random, time
 from pathlib import Path
 from collections import Counter, defaultdict
 
+MAX_INMEMORY_EXAMPLES = 1_500_000
 DATA_DIR = Path(r"D:\Mirro\data")
 MODELS_DIR = Path(r"D:\Mirro\models")
 MODELS_DIR.mkdir(exist_ok=True)
@@ -188,13 +189,28 @@ class MirroAlgorithms:
     # ========================
     #  BUILD INDEX
     # ========================
+    # Приоритет кластеров: ценные сначала (по алфавиту generated шёл бы первым и съедал лимит)
+    CLUSTER_PRIORITY = ["ru", "math", "code", "design", "general", "knowledge",
+                        "3d", "document", "presentation", "research", "system", "generated"]
+
+    def _cluster_priority(self, name):
+        try:
+            return self.CLUSTER_PRIORITY.index(name)
+        except ValueError:
+            return 99
+
     def _build(self):
         print("  [Mirro Algorithms] building indexes...")
         t0 = time.time()
 
-        for f in sorted((DATA_DIR / "processed").glob("*.jsonl")):
+        files = sorted((DATA_DIR / "processed").glob("*.jsonl"))
+        files.sort(key=lambda f: self._cluster_priority(f.stem))
+
+        for f in files:
             with open(f, "r", encoding="utf-8") as fh:
                 for line in fh:
+                    if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                        break
                     if not line.strip():
                         continue
                     try:
@@ -211,6 +227,9 @@ class MirroAlgorithms:
                                 self.term_docs[w].add(idx)
                     except Exception:
                         pass
+            if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                print(f"  Достигнут лимит памяти ({MAX_INMEMORY_EXAMPLES}) — остальное отдаётся RAG-индексу")
+                break
 
         self.total_docs = max(len(self.examples), 1)
         self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
@@ -229,16 +248,25 @@ class MirroAlgorithms:
 
     def _extend_from_corpus(self):
         """Добавляет примеры из corpus_ready в индекс без полной пересборки."""
+        # Корпус (4.8M+) обслуживается дисковым RAG-индексом — в память не грузим,
+        # чтобы не выйти за лимит RAM. Сюда попадают только файлы, которых
+        # ещё не было в индексе (инкрементальное добавление малых файлов).
         corpus_dir = DATA_DIR / "corpus_ready"
         if not corpus_dir.exists():
             return
         added = 0
         for f in sorted(corpus_dir.glob("*.jsonl")):
-            # Пропускаем уже ингестированные файлы — защита от дублей
+            # Пропускаем уже ингестированные файлы
             if f.name in self._ingested_corpus_files:
+                continue
+            # Пропускаем большие корпусные сегменты (4.8M+) — их обслуживает RAG на диске
+            if f.stat().st_size > 10_000_000:  # >10MB — значит это дисковый сегмент корпуса
+                self._ingested_corpus_files.add(f.name)
                 continue
             with open(f, "r", encoding="utf-8") as fh:
                 for line in fh:
+                    if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                        break
                     if not line.strip():
                         continue
                     try:
@@ -257,6 +285,9 @@ class MirroAlgorithms:
                     except Exception:
                         pass
             self._ingested_corpus_files.add(f.name)
+            if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                print(f"  Достигнут лимит памяти ({MAX_INMEMORY_EXAMPLES}) — остальное отдаётся RAG-индексу")
+                break
         if added:
             # построить doc_tf для добавленных
             for i in range(len(self.examples) - added, len(self.examples)):

@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mirro — Эволюционная нейросеть</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #0e0e12; --surface: #181820; --surface2: #21212b;
@@ -15,7 +18,7 @@
   --success: #2ecc8f; --warn: #f0b94e; --danger: #e1605a;
   --radius: 12px;
   --font: 'Inter', 'Segoe UI Variable Display', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', Consolas, monospace;
   --ease: cubic-bezier(.4, 0, .2, 1);
   /* Модульная шкала текста */
   --fs-hero: 26px;      /* заголовок приветствия */
@@ -48,7 +51,7 @@
 ::selection { background: rgba(108,92,231,.35); }
 body {
   background: var(--bg); color: var(--text); font-family: var(--font);
-  height: 100vh; display: flex; overflow: hidden; font-size: 14px;
+  height: 100vh; display: flex; overflow: hidden; font-size: 13.5px;
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
 /* Вьюпорт-затемнение вокруг контента (как в Blender grid) */
@@ -104,6 +107,15 @@ body::after {
 }
 /* Голубой вихрь */
 .vortex-wrap { animation: wave-drift 8s ease-in-out infinite; }
+@keyframes wave-drift {
+  0%, 100% { transform: translate(0px, 0px); }
+  33% { transform: translate(4px, -3px); }
+  66% { transform: translate(-3px, 2px); }
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
 @keyframes vortex-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -230,7 +242,7 @@ body::after {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.welcome h1 { font-size: var(--fs-hero); margin-bottom: 6px; letter-spacing: .4px; color: var(--accent2); }
+.welcome h1 { font-size: 28px; margin-bottom: 6px; letter-spacing: .3px; color: var(--accent2); font-weight: 700; }
 .welcome p { color: var(--muted); line-height: 1.7; font-size: var(--fs-body); }
 .chip-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
 .chip { padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text2); font-size: var(--fs-ui); cursor: pointer; transition: all .18s var(--ease); }
@@ -241,7 +253,7 @@ body::after {
 .msg.user .av { background: linear-gradient(135deg,#6c5ce7,#8b6ef0); color: #fff; }
 .msg.bot .av { background: var(--surface2); color: var(--accent2); border: 1px solid var(--border); }
 .msg .body { max-width: 74%; min-width: 0; }
-.msg .bubble { padding: 10px 14px; border-radius: 14px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; font-size: var(--fs-body); }
+.msg .bubble { padding: 10px 14px; border-radius: 14px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; font-size: var(--fs-body); }
 .msg.user .bubble { background: var(--user-bubble); color: var(--user-text); border-bottom-right-radius: 4px; box-shadow: 0 4px 14px rgba(108,92,231,.18); }
 .msg.bot .bubble { background: var(--asst-bubble); border: 1px solid var(--asst-border); border-bottom-left-radius: 4px; position: relative; }
 .msg.bot .bubble::before {
@@ -796,24 +808,25 @@ async function loadStats() {
     const d = await r.json();
     const a = d.algorithms || {};
     const cl = d.clusters || {};
-    let total = 0, topC = '', topN = 0;
+    let total = 0, corpus = d.corpus_examples || 0, topC = '', topN = 0;
     for (const [k,v] of Object.entries(cl)) {
       total += v.examples;
       if (v.examples > topN) { topN = v.examples; topC = k; }
     }
+    const grandTotal = total + corpus;
     grid.innerHTML =
-      '<div class="card"><div class="k">Знаний в базе</div><div class="v">' + (total/1000).toFixed(0) + 'k</div><div class="s">в ' + Object.keys(cl).length + ' кластерах</div></div>' +
+      '<div class="card"><div class="k">Знаний всего</div><div class="v">' + (grandTotal/1000).toFixed(0) + 'k</div><div class="s">кластеры ' + (total/1000).toFixed(0) + 'k + корпус ' + (corpus/1000).toFixed(0) + 'k</div></div>' +
       '<div class="card"><div class="k">Словарь</div><div class="v">' + ((a.vocab||0)/1000).toFixed(0) + 'k</div><div class="s">уникальных слов</div></div>' +
-      '<div class="card"><div class="k">Индекс</div><div class="v">' + (a.examples||'?') + '</div><div class="s">документов</div></div>' +
+      '<div class="card"><div class="k">Активный индекс</div><div class="v">' + (a.examples||'?') + '</div><div class="s">документов</div></div>' +
       '<div class="card"><div class="k">Топ кластер</div><div class="v v-md">' + topC + '</div><div class="s">' + topN.toLocaleString() + ' примеров</div></div>' +
-      '<div class="card"><div class="k">Алгоритмы</div><div class="v v-md">9 шт</div><div class="s">TF-IDF · TextRank · NB · MLP…</div></div>' +
+      '<div class="card"><div class="k">Алгоритмы</div><div class="v v-md">10 шт</div><div class="s">TF-IDF · TextRank · NB · RAG…</div></div>' +
       '<div class="card"><div class="k">Веса перцептрона</div><div class="v v-md">' + Object.keys(a.perceptron_weights||{}).length + '</div><div class="s">обучено на оценках</div></div>';
     const lines = [
       ['TF-IDF + BM25 поиск', true], ['TextRank суммаризация', true],
       ['Naive Bayes классификация', true], ['Перцептрон', true],
-      ['Детектор галлюцинаций', true], ['Стемминг русских слов', true],
-      ['Веб-поиск (Wikipedia)', true], ['Кэш частых запросов', true],
-      ['Автономное обучение (60 мин)', true],
+      ['Детектор галлюцинаций', true], ['RAG корпус (диск 4.8M)', true],
+      ['Стемминг русских слов', true], ['Веб-поиск (Wikipedia)', true],
+      ['Кэш частых запросов', true], ['Автономное обучение (60 мин)', true],
     ];
     document.getElementById('algoList').innerHTML =
       '<div style="font-size:var(--fs-tiny);color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:8px 4px 6px">Алгоритмы</div>' +

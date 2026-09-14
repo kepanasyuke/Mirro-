@@ -146,9 +146,22 @@ class MirroCore:
             "name": "Mirro", "version": "0.2",
             "total_calls": self.stats["calls"],
             "total_examples": self.stats["total_examples"],
+            "corpus_examples": self.corpus_total(),
             "clusters": self.get_cluster_info(),
             "api": f"http://{HOST}:{PORT}/v1/chat/completions",
         }
+
+    def corpus_total(self):
+        """Количество примеров в большом корпусе на диске (corpus_big)."""
+        if not hasattr(self, "_corpus_total"):
+            total = 0
+            for f in (DATA / "corpus_big").glob("*.jsonl"):
+                with open(f, encoding="utf-8", errors="replace") as fh:
+                    for line in fh:
+                        if line.strip():
+                            total += 1
+            self._corpus_total = total
+        return self._corpus_total
 
 
 core = MirroCore()
@@ -236,7 +249,20 @@ class MirroAPI(BaseHTTPRequestHandler):
 
             from scripts.thinking import thinking
 
-            # 1. Пробуем базу знаний
+            # 1. Пробуем RAG (большой корпус на диске 4.8M) — быстрее и точнее
+            try:
+                from scripts.rag import rag
+                rag_results = rag.search(prompt, top_segments=3, top_k=3)
+                if rag_results:
+                    best = rag_results[0]
+                    sc, inst, out = best
+                    if sc > 0.5 and len(out) > 5:
+                        # Нашли в корпусе — отвечаем сразу (галлюцинаций нет)
+                        return {"content": out[:2000], "strategy": "rag", "rag_score": sc}
+            except Exception:
+                pass
+
+            # 2. Пробуем TF-IDF базу знаний (в памяти, 2.3M)
             algo = self._get_ai()
             try:
                 results = algo.search_tfidf(prompt, top_n=5)
@@ -247,10 +273,22 @@ class MirroAPI(BaseHTTPRequestHandler):
             confidence = thinking.confidence_from_results(results)
             has_result = bool(results)
 
-            # 2. Алгоритм включения решает стратегию
+            # 2b. RAG как второй проход (если TF-IDF слаб)
+            if (not has_result or confidence < 0.4):
+                try:
+                    from scripts.rag import rag
+                    rag_results = rag.search(prompt, top_segments=4, top_k=3)
+                    if rag_results:
+                        results = [(rag_results[i][1:], rag_results[i][0]) for i in range(len(rag_results))]
+                        confidence = thinking.confidence_from_results([(None, rag_results[i][0]) for i in range(min(3, len(rag_results)))])
+                        has_result = True
+                except Exception:
+                    pass
+
+            # 3. Алгоритм включения решает стратегию
             strategy = thinking.decide(prompt, base_confidence=confidence, has_base_result=has_result)
 
-            # 3. Стратегии
+            # 4. Стратегии
             if strategy == "direct":
                 q = prompt.lower().strip()
                 if any(g in q for g in ["привет", "здравств", "добрый"]):
@@ -276,15 +314,9 @@ class MirroAPI(BaseHTTPRequestHandler):
                 if strategy == "base+web" and has_result:
                     try:
                         base_answer = algo.compose_answer(prompt)
-                        if base_answer:
-                            try:
-                                web_result = thinking.web_search(prompt)
-                                if web_result.get("title"):
-                                    web_text = thinking.format_web_answer(prompt, web_result)
-                                    return {"content": base_answer[:2000] + "\n\n---\n\n" + web_text, "strategy": "base+web"}
-                            except Exception:
-                                pass
-                            return {"content": base_answer, "strategy": "base"}
+                        if base_answer and len(base_answer) > 10:
+                            # База есть — отвечаем базой, веб не нужен (веб часто мусор)
+                            return {"content": base_answer[:2000], "strategy": "base"}
                     except Exception:
                         pass
                 # Чистый web
