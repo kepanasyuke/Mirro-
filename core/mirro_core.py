@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 Mirro Core AI — единая нейросеть знаний
 ========================================
@@ -223,11 +223,7 @@ class MirroAPI(BaseHTTPRequestHandler):
         from scripts.thinking import thinking
         return thinking
 
-    def _reason(self, query, candidates):
-        """
-        Обдумывание: оценивает, насколько кандидаты действительно отвечают на вопрос.
-        Возвращает (лучший_ответ, оценка_уверенности, объяснение_почему).
-        """
+    def _reason(self, query, candidates, preferred_cluster=None):
         if not candidates:
             return None, 0.0, "Нет кандидатов"
 
@@ -237,46 +233,45 @@ class MirroAPI(BaseHTTPRequestHandler):
             if len(w) > 2:
                 q_words.add(w)
 
-        best = None
-        best_score = 0.0
-        reason = ""
-
-        for (inst, out, cl), tfidf_score in candidates[:5]:
-            score = 0.0
-            clues = []
-
-            # 1. TF-IDF вес
-            score += tfidf_score * 2.5
-
-            # 2. Пересечение ключевых слов вопроса с ответом
+        def _score(inst, out, cl):
+            s = 0.0
             a_words = set()
             for w in _re.findall(r"[а-яёa-z0-9]+", out.lower()):
                 if len(w) > 2:
                     a_words.add(w)
             overlap = len(q_words & a_words)
             if overlap > 0:
-                score += overlap * 0.8
-                clues.append(f"совпадает {overlap} слов")
-
-            # 3. Длина ответа (не слишком короткий)
+                s += overlap * 0.8
             if len(out) > 100:
-                score += 0.3
+                s += 0.3
             elif len(out) < 20:
-                score -= 0.5
-
-            # 4. Штраф если ответ — почти копия вопроса
+                s -= 0.5
             q_set = set(q_words)
             a_set = set(a_words)
             if q_set and a_set:
                 jaccard = len(q_set & a_set) / max(len(q_set | a_set), 1)
                 if jaccard > 0.7:
-                    score -= 1.0  # ответ повторяет вопрос — плохо
+                    s -= 1.0
+            return s
 
+        # Если есть preferred_cluster — оцениваем только кандидатов из него
+        if preferred_cluster:
+            same = [(inst, out, cl, sc) for (inst, out, cl), sc in candidates if cl == preferred_cluster]
+            if same:
+                best = max(same, key=lambda x: _score(x[0], x[1], x[2]) + x[3] * 2.5)
+                inst, out, cl, tfidf_sc = best
+                best_score = _score(inst, out, cl) + tfidf_sc * 2.5
+                return out, best_score, f"кластер {cl}"
+
+        best = None
+        best_score = 0.0
+        reason = ""
+        for (inst, out, cl), tfidf_score in candidates[:5]:
+            score = _score(inst, out, cl) + tfidf_score * 2.5
             if score > best_score:
                 best_score = score
                 best = out
-                reason = "; ".join(clues)
-
+                reason = "совпадение по словам"
         return best, best_score, reason
 
     def _call_smart(self, prompt, cluster):
@@ -339,22 +334,10 @@ class MirroAPI(BaseHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # 4. Берём лучший результат (без сложного обдумывания, просто top-1)
-            best_answer = None
-            best_score = 0.0
-            if results:
-                for (inst, out, cl), tfidf_score in results[:5]:
-                    score = tfidf_score
-                    if len(out) > 20:
-                        score += 0.5
-                    if len(out) > 100:
-                        score += 0.3
-                    if score > best_score:
-                        best_score = score
-                        best_answer = out
-
-            has_result = best_answer is not None and best_score > 0.5
-            confidence = min(1.0, best_score / 3.0)
+            # 4. Обдумывание: выбираем лучший кандидат с учётом кластера
+            best_answer, best_score, reason = self._reason(prompt, results, preferred_cluster=cluster)
+            has_result = best_answer is not None and best_score > 1.0
+            confidence = min(1.0, best_score / 4.0)
             strategy = thinking.decide(prompt, base_confidence=confidence, has_base_result=has_result)
 
             if has_result and strategy in ("base", "base+web", "direct"):
@@ -373,7 +356,6 @@ class MirroAPI(BaseHTTPRequestHandler):
             return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "unknown"}
 
         except Exception as e:
-            return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
             return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
 
     def _read(self):
