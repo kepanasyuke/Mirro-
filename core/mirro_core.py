@@ -282,18 +282,34 @@ class MirroAPI(BaseHTTPRequestHandler):
     def _call_smart(self, prompt, cluster):
         """
         Умный пайплайн: алгоритм включения + обдумывание.
-        1. Сначала думаем алгоритмами (вычисления, уравнения)
-        2. Пробуем RAG (дисковый корпус)
-        3. Ищем в TF-IDF базе
-        4. Обдумываем: проверяем, что ответ действительно отвечает
-        5. Выбираем стратегию
-        6. Если нужно — ищем в интернете
         """
         try:
             import sys as _sys
             _sys.path.insert(0, str(MIRRO_HOME))
+            from scripts.thinking import thinking
 
-            # 0. Сначала думаем алгоритмами (задачи: вычислить, решить, НОД и т.п.)
+            q = prompt.lower().strip()
+
+            # 0. DIRECT: приветствия, спасибо — сразу, без поисков
+            if any(g in q for g in ["привет", "здравств", "добрый"]) and len(q) < 40:
+                return {"content": "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете.", "strategy": "direct"}
+            if any(g in q for g in ["как дела", "как ты", "как жизнь", "как у тебя", "как настроение", "как твои дела", "как твои", "чё как", "че как", "как сам", "как сама"]) and len(q) < 40:
+                return {"content": "Привет! У меня всё хорошо, я постоянно учусь и становлюсь умнее. А у тебя как дела?", "strategy": "direct"}
+            if "2+2" in q or q.strip() == "2 + 2":
+                return {"content": "4", "strategy": "direct"}
+            if "спасибо" in q and len(q) < 20:
+                return {"content": "Пожалуйста! Рада помочь.", "strategy": "direct"}
+
+            # 0b. LEARN
+            if any(t in q for t in thinking.LEARN_TRIGGERS):
+                return {"content": (
+                    "Я учусь! Чтобы научить меня:\n"
+                    "1. Напиши вопрос и правильный ответ\n"
+                    "2. Отметь ответ\n\n"
+                    "Или просто задай вопрос — я найду ответ в базе или в интернете."
+                ), "strategy": "learn"}
+
+            # 1. Думаем алгоритмами (вычисления, уравнения, НОД и т.п.)
             try:
                 from algos.think import think as mirro_think
                 thought = mirro_think(prompt)
@@ -305,103 +321,59 @@ class MirroAPI(BaseHTTPRequestHandler):
             except Exception:
                 pass
 
-            from scripts.thinking import thinking
-
-            # 1. Пробуем RAG (большой корпус на диске 4.8M)
-            rag_used = False
-            try:
-                from scripts.rag import rag
-                rag_results = rag.search(prompt, top_segments=3, top_k=3)
-                if rag_results:
-                    best_rag, rag_reason = self._reason(prompt, [(("", rag_results[0][2], "rag"), rag_results[0][0])])
-                    if best_rag and len(best_rag) > 20:
-                        return {"content": best_rag[:2000], "strategy": "rag", "reasoning": rag_reason}
-            except Exception:
-                pass
-
-            # 2. Пробуем TF-IDF базу знаний
+            # 2. TF-IDF база знаний
             algo = self._get_ai()
             try:
-                results = algo.search_tfidf(prompt, top_n=8)
+                results = algo.search_tfidf(prompt, top_n=5)
             except Exception:
                 results = []
 
-            # Обдумывание результатов
-            best_answer, best_score, reason = self._reason(prompt, results)
-            has_result = best_answer is not None and best_score > 0.5
-            confidence = min(1.0, best_score / 5.0) if best_score > 0 else 0.0
-
-            # 2b. RAG как второй проход (если TF-IDF слаб)
-            if not has_result:
+            # 3. RAG 
+            rag_tried = False
+            if not results:
                 try:
                     from scripts.rag import rag
-                    rag_results = rag.search(prompt, top_segments=4, top_k=3)
+                    rag_results = rag.search(prompt, top_segments=3, top_k=3)
                     if rag_results:
-                        best_rag, rag_score, rag_reason = self._reason(prompt, [(("", rag_results[i][2], "rag"), rag_results[i][0]) for i in range(min(3, len(rag_results)))])
-                        if best_rag:
-                            best_answer = best_rag
-                            confidence = min(1.0, rag_score / 5.0)
-                            reason = rag_reason
-                            has_result = True
+                        results = [(("", rag_results[i][2], "rag"), rag_results[i][0]) for i in range(min(3, len(rag_results)))]
                 except Exception:
                     pass
 
-            # 3. Алгоритм включения решает стратегию
+            # 4. Берём лучший результат (без сложного обдумывания, просто top-1)
+            best_answer = None
+            best_score = 0.0
+            if results:
+                for (inst, out, cl), tfidf_score in results[:5]:
+                    score = tfidf_score
+                    if len(out) > 20:
+                        score += 0.5
+                    if len(out) > 100:
+                        score += 0.3
+                    if score > best_score:
+                        best_score = score
+                        best_answer = out
+
+            has_result = best_answer is not None and best_score > 0.5
+            confidence = min(1.0, best_score / 3.0)
             strategy = thinking.decide(prompt, base_confidence=confidence, has_base_result=has_result)
 
-            # 4. Стратегии
-            if strategy == "direct":
-                q = prompt.lower().strip()
-                if any(g in q for g in ["привет", "здравств", "добрый"]) and len(q) < 30:
-                    return {"content": "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете.", "strategy": "direct"}
-                if any(g in q for g in ["как дела", "как ты", "как жизнь", "как у тебя", "как настроение", "как твои дела", "как твои", "чё как", "че как", "как сам", "как сама"]):
-                    return {"content": "Привет! У меня всё хорошо, я постоянно учусь и становлюсь умнее. А у тебя как дела?", "strategy": "direct"}
-                if "2+2" in q or q == "2 + 2":
-                    return {"content": "4", "strategy": "direct"}
-                if "спасибо" in q:
-                    return {"content": "Пожалуйста! Рада помочь.", "strategy": "direct"}
-                if best_answer and confidence > 0.3:
-                    return {"content": best_answer[:2000], "strategy": "direct+base", "reasoning": reason}
-                return {"content": "Поняла. Задай вопрос подробнее.", "strategy": "direct"}
+            if has_result and strategy in ("base", "base+web", "direct"):
+                return {"content": best_answer[:2500], "strategy": strategy}
 
-            elif strategy == "learn":
-                return {"content": (
-                    "Я учусь! Чтобы научить меня:\n"
-                    "1. Напиши вопрос и правильный ответ\n"
-                    "2. Отметь ответ\n\n"
-                    "Или просто задай вопрос — я найду ответ в базе или в интернете."
-                ), "strategy": "learn"}
+            try:
+                web_result = thinking.web_search(prompt)
+                if web_result.get("title") and web_result.get("summary"):
+                    return {"content": thinking.format_web_answer(prompt, web_result), "strategy": "web"}
+            except Exception:
+                pass
 
-            elif strategy in ("web", "base+web"):
-                # База + обдумывание
-                if has_result and best_answer:
-                    return {"content": best_answer[:2000], "strategy": "base", "reasoning": reason}
-                # Чистый web
-                try:
-                    web_result = thinking.web_search(prompt)
-                    if web_result.get("title"):
-                        return {"content": thinking.format_web_answer(prompt, web_result), "strategy": "web"}
-                except Exception:
-                    pass
-                # Фоллбэк на базу
-                if has_result and best_answer:
-                    return {"content": best_answer[:2000], "strategy": "base"}
-                return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "web"}
+            if has_result:
+                return {"content": best_answer[:2500], "strategy": "base"}
 
-            else:  # base
-                if has_result and best_answer:
-                    return {"content": best_answer[:2000], "strategy": "base", "reasoning": reason}
-                # Фоллбэк: веб
-                try:
-                    web_result = thinking.web_search(prompt)
-                    if web_result.get("title"):
-                        return {"content": thinking.format_web_answer(prompt, web_result), "strategy": "web"}
-                except Exception:
-                    pass
-                return {"content": "Я пока не знаю ответа на это. Спроси иначе или добавь данные.", "strategy": "base"}
+            return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "unknown"}
 
         except Exception as e:
-            # Никогда не роняем сервер
+            return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
             return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
 
     def _read(self):
