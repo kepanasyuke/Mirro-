@@ -18,7 +18,7 @@ import json, math, re as _re, collections, random, time
 from pathlib import Path
 from collections import Counter, defaultdict
 
-MAX_INMEMORY_EXAMPLES = 1_500_000
+MAX_INMEMORY_EXAMPLES = 800_000
 DATA_DIR = Path(r"D:\Mirro\data")
 MODELS_DIR = Path(r"D:\Mirro\models")
 MODELS_DIR.mkdir(exist_ok=True)
@@ -130,8 +130,12 @@ class MirroAlgorithms:
                 self.nb_total_words = state.get("nb_total_words", Counter())
                 self._ingested_corpus_files = state.get("ingested_corpus_files", set())
                 self._loaded = True
-                print(f"  Индекс загружен из кэша за {time.time()-t0:.1f}s "
-                      f"({len(self.examples)} ex, {len(self.doc_freq)} terms)")
+                if not self._ingested_corpus_files:
+                    corpus_dir = DATA_DIR / "corpus_ready"
+                    if corpus_dir.exists():
+                        for f in corpus_dir.glob("*.jsonl"):
+                            self._ingested_corpus_files.add(f.name)
+                print(f"  Индекс загружен из кэша за {time.time()-t0:.1f}s ({len(self.examples)} ex, {len(self.doc_freq)} terms)")
         except Exception as e:
             print(f"  Кэш индекса не загрузился: {e}")
 
