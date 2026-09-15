@@ -235,6 +235,9 @@ class MirroAPI(BaseHTTPRequestHandler):
 
         def _score(inst, out, cl):
             s = 0.0
+            # Сильный штраф для generated (шумные данные)
+            if cl == "generated":
+                s -= 4.0
             a_words = set()
             for w in _re.findall(r"[а-яёa-z0-9]+", out.lower()):
                 if len(w) > 2:
@@ -254,7 +257,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                     s -= 1.0
             return s
 
-        # Если есть preferred_cluster — оцениваем только кандидатов из него
+        # Приоритет: если есть preferred_cluster — оцениваем ТОЛЬКО его кандидатов
         if preferred_cluster:
             same = [(inst, out, cl, sc) for (inst, out, cl), sc in candidates if cl == preferred_cluster]
             if same:
@@ -263,6 +266,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                 best_score = _score(inst, out, cl) + tfidf_sc * 2.5
                 return out, best_score, f"кластер {cl}"
 
+        # Без preferred_cluster или без совпадений — простой top-1
         best = None
         best_score = 0.0
         reason = ""
@@ -323,8 +327,7 @@ class MirroAPI(BaseHTTPRequestHandler):
             except Exception:
                 results = []
 
-            # 3. RAG 
-            rag_tried = False
+            # 4. Если в preferred_cluster нет результатов — веб-поиск как основной
             if not results:
                 try:
                     from scripts.rag import rag
@@ -334,10 +337,21 @@ class MirroAPI(BaseHTTPRequestHandler):
                 except Exception:
                     pass
 
-            # 4. Обдумывание: выбираем лучший кандидат с учётом кластера
+            # 5. Обдумывание с учётом кластера
             best_answer, best_score, reason = self._reason(prompt, results, preferred_cluster=cluster)
+
             has_result = best_answer is not None and best_score > 1.0
-            confidence = min(1.0, best_score / 4.0)
+
+            # Если preferred кластер не дал ответа, а вопрос русский — веб-поиск
+            if not has_result and cluster in ("ru", "knowledge"):
+                try:
+                    web_result = thinking.web_search(prompt)
+                    if web_result.get("title") and web_result.get("summary"):
+                        return {"content": thinking.format_web_answer(prompt, web_result), "strategy": "web"}
+                except Exception:
+                    pass
+
+            confidence = min(1.0, best_score / 4.0) if has_result else 0.0
             strategy = thinking.decide(prompt, base_confidence=confidence, has_base_result=has_result)
 
             if has_result and strategy in ("base", "base+web", "direct"):
