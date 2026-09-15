@@ -1,0 +1,1436 @@
+[
+  {
+    "cat": "ru",
+    "ds": "IlyaGusev/ru_turbo_saiga",
+    "files": [
+      "ru_turbo_saiga.jsonl"
+    ],
+    "desc": "Русские диалоги Saiga (база)",
+    "est": "40k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "IlyaGusev/ru_turbo_alpaca",
+    "files": [
+      "ru_turbo_alpaca.jsonl"
+    ],
+    "desc": "Русские инструкции Alpaca",
+    "est": "30k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "IlyaGusev/ru_sharegpt_cleaned",
+    "files": [
+      "ru_sharegpt_cleaned.jsonl"
+    ],
+    "desc": "Русские ShareGPT чаты",
+    "est": "2k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "IlyaGusev/ru_turbo_saiga_evol_instruct",
+    "files": [
+      "ru_turbo_saiga_evol_instruct.jsonl"
+    ],
+    "desc": "Эволюционные инструкции RU",
+    "est": "5k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "IlyaGusev/gpt_roleplay_realm",
+    "files": [
+      "gpt_roleplay_realm.jsonl"
+    ],
+    "desc": "Ролевые персонажи RU",
+    "est": "10k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "IlyaGusev/ru_turbo_alpaca_evol_instruct",
+    "files": [
+      "ru_turbo_alpaca_evol_instruct.jsonl"
+    ],
+    "desc": "Evol инструкции RU",
+    "est": "20k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "Den4ikAI/russian_instructions",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "50k русских инструкций",
+    "est": "50k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "Den4ikAI/russian_instructions_2",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "100k+ русских инструкций v2",
+    "est": "100k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "Den4ikAI/russian_code_qa",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "Код Q&A на русском",
+    "est": "100k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "eridai/russian_dpo_qa",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "DPO предпочтения RU",
+    "est": "5k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "attn-signs/russian-easy-instructions",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "Лёгкие RU инструкции",
+    "est": "5k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "ZeroAgency/ru-big-russian-dataset",
+    "files": [
+      "ru_big_russian_dataset.jsonl"
+    ],
+    "desc": "Большой русский корпус",
+    "est": "1B",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "RussianNLP/russian_super_glue",
+    "files": [
+      "data/rcb/train.jsonl",
+      "data/parus/train.jsonl",
+      "data/terra/train.jsonl"
+    ],
+    "desc": "RussianSuperGLUE (логика)",
+    "est": "30k",
+    "priority": 8
+  },
+  {
+    "cat": "ru",
+    "ds": "RussianNLP/multiquora",
+    "files": [
+      "data/train.jsonl",
+      "data/test.jsonl"
+    ],
+    "desc": "Multi-Q&A русский",
+    "est": "200k",
+    "priority": 8
+  },
+  {
+    "cat": "ru",
+    "ds": "RussianNLP/russe",
+    "files": [
+      "data/train.jsonl"
+    ],
+    "desc": "RUSSE семантика RU",
+    "est": "30k",
+    "priority": 8
+  },
+  {
+    "cat": "ru",
+    "ds": "AlexNek/ru_paraphrase",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "Парафразы RU",
+    "est": "30k",
+    "priority": 8
+  },
+  {
+    "cat": "ru",
+    "ds": "RussianNLP/ru_med_qa",
+    "files": [
+      "data/train.jsonl"
+    ],
+    "desc": "Медицина RU",
+    "est": "5k",
+    "priority": 8
+  },
+  {
+    "cat": "code",
+    "ds": "iamtarun/python_code_instructions_18k_alpaca",
+    "files": [
+      "python_code_instructions_18k_alpaca.json"
+    ],
+    "desc": "Python инструкции",
+    "est": "18k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "TokenBender/code_instructions_122k_alpaca_style",
+    "files": [
+      "code_instructions_122k_alpaca_style.json"
+    ],
+    "desc": "Кодовые инструкции 122k",
+    "est": "122k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "sahil2801/CodeAlpaca-20k",
+    "files": [
+      "codealpaca.json"
+    ],
+    "desc": "CodeAlpaca 20k",
+    "est": "20k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "deepmind/code_contests",
+    "files": [
+      "data/train.json"
+    ],
+    "desc": "Олимпиадные задачи по программированию",
+    "est": "13k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "cassanof/taco_extra",
+    "files": [
+      "data/train.jsonl"
+    ],
+    "desc": "TACO алгоритмы",
+    "est": "26k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "WizardLM/evol_instruct_v2",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "WizardLM эволюционные инструкции",
+    "est": "140k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "rombodawg/LimitlessCode-50k-Instruct",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Кодовые инструкции 50k",
+    "est": "50k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "rombodawg/LimitlessCode-250k-Instruct",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Кодовые инструкции 250k",
+    "est": "250k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "rombodawg/LimitlessCode-2M-Instruct",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Кодовые инструкции 2M",
+    "est": "2M",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "rombodawg/LimitlessCode-4M-Instruct",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Кодовые инструкции 4M",
+    "est": "4M",
+    "priority": 10
+  },
+  {
+    "cat": "math",
+    "ds": "microsoft/orca-math-word-problems-200k",
+    "files": [
+      "orca_math_word_problems_200k.jsonl"
+    ],
+    "desc": "Математические задачи 200k",
+    "est": "200k",
+    "priority": 9
+  },
+  {
+    "cat": "math",
+    "ds": "HuggingFaceH4/MATH-500",
+    "files": [
+      "data/test.jsonl"
+    ],
+    "desc": "MATH-500",
+    "est": "500",
+    "priority": 9
+  },
+  {
+    "cat": "math",
+    "ds": "openai/gsm8k",
+    "files": [
+      "main/data/train.jsonl"
+    ],
+    "desc": "GSM8K арифметика",
+    "est": "7k",
+    "priority": 9
+  },
+  {
+    "cat": "math",
+    "ds": "hendrycks/competition_math",
+    "files": [
+      "data/test.jsonl"
+    ],
+    "desc": "Конкурсная математика",
+    "est": "5k",
+    "priority": 9
+  },
+  {
+    "cat": "math",
+    "ds": "EleutherAI/arithmetic",
+    "files": [
+      "data/train.jsonl"
+    ],
+    "desc": "Арифметика",
+    "est": "90k",
+    "priority": 9
+  },
+  {
+    "cat": "math",
+    "ds": "bigbench",
+    "files": [
+      "bbh/train.jsonl"
+    ],
+    "desc": "BigBench (рассуждения)",
+    "est": "200k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "HuggingFaceM4/WebSight",
+    "files": [
+      "data/train-00000-of-00039.parquet"
+    ],
+    "desc": "HTML->Screenshots (вёрстка)",
+    "est": "200k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "HuggingFaceM4/WebSight-v0.2",
+    "files": [
+      "data/train-00000-of-00039.parquet"
+    ],
+    "desc": "HTML->Screenshots v0.2",
+    "est": "300k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "BAAI/InfoVQA",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Визуальный Q&A (инфографика)",
+    "est": "30k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "MMMU/MMMU",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Мультимодальные задачи (колледж)",
+    "est": "100k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "HuggingFaceM4/idefics3-dataset",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Мультимодальные инструкции",
+    "est": "100k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "wikimedia/wikidata_entities",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "Wikidata сущности",
+    "est": "100M",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "shunk031/japanese-dataset-CAFE",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "UI/UX анализ",
+    "est": "5k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "gulli/design-bench",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Бенчмарк дизайна",
+    "est": "2k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "mozilla/svg_datasets",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "SVG датасет (векторная графика)",
+    "est": "10k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "jimmyfeng/canvas2svg",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Canvas→SVG инструкции",
+    "est": "5k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "seminar/design_intent",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Дизайн-интенты",
+    "est": "3k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "laion/laion-coco",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "LAION COCO (подписи к изображениям)",
+    "est": "5M",
+    "priority": 9
+  },
+  {
+    "cat": "knowledge",
+    "ds": "wikipedia",
+    "files": [
+      "20220301.ru/train-00000-of-00042.parquet",
+      "20220301.en/train-00000-of-00041.parquet"
+    ],
+    "desc": "Википедия RU+EN",
+    "est": "100M",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "wikimedia/wikipedia",
+    "files": [
+      "20231101.ru/train-00000-of-00027.parquet"
+    ],
+    "desc": "Википедия свежая RU",
+    "est": "50M",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "wikimedia/wikinews",
+    "files": [
+      "20231101.ru/train-00000-of-00001.parquet"
+    ],
+    "desc": "Викиновости",
+    "est": "50k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "wikimedia/wikibooks",
+    "files": [
+      "20231101.ru/train-00000-of-00001.parquet"
+    ],
+    "desc": "Викиучебники",
+    "est": "50k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "jamescalam/ai-arxiv",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "AI статьи с arXiv",
+    "est": "200k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/physics",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Физика",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/biology",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Биология",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/chemistry",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Химия",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/astronomy",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Астрономия",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/history",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "История",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/law",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Право",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/economics",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Экономика",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/geography",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "География",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/sociology",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Социология",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "camel-ai/psychology",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Психология",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "bigbio/med_qa",
+    "files": [
+      "med_qa.json"
+    ],
+    "desc": "Медицина QA",
+    "est": "60k",
+    "priority": 8
+  },
+  {
+    "cat": "knowledge",
+    "ds": "scirepe/scirepe",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Science RePE",
+    "est": "18k",
+    "priority": 8
+  },
+  {
+    "cat": "general",
+    "ds": "OpenAssistant/oasst1",
+    "files": [
+      "2023-04-12_oasst_ready.trees.jsonl.gz"
+    ],
+    "desc": "OpenAssistant (многоязычный)",
+    "est": "550k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "teknium/OpenHermes-2.5",
+    "files": [
+      "openhermes2_5.json"
+    ],
+    "desc": "OpenHermes 2.5 (топ)",
+    "est": "240k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "HuggingFaceH4/ultrachat_200k",
+    "files": [
+      "data/train-00000-of-00002.parquet"
+    ],
+    "desc": "UltraChat 200k",
+    "est": "200k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "HuggingFaceH4/ultrafeedback_binarized",
+    "files": [
+      "data/train-00000-of-00005.parquet"
+    ],
+    "desc": "UltraFeedback (обучение с подкреплением)",
+    "est": "60k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "Intel/orca_dpo_pairs",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Orca DPO пары",
+    "est": "13k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "databricks/databricks-dolly-15k",
+    "files": [
+      "databricks-dolly-15k.jsonl"
+    ],
+    "desc": "Dolly 15k (инструкции)",
+    "est": "15k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "tatsu-lab/alpaca",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "Alpaca оригинал",
+    "est": "52k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "lmsys/lmsys-chat-1m",
+    "files": [
+      "data/train-00000-of-00001.parquet"
+    ],
+    "desc": "LMSYS Chat 1M (человеческие чаты)",
+    "est": "1M",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "nomic-ai/gpt4all_prompt_generations",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "GPT4All (инструкции)",
+    "est": "440k",
+    "priority": 7
+  },
+  {
+    "cat": "general",
+    "ds": "cognitivecomputations/dolphin",
+    "files": [
+      "dolphin-*.jsonl"
+    ],
+    "desc": "Dolphin (огромный набор)",
+    "est": "900k",
+    "priority": 7
+  },
+  {
+    "cat": "code",
+    "ds": "mikex86/stackoverflow-posts",
+    "files": [
+      "stackoverflow-posts-00000-of-00058.parquet"
+    ],
+    "desc": "StackOverflow 10M+ постов Q&A",
+    "est": "10M",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "its5Q/habr_qna",
+    "files": [
+      "questions.jsonl.zst"
+    ],
+    "desc": "Хабр Q&A — русские IT-вопросы",
+    "est": "100k",
+    "priority": 10
+  },
+  {
+    "cat": "ru",
+    "ds": "volosati/habr",
+    "files": [
+      "data/train-00000-of-00002.parquet"
+    ],
+    "desc": "Хабр статьи — IT и разработка",
+    "est": "100k",
+    "priority": 9
+  },
+  {
+    "cat": "code",
+    "ds": "bigcode/the-stack-github-issues",
+    "files": [
+      "data/train-00000-of-00127.parquet"
+    ],
+    "desc": "GitHub issues 10M+",
+    "est": "10M",
+    "priority": 9
+  },
+  {
+    "cat": "code",
+    "ds": "lewtun/github-issues",
+    "files": [
+      "data/train-00001-of-00002.json"
+    ],
+    "desc": "GitHub issues датасет",
+    "est": "5k",
+    "priority": 8
+  },
+  {
+    "cat": "code",
+    "ds": "ronantakizawa/github-codereview",
+    "files": [
+      "data/train-00000-of-00002.parquet"
+    ],
+    "desc": "Code review реальных PR",
+    "est": "100k",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "fasterinnerlooper/codereviewer",
+    "files": [
+      "data/train-00000-of-00002.parquet"
+    ],
+    "desc": "Code review data",
+    "est": "100k",
+    "priority": 8
+  },
+  {
+    "cat": "code",
+    "ds": "HuggingFaceCode/stack-v3-train",
+    "files": [
+      "data/part-00000-7d88aa48-1310-480e-a9e5-fbbe6a9201cc-c000.snappy.parquet"
+    ],
+    "desc": "The Stack v3 — код всех языков",
+    "est": "500M",
+    "priority": 10
+  },
+  {
+    "cat": "code",
+    "ds": "bigcode/the-stack-smol",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "The Stack smol — 100k+ репозиториев",
+    "est": "100k",
+    "priority": 9
+  },
+  {
+    "cat": "code",
+    "ds": "bigcode/the-stack-dedup",
+    "files": [
+      "data/train-00000-of-00256.parquet"
+    ],
+    "desc": "The Stack дедуплицированный",
+    "est": "500M",
+    "priority": 9
+  },
+  {
+    "cat": "code",
+    "ds": "code_search_net",
+    "files": [
+      "data/train.jsonl"
+    ],
+    "desc": "CodeSearchNet — код + документация",
+    "est": "2M",
+    "priority": 8
+  },
+  {
+    "cat": "code",
+    "ds": "b-mc2/sql-create-context",
+    "files": [
+      "data/train.jsonl"
+    ],
+    "desc": "SQL запросы с контекстом",
+    "est": "7k",
+    "priority": 7
+  },
+  {
+    "cat": "code",
+    "ds": "reddit/coding",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Reddit код-обсуждения",
+    "est": "50k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "creative-graphic-design/GenPoster100K",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "100K постеров (дизайн-генерация)",
+    "est": "100k",
+    "priority": 10
+  },
+  {
+    "cat": "design",
+    "ds": "creative-graphic-design/CreativePSD",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "PSD файлы креативных макетов",
+    "est": "50k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "creative-graphic-design/PubLayNet",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Разметка макетов (сетки, блоки)",
+    "est": "350k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "nyuuzyou/svgrepo",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "SVG репозиторий (векторная графика)",
+    "est": "100k",
+    "priority": 10
+  },
+  {
+    "cat": "design",
+    "ds": "starvector/svg-stack",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "SVG Stack — генерация векторной графики",
+    "est": "1M",
+    "priority": 10
+  },
+  {
+    "cat": "design",
+    "ds": "wapiuk/svgfind",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "SVG находки",
+    "est": "50k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "sergiopaniego/pelican-svg-drawings",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "SVG рисунки",
+    "est": "10k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "SALT-NLP/Design2Code",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Скриншот → HTML/CSS код",
+    "est": "400k",
+    "priority": 10
+  },
+  {
+    "cat": "design",
+    "ds": "michaelsyao/design_bench_data",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Бенчмарк дизайна",
+    "est": "10k",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "xcodemind/Figma2Code",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Figma → код",
+    "est": "5k",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "Jintae-Park/ReDesign-Figma909",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Редизайн Figma 909",
+    "est": "1k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "PatronusAI/figmatrace",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Figma trace — макеты в код",
+    "est": "2k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "MAsad789565/HTML-CSS-Website",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "HTML/CSS сайты",
+    "est": "1k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "theprint/MultiRoundConvos-Code-JS-HTML-CSS-Python",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Многоходовые диалоги HTML/CSS/JS",
+    "est": "5k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "VIBECODER999/aiden0.1-uiux-training-dataset",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "UI/UX обучающий датасет",
+    "est": "1k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "alucent/creative-uiux-sft",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Креативный UI/UX SFT",
+    "est": "5k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "obaydata/design-repo-web-design-benchmark",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Web-дизайн бенчмарк",
+    "est": "2k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "JoshPurtell/web-design-screenshots",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Скриншоты web-дизайна",
+    "est": "1k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "common-canvas/commoncatalog-cc-by",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Common Catalog CC-BY изображения",
+    "est": "10M",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "ANWERFATEHY/best_pinterest_images_for_diffusion",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Лучшие Pinterest-изображения для диффузии",
+    "est": "10k",
+    "priority": 10
+  },
+  {
+    "cat": "design",
+    "ds": "sleeping-ai/Pinterest-17K",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Pinterest 17K — коллекция дизайна",
+    "est": "17k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "xinyangli/pinterest-design-resize-0715",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Pinterest дизайн-ресёрч",
+    "est": "5k",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "shuttleai/pinterest_expressionism",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Pinterest экспрессионизм",
+    "est": "1k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "krishnakamath/pinterest_tag_prediction",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Pinterest теги/классификация",
+    "est": "50k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "annh3/ann_pinterest_and_captions_numinous",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Pinterest с подписями",
+    "est": "2k",
+    "priority": 6
+  },
+  {
+    "cat": "design",
+    "ds": "shiertier/behance_json",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Behance портфолио (JSON)",
+    "est": "10k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "shangshang/graphic-design-dataset",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Графический дизайн датасет",
+    "est": "2k",
+    "priority": 7
+  },
+  {
+    "cat": "design",
+    "ds": "creative-graphic-design/CGL-Dataset-v2",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "CGL — креативный графический датасет v2",
+    "est": "100k",
+    "priority": 9
+  },
+  {
+    "cat": "audio",
+    "ds": "drengskapur/midi-classical-music",
+    "files": [
+      "data/*.mid"
+    ],
+    "desc": "MIDI классическая музыка",
+    "est": "25k",
+    "priority": 10
+  },
+  {
+    "cat": "audio",
+    "ds": "wanghappy/Music-tag-generation",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Музыкальные теги",
+    "est": "75",
+    "priority": 6
+  },
+  {
+    "cat": "audio",
+    "ds": "Kukedlc/suno-ai-music-dataset",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Suno AI музыка",
+    "est": "3k",
+    "priority": 8
+  },
+  {
+    "cat": "audio",
+    "ds": "teamsleeping/suno_musicality",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Suno музыкальность",
+    "est": "1k",
+    "priority": 7
+  },
+  {
+    "cat": "audio",
+    "ds": "Chat-Error/MusicLM",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "MusicLM (Google)",
+    "est": "139",
+    "priority": 6
+  },
+  {
+    "cat": "audio",
+    "ds": "Seeker38/music_abc_notation_v2",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "ABC-нотация (музыка текстом)",
+    "est": "35",
+    "priority": 8
+  },
+  {
+    "cat": "audio",
+    "ds": "teticio/audio-diffusion-1024",
+    "files": [
+      "data/*.json"
+    ],
+    "desc": "Audio diffusion",
+    "est": "178",
+    "priority": 6
+  },
+  {
+    "cat": "creative-code",
+    "ds": "openroomxyz/ShaderToyAbstract_V0",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "ShaderToy абстрактные шейдеры",
+    "est": "1k",
+    "priority": 10
+  },
+  {
+    "cat": "creative-code",
+    "ds": "seanmemery/shader_dataset",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Шейдеры (GLSL)",
+    "est": "100",
+    "priority": 8
+  },
+  {
+    "cat": "creative-code",
+    "ds": "mizuamedesu/shader-sft-dataset",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Шейдеры SFT",
+    "est": "78",
+    "priority": 7
+  },
+  {
+    "cat": "creative-code",
+    "ds": "shorecode/svg-generation-295k-rows",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "SVG-генерация 295k (картины кодом)",
+    "est": "295k",
+    "priority": 10
+  },
+  {
+    "cat": "creative-code",
+    "ds": "shorecode/svg-generation-6.5k-rows",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "SVG-генерация 6.5k",
+    "est": "6.5k",
+    "priority": 9
+  },
+  {
+    "cat": "creative-code",
+    "ds": "TuneIt/SVG-Icons-Generation",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "SVG иконки генерация",
+    "est": "34",
+    "priority": 7
+  },
+  {
+    "cat": "creative-code",
+    "ds": "datavorous/creative-coding",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Creative coding датасет",
+    "est": "32",
+    "priority": 8
+  },
+  {
+    "cat": "creative-code",
+    "ds": "agagasf123123/threejs-gamecode-instruct-v3-ultra",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Three.js игровой код (3D графика)",
+    "est": "186",
+    "priority": 8
+  },
+  {
+    "cat": "video",
+    "ds": "Wild-Heart/Tom-and-Jerry-VideoGeneration-Dataset",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Tom&Jerry видео-генерация",
+    "est": "1.6k",
+    "priority": 8
+  },
+  {
+    "cat": "video",
+    "ds": "meta-ai-for-media-research/movie_gen_video_bench",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "MovieGen — генерация видео",
+    "est": "472",
+    "priority": 10
+  },
+  {
+    "cat": "video",
+    "ds": "LanguageBind/Open-Sora-Plan-v1.1.0",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Open-Sora — генерация видео из текста",
+    "est": "87k",
+    "priority": 10
+  },
+  {
+    "cat": "video",
+    "ds": "KlingTeam/MultiCamVideo-Dataset",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Kling мультикамерное видео",
+    "est": "4.3k",
+    "priority": 9
+  },
+  {
+    "cat": "video",
+    "ds": "KlingTeam/VideoGen-RewardBench",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Kling бенчмарк генерации",
+    "est": "1.6k",
+    "priority": 7
+  },
+  {
+    "cat": "video",
+    "ds": "LIMinghan/FiVE-Fine-Grained-Video-Editing-Benchmark",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "FiVE редактирование видео",
+    "est": "599",
+    "priority": 9
+  },
+  {
+    "cat": "video",
+    "ds": "contralabs/premiere-video-editing-trajectories",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Premiere Pro траектории монтажа",
+    "est": "348",
+    "priority": 10
+  },
+  {
+    "cat": "video",
+    "ds": "contralabs/descript-video-editing-trajectories",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Descript траектории монтажа",
+    "est": "147",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "Falah/fashion_moodboards_prompts",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Fashion мудборды",
+    "est": "19",
+    "priority": 10
+  },
+  {
+    "cat": "design",
+    "ds": "moeenuddin/MoodBoard2Creation",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Мудборд→создание дизайна",
+    "est": "13",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "Goblinboy/moodboard-data",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Датасет мудбордов",
+    "est": "6",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "m-Just/VisCoT_VStar_Collage",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Коллажи и визуальные доски",
+    "est": "884",
+    "priority": 8
+  },
+  {
+    "cat": "design",
+    "ds": "molbal/multi_reference_image_editing",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Мульти-референс редактирование",
+    "est": "1.1k",
+    "priority": 9
+  },
+  {
+    "cat": "design",
+    "ds": "Brahim1186/style-reference-captions",
+    "files": [
+      "data/*.jsonl"
+    ],
+    "desc": "Стиль-референс с подписями",
+    "est": "29",
+    "priority": 7
+  },
+  {
+    "cat": "video",
+    "ds": "LanguageBind/Open-Sora-Plan-v1.0.0",
+    "files": [
+      "data/*.parquet"
+    ],
+    "desc": "Open-Sora plan v1",
+    "est": "1k",
+    "priority": 8
+  }
+]

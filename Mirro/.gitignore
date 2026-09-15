@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+*.pickle
+
+# Data (large generated files)
+data/corpus_big/
+data/corpus_ready/
+data/raw/
+data/processed/*.jsonl
+data/semantics.json
+data/web_cache.json
+
+# Models
+models/*.pkl
+models/*.pickle
+models/rag_index/
+
+# Logs
+logs/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mirro — план улучшений — интеллект-карта</title><style>
+:root{
+  --paper:#FBFAF7; --ink:#14130F; --ink60:rgba(20,19,15,.6); --ink45:rgba(20,19,15,.45);
+  --rule:rgba(20,19,15,.22); --conn:rgba(20,19,15,.3); --accent:#D8231C;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:var(--paper)}
+body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:antialiased;
+     color:var(--ink);font-variant-numeric:tabular-nums}
+::selection{background:rgba(216,35,28,.18)}
+
+.app{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--paper)}
+.bar{flex:0 0 auto;display:flex;align-items:center;gap:16px;padding:14px 22px;border-bottom:1px solid var(--rule)}
+.bar-years{font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;flex:0 0 auto}
+.bar-title{font-size:14px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;flex:0 0 auto}
+.bar-en{font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink45);
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.bar-sp{flex:1 1 auto;min-width:8px}
+.bar-hint{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink45);
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}
+.btns{display:flex;border:1px solid var(--rule);flex:0 0 auto}
+.btns button{font:inherit;font-weight:700;line-height:1;cursor:pointer;background:var(--paper);
+             color:var(--ink);border:none;border-right:1px solid var(--rule);padding:8px 12px}
+.btns button:last-child{border-right:none}
+.btns button:hover{background:var(--ink);color:var(--paper)}
+#zin,#zout{font-size:13px}
+#rst{font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+
+.stage{flex:1 1 auto;position:relative;overflow:hidden;cursor:grab;touch-action:none}
+.stage.grabbing{cursor:grabbing}
+.canvas{position:absolute;left:0;top:0;transform-origin:0 0}
+.root,.b,.n,.eh,.ev{position:absolute;left:0;top:0}
+
+.root{width:240px;padding:16px 18px;background:var(--ink)}
+.root-years{font-size:34px;font-weight:700;letter-spacing:-.04em;line-height:1;color:var(--paper)}
+.root-title{font-size:14px;font-weight:700;letter-spacing:-.01em;color:var(--paper);margin-top:8px}
+.root-en{font-size:9.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-top:4px}
+
+.b{width:172px;cursor:pointer;padding-bottom:6px;border-bottom:2px solid var(--accent)}
+.b-row{display:flex;align-items:baseline;gap:8px}
+.b-num{font-size:11px;font-weight:700;color:var(--accent);flex:0 0 auto}
+.b-ru{font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.b-sign{font-size:12px;font-weight:700;color:var(--ink45);flex:0 0 auto}
+.b-en{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink45);margin-top:3px}
+
+.n{width:252px;padding-top:7px;border-top:1px solid var(--rule)}
+.n-row{display:flex;align-items:baseline;gap:7px}
+.n-year{font-size:12px;font-weight:700;color:var(--accent);flex:0 0 auto}
+.n-ru{font-size:13.5px;font-weight:700;line-height:1.2;letter-spacing:-.01em}
+.n-en{font-size:10px;letter-spacing:.1em;text-transform:uppercase;line-height:1.3;color:var(--ink45);margin-top:3px}
+.n-note{font-size:11px;line-height:1.35;color:var(--ink60);margin-top:3px}
+
+.side-r{text-align:left}
+.side-r .b-row,.side-r .n-row{justify-content:flex-start}
+.side-l{text-align:right}
+.side-l .b-row,.side-l .n-row{justify-content:flex-end}
+
+.eh{height:1px;background:var(--conn)}
+.ev{width:1px;background:var(--conn)}
+.is-hidden{display:none}
+</style></head><body><div class="app"><div class="bar"><div class="bar-years">2026</div><div class="bar-title">Mirro — план улучшений</div><div class="bar-en">38 ЗАДАЧ · 10 ГОТОВО · интеллект-карта</div><div class="bar-sp"></div><div class="bar-hint">клик по ветви — свернуть · тяни — двигать · колесо — масштаб</div><div class="btns"><button id="zout" title="Уменьшить">−</button><button id="rst" title="По размеру">по размеру</button><button id="zin" title="Увеличить">+</button></div></div><div class="stage" id="stage"><div class="canvas" id="canvas"><div id="edges"></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Стемминг русских слов</div></div><div class="n-note">ГОТОВО: Porter-style, словарь исключений</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">BM25 + TF-IDF поиск</div></div><div class="n-note">ГОТОВО: k1/b, dl norm</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">TextRank суммаризация</div></div><div class="n-note">ГОТОВО: PageRank на графе предложений</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Naive Bayes классификация</div></div><div class="n-note">ГОТОВО: 6 кластеров</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">KeyBERT извлечение слов</div></div><div class="n-note">ГОТОВО: TF-IDF взвешивание</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Перцептрон (1 слой)</div></div><div class="n-note">ГОТОВО: обучение на feedback</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">MLP (2 слоя)</div></div><div class="n-note">скрытый слой · ЖДЁТ</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Self-correction</div></div><div class="n-note">ГОТОВО: повторный поиск при плохой оценке</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Детектор галлюцинаций</div></div><div class="n-note">ГОТОВО: TF-IDF поддержка фактов</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Автономное обучение</div></div><div class="n-note">ГОТОВО: планировщик на 60 мин</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Кэш частых запросов</div></div><div class="n-note">ГОТОВО: 200 запросов</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Чат (основной экран)</div></div><div class="n-note">аватары · история · лайк/дизлайк · быстрые кнопки</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Аналитика (дашборд)</div></div><div class="n-note">метрики · карточки · графики баров</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Кластеры (данные)</div></div><div class="n-note">датасеты · категории · прогресс-бары</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Боковая панель</div></div><div class="n-note">навигация · кнопка обучения · статус</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Тёмная/светлая тема</div></div><div class="n-note">переключатель · ЖДЁТ</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Прогресс обучения</div></div><div class="n-note">индикатор · сколько усвоила · ЖДЁТ</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">История диалогов</div></div><div class="n-note">ГОТОВО: localStorage</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Экспорт знаний</div></div><div class="n-note">PDF/MD · ЖДЁТ</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Уведомления</div></div><div class="n-note">статус автообучения · колокольчик</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Строка поиска датасетов</div></div><div class="n-note">ГОТОВО: фильтрация в реальном времени</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Состояния UI:</div></div><div class="n-en">ЗАГРУЗКА · ПУСТО · ОШИБКА · ГОТОВО</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Loading</div></div><div class="n-note">спиннер · скелетон · анимация</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Empty</div></div><div class="n-note">приветствие · подсказки · что спросить</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Error</div></div><div class="n-note">корректное сообщение об ошибке</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Ready</div></div><div class="n-note">основное содержимое с переходами</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Дизайн/креатив</div></div><div class="n-note">SVG · постеры · Figma · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Math (200k+)</div></div><div class="n-note">Orca-math · GSM8K · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Knowledge Википедия</div></div><div class="n-note">раздел RU · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Код The Stack</div></div><div class="n-note">образец кода · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Дедупликация</div></div><div class="n-note">убрать дубли · ЖДЁТ</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Планировщик 60 мин</div></div><div class="n-note">ГОТОВО: фоновый поток</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Перцептрон на feedback</div></div><div class="n-note">ГОТОВО: train_on_feedback</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Ре-плей буфер</div></div><div class="n-note">переигрывать лайки · ЧАСТИЧНО</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Затухание бустов</div></div><div class="n-note">старые → ниже вес · ЖДЁТ</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Пакетное обучение</div></div><div class="n-note">батчи из history · ЖДЁТ</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">mirro_core.py</div></div><div class="n-note">API :3443 · планировщик · автообучение</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">algorithms.py</div></div><div class="n-note">TF-IDF · TextRank · NB · перцептрон · стемминг</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">index.html (web)</div></div><div class="n-note">чат · аналитика · кластеры · дизайн-карта</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">setup.bat / start.py</div></div><div class="n-note">запуск одной кнопкой</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">model_state.json</div></div><div class="n-note">сохранение весов перцептрона</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Автостарт Windows</div></div><div class="n-note">опционально · ЖДЁТ</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Логирование</div></div><div class="n-note">ГОТОВО: JSONL calls.jsonl</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Кэш ответов</div></div><div class="n-note">ГОТОВО: 200 входов</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Бэкап модели</div></div><div class="n-note">ai_state.json · ЧАСТИЧНО</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Self-health check</div></div><div class="n-note">мониторинг · ЖДЁТ</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Метрики автообучения</div></div><div class="n-note">сколько усвоила · ЧАСТИЧНО</div></div><div class="b side-l" data-id="b0" data-side="l"><div class="b-row"><div class="b-num">01</div><div class="b-ru">Алгоритмы (11 задач)</div><div class="b-sign">−</div></div></div><div class="b side-r" data-id="b1" data-side="r"><div class="b-row"><div class="b-num">02</div><div class="b-ru">Интерфейс Mirro</div><div class="b-sign">−</div></div><div class="b-en">ДИЗАЙН-КАРТА</div></div><div class="b side-r" data-id="b2" data-side="r"><div class="b-row"><div class="b-num">03</div><div class="b-ru">Данные (5 задач)</div><div class="b-sign">−</div></div></div><div class="b side-l" data-id="b3" data-side="l"><div class="b-row"><div class="b-num">04</div><div class="b-ru">Обучение (5 задач)</div><div class="b-sign">−</div></div></div><div class="b side-r" data-id="b4" data-side="r"><div class="b-row"><div class="b-num">05</div><div class="b-ru">Архитектура</div><div class="b-sign">−</div></div></div><div class="b side-l" data-id="b5" data-side="l"><div class="b-row"><div class="b-num">06</div><div class="b-ru">Инфраструктура (6 задач)</div><div class="b-sign">−</div></div></div><div class="root"><div class="root-years">2026</div><div class="root-title">Mirro — план улучшений</div><div class="root-en">38 ЗАДАЧ · 10 ГОТОВО</div></div></div></div></div><script>
+(function(){
+  var CFG={"rootW":240,"rootH":118,"w1":172,"w2":252,"g1":44,"g2":52,"gap":14,"gg":36,"pad":30};
+  var stage=document.getElementById('stage'), canvas=document.getElementById('canvas');
+  var edgeBox=document.getElementById('edges'), rootEl=document.querySelector('.root');
+  var branches=[].slice.call(document.querySelectorAll('.b'));
+  var collapsed={}, cw=0, ch=0, fit={s:1,x:0,y:0}, tr=null;
+
+  branches.forEach(function(b){
+    b.__kids=[].slice.call(document.querySelectorAll('.n[data-parent="'+b.getAttribute('data-id')+'"]'));
+  });
+
+  function clamp(s){ return Math.min(3, Math.max(0.25, s)); }
+  function T(){ return tr || fit; }
+  function applyView(){ var t=T();
+    canvas.style.transform='translate('+t.x+'px,'+t.y+'px) scale('+t.s+')'; }
+
+  // One orthogonal elbow = three 1px divs. No SVG.
+  function elbow(x0,y0,x1,y1){
+    var mid=(x0+x1)/2;
+    var h1=document.createElement('div'); h1.className='eh';
+    h1.style.width=Math.abs(mid-x0)+'px';
+    h1.style.transform='translate('+Math.min(x0,mid)+'px,'+y0+'px)';
+    var v=document.createElement('div'); v.className='ev';
+    v.style.height=Math.abs(y1-y0)+'px';
+    v.style.transform='translate('+mid+'px,'+Math.min(y0,y1)+'px)';
+    var h2=document.createElement('div'); h2.className='eh';
+    h2.style.width=Math.abs(x1-mid)+'px';
+    h2.style.transform='translate('+Math.min(x1,mid)+'px,'+y1+'px)';
+    edgeBox.appendChild(h1); edgeBox.appendChild(v); edgeBox.appendChild(h2);
+  }
+
+  function layout(){
+    // visibility first, so measurement and layout agree
+    branches.forEach(function(b){
+      var open=!collapsed[b.getAttribute('data-id')];
+      b.__kids.forEach(function(k){ k.classList.toggle('is-hidden', !open); });
+      var sign=b.querySelector('.b-sign'); if(sign) sign.textContent=open?'\u2212':'+';
+    });
+
+    var half=CFG.rootW/2+CFG.g1+CFG.w1+CFG.g2+CFG.w2+CFG.pad;
+    cw=half*2; var cx=cw/2;
+
+    // Pass 1 — measure and stack each side in local coords.
+    var sides={r:{items:[],total:0}, l:{items:[],total:0}};
+    ['r','l'].forEach(function(side){
+      var cur=0, items=[];
+      branches.filter(function(b){ return b.getAttribute('data-side')===side; }).forEach(function(b){
+        var hb=b.offsetHeight, gs=cur, id=b.getAttribute('data-id');
+        var kids=collapsed[id]?[]:b.__kids;
+        if(kids.length===0){
+          items.push({b:b, by:cur+hb/2, kids:[], ys:[]});
+          cur=gs+hb;
+        } else {
+          var c=cur, ys=[];
+          kids.forEach(function(k){ var h=k.offsetHeight; ys.push(c+h/2); c+=h+CFG.gap; });
+          var span=(c-CFG.gap)-gs;
+          // A tall branch label must not overhang into its neighbours: give the
+          // group at least the branch's own height and centre the kids in it.
+          if(span<hb){ var padY=(hb-span)/2; ys=ys.map(function(y){ return y+padY; }); span=hb; }
+          items.push({b:b, by:(ys[0]+ys[ys.length-1])/2, kids:kids, ys:ys});
+          cur=gs+span;
+        }
+        cur+=CFG.gg;
+      });
+      sides[side]={items:items, total:Math.max(0,cur-CFG.gg)};
+    });
+
+    var rootH=rootEl.offsetHeight||CFG.rootH;
+    ch=Math.max(sides.r.total, sides.l.total, rootH+80)+70;
+    var rootY=ch/2;
+
+    canvas.style.width=cw+'px'; canvas.style.height=ch+'px';
+    edgeBox.textContent='';
+    rootEl.style.transform='translate('+(cx-CFG.rootW/2)+'px,'+rootY+'px) translateY(-50%)';
+
+    // Pass 2 — place, each side centred vertically on its own.
+    ['r','l'].forEach(function(side){
+      var d=sides[side], dy=(ch-d.total)/2, right=(side==='r');
+      var x1=right?cx+CFG.rootW/2+CFG.g1:cx-CFG.rootW/2-CFG.g1-CFG.w1;
+      var x2=right?x1+CFG.w1+CFG.g2:x1-CFG.g2-CFG.w2;
+      var rootEdge=right?cx+CFG.rootW/2:cx-CFG.rootW/2;
+      var bEdge=right?x1+CFG.w1:x1;
+      d.items.forEach(function(it){
+        var by=it.by+dy;
+        elbow(rootEdge, rootY, right?x1:x1+CFG.w1, by);
+        it.b.style.transform='translate('+x1+'px,'+by+'px) translateY(-50%)';
+        it.kids.forEach(function(k,i){
+          var y=it.ys[i]+dy;
+          elbow(bEdge, by, right?x2:x2+CFG.w2, y);
+          k.style.transform='translate('+x2+'px,'+y+'px) translateY(-50%)';
+        });
+      });
+    });
+
+    // fit is recomputed on every layout; never magnify past 100%
+    var vw=stage.clientWidth||1440, vh=stage.clientHeight||860;
+    var s=Math.min(1,(vw-48)/cw,(vh-32)/ch);
+    fit={s:s, x:(vw-cw*s)/2, y:(vh-ch*s)/2};
+    applyView();
+  }
+
+  function zoomCenter(f){ var t=T(), ns=clamp(t.s*f);
+    var px=(stage.clientWidth||1440)/2, py=(stage.clientHeight||860)/2;
+    tr={s:ns, x:px-(px-t.x)*(ns/t.s), y:py-(py-t.y)*(ns/t.s)}; applyView(); }
+
+  document.getElementById('zin').onclick=function(){ zoomCenter(1.18); };
+  document.getElementById('zout').onclick=function(){ zoomCenter(1/1.18); };
+  document.getElementById('rst').onclick=function(){ tr=null; layout(); };
+
+  // Drag to pan. Tap-vs-drag is decided in SCREEN pixels; pointer capture is
+  // taken only once a real drag starts, because capturing on pointerdown
+  // retargets the event away from the branch that was pressed.
+  var DRAG_PX=3, drag=null;
+  stage.addEventListener('pointerdown', function(e){
+    drag={x:e.clientX, y:e.clientY, moved:false, captured:false,
+          b:(e.target&&e.target.closest)?e.target.closest('.b'):null};
+    stage.classList.add('grabbing');
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    if(!drag.moved && Math.abs(dx)+Math.abs(dy)>DRAG_PX){
+      drag.moved=true;
+      if(!drag.captured){ try{ stage.setPointerCapture(e.pointerId); drag.captured=true; }catch(_){ } }
+    }
+    if(!drag.moved) return;
+    drag.x=e.clientX; drag.y=e.clientY;
+    var t=T(); tr={s:t.s, x:t.x+dx, y:t.y+dy}; applyView();
+  });
+  function endDrag(e){
+    if(!drag) return;
+    var d=drag; drag=null; stage.classList.remove('grabbing');
+    if(d.captured&&e){ try{ stage.releasePointerCapture(e.pointerId); }catch(_){ } }
+    if(!d.moved && d.b){                       // a tap on a branch toggles it
+      var id=d.b.getAttribute('data-id');
+      collapsed[id]=!collapsed[id];
+      layout();                                 // recompute: the canvas compacts
+    }
+  }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  // Native listener with {passive:false} — preventDefault is required or the
+  // wheel scrolls the page instead of zooming.
+  stage.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var r=stage.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+    var t=T(), f=(e.deltaY<0)?1.12:1/1.12, ns=clamp(t.s*f);
+    tr={s:ns, x:px-(px-t.x)*(ns/t.s), y:py-(py-t.y)*(ns/t.s)}; applyView();
+  }, {passive:false});
+
+  window.addEventListener('resize', function(){ layout(); });
+  layout();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layout).catch(function(){});
+})();
+</script></body></html>
