@@ -1,2 +1,2 @@
 # Mirro-
-Its Mirro, created by me and DeepSeek V4 Flash
+Its Mirro, created by me MC_Perets (MT) and DeepSeek V4 Flash
