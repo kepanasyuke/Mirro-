@@ -223,13 +223,71 @@ class MirroAPI(BaseHTTPRequestHandler):
         from scripts.thinking import thinking
         return thinking
 
+    def _reason(self, query, candidates):
+        """
+        Обдумывание: оценивает, насколько кандидаты действительно отвечают на вопрос.
+        Возвращает (лучший_ответ, оценка_уверенности, объяснение_почему).
+        """
+        if not candidates:
+            return None, 0.0, "Нет кандидатов"
+
+        q_words = set()
+        import re as _re
+        for w in _re.findall(r"[а-яёa-z0-9]+", query.lower()):
+            if len(w) > 2:
+                q_words.add(w)
+
+        best = None
+        best_score = 0.0
+        reason = ""
+
+        for (inst, out, cl), tfidf_score in candidates[:5]:
+            score = 0.0
+            clues = []
+
+            # 1. TF-IDF вес
+            score += tfidf_score * 2.5
+
+            # 2. Пересечение ключевых слов вопроса с ответом
+            a_words = set()
+            for w in _re.findall(r"[а-яёa-z0-9]+", out.lower()):
+                if len(w) > 2:
+                    a_words.add(w)
+            overlap = len(q_words & a_words)
+            if overlap > 0:
+                score += overlap * 0.8
+                clues.append(f"совпадает {overlap} слов")
+
+            # 3. Длина ответа (не слишком короткий)
+            if len(out) > 100:
+                score += 0.3
+            elif len(out) < 20:
+                score -= 0.5
+
+            # 4. Штраф если ответ — почти копия вопроса
+            q_set = set(q_words)
+            a_set = set(a_words)
+            if q_set and a_set:
+                jaccard = len(q_set & a_set) / max(len(q_set | a_set), 1)
+                if jaccard > 0.7:
+                    score -= 1.0  # ответ повторяет вопрос — плохо
+
+            if score > best_score:
+                best_score = score
+                best = out
+                reason = "; ".join(clues)
+
+        return best, best_score, reason
+
     def _call_smart(self, prompt, cluster):
         """
-        Умный пайплайн: алгоритм включения решает стратегию ответа.
-        1. Пробуем базу → оцениваем уверенность
-        2. thinking.decide → стратегия (base/web/direct/learn)
-        3. Если web → Wikipedia
-        Полностью защищён от исключений — сервер не падает.
+        Умный пайплайн: алгоритм включения + обдумывание.
+        1. Сначала думаем алгоритмами (вычисления, уравнения)
+        2. Пробуем RAG (дисковый корпус)
+        3. Ищем в TF-IDF базе
+        4. Обдумываем: проверяем, что ответ действительно отвечает
+        5. Выбираем стратегию
+        6. Если нужно — ищем в интернете
         """
         try:
             import sys as _sys
@@ -249,39 +307,42 @@ class MirroAPI(BaseHTTPRequestHandler):
 
             from scripts.thinking import thinking
 
-            # 1. Пробуем RAG (большой корпус на диске 4.8M) — быстрее и точнее
+            # 1. Пробуем RAG (большой корпус на диске 4.8M)
+            rag_used = False
             try:
                 from scripts.rag import rag
                 rag_results = rag.search(prompt, top_segments=3, top_k=3)
                 if rag_results:
-                    best = rag_results[0]
-                    sc, inst, out = best
-                    if sc > 0.5 and len(out) > 5:
-                        # Нашли в корпусе — отвечаем сразу (галлюцинаций нет)
-                        return {"content": out[:2000], "strategy": "rag", "rag_score": sc}
+                    best_rag, rag_reason = self._reason(prompt, [(("", rag_results[0][2], "rag"), rag_results[0][0])])
+                    if best_rag and len(best_rag) > 20:
+                        return {"content": best_rag[:2000], "strategy": "rag", "reasoning": rag_reason}
             except Exception:
                 pass
 
-            # 2. Пробуем TF-IDF базу знаний (в памяти, 2.3M)
+            # 2. Пробуем TF-IDF базу знаний
             algo = self._get_ai()
             try:
-                results = algo.search_tfidf(prompt, top_n=5)
+                results = algo.search_tfidf(prompt, top_n=8)
             except Exception:
                 results = []
 
-            # Оценка уверенности
-            confidence = thinking.confidence_from_results(results)
-            has_result = bool(results)
+            # Обдумывание результатов
+            best_answer, best_score, reason = self._reason(prompt, results)
+            has_result = best_answer is not None and best_score > 0.5
+            confidence = min(1.0, best_score / 5.0) if best_score > 0 else 0.0
 
             # 2b. RAG как второй проход (если TF-IDF слаб)
-            if (not has_result or confidence < 0.4):
+            if not has_result:
                 try:
                     from scripts.rag import rag
                     rag_results = rag.search(prompt, top_segments=4, top_k=3)
                     if rag_results:
-                        results = [(rag_results[i][1:], rag_results[i][0]) for i in range(len(rag_results))]
-                        confidence = thinking.confidence_from_results([(None, rag_results[i][0]) for i in range(min(3, len(rag_results)))])
-                        has_result = True
+                        best_rag, rag_score, rag_reason = self._reason(prompt, [(("", rag_results[i][2], "rag"), rag_results[i][0]) for i in range(min(3, len(rag_results)))])
+                        if best_rag:
+                            best_answer = best_rag
+                            confidence = min(1.0, rag_score / 5.0)
+                            reason = rag_reason
+                            has_result = True
                 except Exception:
                     pass
 
@@ -291,14 +352,16 @@ class MirroAPI(BaseHTTPRequestHandler):
             # 4. Стратегии
             if strategy == "direct":
                 q = prompt.lower().strip()
-                if any(g in q for g in ["привет", "здравств", "добрый"]):
+                if any(g in q for g in ["привет", "здравств", "добрый"]) and len(q) < 30:
                     return {"content": "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете.", "strategy": "direct"}
                 if any(g in q for g in ["как дела", "как ты", "как жизнь", "как у тебя", "как настроение", "как твои дела", "как твои", "чё как", "че как", "как сам", "как сама"]):
-                    return {"content": "У меня всё отлично! Я готова отвечать на вопросы. А у тебя как дела?", "strategy": "direct"}
+                    return {"content": "Привет! У меня всё хорошо, я постоянно учусь и становлюсь умнее. А у тебя как дела?", "strategy": "direct"}
                 if "2+2" in q or q == "2 + 2":
                     return {"content": "4", "strategy": "direct"}
                 if "спасибо" in q:
-                    return {"content": "Пожалуйста!", "strategy": "direct"}
+                    return {"content": "Пожалуйста! Рада помочь.", "strategy": "direct"}
+                if best_answer and confidence > 0.3:
+                    return {"content": best_answer[:2000], "strategy": "direct+base", "reasoning": reason}
                 return {"content": "Поняла. Задай вопрос подробнее.", "strategy": "direct"}
 
             elif strategy == "learn":
@@ -310,15 +373,9 @@ class MirroAPI(BaseHTTPRequestHandler):
                 ), "strategy": "learn"}
 
             elif strategy in ("web", "base+web"):
-                # Комбинируем базу + веб если есть база
-                if strategy == "base+web" and has_result:
-                    try:
-                        base_answer = algo.compose_answer(prompt)
-                        if base_answer and len(base_answer) > 10:
-                            # База есть — отвечаем базой, веб не нужен (веб часто мусор)
-                            return {"content": base_answer[:2000], "strategy": "base"}
-                    except Exception:
-                        pass
+                # База + обдумывание
+                if has_result and best_answer:
+                    return {"content": best_answer[:2000], "strategy": "base", "reasoning": reason}
                 # Чистый web
                 try:
                     web_result = thinking.web_search(prompt)
@@ -327,22 +384,14 @@ class MirroAPI(BaseHTTPRequestHandler):
                 except Exception:
                     pass
                 # Фоллбэк на базу
-                if has_result:
-                    try:
-                        base_answer = algo.compose_answer(prompt)
-                        if base_answer:
-                            return {"content": base_answer, "strategy": "base"}
-                    except Exception:
-                        pass
+                if has_result and best_answer:
+                    return {"content": best_answer[:2000], "strategy": "base"}
                 return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "web"}
 
             else:  # base
-                try:
-                    base_answer = algo.compose_answer(prompt) if has_result else None
-                    if base_answer:
-                        return {"content": base_answer, "strategy": "base"}
-                except Exception:
-                    pass
+                if has_result and best_answer:
+                    return {"content": best_answer[:2000], "strategy": "base", "reasoning": reason}
+                # Фоллбэк: веб
                 try:
                     web_result = thinking.web_search(prompt)
                     if web_result.get("title"):
