@@ -125,14 +125,18 @@ def score_candidate(query, out, cluster, tfidf_score, preferred=None):
 
 def choose_best(query, candidates, preferred=None):
     if not candidates: return None, 0.0, "нет кандидатов"
+    # Всегда исключаем шумный generated, если есть альтернативы
+    cands = [c for c in candidates if c[0][2] != "generated"] or candidates
     if preferred:
-        same = [(inst, out, cl, sc) for (inst, out, cl), sc in candidates if cl == preferred]
+        same = [(inst, out, cl, sc) for (inst, out, cl), sc in cands if cl == preferred]
         if same:
             best = max(same, key=lambda x: score_candidate(query, x[1], x[2], x[3], preferred)[0])
             sc, _ = score_candidate(query, best[1], best[2], best[3], preferred)
             return best[1], sc, f"кластер {best[2]}"
+        # В предпочтительном кластере нет ответа — не тянем мусор из чужих кластеров
+        return None, 0.0, f"нет в кластере {preferred}"
     b_out, b_sc, b_r = None, -999, ""
-    for (inst, out, cl), tfidf_score in candidates[:5]:
+    for (inst, out, cl), tfidf_score in cands[:5]:
         sc, rs = score_candidate(query, out, cl, tfidf_score, preferred)
         if sc > b_sc: b_sc, b_out, b_r = sc, out, "; ".join(rs) if rs else "базовый"
     return b_out, b_sc, b_r
@@ -203,6 +207,33 @@ def try_web(query):
     except: pass
     return None
 
+
+def answer_looks_bad(query, answer):
+    """Проверка качества ответа: реально ли он отвечает на вопрос?
+
+    Возвращает True, если ответ мусорный — его нельзя отдавать пользователю.
+    """
+    if not answer or len(answer) < 10:
+        return True
+    # Ответ похож на код (PHP/JS/C++/SQL) — а вопрос фактологический
+    code_markers = ["<?php", "function ", "std::", "#include", "import ", "class ", "=>", "console.", "npm ", "git ", "def "]
+    code_hits = sum(1 for m in code_markers if m in answer)
+    if code_hits >= 2:
+        return True
+    # Вопрос вида «что такое X / кто такой X» — ответ должен содержать ключевые слова
+    q = query.lower().strip()
+    is_factual = any(p in q for p in ["что такое", "кто такой", "кто такая", "что значит", "расскажи про", "что такое ндс"])
+    if is_factual:
+        q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
+        a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
+        # Ключевые слова вопроса: убираем стоп-слова
+        stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или"}
+        key = q_words - stop
+        if key and not key & a_words:
+            return True  # ответ вообще не про это
+    return False
+
+
 def build_response(prompt, cluster):
     try:
         greeting = try_greetings(prompt)
@@ -217,6 +248,14 @@ def build_response(prompt, cluster):
         if not results: results = try_rag(prompt, cluster)
         best_answer, best_score, reason = choose_best(prompt, results, preferred=cluster)
         has_result = best_answer is not None and best_score > 1.0
+
+        # Шлюз качества: если ответ мусорный — не отдаём, ищем в вебе
+        bad_answer = has_result and answer_looks_bad(prompt, best_answer)
+        if bad_answer:
+            web_answer = try_web(prompt)
+            if web_answer: return {"content": web_answer, "strategy": "web"}
+            return {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
+
         if not has_result and cluster in ("ru", "knowledge"):
             web_answer = try_web(prompt)
             if web_answer: return {"content": web_answer, "strategy": "web"}
