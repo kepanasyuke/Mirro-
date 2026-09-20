@@ -18,7 +18,7 @@ import json, math, re as _re, collections, random, time
 from pathlib import Path
 from collections import Counter, defaultdict
 
-MAX_INMEMORY_EXAMPLES = 800_000
+MAX_INMEMORY_EXAMPLES = 1_500_000
 DATA_DIR = Path(r"D:\Mirro\data")
 MODELS_DIR = Path(r"D:\Mirro\models")
 MODELS_DIR.mkdir(exist_ok=True)
