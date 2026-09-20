@@ -234,6 +234,16 @@ def answer_looks_bad(query, answer):
     return False
 
 
+def _voice(raw, query, strategy="base"):
+    """Обернуть сырой ответ в голос Mirro (свои слова, характер)."""
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from scripts.voice import speak
+        return speak(raw, query, strategy)
+    except Exception:
+        return raw
+
+
 def build_response(prompt, cluster):
     try:
         greeting = try_greetings(prompt)
@@ -253,16 +263,16 @@ def build_response(prompt, cluster):
         bad_answer = has_result and answer_looks_bad(prompt, best_answer)
         if bad_answer:
             web_answer = try_web(prompt)
-            if web_answer: return {"content": web_answer, "strategy": "web"}
+            if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
             return {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
 
         if not has_result and cluster in ("ru", "knowledge"):
             web_answer = try_web(prompt)
-            if web_answer: return {"content": web_answer, "strategy": "web"}
-        if has_result: return {"content": best_answer[:2500], "strategy": "base"}
+            if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
+        if has_result: return {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
         web_answer = try_web(prompt)
-        if web_answer: return {"content": web_answer, "strategy": "web"}
-        if has_result: return {"content": best_answer[:2500], "strategy": "base"}
+        if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
+        if has_result: return {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
         return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "unknown"}
     except Exception as e:
         return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}

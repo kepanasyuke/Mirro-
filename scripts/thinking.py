@@ -157,11 +157,12 @@ class MirroThinking:
         Фоллбэк — Wikipedia RU/EN API.
         С кэшем результатов.
         """
-        # 1. Кэш
+        # 1. Кэш (только для успешных результатов — пустоту не кэшируем)
         cache_key = query.strip().lower()[:100]
         with self._cache_lock:
-            if cache_key in self.web_cache:
-                return self.web_cache[cache_key]
+            cached = self.web_cache.get(cache_key)
+            if cached and cached.get("title"):
+                return cached
 
         # 2. Wikidata (основной, быстрый, русский)
         result = self._search_wikidata(query)
@@ -169,15 +170,16 @@ class MirroThinking:
             # 3. Фоллбэк: Wikipedia параллельно
             result = self._search_wikipedia_parallel(query)
 
-        if not result:
+        if not result or not result.get("title"):
             result = {"title": "", "summary": "Не удалось найти в сети.", "url": "", "source": "none"}
 
-        # 4. Сохранить в кэш
-        with self._cache_lock:
-            if len(self.web_cache) > 300:
-                self.web_cache = dict(list(self.web_cache.items())[-200:])
-            self.web_cache[cache_key] = result
-        self._save_cache()
+        # 4. Сохранить в кэш только успешные результаты (пустоту не храним)
+        if result.get("title"):
+            with self._cache_lock:
+                if len(self.web_cache) > 300:
+                    self.web_cache = dict(list(self.web_cache.items())[-200:])
+                self.web_cache[cache_key] = result
+            self._save_cache()
 
         return result
 
