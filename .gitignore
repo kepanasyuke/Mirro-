@@ -29,6 +29,7 @@ core/providers_secret.json
 # Decimal cipher (key document must never be committed; encrypted backups are local)
 keys/
 backups/
+restore/
 
 # OS
 .DS_Store
