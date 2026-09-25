@@ -435,6 +435,8 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
       <div class="mb-note">Это настоящие веса и bias Мирро из <b>models/model_state.json</b>. Собери паспорт помощника и нажми кнопку — Мирро по-настоящему оценит твоего помощника своим перцептроном.</div>
       <button class="mini-btn" id="btnBrain" type="button">Оценить помощника перцептроном Мирро</button>
       <div id="brainResult" class="quiz-feed"></div>
+      <button class="mini-btn" id="btnAskMirro" type="button">💬 Спросить Мирро (живой ответ)</button>
+      <div id="askMirroResult" class="quiz-feed"></div>
     </div>
 
     <div class="dot-tools">
@@ -832,6 +834,37 @@ function mirroPredict(query, candidate) {
   for (let i = 0; i < v.feats.length; i++) activation += (W[v.names[i]] || 0) * v.feats[i];
   const score = 1 / (1 + Math.exp(-activation));
   return { score, activation, feats: v.feats, names: v.names };
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function askMirro() {
+  const pr = ($('pPrompt') ? $('pPrompt').value : '').trim();
+  const out = $('askMirroResult');
+  const prompt = pr || 'Расскажи, кто ты, Мирро?';
+  const started = performance.now();
+  out.className = 'quiz-feed';
+  out.textContent = 'Мирро думает... (запрос на 127.0.0.1:3443)';
+  fetch('http://127.0.0.1:3443/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'mirro', messages: [{ role: 'user', content: prompt }] })
+  })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(data => {
+    const content = data && data.choices && data.choices[0] &&
+                    data.choices[0].message && data.choices[0].message.content;
+    const ms = Math.round(performance.now() - started);
+    out.className = 'quiz-feed ok';
+    out.textContent = '';
+    out.innerHTML = '<b>Мирро (живой ответ, ' + ms + ' мс):</b><br>' +
+                    '<span style="font-weight:500">' + escapeHtml(content || '(пусто)') + '</span>';
+  })
+  .catch(err => {
+    out.className = 'quiz-feed bad';
+    out.textContent = 'Сервер Мирро не отвечает (' + String(err.message).split('\n')[0] +
+                      '). Запусти mirro_launcher.pyw и нажми ещё раз.';
+  });
 }
 function renderBrainWeights() {
   const host = $('mbWeights'); if (!host) return;
@@ -2012,6 +2045,8 @@ function bindControls() {
   });
   const btnBrain = $('btnBrain');
   if (btnBrain) btnBrain.addEventListener('click', runMirroBrain);
+  const btnAsk = $('btnAskMirro');
+  if (btnAsk) btnAsk.addEventListener('click', askMirro);
   $('btnQuiz').addEventListener('click', () => {
     const q1 = document.querySelector('input[name="q1"]:checked');
     const q2 = document.querySelector('input[name="q2"]:checked');
