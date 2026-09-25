@@ -21,6 +21,11 @@ models/rag_index/
 # Logs
 logs/
 
+# Secrets
+.env
+*.env
+core/providers_secret.json
+
 # OS
 .DS_Store
 Thumbs.db

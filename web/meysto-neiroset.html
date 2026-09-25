@@ -1,0 +1,2055 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мейсто Нейросеть — собери нейросеть из блоков</title>
+<style>
+:root{
+  --blue:#4d7cfe; --green:#2ecc8f; --orange:#ff9f43; --ink:#1e2a4a;
+  --soft:#dfe7f7; --bg1:#eef4ff; --bg2:#dbe9ff; --card:#ffffff;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Segoe UI', Verdana, sans-serif;
+  color:var(--ink);
+  background:linear-gradient(160deg,var(--bg1),var(--bg2));
+  overflow:hidden;
+}
+.hdr{
+  display:flex; align-items:center; gap:14px;
+  padding:10px 18px; background:rgba(255,255,255,.85);
+  border-bottom:2px solid #d6e0f5; backdrop-filter:blur(4px);
+}
+.logo{display:flex; align-items:center; gap:10px;}
+.logo svg{flex:none;}
+.logo h1{font-family:'Comic Sans MS','Chalkboard SE',cursive; font-size:24px; letter-spacing:.5px;}
+.logo .sub{display:block; font-size:11px; color:#7a88ad; font-family:'Segoe UI',Verdana,sans-serif; letter-spacing:.3px;}
+.pills{display:flex; gap:8px; margin-left:auto;}
+.total-stars{
+  background:#fff8e8; border:2px solid #f5b301; border-radius:999px; padding:6px 12px;
+  font-weight:700; font-size:14px; color:#a07a00; white-space:nowrap;
+}
+.pill{
+  display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:999px;
+  background:#fff; border:2px solid #cfdaf2; cursor:pointer; font-weight:600; font-size:14px;
+  transition:transform .12s;
+}
+.pill:hover{transform:translateY(-1px);}
+.pill.active{border-color:var(--blue); background:#eaf1ff;}
+.pill .st{color:#f5b301; font-size:12px;}
+.pill .st.off{color:#c9d3ea;}
+.icon-btn{
+  width:38px;height:38px;border-radius:12px;border:2px solid #cfdaf2;background:#fff;
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+}
+.icon-btn:hover{background:#eaf1ff;}
+.icon-btn:active{transform:scale(.95);}
+.app{
+  display:grid; grid-template-columns:250px 1fr 280px; gap:12px;
+  padding:12px; height:calc(100vh - 62px);
+}
+.card{
+  background:var(--card); border-radius:18px; padding:14px;
+  box-shadow:0 6px 18px rgba(40,70,160,.10); border:1px solid #dce5f6;
+  display:flex; flex-direction:column; gap:10px; min-height:0;
+}
+.card h2{font-size:14px; text-transform:uppercase; letter-spacing:1px; color:#7a88ad;}
+.tabs{display:flex; gap:6px; flex-wrap:wrap;}
+.tabs button{
+  flex:1; min-width:56px; padding:8px 6px; border-radius:12px; border:2px solid #d3ddf2;
+  background:#fff; font-weight:700; font-size:13px; cursor:pointer; color:#5a6a92;
+}
+.tabs button.on{background:var(--blue); color:#fff; border-color:var(--blue);}
+.tab-body{display:flex; flex-direction:column; gap:10px; min-height:0; overflow-y:auto;}
+.task-done{
+  display:none; background:#e6f9ef; border:2px solid #2ecc8f; border-radius:12px;
+  padding:8px 10px; font-size:13px; font-weight:600; color:#1b8a5a;
+}
+.task-done.on{display:block;}
+.draw-canvas{
+  width:100%; height:230px; background:#fff; border:2px solid #d3ddf2; border-radius:12px;
+  cursor:crosshair; touch-action:none;
+}
+.draw-controls{display:flex; gap:8px;}
+.draw-controls .mini-btn, .draw-controls .btn-blue{width:auto; flex:1;}
+.quiz-opts{display:flex; flex-direction:column; gap:8px;}
+.quiz-opts label{
+  border:2px solid #d3ddf2; border-radius:12px; padding:10px 12px; cursor:pointer;
+  font-size:14px; background:#fff; color:#3b4a70;
+}
+.quiz-opts label:hover{border-color:var(--blue);}
+.quiz-opts input{margin-right:8px;}
+.quiz-feed{font-size:14px; font-weight:700; min-height:20px; border-radius:10px; padding:8px 10px;}
+.quiz-feed.ok{background:#e6f9ef; color:#1b8a5a;}
+.quiz-feed.bad{background:#fff0ee; color:#c0392b;}
+.level-progress{
+  background:#eef3ff; border-radius:10px; padding:8px 10px; font-size:13px; font-weight:700;
+  text-align:center; color:#3b4a70;
+}
+.task-svg{display:flex; justify-content:center;}
+.task h3{font-family:'Comic Sans MS','Chalkboard SE',cursive; font-size:19px; line-height:1.2;}
+.task p{font-size:14px; line-height:1.45; color:#3b4a70;}
+.goal{
+  background:#fff8e8; border:2px dashed #f5b301; border-radius:12px;
+  padding:10px 12px; font-size:13px; line-height:1.4; color:#7a5b00;
+}
+.goal b{color:#a07a00;}
+.btn-blue{
+  border:none; border-radius:14px; padding:12px 14px; font-size:15px; font-weight:700;
+  color:#fff; background:linear-gradient(135deg,#5b8bff,#3d6df0); cursor:pointer;
+  box-shadow:0 4px 10px rgba(61,109,240,.35); transition:transform .12s;
+}
+.btn-blue:hover{transform:translateY(-1px);}
+.btn-blue:active{transform:translateY(0) scale(.98);}
+.legend{font-size:12px; color:#5a6a92; display:flex; flex-direction:column; gap:4px;}
+.legend .li{display:flex; align-items:center; gap:8px;}
+.dot{width:13px;height:13px;border-radius:50%; border:2px solid #fff; box-shadow:0 0 0 1px #c3cee8; flex:none;}
+.stage{display:flex; flex-direction:column; gap:12px; min-height:0;}
+.plot-card{flex:1 1 55%; min-height:0;}
+.net-row{flex:1 1 45%; display:flex; gap:12px; min-height:0;}
+.net-card{flex:1.35; min-width:0;}
+.chart-card{flex:1; min-width:0;}
+canvas{display:block; width:100%; height:100%; border-radius:10px;}
+.plot-card canvas,
+.net-card canvas{background:#fff;}
+.chart-card canvas{background:linear-gradient(180deg,#fff,#f5f9ff);}
+#cvConfetti{
+  position:fixed; inset:0; pointer-events:none; z-index:200;
+  background:transparent; border-radius:0;
+  display:none;
+}
+#cvConfetti.on{display:block;}
+.controls{overflow-y:auto;}
+.ctl{display:flex; flex-direction:column; gap:6px;}
+.ctl label{font-size:13px; font-weight:600; color:#3b4a70;}
+.seg{display:flex; gap:6px;}
+.seg button{
+  flex:1; padding:9px; border-radius:12px; border:2px solid #d3ddf2; background:#fff;
+  font-weight:700; font-size:14px; cursor:pointer; color:#5a6a92;
+}
+.seg button.on{background:var(--blue); color:#fff; border-color:var(--blue);}
+.slider-row{display:flex; align-items:center; gap:10px;}
+.slider-row input[type=range]{flex:1; accent-color:var(--blue); height:6px;}
+.slider-row .val{
+  min-width:52px; text-align:center; background:#eef3ff; border-radius:8px;
+  padding:4px 6px; font-weight:700; font-size:13px;
+}
+.big-btn{
+  width:100%; border:none; border-radius:16px; padding:16px; font-size:18px; font-weight:800;
+  color:#fff; cursor:pointer; letter-spacing:1px;
+  background:linear-gradient(135deg,#38d996,#1fb878);
+  box-shadow:0 5px 14px rgba(31,184,120,.4); transition:transform .12s;
+}
+.big-btn.running{background:linear-gradient(135deg,#ff8a5b,#f5634a); box-shadow:0 5px 14px rgba(245,99,74,.4);}
+.big-btn:hover{transform:translateY(-1px);}
+.big-btn:active{transform:scale(.98);}
+.mini-btn{
+  border:2px solid #d3ddf2; background:#fff; border-radius:12px; padding:9px;
+  font-weight:700; font-size:13px; color:#5a6a92; cursor:pointer; width:100%;
+}
+.mini-btn:hover{background:#f4f8ff;}
+.avatar-row{display:flex; align-items:center; gap:10px;}
+.avatar{
+  width:52px; height:52px; border-radius:14px; border:2px solid #d3ddf2; background:#f0f5ff;
+  display:flex; align-items:center; justify-content:center; font-size:28px; flex:none;
+}
+.passport .seg button{font-size:18px; padding:6px;}
+.build-state{
+  border-radius:12px; padding:10px 12px; font-size:13px; font-weight:600; text-align:center;
+}
+.build-state.ok{background:#e6f9ef; color:#1b8a5a; border:2px solid #2ecc8f;}
+.build-state.no{background:#fff0ee; color:#c0392b; border:2px solid #ff8a7a;}
+.passport{display:flex; flex-direction:column; gap:6px; border-top:2px dashed #cfdaf2; padding-top:10px;}
+.passport label{font-size:13px; font-weight:600; color:#3b4a70;}
+.passport input,.passport textarea{
+  border:2px solid #d3ddf2; border-radius:10px; padding:8px 10px;
+  font-size:13px; font-family:inherit; color:var(--ink); background:#fff; resize:vertical;
+}
+.passport input:focus,.passport textarea:focus{outline:none; border-color:var(--blue);}
+.passport-result{
+  display:none; background:#e6f9ef; border:2px solid #2ecc8f; border-radius:12px;
+  padding:10px; font-size:13px; line-height:1.45; color:#1b8a5a;
+}
+.dot-tools{display:flex; flex-direction:column; gap:6px; border-top:2px dashed #cfdaf2; padding-top:10px;}
+.dot-tools label{font-size:13px; font-weight:600; color:#3b4a70;}
+.dot-hint{font-size:11.5px; color:#7a88ad; line-height:1.35;}
+.scratch{display:flex; flex-direction:column; gap:6px; border-top:2px dashed #cfdaf2; padding-top:10px;}
+.scratch label{font-size:13px; font-weight:600; color:#3b4a70;}
+.scratch-palette{display:flex; flex-wrap:wrap; gap:6px;}
+.sblock{
+  border-radius:10px; padding:8px 12px; font-size:13px; font-weight:700; cursor:grab;
+  user-select:none; color:#fff; box-shadow:0 2px 6px rgba(40,70,160,.2);
+}
+.sblock:active{cursor:grabbing;}
+.s-move{background:linear-gradient(135deg,#5b8bff,#3d6df0);}
+.s-turn{background:linear-gradient(135deg,#38d996,#1fb878);}
+.s-dot{background:linear-gradient(135deg,#ffb347,#ff8a3d);}
+.s-clear{background:linear-gradient(135deg,#a889ff,#845ef7);}
+.scratch-script{
+  min-height:64px; border:2px dashed #b9c8ea; border-radius:12px; background:#f7faff;
+  padding:8px; display:flex; flex-wrap:wrap; gap:6px; align-content:flex-start;
+}
+.scratch-hint{font-size:12px; color:#aab6d4; width:100%; text-align:center; padding:6px 0;}
+.scratch-actions{display:flex; gap:6px;}
+.scratch-actions .mini-btn{margin:0;}
+.scratch-canvas{
+  width:100%; height:150px; background:#fff; border:2px solid #d3ddf2; border-radius:12px;
+}
+.stats{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; text-align:center;}
+.stat{background:#f3f7ff; border-radius:10px; padding:7px 4px;}
+.stat b{display:block; font-size:17px; color:var(--ink);}
+.stat span{font-size:10px; color:#7a88ad;}
+.mascot-wrap{position:relative; margin-top:auto;}
+.bubble{
+  position:absolute; right:0; bottom:calc(100% + 8px); width:230px;
+  background:#fff; border:2px solid #d3ddf2; border-radius:16px; padding:10px 12px;
+  font-size:13px; line-height:1.35; box-shadow:0 6px 16px rgba(40,70,160,.15); opacity:0;
+  transform:translateY(6px); transition:opacity .3s, transform .3s; pointer-events:none;
+}
+.bubble.show{opacity:1; transform:translateY(0);}
+.bubble::after{
+  content:""; position:absolute; top:100%; right:34px; border:9px solid transparent;
+  border-top-color:#fff; filter:drop-shadow(0 1px 0 #d3ddf2);
+}
+.robot{background:#fff; border:2px solid #d3ddf2; border-radius:16px; padding:8px; display:flex; justify-content:center;}
+.modal-back{
+  position:fixed; inset:0; background:rgba(30,42,74,.45); display:none;
+  align-items:center; justify-content:center; z-index:300;
+}
+.modal-back.show{display:flex;}
+.modal{
+  background:#fff; border-radius:24px; padding:28px; max-width:460px; width:92%;
+  text-align:center; box-shadow:0 18px 50px rgba(20,40,90,.35);
+}
+.modal h2{font-family:'Comic Sans MS','Chalkboard SE',cursive; font-size:26px; margin-bottom:8px;}
+.modal p{font-size:15px; color:#3b4a70; line-height:1.5; margin-bottom:14px;}
+.big-stars{font-size:44px; color:#f5b301; letter-spacing:6px; margin:10px 0;}
+.big-stars .dim{color:#dbe3f4;}
+.modal .rowbtns{display:flex; gap:10px; justify-content:center; margin-top:8px;}
+.info-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; text-align:left; margin:14px 0;}
+.info-card{background:#f3f7ff; border-radius:14px; padding:12px;}
+.info-card h4{font-size:15px; margin-bottom:4px; color:var(--ink);}
+.info-card p{font-size:12.5px; color:#4a5a84; margin:0;}
+.info-card svg{display:block; margin-bottom:6px;}
+.credits{
+  background:#f3f7ff; border-radius:14px; padding:12px 14px; text-align:left;
+  border:2px dashed #cfdaf2;
+}
+.credits h4{font-size:13px; text-transform:uppercase; letter-spacing:1px; color:#7a88ad; margin-bottom:6px;}
+.credits p{font-size:12.5px; color:#4a5a84; line-height:1.45; margin:0 0 4px;}
+.credits p:last-child{margin-bottom:0;}
+.gray-btn{
+  border:2px solid #d3ddf2; background:#fff; border-radius:12px; padding:10px 18px;
+  font-weight:700; font-size:14px; color:#5a6a92; cursor:pointer;
+}
+.gray-btn:hover{background:#f4f8ff;}
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:#fff; padding:12px 20px; border-radius:14px; font-size:14px;
+  opacity:0; transition:opacity .3s, transform .3s; z-index:400; pointer-events:none; max-width:80%;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+#errBanner{
+  display:none; position:fixed; left:12px; right:12px; bottom:12px;
+  background:#c62828; color:#fff; font-family:Verdana,sans-serif; font-size:13px;
+  padding:10px 14px; border-radius:12px; z-index:99999; cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,0,0,.25);
+}
+@media (max-width:980px){
+  body{overflow:auto;}
+  .app{grid-template-columns:1fr; height:auto;}
+  .stage{min-height:700px;}
+  .controls{overflow:visible;}
+  .hdr{flex-wrap:wrap;}
+  .pills{margin-left:0; order:10; width:100%; justify-content:center;}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo">
+    <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
+      <rect x="6" y="10" width="12" height="12" rx="3" fill="#4d7cfe"/>
+      <rect x="22" y="10" width="12" height="12" rx="3" fill="#2ecc8f"/>
+      <rect x="6" y="24" width="12" height="12" rx="3" fill="#ff9f43"/>
+      <rect x="22" y="24" width="12" height="12" rx="3" fill="#845ef7"/>
+      <circle cx="12" cy="16" r="2" fill="#fff"/>
+      <circle cx="28" cy="16" r="2" fill="#fff"/>
+      <circle cx="12" cy="30" r="2" fill="#fff"/>
+      <circle cx="28" cy="30" r="2" fill="#fff"/>
+      <line x1="18" y1="16" x2="22" y2="16" stroke="#b9c8ea" stroke-width="2"/>
+      <line x1="18" y1="30" x2="22" y2="30" stroke="#b9c8ea" stroke-width="2"/>
+      <line x1="12" y1="22" x2="12" y2="24" stroke="#b9c8ea" stroke-width="2"/>
+      <line x1="28" y1="22" x2="28" y2="24" stroke="#b9c8ea" stroke-width="2"/>
+    </svg>
+    <h1>МЕЙСТО НЕЙРОСЕТЬ<span class="sub">собери нейросеть из блоков</span></h1>
+  </div>
+  <div class="pills" id="pills"></div>
+  <div class="total-stars" id="totalStars" title="Звёзды за пройденные уровни">⭐ 0/8</div>
+  <button class="icon-btn" id="btnSound" type="button" title="Звук">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a5a84" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M11 5 6 9H2v6h4l5 4z" fill="#4a5a84" stroke="none"/>
+      <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
+      <path d="M18.5 5.5a9 9 0 0 1 0 13"/>
+    </svg>
+  </button>
+  <button class="icon-btn" id="btnInfo" type="button" title="Как это работает">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4a5a84" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 11v5"/><circle cx="12" cy="8" r=".5" fill="#4a5a84"/>
+    </svg>
+  </button>
+</div>
+
+<div class="app">
+  <div class="card task">
+    <h2>Задания уровня</h2>
+    <div class="tabs" id="taskTabs">
+      <button data-tab="net" class="on" type="button">1. Сеть</button>
+      <button data-tab="draw" type="button">2. Рисунок</button>
+      <button data-tab="quiz" type="button">3. Тест</button>
+      <button data-tab="prompt" type="button">4. Промт</button>
+    </div>
+    <div class="tab-body" id="tabNet">
+      <h3 id="taskTitle"></h3>
+      <p id="taskDesc"></p>
+      <div class="goal" id="taskGoal"></div>
+      <button class="btn-blue" id="btnHint" type="button">Подсказка</button>
+      <div class="legend" id="legend"></div>
+      <div class="task-done" id="doneNet">✅ Сеть собрана и обучена</div>
+    </div>
+    <div class="tab-body" id="tabDraw" style="display:none">
+      <h3>Нарисуй картинку по точкам</h3>
+      <p id="drawDesc">Нажми на поле, чтобы поставить точки-«пиксели». Повтори картинку из задания!</p>
+      <div class="goal" id="drawGoal"></div>
+      <canvas id="cvDraw" class="draw-canvas"></canvas>
+      <div class="draw-controls">
+        <button class="mini-btn" id="btnDrawClear" type="button">Очистить</button>
+        <button class="btn-blue" id="btnDrawCheck" type="button">Проверить</button>
+      </div>
+      <div class="task-done" id="doneDraw">✅ Рисунок готов</div>
+    </div>
+    <div class="tab-body" id="tabQuiz" style="display:none">
+      <h3>Тест уровня</h3>
+      <p id="quizQ"></p>
+      <div class="quiz-opts" id="quizOpts"></div>
+      <button class="btn-blue" id="btnQuizCheck" type="button">Ответить</button>
+      <div id="quizFeed" class="quiz-feed"></div>
+      <div class="task-done" id="doneQuiz">✅ Тест пройден</div>
+    </div>
+    <div class="tab-body" id="tabPrompt" style="display:none">
+      <h3>Напиши промт помощнику</h3>
+      <p id="promptDesc">Составь задание для своего AI-помощника — как в Мейсто. Чёткая роль, правило, задача.</p>
+      <textarea id="promptInput" rows="4" maxlength="300" placeholder="Ты — мой помощник по учёбе. Объясняй просто и приводи примеры из жизни..."></textarea>
+      <div class="draw-controls">
+        <button class="btn-blue" id="btnPromptCheck" type="button">Проверить</button>
+      </div>
+      <div id="promptFeed" class="quiz-feed"></div>
+      <div class="task-done" id="donePrompt">✅ Промт написан</div>
+    </div>
+    <div class="level-progress" id="levelProgress">Задания: 0/4</div>
+  </div>
+
+  <div class="stage">
+    <div class="card plot-card">
+      <h2>Поле данных — точки учит нейросеть</h2>
+      <canvas id="cvPlot"></canvas>
+    </div>
+    <div class="net-row">
+      <div class="card net-card">
+        <h2>Обзор нейросети</h2>
+        <canvas id="cvNet"></canvas>
+      </div>
+      <div class="card chart-card">
+        <h2>График ума</h2>
+        <canvas id="cvChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="card controls">
+    <h2>Конструктор</h2>
+
+    <div class="ctl">
+      <label>Скрытых слоёв</label>
+      <div class="seg" id="segLayers">
+        <button data-v="1" type="button">1 слой</button>
+        <button data-v="2" type="button">2 слоя</button>
+      </div>
+    </div>
+
+    <div class="ctl">
+      <label>Нейронов в каждом слое</label>
+      <div class="slider-row">
+        <input type="range" id="rngNeurons" min="1" max="12" step="1" value="4">
+        <div class="val" id="valNeurons">4</div>
+      </div>
+    </div>
+
+    <div class="ctl">
+      <label>Скорость обучения</label>
+      <div class="slider-row">
+        <input type="range" id="rngLr" min="5" max="150" step="5" value="50">
+        <div class="val" id="valLr">средне</div>
+      </div>
+    </div>
+
+    <div class="build-state no" id="buildState">Собери сеть по заданию выше</div>
+
+    <div class="passport">
+      <label>Паспорт твоего помощника (как в Мейсто)</label>
+      <div class="avatar-row">
+        <div class="avatar" id="avatarPrev">🤖</div>
+        <div class="seg" id="segAvatar">
+          <button data-v="robot" type="button" class="on">🤖</button>
+          <button data-v="cat" type="button">🐱</button>
+          <button data-v="star" type="button">⭐</button>
+          <button data-v="rocket" type="button">🚀</button>
+        </div>
+      </div>
+      <input type="text" id="pName" maxlength="20" placeholder="Имя помощника">
+      <input type="text" id="pRole" maxlength="30" placeholder="Роль: репетитор, автор идей...">
+      <input type="text" id="pChar" maxlength="30" placeholder="Характер: весёлый, строгий...">
+      <input type="text" id="pKnow" maxlength="40" placeholder="Знания: математика, история...">
+      <input type="text" id="pRules" maxlength="40" placeholder="Правила (инструкции): отвечай коротко, без шуток...">
+      <textarea id="pPrompt" rows="2" maxlength="200" placeholder="Напиши промт: «Ты — мой помощник по учёбе. Объясняй просто...»"></textarea>
+      <button class="mini-btn" id="btnPassport" type="button">Собрать помощника</button>
+      <div class="passport-result" id="passportResult"></div>
+    </div>
+
+    <div class="dot-tools">
+      <label>Свои точки на поле (как в Мейсто)</label>
+      <div class="seg" id="segDotColor">
+        <button data-v="1" type="button" class="on">➕ Оранжевая</button>
+        <button data-v="0" type="button">➕ Синяя</button>
+      </div>
+      <button class="mini-btn" id="btnClearDots" type="button">Очистить свои точки</button>
+      <div class="dot-hint">Кликай по полю — добавишь точку. Тяни точку — передвинешь. Сеть доучится на твоих данных!</div>
+    </div>
+
+    <div class="scratch">
+      <label>Собери программу из блоков (как Scratch), команды на русском</label>
+      <div class="scratch-palette">
+        <div class="sblock s-move" draggable="true">▶ идти вперёд</div>
+        <div class="sblock s-turn" draggable="true">↻ повернуть направо</div>
+        <div class="sblock s-turn" draggable="true">↺ повернуть налево</div>
+        <div class="sblock s-dot"  draggable="true">● поставить точку</div>
+        <div class="sblock s-clear" draggable="true">✦ очистить</div>
+      </div>
+      <div class="scratch-script" id="scratchScript">
+        <div class="scratch-hint">Перетащи блоки сюда — получится программа для рисования по точкам</div>
+      </div>
+      <div class="scratch-actions">
+        <button class="mini-btn" id="btnRunScript" type="button">▶ Запустить программу</button>
+        <button class="mini-btn" id="btnClearScript" type="button">Очистить программу</button>
+      </div>
+      <canvas id="cvScratch" class="scratch-canvas"></canvas>
+    </div>
+
+    <button class="big-btn" id="btnTrain" type="button">УЧИТЬСЯ</button>
+    <button class="mini-btn" id="btnReset" type="button">Сбросить сеть</button>
+
+    <div class="stats">
+      <div class="stat"><b id="stAcc">—</b><span>точность</span></div>
+      <div class="stat"><b id="stEpoch">0</b><span>эпох</span></div>
+      <div class="stat"><b id="stFuel">1500</b><span>топливо</span></div>
+    </div>
+
+    <div class="mascot-wrap">
+      <div class="bubble" id="bubble"></div>
+      <div class="robot">
+        <svg id="robot" width="150" height="80" viewBox="0 0 150 80" aria-hidden="true">
+          <rect x="30" y="26" width="90" height="42" rx="14" fill="#ffffff" stroke="#b9c8ea" stroke-width="2"/>
+          <rect x="42" y="12" width="6" height="14" rx="3" fill="#b9c8ea"/>
+          <circle cx="45" cy="10" r="5" fill="#ff9f43"/>
+          <circle cx="58" cy="42" r="7" fill="#4d7cfe"/>
+          <circle cx="92" cy="42" r="7" fill="#4d7cfe"/>
+          <circle cx="60" cy="42" r="3" fill="#fff"/>
+          <circle cx="94" cy="42" r="3" fill="#fff"/>
+          <path d="M68 56 q7 6 14 0" stroke="#4a5a84" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <rect x="52" y="58" width="46" height="6" rx="3" fill="#b9c8ea"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-back" id="mIntro">
+  <div class="modal">
+    <h2 id="introTitle">Привет! Я твой робот-учитель</h2>
+    <p id="introText">Общая задача: собрать нейросеть из блоков и научить её разделять точки на поле — оранжевые и синие. Смотри задание и цель сборки, собери нужные слои и нейроны, потом жми <b>УЧИТЬСЯ</b>. Обрати внимание, как график ошибки ползёт вниз — это нейросеть умнеет!</p>
+    <div id="quizWrap" style="display:none; text-align:left; margin:12px 0;">
+      <label style="font-size:14px; font-weight:700; color:#3b4a70;">Мини-опрос (как на слайдах):</label>
+      <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+        <label class="quiz-q"><b>1. Чем AI-агент отличается от чат-бота?</b><br>
+          <label><input type="radio" name="q1" value="role"> У него есть роль и цель</label><br>
+          <label><input type="radio" name="q1" value="no"> Ничем</label>
+        </label>
+        <label class="quiz-q"><b>2. Из чего состоит нейросеть?</b><br>
+          <label><input type="radio" name="q2" value="layers"> Из слоёв и нейронов</label><br>
+          <label><input type="radio" name="q2" value="no"> Из букв</label>
+        </label>
+        <label class="quiz-q"><b>3. Что делает «обучение»?</b><br>
+          <label><input type="radio" name="q3" value="weights"> Подкручивает веса, чтобы меньше ошибаться</label><br>
+          <label><input type="radio" name="q3" value="no"> Стирает данные</label>
+        </label>
+      </div>
+      <button class="btn-blue" id="btnQuiz" type="button" style="margin-top:10px; width:100%;">Отправить ответ</button>
+      <div id="quizResult" style="margin-top:8px; font-size:14px; color:#1b8a5a; font-weight:700;"></div>
+    </div>
+    <button class="big-btn" id="btnGo" type="button">Поехали!</button>
+  </div>
+</div>
+
+<div class="modal-back" id="mWin">
+  <div class="modal">
+    <h2 id="winTitle">Отлично пройдено!</h2>
+    <div class="big-stars" id="winStars"></div>
+    <p id="winText"></p>
+    <div class="rowbtns">
+      <button class="gray-btn" id="btnAgain" type="button">Попробовать ещё</button>
+      <button class="btn-blue" id="btnNext" type="button">Дальше</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-back" id="mInfo">
+  <div class="modal">
+    <h2>Как это работает</h2>
+    <div class="info-grid">
+      <div class="info-card">
+        <svg width="36" height="24" viewBox="0 0 36 24"><circle cx="18" cy="12" r="9" fill="#4d7cfe"/><circle cx="18" cy="12" r="3.5" fill="#fff"/></svg>
+        <h4>Нейроны</h4>
+        <p>Крошечные счётные блоки. Каждый складывает числа из своих связей и решает: зажечься или нет.</p>
+      </div>
+      <div class="info-card">
+        <svg width="36" height="24" viewBox="0 0 36 24"><circle cx="8" cy="12" r="5" fill="#2ecc8f"/><circle cx="18" cy="12" r="5" fill="#ff9f43"/><circle cx="28" cy="12" r="5" fill="#845ef7"/></svg>
+        <h4>Слои</h4>
+        <p>Ряды нейронов. Первый слой видит данные, последний — ответ. Остальные слои думают.</p>
+      </div>
+      <div class="info-card">
+        <svg width="36" height="24" viewBox="0 0 36 24"><line x1="6" y1="18" x2="16" y2="6" stroke="#ff9f43" stroke-width="3"/><line x1="6" y1="6" x2="16" y2="18" stroke="#4d7cfe" stroke-width="3"/><circle cx="6" cy="12" r="4" fill="#fff" stroke="#ff9f43" stroke-width="2"/></svg>
+        <h4>Веса</h4>
+        <p>Мастерки связей между нейронами. Обучение по чуть-чуть их подкручивает, чтобы меньше ошибаться.</p>
+      </div>
+      <div class="info-card">
+        <svg width="36" height="24" viewBox="0 0 36 24"><path d="M4 6 L14 10 L24 8 L32 13" stroke="#2ecc8f" stroke-width="3" fill="none"/><path d="M4 16 L32 16" stroke="#c9d3ea" stroke-width="2"/></svg>
+        <h4>Обучение</h4>
+        <p>Нейросеть смотрит на примеры, ошибается и исправляет веса. Ошибка на графике падает — значит, умнеет! Каждый полный проход по всем примерам — это эпоха: смотри счётчик эпох и точность.</p>
+      </div>
+    </div>
+    <div class="credits">
+      <h4>Кто это сделал</h4>
+      <p>Организаторы придумали и собрали <b>ты и я</b> — вместе с <b>MultiTool</b>.</p>
+    </div>
+    <button class="btn-blue" id="btnInfoClose" type="button">Понятно</button>
+  </div>
+</div>
+
+<canvas id="cvConfetti"></canvas>
+<div class="toast" id="toast"></div>
+<div id="errBanner" title="Нажми, чтобы скрыть"></div>
+
+<script>
+'use strict';
+(function(){
+
+/* ================= 0. УТИЛИТЫ ================= */
+const $      = id => document.getElementById(id);
+const clamp  = (v,a,b) => v < a ? a : (v > b ? b : v);
+const fmtPct = v => Math.round(v * 100) + '%';
+
+/* ================= 1. ОШИБКИ ================= */
+const Errors = (() => {
+  let t = 0;
+  function show(msg) {
+    const b = $('errBanner'); if (!b) return;
+    b.textContent = 'Ошибка: ' + msg + '  (нажми, чтобы скрыть)';
+    b.style.display = 'block';
+    clearTimeout(t); t = setTimeout(hide, 8000);
+  }
+  function hide() { const b = $('errBanner'); if (b) b.style.display = 'none'; }
+  function install() {
+    window.addEventListener('error', e => show(e && e.message ? e.message : 'неизвестная'));
+    window.addEventListener('unhandledrejection', e =>
+      show('promise: ' + (e && e.reason ? e.reason : 'неизвестная')));
+    const b = $('errBanner'); if (b) b.addEventListener('click', hide);
+  }
+  return { install, show, hide };
+})();
+
+/* ================= 2. RNG ================= */
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+/* ================= 3. CANVAS ================= */
+const CanvasUtil = {
+  fit(cv) {
+    const dpr = window.devicePixelRatio || 1;
+    const r = cv.getBoundingClientRect();
+    const w = Math.max(10, Math.round(r.width  * dpr));
+    const h = Math.max(10, Math.round(r.height * dpr));
+    if (cv.width !== w)  cv.width  = w;
+    if (cv.height !== h) cv.height = h;
+    cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  },
+  size(cv) { return { w: cv.clientWidth || 300, h: cv.clientHeight || 200 }; }
+};
+
+/* ================= 4. ЗВУК ================= */
+const Sfx = (() => {
+  let ac = null, muted = false;
+  function ensure() {
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) ac = new AC();
+    }
+    return ac;
+  }
+  function beep(freq, dur, type, vol) {
+    if (muted) return;
+    try {
+      const c = ensure(); if (!c) return;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = type || 'sine'; o.frequency.value = freq;
+      g.gain.value = vol || 0.07;
+      o.connect(g); g.connect(c.destination);
+      o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + (dur || 0.1));
+      o.stop(c.currentTime + (dur || 0.1) + 0.02);
+    } catch (e) {}
+  }
+  function toggle() {
+    muted = !muted;
+    $('btnSound').style.opacity = muted ? 0.4 : 1;
+    if (!muted) beep(700, 0.08, 'triangle', 0.08);
+  }
+  return { beep, toggle };
+})();
+
+/* ================= 5. УРОВНИ И ДАННЫЕ ================= */
+/*
+  Каждый уровень: задача + цель сборки (targetCfg) + подсказка.
+  Дети читают задание, собирают сеть в конструкторе под цель,
+  игра проверяет сборку и даёт звезду за верную.
+*/
+const LEVELS = [
+  {
+    name:'Можно и лучше?',
+    desc:'Раздели действия: оранжевые — солнечные, синие — пасмурные. Разделить можно одной линией.',
+    cls:['пасмурный день','солнечный день'],
+    goalLayers:1, goalNeurons:3,
+    hint:'Построй 1 скрытый слой с 3 нейронами, скорость «супер-быстро».',
+    defaultCfg:{layers:1, neurons:3},
+    draw:{ name:'Солнышко', target:[[0.5,0.2],[0.5,0.8],[0.2,0.5],[0.8,0.5],[0.3,0.3],[0.7,0.7],[0.3,0.7],[0.7,0.3]], tol:0.08 },
+    quiz:{ q:'Что делает нейросеть, когда учится?', opts:['Подкручивает веса, чтобы меньше ошибаться','Стирает все данные','Отвечает случайно'], ok:0 },
+    promptHint:'Напиши промт: роль + как отвечать + задача (например: «Ты — репетитор по математике. Объясняй просто, как для 6 класса. Помоги решить уравнение»)'
+  },
+  {
+    name:'Запутанные узоры',
+    desc:'Знаки перемешаны в шахматном порядке — одной линией их не разделить! Нужен скрытый слой побольше.',
+    cls:['узор №1','узор №2'],
+    goalLayers:1, goalNeurons:6,
+    hint:'Собери 1 скрытый слой с 6 нейронами. Линия тут не справится.',
+    defaultCfg:{layers:1, neurons:6},
+    draw:{ name:'Шахматная доска', target:[[0.25,0.25],[0.25,0.75],[0.75,0.25],[0.75,0.75],[0.1,0.5],[0.9,0.5],[0.5,0.1],[0.5,0.9]], tol:0.08 },
+    quiz:{ q:'Почему одну линию не получается провести между узорами?', opts:['Потому что данные перемешаны — нужен скрытый слой','Линия слишком толстая','Нейросеть не умеет рисовать'], ok:0 },
+    promptHint:'Составь промт для помощника, который готовит доклад: роль, стиль, структура, пример вопроса'
+  },
+  {
+    name:'Волшебный круг',
+    desc:'Клад спрятан внутри круга, снаружи — пусто. Нужна сеть, которая умеет видеть круги.',
+    cls:['пусто','клад!'],
+    goalLayers:2, goalNeurons:6,
+    hint:'Собери 2 скрытых слоя по 6 нейронов — такая сеть видит круги.',
+    defaultCfg:{layers:2, neurons:6},
+    draw:{ name:'Круг', target:[[0.5,0.2],[0.5,0.8],[0.2,0.5],[0.8,0.5],[0.29,0.29],[0.71,0.71],[0.29,0.71],[0.71,0.29],[0.35,0.2],[0.65,0.2],[0.35,0.8],[0.65,0.8]], tol:0.08 },
+    quiz:{ q:'Сколько скрытых слоёв нужно, чтобы увидеть круг?', opts:['0 — хватит линии','Достаточно одного слоя с 1 нейроном','Лучше 2 слоя с несколькими нейронами'], ok:2 },
+    promptHint:'Промт для помощника-писателя: роль, жанр, кому адресовано, что на выходе'
+  },
+  {
+    name:'Два острова',
+    desc:'Два острова в океане: на островах — клад, вокруг — вода. Нужно увидеть оба острова сразу.',
+    cls:['вода','клад на острове'],
+    goalLayers:2, goalNeurons:5,
+    hint:'2 скрытых слоя по 5 нейронов — сеть увидит два острова.',
+    defaultCfg:{layers:2, neurons:5},
+    draw:{ name:'Два острова', target:[[0.3,0.35],[0.3,0.6],[0.7,0.4],[0.7,0.65],[0.22,0.5],[0.38,0.5],[0.62,0.5],[0.78,0.5]], tol:0.08 },
+    quiz:{ q:'Что значит «нейросеть обучилась»?', opts:['Она запомнила ответы наизусть','Она нашла правило и разделяет данные с малой ошибкой','Она стала работать быстрее'], ok:1 },
+    promptHint:'Промт для помощника-организатора: роль, как общаться, что составить (план/список)'
+  },
+  {
+    name:'Вертикальные полосы',
+    desc:'Полосы как на флаге: то синяя, то оранжевая. Одна линия не разделит пять полос!',
+    cls:['полоса B','полоса A'],
+    goalLayers:2, goalNeurons:6,
+    hint:'2 скрытых слоя по 6 нейронов — сеть разделит полосы.',
+    defaultCfg:{layers:2, neurons:6},
+    draw:{ name:'Полосатый флаг', target:[[0.15,0.2],[0.15,0.8],[0.5,0.2],[0.5,0.8],[0.85,0.2],[0.85,0.8],[0.3,0.4],[0.3,0.6],[0.7,0.4],[0.7,0.6]], tol:0.08 },
+    quiz:{ q:'Что такое «эпоха» в обучении?', opts:['Один полный проход по всем примерам','Один год обучения','Один нейрон'], ok:0 },
+    promptHint:'Промт для помощника-художника: роль, стиль, тема, формат ответа'
+  },
+  {
+    name:'Кольцо',
+    desc:'Сокровище спрятано в кольце: внутри пусто, снаружи пусто, только само кольцо — клад.',
+    cls:['пусто','кольцо-клад'],
+    goalLayers:2, goalNeurons:6,
+    hint:'2 скрытых слоя по 6 нейронов — сеть увидит кольцо.',
+    defaultCfg:{layers:2, neurons:6},
+    draw:{ name:'Кольцо', target:[[0.5,0.15],[0.5,0.85],[0.15,0.5],[0.85,0.5],[0.25,0.25],[0.75,0.75],[0.25,0.75],[0.75,0.25],[0.35,0.15],[0.65,0.15],[0.35,0.85],[0.65,0.85]], tol:0.08 },
+    quiz:{ q:'Зачем нужен скрытый слой?', opts:['Для красоты','Он помогает сети находить сложные закономерности','Он хранит пароль'], ok:1 },
+    promptHint:'Промт для помощника-учителя: роль, предмет, как объяснять, что проверить'
+  },
+  {
+    name:'Спираль',
+    desc:'Запутанная спираль: оранжевые витки перемешаны с синими. Нужна очень умная сеть!',
+    cls:['виток B','виток A'],
+    goalLayers:2, goalNeurons:8,
+    hint:'2 скрытых слоя по 8 нейронов и скорость «средне». Запасись терпением!',
+    defaultCfg:{layers:2, neurons:8},
+    draw:{ name:'Спираль', target:[[0.5,0.5],[0.5,0.3],[0.7,0.5],[0.5,0.7],[0.3,0.5],[0.45,0.45],[0.55,0.55],[0.45,0.55],[0.55,0.45]], tol:0.08 },
+    quiz:{ q:'Что будет, если скорость обучения слишком большая?', opts:['Сеть научится мгновенно','График будет прыгать, обучение может сломаться','Ничего не изменится'], ok:1 },
+    promptHint:'Промт для вдохновения: роль, жанр, настроение, 3 идеи на выход'
+  },
+  {
+    name:'Диагональные полосы',
+    desc:'Полосы по диагонали, как на зебре. Финальный уровень — собери самую мощную сеть!',
+    cls:['полоса B','полоса A'],
+    goalLayers:2, goalNeurons:8,
+    hint:'2 скрытых слоя по 8 нейронов — диагональные полосы разделятся.',
+    defaultCfg:{layers:2, neurons:8},
+    draw:{ name:'Зебра', target:[[0.2,0.8],[0.35,0.65],[0.5,0.5],[0.65,0.35],[0.8,0.2],[0.35,0.8],[0.5,0.65],[0.65,0.5],[0.8,0.35]], tol:0.08 },
+    quiz:{ q:'AI-агент — это...', opts:['Просто чат-бот, который отвечает всем одинаково','Умный помощник с ролью, инструкциями и целью','Только текстовая программа'], ok:1 },
+    promptHint:'Собери полный промт для своего помощника из Мейсто: имя, роль, характер, задача, пример вопроса'
+  }
+];
+
+function makeData(level, rng) {
+  const N = 120, pts = [];
+  for (let i = 0; i < N; i++) {
+    const x = rng(), y = rng();
+    let label;
+    if (level === 0)      label = (y > 0.28 * x + 0.18) ? 1 : 0;
+    else if (level === 1) label = ((x > 0.5) === (y > 0.5)) ? 1 : 0;
+    else if (level === 2) {
+      const dx = x - 0.5, dy = y - 0.5;
+      label = (Math.sqrt(dx*dx + dy*dy) > 0.22) ? 0 : 1;
+    }
+    else if (level === 3) {
+      // два острова
+      const d1 = Math.sqrt((x-0.3)*(x-0.3) + (y-0.55)*(y-0.55));
+      const d2 = Math.sqrt((x-0.7)*(x-0.7) + (y-0.45)*(y-0.45));
+      label = (d1 < 0.18 || d2 < 0.18) ? 1 : 0;
+    }
+    else if (level === 4) {
+      // вертикальные полосы: 0.2-0.4 синяя, 0.6-0.8 оранжевая
+      const inA = (x > 0.15 && x < 0.4);
+      const inB = (x > 0.6 && x < 0.85);
+      label = (inA || inB) ? 1 : 0;
+    }
+    else if (level === 5) {
+      // кольцо: 0.18 < r < 0.34
+      const dx = x - 0.5, dy = y - 0.5;
+      const r = Math.sqrt(dx*dx + dy*dy);
+      label = (r > 0.18 && r < 0.34) ? 1 : 0;
+    }
+    else if (level === 6) {
+      // спираль: угол + радиус
+      const dx = x - 0.5, dy = y - 0.5;
+      const ang = Math.atan2(dy, dx);
+      const r = Math.sqrt(dx*dx + dy*dy);
+      label = ((ang + r * 9) % (2 * Math.PI)) > Math.PI ? 1 : 0;
+    }
+    else {
+      // диагональные полосы: чередующиеся диагональные ленты
+      label = (Math.floor((x + y) * 3) % 2 === 0) ? 1 : 0;
+    }
+    pts.push({ x, y, label });
+  }
+  // гарантируем, что оба класса представлены
+  const has0 = pts.some(p => p.label === 0), has1 = pts.some(p => p.label === 1);
+  if (!has0 || !has1) { pts[0].label = 0; pts[1].label = 1; }
+  return pts;
+}
+
+/* ================= 6. НЕЙРОСЕТЬ ================= */
+const sigmoid = x => 1 / (1 + Math.exp(-x));
+
+function NeuralNet(sizes) {
+  this.sizes = sizes;
+  this.lr = 0.5;
+  this.W = []; this.B = []; this.acts = []; this.zs = [];
+  this._initWeights();
+}
+NeuralNet.prototype._initWeights = function () {
+  this.W = []; this.B = [];
+  for (let l = 0; l < this.sizes.length - 1; l++) {
+    const a = this.sizes[l], b = this.sizes[l + 1];
+    const scale = Math.sqrt(1 / a);
+    const Wl = [], Bl = [];
+    for (let j = 0; j < b; j++) {
+      const row = [];
+      for (let k = 0; k < a; k++) row.push((Math.random() * 2 - 1) * scale);
+      Wl.push(row); Bl.push(0);
+    }
+    this.W.push(Wl); this.B.push(Bl);
+  }
+};
+NeuralNet.prototype.forward = function (x) {
+  let act = x.slice();
+  this.zs = []; this.acts = [act];
+  for (let l = 0; l < this.W.length; l++) {
+    const w = this.W[l], b = this.B[l], z = [];
+    for (let j = 0; j < w.length; j++) {
+      let s = b[j];
+      for (let k = 0; k < w[j].length; k++) s += w[j][k] * act[k];
+      z.push(s);
+    }
+    this.zs.push(z);
+    act = z.map(sigmoid);
+    this.acts.push(act);
+  }
+  return act[0];
+};
+NeuralNet.prototype.backprop = function (x, y) {
+  this.forward(x);
+  const last = this.acts[this.acts.length - 1];
+  let delta = last.map(o => o - y);
+  const dW = [], dB = [];
+  for (let l = this.W.length - 1; l >= 0; l--) {
+    const aPrev = this.acts[l];
+    const dw = this.W[l].map((row, j) => row.map((_, k) => delta[j] * aPrev[k]));
+    dW.unshift(dw); dB.unshift(delta.slice());
+    if (l > 0) {
+      const aL = this.acts[l], next = this.W[l];
+      const daPrev = new Array(aPrev.length).fill(0);
+      for (let j = 0; j < next.length; j++)
+        for (let k = 0; k < next[j].length; k++)
+          daPrev[k] += next[j][k] * delta[j];
+      delta = daPrev.map((d, k) => d * aL[k] * (1 - aL[k]));
+    }
+  }
+  for (let l = 0; l < this.W.length; l++) {
+    for (let j = 0; j < this.W[l].length; j++) {
+      for (let k = 0; k < this.W[l][j].length; k++)
+        this.W[l][j][k] -= this.lr * dW[l][j][k];
+      this.B[l][j] -= this.lr * dB[l][j];
+    }
+  }
+};
+
+/* ================= 7. ГЕОМЕТРИЯ СЕТКИ ================= */
+function computeNetLayout(w, h, sizes) {
+  const pad = 36, n = sizes.length;
+  const xs = [], ys = [];
+  for (let i = 0; i < n; i++) {
+    xs.push(pad + (w - 2 * pad) * (n === 1 ? 0.5 : i / (n - 1)));
+    const m   = sizes[i];
+    const gap = Math.min(30, (h - 56) / m);
+    const r   = Math.min(13, gap * 0.42);
+    const cy  = h / 2 + (m - 1) * gap / 2;
+    const row = [];
+    for (let k = 0; k < m; k++) row.push({ y: cy - k * gap, r });
+    ys.push(row);
+  }
+  return { xs, ys };
+}
+
+/* ================= 8. СОСТОЯНИЕ ================= */
+const CFG = { layers: 1, neurons: 4, lr: 0.5, dotColor: 1 };
+const S = {
+  level: 0, net: null, data: [], running: false,
+  epochs: 0, lossHist: [], acc: 0, lastLoss: 0.7,
+  budget: 1500, budgetLeft: 1500,
+  bestAcc: [0,0,0,0,0,0,0,0],
+  pulses: [], flashes: {}, layoutCache: null,
+  customDots: [], dragging: null,
+  avatar: 'robot',
+  done: { net:[], draw:[], quiz:[], prompt:[] },
+  drawDots: [],
+  currentTab: 'net'
+};
+const Rng = mulberry32(20260921);
+
+/* ================= 9. КАНВАСЫ И КОНТЕКСТЫ ================= */
+const CV = {
+  plot: $('cvPlot'), net: $('cvNet'),
+  chart: $('cvChart'), confetti: $('cvConfetti'),
+  scratch: $('cvScratch'), draw: $('cvDraw')
+};
+const Ctx = {
+  plot:  CV.plot.getContext('2d'),
+  net:   CV.net.getContext('2d'),
+  chart: CV.chart.getContext('2d'),
+  scratch: CV.scratch.getContext('2d'),
+  draw: CV.draw.getContext('2d')
+};
+
+/* ================= 10. ОТРИСОВКА СЕТИ ================= */
+function redrawNet(dt) {
+  const { w, h } = CanvasUtil.size(CV.net);
+  const ctx = Ctx.net;
+  ctx.clearRect(0, 0, w, h);
+  if (!S.net || !S.layoutCache) return;
+
+  const { xs, ys } = S.layoutCache;
+  drawNetWeights(ctx, xs, ys);
+  updatePulses(dt);
+  drawNetPulses(ctx);
+  drawNetNodes(ctx, xs, ys);
+  drawNetLabels(ctx, xs, ys);
+}
+function drawNetWeights(ctx, xs, ys) {
+  let maxW = 1e-6;
+  const net = S.net;
+  for (let l = 0; l < net.W.length; l++)
+    for (let j = 0; j < net.W[l].length; j++)
+      for (let k = 0; k < net.W[l][j].length; k++)
+        maxW = Math.max(maxW, Math.abs(net.W[l][j][k]));
+  ctx.lineWidth = 1.4;
+  for (let l = 0; l < net.W.length; l++)
+    for (let j = 0; j < net.W[l].length; j++)
+      for (let k = 0; k < net.W[l][j].length; k++) {
+        const w = Math.abs(net.W[l][j][k]) / maxW;
+        ctx.strokeStyle = 'rgba(154,167,200,' + (0.12 + w * 0.5).toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.moveTo(xs[l], ys[l][k].y);
+        ctx.lineTo(xs[l + 1], ys[l + 1][j].y);
+        ctx.stroke();
+      }
+}
+function updatePulses(dt) {
+  const alive = [];
+  for (const p of S.pulses) {
+    p.t += dt;
+    if (p.t < p.dur) alive.push(p);
+    else S.flashes[p.l + '_' + p.j] = performance.now() / 1000;
+  }
+  S.pulses = alive;
+}
+function drawNetPulses(ctx) {
+  for (const p of S.pulses) {
+    const pr = clamp(p.t / p.dur, 0, 1);
+    const px = p.fx + (p.tx - p.fx) * pr;
+    const py = p.fy + (p.ty - p.fy) * pr;
+    ctx.fillStyle = 'rgba(245,179,1,' + (1 - pr).toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 6.283); ctx.fill();
+  }
+}
+function drawNetNodes(ctx, xs, ys) {
+  const net = S.net, now = performance.now() / 1000;
+  for (let l = 0; l < ys.length; l++) {
+    const acts = net.acts ? net.acts[l] : null;
+    for (let k = 0; k < ys[l].length; k++) {
+      const node = ys[l][k];
+      const act  = acts ? acts[k] : 0.5;
+      ctx.fillStyle = 'rgb(' + (96 + Math.round(act * 159)) + ','
+                             + (124 + Math.round(act * 55))  + ',254)';
+      ctx.beginPath(); ctx.arc(xs[l], node.y, node.r, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      const key = l + '_' + k;
+      if (S.flashes[key] && (now - S.flashes[key]) < 0.4) {
+        const fa = 1 - (now - S.flashes[key]) / 0.4;
+        ctx.strokeStyle = 'rgba(245,179,1,' + (fa * 0.9).toFixed(3) + ')';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(xs[l], node.y, node.r + 3.5, 0, 6.283); ctx.stroke();
+      }
+    }
+  }
+}
+function drawNetLabels(ctx, xs, ys) {
+  ctx.fillStyle = '#8a97ba'; ctx.font = '11px Verdana'; ctx.textAlign = 'center';
+  if (ys[0].length === 2) {
+    ctx.fillText('x1', xs[0], ys[0][1].y - ys[0][1].r - 5);
+    ctx.fillText('x2', xs[0], ys[0][0].y - ys[0][0].r - 5);
+  }
+  const last = ys.length - 1;
+  ctx.fillText('ответ', xs[last], ys[last][0].y - ys[last][0].r - 5);
+}
+
+/* ================= 11. ОТРИСОВКА ПОЛЯ ================= */
+function redrawPlot() {
+  const { w, h } = CanvasUtil.size(CV.plot);
+  const ctx = Ctx.plot;
+  ctx.clearRect(0, 0, w, h);
+  if (!S.net) return;
+
+  const GRID = 22, cw = w / GRID, ch = h / GRID;
+  for (let gx = 0; gx < GRID; gx++)
+    for (let gy = 0; gy < GRID; gy++) {
+      const u = (gx + 0.5) / GRID, v = (gy + 0.5) / GRID;
+      const o = S.net.forward([u, v]);
+      const r = Math.round(77  + o * 178);
+      const g = Math.round(124 + (1 - o) * 31);
+      const b = Math.round(254 - (1 - o) * 155);
+      ctx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',0.30)';
+      ctx.fillRect(gx * cw, gy * ch, cw + 1, ch + 1);
+    }
+  for (const p of S.data) {
+    ctx.fillStyle = p.label === 1 ? '#ff9f43' : '#4d7cfe';
+    ctx.beginPath(); ctx.arc(p.x * w, p.y * h, 4.5, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+  for (const p of S.customDots) {
+    ctx.fillStyle = p.label === 1 ? '#ff9f43' : '#4d7cfe';
+    ctx.beginPath(); ctx.arc(p.x * w, p.y * h, 7, 0, 6.283); ctx.fill();
+    ctx.strokeStyle = '#1e2a4a'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+  }
+}
+
+/* ================= 12. ГРАФИК ОШИБКИ ================= */
+function redrawChart() {
+  const { w, h } = CanvasUtil.size(CV.chart);
+  const ctx = Ctx.chart;
+  ctx.clearRect(0, 0, w, h);
+  drawChartGrid(ctx, w, h);
+  if (S.lossHist.length < 2) { drawChartEmpty(ctx, w, h); return; }
+  drawChartLine(ctx, w, h);
+  drawChartLabels(ctx, w, h);
+}
+function drawChartGrid(ctx, w, h) {
+  ctx.strokeStyle = '#d3ddf2'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  ctx.font = '10px Verdana'; ctx.textAlign = 'left'; ctx.fillStyle = '#aab6d4';
+  const lmin = Math.log10(1e-4), lmax = Math.log10(1);
+  const marks = [1, 0.1, 0.01, 0.001];
+  for (const m of marks) {
+    const lv = Math.log10(m);
+    const yy = h - (lv - lmin) / (lmax - lmin) * h;
+    ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(w, yy); ctx.stroke();
+    ctx.fillText(String(m), 3, yy - 3);
+  }
+  ctx.setLineDash([]);
+}
+function drawChartEmpty(ctx, w, h) {
+  ctx.fillStyle = '#aab6d4'; ctx.font = '13px Verdana'; ctx.textAlign = 'center';
+  ctx.fillText('нажми УЧИТЬСЯ — и смотри,', w/2, h/2 - 6);
+  ctx.fillText('как линия ошибки ползёт вниз', w/2, h/2 + 12);
+}
+function drawChartLine(ctx, w, h) {
+  const hist = S.lossHist;
+  const lmin = Math.log10(1e-4), lmax = Math.log10(1);
+  const span = lmax - lmin;
+  const draw = hist.length > 220 ? downsample(hist, 220) : hist;
+  ctx.beginPath();
+  for (let i = 0; i < draw.length; i++) {
+    const xx = (i / (draw.length - 1)) * w;
+    const v = Math.min(1, Math.max(draw[i], 1e-4));
+    const lv = Math.log10(v);
+    const yy = h - (lv - lmin) / span * h;
+    if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+  }
+  ctx.strokeStyle = '#2ecc8f'; ctx.lineWidth = 2.6; ctx.lineJoin = 'round';
+  ctx.stroke();
+}
+function downsample(arr, target) {
+  const step = arr.length / target, out = [];
+  for (let i = 0; i < target; i++) out.push(arr[Math.floor(i * step)]);
+  return out;
+}
+function drawChartLabels(ctx, w, h) {
+  ctx.fillStyle = '#7a88ad'; ctx.font = '12px Verdana';
+  ctx.textAlign = 'left';
+  ctx.fillText('ошибка: ' + S.lastLoss.toFixed(4), 6, 16);
+  ctx.fillText('эпоха ' + S.epochs, 6, h - 10);
+  ctx.textAlign = 'right';
+  ctx.fillText('лог-шкала: ошибка падает = умнеет', w - 6, h - 10);
+}
+
+/* ================= 13. КОНФЕТТИ ================= */
+function burstConfetti(durationMs) {
+  const cv = CV.confetti, ctx = cv.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  cv.width  = window.innerWidth  * dpr;
+  cv.height = window.innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cv.classList.add('on');
+
+  const colors = ['#4d7cfe','#2ecc8f','#ff9f43','#845ef7','#f5b301','#ff6b6b'];
+  const parts = [];
+  for (let i = 0; i < 130; i++) {
+    parts.push({
+      x: Math.random() * window.innerWidth,
+      y: -20 - Math.random() * window.innerHeight * 0.4,
+      vx: (Math.random() - 0.5) * 2,
+      vy: 2 + Math.random() * 3.5,
+      w: 5 + Math.random() * 5, h: 8 + Math.random() * 7,
+      rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.25,
+      c: colors[Math.floor(Math.random() * colors.length)]
+    });
+  }
+  const t0 = performance.now();
+  (function anim() {
+    const el = performance.now() - t0;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (const p of parts) {
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.c;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (el < durationMs) requestAnimationFrame(anim);
+    else {
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      cv.classList.remove('on');
+    }
+  })();
+}
+
+/* ================= 14. HUD ================= */
+const Hud = (() => {
+  let pillsKey = '';
+
+  function buildOk() {
+    const L = LEVELS[S.level];
+    return CFG.layers === L.goalLayers && CFG.neurons === L.goalNeurons;
+  }
+
+  function starsFor(lv) {
+    const a = S.bestAcc[lv];
+    return a >= 0.93 ? 3 : a >= 0.8 ? 2 : a >= 0.6 ? 1 : 0;
+  }
+
+  function updateStats() {
+    $('stAcc').textContent   = S.acc ? fmtPct(S.acc) : '—';
+    $('stEpoch').textContent = S.epochs;
+    $('stFuel').textContent  = S.budgetLeft;
+
+    const g = $('buildState');
+    if (buildOk()) {
+      g.textContent = 'Собрано верно! Жми УЧИТЬСЯ';
+      g.className = 'build-state ok';
+    } else {
+      const L = LEVELS[S.level];
+      g.textContent = 'Собери: ' + L.goalLayers + (L.goalLayers === 1 ? ' слой' : ' слоя') +
+        ', ' + L.goalNeurons + ' нейронов';
+      g.className = 'build-state no';
+    }
+
+    const key = S.done.net.join('|') + S.done.draw.join('|') + S.done.quiz.join('|') + S.done.prompt.join('|') + '/' + S.level + '/' + S.acc;
+    if (key !== pillsKey) { renderPills(); pillsKey = key; }
+  }
+
+  function renderPills() {
+    const host = $('pills');
+    let html = '';
+    for (let i = 0; i < LEVELS.length; i++) {
+      const d = Tasks.allDone(i);
+      let st = '';
+      if (d) st = '<span class="st">★</span>';
+      else {
+        st = '<span class="st off">★</span>';
+      }
+      html += '<div class="pill' + (i === S.level ? ' active' : '') +
+              '" data-lv="' + i + '">' + (i + 1) + st + '</div>';
+    }
+    host.innerHTML = html;
+    host.querySelectorAll('.pill').forEach(el =>
+      el.addEventListener('click', () =>
+        Levels.load(parseInt(el.getAttribute('data-lv'), 10))));
+  }
+
+  function updateTrainButton() {
+    const b = $('btnTrain');
+    b.textContent = S.running ? 'ОСТАНОВИТЬ' : 'УЧИТЬСЯ';
+    b.classList.toggle('running', S.running);
+    b.disabled = !buildOk();
+    b.style.opacity = buildOk() ? 1 : 0.5;
+    b.style.cursor  = buildOk() ? 'pointer' : 'not-allowed';
+  }
+
+  function updateLrLabel() {
+    const v = CFG.lr;
+    $('valLr').textContent = v < 0.2 ? 'медленно' : v < 0.8 ? 'средне' : 'супер-быстро';
+  }
+
+  function updateLayersSegment() {
+    document.querySelectorAll('#segLayers button').forEach(btn =>
+      btn.classList.toggle('on',
+        parseInt(btn.getAttribute('data-v'), 10) === CFG.layers));
+  }
+
+  return { buildOk, updateStats, renderPills, updateTrainButton,
+           updateLrLabel, updateLayersSegment, starsFor };
+})();
+
+/* ================= 15. UI ================= */
+const Ui = (() => {
+  let tT = 0, sT = 0;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(tT);
+    tT = setTimeout(() => t.classList.remove('show'), 3600);
+  }
+  function say(msg) {
+    const b = $('bubble');
+    b.textContent = msg; b.classList.add('show');
+    clearTimeout(sT);
+    sT = setTimeout(() => b.classList.remove('show'), 5000);
+  }
+  function open(id)  { $(id).classList.add('show'); }
+  function close(id) { $(id).classList.remove('show'); }
+  return { toast, say, open, close };
+})();
+
+/* ================= 16. ТРЕНЕР ================= */
+const Trainer = (() => {
+
+  function shuffledIndices(n) {
+    const a = new Array(n);
+    for (let i = 0; i < n; i++) a[i] = i;
+    for (let j = n - 1; j > 0; j--) {
+      const k = Math.floor(Math.random() * (j + 1));
+      const t = a[j]; a[j] = a[k]; a[k] = t;
+    }
+    return a;
+  }
+
+  function build() {
+    const sizes = [2];
+    for (let i = 0; i < CFG.layers; i++) sizes.push(CFG.neurons);
+    sizes.push(1);
+    S.net        = new NeuralNet(sizes);
+    S.net.lr     = CFG.lr;
+    S.epochs     = 0;
+    S.lossHist   = [];
+    S.budgetLeft = S.budget;
+    S.pulses     = [];
+    S.running    = false;
+    S.acc        = 0;
+    Hud.updateTrainButton();
+    if (S.data.length) S.net.forward([S.data[0].x, S.data[0].y]);
+    S.layoutCache = computeNetLayout(
+      CanvasUtil.size(CV.net).w,
+      CanvasUtil.size(CV.net).h,
+      S.net.sizes
+    );
+  }
+
+  function allData() {
+    return S.customDots.length ? S.data.concat(S.customDots) : S.data;
+  }
+
+  function computeAccuracy() {
+    const data = allData();
+    let ok = 0;
+    for (const p of data) {
+      const o = S.net.forward([p.x, p.y]);
+      if ((o > 0.5 ? 1 : 0) === p.label) ok++;
+    }
+    S.acc = ok / data.length;
+  }
+
+  function runOneEpoch() {
+    const data = allData();
+    const idx = shuffledIndices(data.length);
+    let sum = 0;
+    for (const i of idx) {
+      const p = data[i];
+      S.net.backprop([p.x, p.y], p.label);
+      const o = S.net.acts[S.net.acts.length - 1][0];
+      sum += -(p.label * Math.log(o + 1e-9) + (1 - p.label) * Math.log(1 - o + 1e-9));
+    }
+    const L = sum / idx.length;
+    if (!isFinite(L) || isNaN(L)) {
+      Ui.toast('Ошибка обучения — сбавил скорость и пересобрал сеть.');
+      CFG.lr = Math.min(CFG.lr, 0.3);
+      $('rngLr').value = Math.round(CFG.lr * 100);
+      Hud.updateLrLabel();
+      build();
+      return;
+    }
+    S.epochs++;
+    S.lastLoss = L;
+    S.lossHist.push(L);
+    if (S.lossHist.length > 600) S.lossHist = downsample(S.lossHist, 300);
+  }
+
+  function start() {
+    if (S.running) { stop('Пауза. Жми УЧИТЬСЯ, чтобы продолжить.'); return; }
+    if (!Hud.buildOk()) {
+      Ui.toast('Сначала собери сеть по заданию!');
+      return;
+    }
+    if (S.budgetLeft <= 0) {
+      S.budgetLeft = S.budget;
+      Ui.toast('Заправились! Ещё ' + S.budget + ' эпох топлива.');
+    }
+    if (S.net && CFG.lr > 1.05)
+      Ui.say('Ого, скорость большая! Смотри, график прыгает.');
+    S.running = true;
+    Hud.updateTrainButton();
+    Sfx.beep(440, 0.1, 'triangle', 0.08);
+  }
+
+  function stop(msg) {
+    S.running = false;
+    Hud.updateTrainButton();
+    if (msg) Ui.say(msg);
+    Hud.updateStats();
+  }
+
+  function checkWin() {
+    computeAccuracy();
+    const lv = S.level;
+    if (S.acc > S.bestAcc[lv]) S.bestAcc[lv] = S.acc;
+
+    if (Hud.buildOk() && S.acc >= 0.93 && !S.done.net[lv]) {
+      S.done.net[lv] = true;
+      Tasks.updateProgress();
+      Tasks.applyDone(lv);
+      Ui.toast('Задание 1 готово: сеть собрана и обучена! Осталось ' +
+        ((S.done.draw[lv]?0:1)+(S.done.quiz[lv]?0:1)+(S.done.prompt[lv]?0:1)) + ' задания.');
+      Sfx.beep(659, 0.15, 'triangle', 0.1);
+      Tasks.maybeWin();
+      return;
+    }
+    Hud.updateStats();
+  }
+
+  function buildCelebrate() {
+    Sfx.beep(523, 0.18, 'triangle', 0.1);
+    setTimeout(() => Sfx.beep(659, 0.18, 'triangle', 0.1), 110);
+    setTimeout(() => Sfx.beep(784, 0.18, 'triangle', 0.1), 220);
+    setTimeout(() => Sfx.beep(1046, 0.25, 'triangle', 0.12), 330);
+
+    const lv = S.level, st = Hud.starsFor(lv);
+    $('winTitle').textContent = 'Верная сборка! Звезда твоя!';
+    let html = '';
+    for (let i = 0; i < 3; i++)
+      html += '<span class="' + (i < st ? '' : 'dim') + '">★</span>';
+    $('winStars').innerHTML = html;
+    $('winText').textContent = 'Ты собрал ' + LEVELS[lv].name +
+      ' (слой x' + CFG.layers + ', ' + CFG.neurons + ' нейронов) и точность ' +
+      fmtPct(S.acc) + '!';
+
+    Ui.open('mWin');
+    burstConfetti(3200);
+  }
+
+  function accCelebrate() {
+    const lv = S.level, st = Hud.starsFor(lv);
+    $('winTitle').textContent = 'Отлично пройдено!';
+    let html = '';
+    for (let i = 0; i < 3; i++)
+      html += '<span class="' + (i < st ? '' : 'dim') + '">★</span>';
+    $('winStars').innerHTML = html;
+    $('winText').textContent = 'Точность ' + fmtPct(S.acc) +
+      '! Нейросеть научилась: ' + LEVELS[lv].name;
+    Ui.open('mWin');
+    burstConfetti(3200);
+  }
+
+  return { build, computeAccuracy, runOneEpoch, start, stop, checkWin };
+})();
+
+/* ================= 16.5 ЗАДАНИЯ УРОВНЯ (табы: Сеть/Рисунок/Тест/Промт) ================= */
+const Tasks = (() => {
+
+  function tab(name) {
+    S.currentTab = name;
+    document.querySelectorAll('#taskTabs button').forEach(b =>
+      b.classList.toggle('on', b.getAttribute('data-tab') === name));
+    ['net','draw','quiz','prompt'].forEach(t =>
+      $('tab' + t.charAt(0).toUpperCase() + t.slice(1)).style.display =
+        (t === name) ? 'flex' : 'none');
+    if (name === 'draw' && CV.draw) {
+      CanvasUtil.fit(CV.draw);
+      renderDrawTarget(S.level);
+    }
+  }
+
+  function reset(lv) {
+    S.done.net[lv] = false; S.done.draw[lv] = false;
+    S.done.quiz[lv] = false; S.done.prompt[lv] = false;
+    S.drawDots = [];
+    if (CV.draw) { const ctx = Ctx.draw; ctx.clearRect(0,0,CV.draw.width||300,CV.draw.height||190); }
+    if ($('quizFeed')) { $('quizFeed').textContent = ''; $('quizFeed').className = 'quiz-feed'; }
+    if ($('quizOpts')) $('quizOpts').innerHTML = '';
+    if ($('promptInput')) $('promptInput').value = '';
+    if ($('promptFeed')) { $('promptFeed').textContent = ''; $('promptFeed').className = 'quiz-feed'; }
+    tab('net');
+    renderLevel(lv);
+    updateProgress();
+  }
+
+  function renderLevel(lv) {
+    const L = LEVELS[lv];
+    // Сеть
+    $('taskTitle').textContent = 'Уровень ' + (lv + 1) + '. ' + L.name;
+    $('taskDesc').textContent = L.desc;
+    $('taskGoal').innerHTML =
+      '<b>Цель сборки:</b> ' + L.goalLayers + (L.goalLayers === 1 ? ' скрытый слой' : ' скрытых слоя') +
+      ' и ' + L.goalNeurons + ' нейронов в каждом';
+    $('legend').innerHTML =
+      '<div class="li"><span class="dot" style="background:#ff9f43"></span>' +
+      L.cls[1] + '</div>' +
+      '<div class="li"><span class="dot" style="background:#4d7cfe"></span>' +
+      L.cls[0] + '</div>';
+    // Рисунок
+    if (L.draw) {
+      $('drawDesc').textContent = 'Нарисуй «' + L.draw.name + '» по точкам: кликай по полю, чтобы поставить точки-' +
+        'пиксели так, чтобы получилась фигура из задания. ' + L.draw.target.length + ' точек-подсказок покажем пунктиром.';
+      $('drawGoal').innerHTML = '<b>Что нарисовать:</b> ' + L.draw.name;
+      renderDrawTarget(lv);
+    }
+    // Тест
+    if (L.quiz) {
+      $('quizQ').textContent = L.quiz.q;
+      $('quizOpts').innerHTML = '';
+      L.quiz.opts.forEach((o, i) => {
+        const lab = document.createElement('label');
+        lab.innerHTML = '<input type="radio" name="quizLvl" value="' + i + '"> ' + o;
+        $('quizOpts').appendChild(lab);
+      });
+    }
+    // Промт
+    if (L.promptHint) {
+      $('promptDesc').textContent = L.promptHint;
+    }
+    applyDone(lv);
+    updateProgress();
+  }
+
+  function drawTarget(lv) {
+    return LEVELS[lv].draw ? LEVELS[lv].draw.target : [];
+  }
+
+  function renderDrawTarget(lv) {
+    const cv = CV.draw, ctx = Ctx.draw;
+    const w = cv.clientWidth || 300, h = cv.clientHeight || 190;
+    cv.width = w; cv.height = h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#fbfdff'; ctx.fillRect(0, 0, w, h);
+    // сетка
+    ctx.strokeStyle = '#e8eef8'; ctx.lineWidth = 1;
+    for (let i = 1; i < 10; i++) {
+      ctx.beginPath(); ctx.moveTo(i * w / 10, 0); ctx.lineTo(i * w / 10, h); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i * h / 10); ctx.lineTo(w, i * h / 10); ctx.stroke();
+    }
+    // подсказки пунктиром
+    const L = LEVELS[lv];
+    if (L.draw) {
+      ctx.strokeStyle = '#b9c8ea'; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
+      L.draw.target.forEach((t, i) => {
+        if (i > 0) {
+          const p = L.draw.target[i-1];
+          ctx.beginPath(); ctx.moveTo(p[0]*w, p[1]*h); ctx.lineTo(t[0]*w, t[1]*h); ctx.stroke();
+        }
+      });
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#c9d3ea';
+      L.draw.target.forEach(t => {
+        ctx.beginPath(); ctx.arc(t[0]*w, t[1]*h, 4, 0, 6.283); ctx.fill();
+      });
+    }
+    // свои точки
+    ctx.fillStyle = '#1e2a4a';
+    S.drawDots.forEach(d => {
+      ctx.beginPath(); ctx.arc(d.x*w, d.y*h, 6, 0, 6.283); ctx.fill();
+    });
+  }
+
+  function drawAdd(x, y) {
+    if (S.drawDots.length >= 60) { Ui.toast('Максимум 60 точек.'); return; }
+    S.drawDots.push({ x, y });
+    drawPoints();
+  }
+
+  function drawPoints() {
+    const cv = CV.draw, ctx = Ctx.draw;
+    const w = cv.clientWidth || 300, h = cv.clientHeight || 190;
+    renderDrawTarget(S.level);
+  }
+
+  function checkDraw() {
+    const L = LEVELS[S.level];
+    if (!L.draw) return;
+    if (S.drawDots.length < 3) {
+      Ui.toast('Поставь хотя бы 3 точки!');
+      return;
+    }
+    let matched = 0;
+    L.draw.target.forEach(t => {
+      for (const d of S.drawDots) {
+        if (Math.abs(d.x - t[0]) <= L.draw.tol && Math.abs(d.y - t[1]) <= L.draw.tol) { matched++; break; }
+      }
+    });
+    const total = L.draw.target.length;
+    const ratio = matched / total;
+    if (ratio >= 0.75) {
+      S.done.draw[S.level] = true;
+      applyDone(S.level);
+      updateProgress();
+      Sfx.beep(659, 0.15, 'triangle', 0.1);
+      Ui.say('Отлично! Ты нарисовал «' + L.draw.name + '» по точкам!');
+      maybeWin();
+    } else {
+      Ui.toast('Пока совпало ' + matched + ' из ' + total + ' точек. Подвигай точки ближе к подсказкам.');
+    }
+  }
+
+  function checkQuiz() {
+    const L = LEVELS[S.level];
+    if (!L.quiz) return;
+    const sel = document.querySelector('input[name="quizLvl"]:checked');
+    if (!sel) { Ui.toast('Выбери ответ!'); return; }
+    const val = parseInt(sel.value, 10);
+    const feed = $('quizFeed');
+    if (val === L.quiz.ok) {
+      S.done.quiz[S.level] = true;
+      feed.textContent = 'Верно!';
+      feed.className = 'quiz-feed ok';
+      applyDone(S.level); updateProgress();
+      Sfx.beep(659, 0.15, 'triangle', 0.1);
+      maybeWin();
+    } else {
+      feed.textContent = 'Попробуй ещё раз! Подсказка: подумай, что делает обучение.';
+      feed.className = 'quiz-feed bad';
+    }
+  }
+
+  function checkPrompt() {
+    const v = ($('promptInput') ? $('promptInput').value : '').trim();
+    const feed = $('promptFeed');
+    if (v.length < 20) {
+      feed.textContent = 'Промт коротковат. Напиши роль, правило и задачу (хотя бы 20 символов).';
+      feed.className = 'quiz-feed bad';
+      return;
+    }
+    S.done.prompt[S.level] = true;
+    feed.textContent = 'Отличный промт! Твой помощник готов к работе.';
+    feed.className = 'quiz-feed ok';
+    applyDone(S.level); updateProgress();
+    Sfx.beep(659, 0.15, 'triangle', 0.1);
+    maybeWin();
+  }
+
+  function maybeWin() {
+    const lv = S.level;
+    if (!allDone(lv)) return;
+    const L = LEVELS[lv];
+    Sfx.beep(523, 0.18, 'triangle', 0.1);
+    setTimeout(() => Sfx.beep(659, 0.18, 'triangle', 0.1), 110);
+    setTimeout(() => Sfx.beep(784, 0.18, 'triangle', 0.1), 220);
+    setTimeout(() => Sfx.beep(1046, 0.25, 'triangle', 0.12), 330);
+    $('winTitle').textContent = 'Уровень пройден полностью!';
+    let html = '';
+    for (let i = 0; i < 3; i++)
+      html += '<span class="' + (i < Hud.starsFor(lv) ? '' : 'dim') + '">★</span>';
+    $('winStars').innerHTML = html;
+    $('winText').textContent = 'Ты собрал сеть, нарисовал «' + L.name + '» по точкам, прошёл тест и написал промт! ' +
+      'Точность сети ' + fmtPct(S.acc) + '. Настоящий ИИ-инженер!';
+    Ui.open('mWin');
+    burstConfetti(3200);
+  }
+
+  function applyDone(lv) {
+    const d = S.done;
+    $('doneNet').classList.toggle('on', !!d.net[lv]);
+    $('doneDraw').classList.toggle('on', !!d.draw[lv]);
+    $('doneQuiz').classList.toggle('on', !!d.quiz[lv]);
+    $('donePrompt').classList.toggle('on', !!d.prompt[lv]);
+  }
+
+  function updateProgress() {
+    const lv = S.level;
+    const doneCount = (S.done.net[lv]?1:0) + (S.done.draw[lv]?1:0) + (S.done.quiz[lv]?1:0) + (S.done.prompt[lv]?1:0);
+    const el = $('levelProgress');
+    if (el) {
+      el.textContent = doneCount === 4 ? 'Задания: 4/4 — уровень пройден! 🎉' : 'Задания: ' + doneCount + '/4';
+      el.style.background = doneCount === 4 ? '#e6f9ef' : '#eef3ff';
+      el.style.border = doneCount === 4 ? '2px solid #2ecc8f' : 'none';
+    }
+    let stars = 0;
+    for (let i = 0; i < LEVELS.length; i++) {
+      if (S.done.net[i] && S.done.draw[i] && S.done.quiz[i] && S.done.prompt[i]) stars++;
+    }
+    const ts = $('totalStars');
+    if (ts) ts.textContent = '⭐ ' + stars + '/' + LEVELS.length;
+    Hud.updateStats();
+  }
+
+  function allDone(lv) {
+    const d = S.done;
+    return !!(d.net[lv] && d.draw[lv] && d.quiz[lv] && d.prompt[lv]);
+  }
+
+  function bind() {
+    document.querySelectorAll('#taskTabs button').forEach(b =>
+      b.addEventListener('click', () => tab(b.getAttribute('data-tab'))));
+    const cv = CV.draw;
+    if (cv) {
+      cv.addEventListener('click', e => {
+        const r = cv.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width;
+        const y = (e.clientY - r.top) / r.height;
+        drawAdd(Math.min(1,Math.max(0,x)), Math.min(1,Math.max(0,y)));
+      });
+    }
+    if ($('btnDrawClear')) $('btnDrawClear').addEventListener('click', () => { S.drawDots = []; renderDrawTarget(S.level); });
+    if ($('btnDrawCheck')) $('btnDrawCheck').addEventListener('click', checkDraw);
+    if ($('btnQuizCheck')) $('btnQuizCheck').addEventListener('click', checkQuiz);
+    if ($('btnPromptCheck')) $('btnPromptCheck').addEventListener('click', checkPrompt);
+  }
+
+  return { bind, reset, renderLevel, updateProgress, allDone, applyDone, maybeWin, tab };
+})();
+
+/* ================= 17. УРОВНИ ================= */
+const Levels = (() => {
+
+  function load(lv) {
+    if (lv < 0 || lv >= LEVELS.length) return;
+    Trainer.stop('');
+    S.level = lv;
+    S.data  = makeData(lv, Rng);
+    S.customDots = [];
+    S.dragging = null;
+    if ($('passportResult')) $('passportResult').style.display = 'none';
+
+    const def = LEVELS[lv].defaultCfg || { layers: 1, neurons: 4 };
+    // Стартуем НЕ с целевой конфигурации, а с простой — чтобы ребёнок сам собрал
+    CFG.layers  = 1;
+    CFG.neurons = 2;
+    CFG.lr      = 0.5;
+
+    $('rngNeurons').value = CFG.neurons;
+    $('valNeurons').textContent = CFG.neurons;
+    $('rngLr').value = 50;
+
+    Hud.updateLrLabel();
+    Hud.updateLayersSegment();
+    Tasks.reset(lv);
+    Trainer.build();
+    Trainer.computeAccuracy();
+    Hud.updateStats();
+    Hud.updateTrainButton();
+    Ui.say('Уровень ' + (lv + 1) + ': собери сеть, нарисуй по точкам, ответь на тест и напиши промт!');
+  }
+
+  function renderTask(lv) {
+    const L = LEVELS[lv];
+    $('taskTitle').textContent = 'Уровень ' + (lv + 1) + '. ' + L.name;
+    $('taskDesc').textContent  = L.desc;
+    $('taskGoal').innerHTML =
+      '<b>Цель сборки:</b> ' + L.goalLayers + (L.goalLayers === 1 ? ' скрытый слой' : ' скрытых слоя') +
+      ' и ' + L.goalNeurons + ' нейронов в каждом';
+    $('legend').innerHTML =
+      '<div class="li"><span class="dot" style="background:#ff9f43"></span>' +
+      L.cls[1] + '</div>' +
+      '<div class="li"><span class="dot" style="background:#4d7cfe"></span>' +
+      L.cls[0] + '</div>';
+  }
+
+
+  function next() {
+    if (S.level < LEVELS.length - 1) load(S.level + 1);
+    else {
+      $('introTitle').textContent = 'Финиш! Мы молодцы!';
+      $('introText').innerHTML =
+        'Мы прошли все ' + LEVELS.length + ' уровней и собрали нейросеть, ' +
+        'а ещё оформили паспорт своего помощника в Мейсто — как настоящие создатели AI-агентов! ' +
+        'Теперь ты знаешь, как нейросеть учится. А каким будет твой помощник?';
+      // показываем опрос в конце
+      $('quizWrap').style.display = 'block';
+      $('btnGo').style.display = 'none';
+      Ui.open('mIntro');
+    }
+  }
+
+  return { load, next };
+})();
+
+/* ================= 18. ИМПУЛЬСЫ ================= */
+function spawnPulses() {
+  if (!S.net || S.pulses.length > 36 || !S.layoutCache) return;
+  const { xs, ys } = S.layoutCache;
+  for (let t = 0; t < 3; t++) {
+    const l = Math.floor(Math.random() * S.net.W.length);
+    const j = Math.floor(Math.random() * S.net.W[l].length);
+    const k = Math.floor(Math.random() * S.net.W[l][j].length);
+    S.pulses.push({
+      fx: xs[l],     fy: ys[l][k].y,
+      tx: xs[l + 1], ty: ys[l + 1][j].y,
+      t: 0, dur: 0.5, l, j
+    });
+  }
+}
+
+/* ================= 19. ГЛАВНЫЙ ЦИКЛ ================= */
+let lastFrameTime = performance.now();
+let dirtyPlot = true, dirtyChart = true;
+
+function frame(now) {
+  const dt = Math.min(0.05, (now - lastFrameTime) / 1000);
+  lastFrameTime = now;
+
+  if (S.net) {
+    const sz = CanvasUtil.size(CV.net);
+    S.layoutCache = computeNetLayout(sz.w, sz.h, S.net.sizes);
+  }
+
+  if (S.running && S.net) {
+    runTrainingSlice();
+    spawnPulses();
+    Trainer.computeAccuracy();
+    dirtyPlot = dirtyChart = true;
+    Hud.updateStats();
+    Trainer.checkWin();
+  } else if (S.net && S.data.length) {
+    if (Math.random() < 0.5) {
+      const p = S.data[Math.floor(Math.random() * S.data.length)];
+      S.net.forward([p.x, p.y]);
+    }
+  }
+
+  redrawNet(dt);
+  if (dirtyPlot)  { redrawPlot();  dirtyPlot  = false; }
+  if (dirtyChart) { redrawChart(); dirtyChart = false; }
+
+  requestAnimationFrame(frame);
+}
+
+function runTrainingSlice() {
+  for (let e = 0; e < 6; e++) {
+    if (S.budgetLeft > 0) { Trainer.runOneEpoch(); S.budgetLeft--; }
+    else {
+      Trainer.stop('Топливо кончилось! Нажми УЧИТЬСЯ, чтобы продолжить.');
+      return;
+    }
+  }
+  if (S.acc < 0.93 && Math.random() < 0.02)
+    Ui.say('Смотри, как закрутилось поле — сеть учится разделять точки!');
+}
+
+/* ================= 19.5 SCRATCH-ПРОГРАММИРОВАНИЕ ================= */
+const Scratch = (() => {
+  let blocks = [];
+  let running = false;
+  const CMD = {
+    FWD: { rus: 'идти вперёд', run: (st, c) => { st.x += Math.cos(st.ang) * 14; st.y += Math.sin(st.ang) * 14; } },
+    RGT: { rus: 'повернуть направо', run: (st, c) => { st.ang += 0.6; } },
+    LFT: { rus: 'повернуть налево', run: (st, c) => { st.ang -= 0.6; } },
+    DOT: { rus: 'поставить точку', run: (st, c) => { st.dots.push({ x: st.x, y: st.y }); } },
+    CLR: { rus: 'очистить', run: (st, c) => { st.dots = []; } }
+  };
+
+  function addBlock(rus) {
+    if (blocks.length >= 12) { Ui.toast('Много блоков! Убери лишние.'); return; }
+    blocks.push(rus);
+    renderScript();
+  }
+  function renderScript() {
+    const host = $('scratchScript');
+    if (!blocks.length) {
+      host.innerHTML = '<div class="scratch-hint">Перетащи блоки сюда — получится программа для рисования по точкам</div>';
+      return;
+    }
+    host.innerHTML = '';
+    blocks.forEach((rus, i) => {
+      const d = document.createElement('div');
+      d.className = 'sblock ' + (rus.includes('вперёд') ? 's-move' : rus.includes('направо') ? 's-turn' : rus.includes('налево') ? 's-turn' : rus.includes('точк') ? 's-dot' : 's-clear');
+      d.textContent = rus;
+      d.setAttribute('data-idx', i);
+      d.style.cursor = 'pointer';
+      d.title = 'Клик — убрать блок';
+      d.addEventListener('click', () => {
+        blocks.splice(i, 1);
+        renderScript();
+      });
+      host.appendChild(d);
+    });
+  }
+
+  function run() {
+    if (running) return;
+    if (!blocks.length) { Ui.toast('Программа пуста — добавь блоки!'); return; }
+    running = true;
+    const cv = CV.scratch, ctx = Ctx.scratch;
+    const w = cv.clientWidth || 300, h = cv.clientHeight || 150;
+    cv.width = w; cv.height = h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#f0f5ff'; ctx.fillRect(0, 0, w, h);
+
+    const st = { x: w / 2, y: h / 2, ang: -Math.PI / 2, dots: [] };
+    let step = 0;
+    function tick() {
+      if (step >= blocks.length) {
+        running = false;
+        if (st.dots.length) Ui.say('Программа готова! Ты нарисовал фигуру по точкам — как нейросеть рисует по данным.');
+        else Ui.say('Программа выполнена. Попробуй добавить блок «поставить точку».');
+        return;
+      }
+      const rus = blocks[step];
+      let cmd = null;
+      for (const k in CMD) if (CMD[k].rus === rus) cmd = CMD[k];
+      if (cmd) cmd.run(st, null);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#f0f5ff'; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#c9d3ea'; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.moveTo(w/2, 0); ctx.lineTo(w/2, h); ctx.stroke();
+      ctx.setLineDash([]);
+      // след
+      ctx.strokeStyle = '#4d7cfe'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+      ctx.beginPath();
+      let px = w/2, py = h/2, pa = -Math.PI/2;
+      for (let i = 0; i <= step; i++) {
+        const r2 = blocks[i];
+        let cmd2 = null;
+        for (const k in CMD) if (CMD[k].rus === r2) cmd2 = CMD[k];
+        if (cmd2) cmd2.run({ x: px, y: py, ang: pa, dots: st.dots }, null);
+        // хак: считаем сами, чтобы след шёл по шагам
+        if (r2.includes('вперёд')) { px += Math.cos(pa)*14; py += Math.sin(pa)*14; ctx.lineTo(px, py); }
+        else if (r2.includes('направо')) { pa += 0.6; }
+        else if (r2.includes('налево')) { pa -= 0.6; }
+      }
+      ctx.stroke();
+      // точки
+      ctx.fillStyle = '#ff9f43';
+      for (const d of st.dots) {
+        ctx.beginPath(); ctx.arc(d.x, d.y, 5, 0, 6.283); ctx.fill();
+      }
+      ctx.fillStyle = '#4d7cfe';
+      ctx.beginPath(); ctx.arc(st.x, st.y, 7, 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(st.x, st.y, 3, 0, 6.283); ctx.fill();
+      step++;
+      setTimeout(tick, 260);
+    }
+    tick();
+  }
+
+  function clear() { blocks = []; running = false; renderScript(); }
+
+  function bind() {
+    // Перетаскивание из палитры
+    document.querySelectorAll('.scratch-palette .sblock').forEach(b => {
+      b.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', b.textContent.trim());
+        e.dataTransfer.effectAllowed = 'copy';
+      });
+    });
+    const script = $('scratchScript');
+    script.addEventListener('dragover', e => e.preventDefault());
+    script.addEventListener('drop', e => {
+      e.preventDefault();
+      const rus = e.dataTransfer.getData('text/plain');
+      if (rus) addBlock(rus);
+    });
+    // Клик по блоку в палитре тоже добавляет (надёжнее, чем drag в headless)
+    document.querySelectorAll('.scratch-palette .sblock').forEach(b => {
+      b.addEventListener('click', () => addBlock(b.textContent.trim()));
+    });
+    $('btnRunScript').addEventListener('click', run);
+    $('btnClearScript').addEventListener('click', clear);
+  }
+
+  return { bind, addBlock, clear };
+})();
+
+/* ================= 20. СОБЫТИЯ ================= */
+function bindControls() {
+  $('btnTrain').addEventListener('click', () => {
+    if (S.running) Trainer.stop('Пауза. Жми УЧИТЬСЯ, чтобы продолжить.');
+    else { Trainer.start(); Sfx.beep(500, 0.06, 'square', 0.04); }
+  });
+  $('btnReset').addEventListener('click', () => {
+    Trainer.build();
+    Trainer.computeAccuracy();
+    Hud.updateStats();
+    Ui.toast('Сеть пересобрана с нуля — веса свежие!');
+    Sfx.beep(300, 0.08, 'square', 0.05);
+  });
+  $('btnHint').addEventListener('click', () => Ui.say(LEVELS[S.level].hint));
+  document.querySelectorAll('#segAvatar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      S.avatar = btn.getAttribute('data-v');
+      document.querySelectorAll('#segAvatar button').forEach(b =>
+        b.classList.toggle('on', b.getAttribute('data-v') === S.avatar));
+      const map = { robot:'🤖', cat:'🐱', star:'⭐', rocket:'🚀' };
+      $('avatarPrev').textContent = map[S.avatar] || '🤖';
+    });
+  });
+  $('btnPassport').addEventListener('click', () => {
+    const name = $('pName').value.trim();
+    const role = $('pRole').value.trim();
+    const ch   = $('pChar').value.trim();
+    const kn   = $('pKnow') ? $('pKnow').value.trim() : '';
+    const ru   = $('pRules') ? $('pRules').value.trim() : '';
+    const pr   = $('pPrompt').value.trim();
+    if (!name && !role && !ch && !kn && !ru && !pr) {
+      Ui.toast('Заполни хотя бы имя помощника!');
+      return;
+    }
+    const out = $('passportResult');
+    out.style.display = 'block';
+    const map = { robot:'🤖', cat:'🐱', star:'⭐', rocket:'🚀' };
+    out.innerHTML =
+      '<div class="avatar" style="margin:0 auto 8px; font-size:34px;">' + (map[S.avatar] || '🤖') + '</div>' +
+      '<b>Твой помощник готов!</b><br>' +
+      'Имя: <b>' + (name || 'Безымянный') + '</b> · ' +
+      'Роль: <b>' + (role || 'помощник') + '</b> · ' +
+      'Характер: <b>' + (ch || 'дружелюбный') + '</b>' +
+      (kn ? '<br>Знания: <b>' + kn + '</b>' : '') +
+      (ru ? '<br>Правила: <b>' + ru + '</b>' : '') +
+      (pr ? '<br>Промт: «' + pr + '»' : '');
+    Sfx.beep(659, 0.12, 'triangle', 0.08);
+    Ui.say('Кажется, у тебя получился настоящий помощник из Мейсто!');
+  });
+  $('btnGo').addEventListener('click', () => {
+    Ui.close('mIntro');
+    Levels.load(0);
+    Sfx.beep(660, 0.12, 'triangle', 0.08);
+  });
+  $('btnQuiz').addEventListener('click', () => {
+    const q1 = document.querySelector('input[name="q1"]:checked');
+    const q2 = document.querySelector('input[name="q2"]:checked');
+    const q3 = document.querySelector('input[name="q3"]:checked');
+    let score = 0;
+    if (q1 && q1.value === 'role') score++;
+    if (q2 && q2.value === 'layers') score++;
+    if (q3 && q3.value === 'weights') score++;
+    $('quizResult').textContent = 'Твой результат: ' + score + ' из 3. ' +
+      (score === 3 ? 'Отлично, ты настоящий ИИ-инженер!' : (score >= 1 ? 'Хорошо! Перечитай слайды и попробуй ещё раз.' : 'Попробуй ещё раз — загляни в «Как это работает».'));
+    Sfx.beep(score === 3 ? 880 : 440, 0.15, 'triangle', 0.1);
+  });
+  $('btnAgain').addEventListener('click', () => Ui.close('mWin'));
+  $('btnNext').addEventListener('click', () => { Ui.close('mWin'); Levels.next(); });
+  $('btnInfo').addEventListener('click',      () => Ui.open('mInfo'));
+  $('btnInfoClose').addEventListener('click', () => Ui.close('mInfo'));
+  $('btnSound').addEventListener('click',     () => Sfx.toggle());
+
+  // --- Свои точки на поле (клик / перетаскивание) ---
+  document.querySelectorAll('#segDotColor button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      CFG.dotColor = parseInt(btn.getAttribute('data-v'), 10);
+      document.querySelectorAll('#segDotColor button').forEach(b =>
+        b.classList.toggle('on', parseInt(b.getAttribute('data-v'), 10) === CFG.dotColor));
+    });
+  });
+  $('btnClearDots').addEventListener('click', () => {
+    S.customDots = [];
+    S.dragging = null;
+    dirtyPlot = true;
+    Trainer.computeAccuracy(); Hud.updateStats();
+    Ui.toast('Свои точки убраны. Поле — как в задании.');
+  });
+  const plot = CV.plot;
+  function evtPos(e) {
+    const r = plot.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const y = (e.clientY - r.top) / r.height;
+    return { x: Math.min(1, Math.max(0, x)), y: Math.min(1, Math.max(0, y)) };
+  }
+  function hitTest(px, py) {
+    for (let i = S.customDots.length - 1; i >= 0; i--) {
+      const d = S.customDots[i];
+      if (Math.abs(d.x - px) < 0.03 && Math.abs(d.y - py) < 0.03) return i;
+    }
+    return -1;
+  }
+  plot.addEventListener('mousedown', e => {
+    const pos = evtPos(e);
+    const idx = hitTest(pos.x, pos.y);
+    if (idx >= 0) { S.dragging = idx; return; }
+    if (S.customDots.length >= 40) { Ui.toast('Максимум 40 своих точек.'); return; }
+    S.customDots.push({ x: pos.x, y: pos.y, label: CFG.dotColor });
+    dirtyPlot = true;
+    Trainer.computeAccuracy(); Hud.updateStats();
+    Ui.say('Точка добавлена! Нажми УЧИТЬСЯ — сеть учтёт её.');
+  });
+  plot.addEventListener('mousemove', e => {
+    if (S.dragging === null) return;
+    const pos = evtPos(e);
+    S.customDots[S.dragging].x = pos.x;
+    S.customDots[S.dragging].y = pos.y;
+    dirtyPlot = true;
+  });
+  window.addEventListener('mouseup', () => {
+    if (S.dragging !== null) {
+      S.dragging = null;
+      Trainer.computeAccuracy(); Hud.updateStats();
+    }
+  });
+  plot.style.cursor = 'crosshair';
+
+  document.querySelectorAll('#segLayers button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      CFG.layers = parseInt(btn.getAttribute('data-v'), 10);
+      Hud.updateLayersSegment();
+      Trainer.build(); Trainer.computeAccuracy(); Hud.updateStats();
+      Hud.updateTrainButton();
+      const L = LEVELS[S.level];
+      const ok = (CFG.layers === L.goalLayers && CFG.neurons === L.goalNeurons);
+      Ui.toast(ok ? 'Сборка верная!' : 'Слои: ' + CFG.layers + ' (нужно ' + L.goalLayers + ')');
+    });
+  });
+  $('rngNeurons').addEventListener('input', function () {
+    CFG.neurons = parseInt(this.value, 10);
+    $('valNeurons').textContent = CFG.neurons;
+    Trainer.build(); Trainer.computeAccuracy(); Hud.updateStats();
+    Hud.updateTrainButton();
+    const L = LEVELS[S.level];
+    const ok = (CFG.layers === L.goalLayers && CFG.neurons === L.goalNeurons);
+    Ui.toast(ok ? 'Сборка верная!' : 'Нейронов: ' + CFG.neurons + ' (нужно ' + L.goalNeurons + ')');
+  });
+  $('rngLr').addEventListener('input', function () {
+    CFG.lr = parseInt(this.value, 10) / 100;
+    Hud.updateLrLabel();
+    if (S.net) S.net.lr = CFG.lr;
+    if (CFG.lr > 1.05) Ui.say('Ого, так быстро! График будет прыгать.');
+    else if (CFG.lr < 0.15) Ui.say('Медленно, но верно. Попробуй «супер-быстро».');
+  });
+  $('mIntro').addEventListener('click', e => {
+    if (e.target !== $('mIntro')) return;
+    if ($('introTitle').textContent === 'Финиш! Мы молодцы!') return;
+    $('btnGo').click();
+  });
+  window.addEventListener('resize', () => {
+    [CV.plot, CV.net, CV.chart].forEach(CanvasUtil.fit);
+    if (S.net) {
+      const sz = CanvasUtil.size(CV.net);
+      S.layoutCache = computeNetLayout(sz.w, sz.h, S.net.sizes);
+    }
+    dirtyPlot = dirtyChart = true;
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && S.running)
+      Trainer.stop('Пауза (вкладка была в фоне). Жми УЧИТЬСЯ.');
+  });
+  document.querySelectorAll('input[type=range]').forEach(el =>
+    el.addEventListener('keydown', e => e.preventDefault()));
+}
+
+/* ================= 21. СТАРТ ================= */
+function boot() {
+  Errors.install();
+  [CV.plot, CV.net, CV.chart, CV.scratch, CV.draw].forEach(CanvasUtil.fit);
+  bindControls();
+  Scratch.bind();
+  Tasks.bind();
+  Levels.load(0);
+  Hud.updateStats();
+  Ui.open('mIntro');
+  requestAnimationFrame(frame);
+}
+
+try { boot(); }
+catch (err) { Errors.show(err && err.message ? err.message : String(err)); }
+
+})();
+</script>
+</body>
+</html>

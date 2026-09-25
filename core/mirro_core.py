@@ -70,7 +70,13 @@ class MirroCore:
     def get_cluster_info(self):
         return {name: {**info, "examples": len(self.knowledge_base.get(name, [])), "calls": self.stats["clusters_used"].get(name, 0)} for name, info in KNOWLEDGE_CLUSTERS.items()}
     def status(self):
-        return {"name": "Mirro", "version": "0.2", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "clusters": self.get_cluster_info(), "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
+        try:
+            sys.path.insert(0, str(MIRRO_HOME))
+            from scripts.providers import status as _pv_status
+            prov = _pv_status()
+        except Exception:
+            prov = {}
+        return {"name": "Mirro", "version": "0.2", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
     def corpus_total(self):
         if not hasattr(self, "_corpus_total"):
             t = 0
@@ -207,6 +213,15 @@ def try_web(query):
     except: pass
     return None
 
+def try_provider(query):
+    """Финальный фоллбэк: внешний ИИ-провайдер (DeepSeek и др.), если всё остальное не ответило."""
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from scripts.providers import fallback
+        return fallback(query)
+    except: pass
+    return None
+
 
 def answer_looks_bad(query, answer):
     """Проверка качества ответа: реально ли он отвечает на вопрос?
@@ -272,7 +287,12 @@ def build_response(prompt, cluster):
         if has_result: return {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
         web_answer = try_web(prompt)
         if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
-        if has_result: return {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
+
+        # Финальный резерв — легальный ИИ-провайдер (DeepSeek), если база и веб пусты
+        provider_answer = try_provider(prompt)
+        if provider_answer:
+            return {"content": provider_answer[:2500], "strategy": "provider"}
+
         return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "unknown"}
     except Exception as e:
         return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
