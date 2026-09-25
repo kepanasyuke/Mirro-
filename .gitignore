@@ -26,10 +26,12 @@ logs/
 *.env
 core/providers_secret.json
 
-# Decimal cipher (key document must never be committed; encrypted backups are local)
+# Decimal cipher — key document and plaintext restores stay local,
+# but encrypted *.dec backups may be committed as an off-site copy.
 keys/
-backups/
 restore/
+backups/*
+!backups/*.dec
 
 # OS
 .DS_Store
