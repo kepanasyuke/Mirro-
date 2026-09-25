@@ -172,6 +172,15 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
   display:none; background:#e6f9ef; border:2px solid #2ecc8f; border-radius:12px;
   padding:10px; font-size:13px; line-height:1.45; color:#1b8a5a;
 }
+.mirro-brain{display:flex; flex-direction:column; gap:6px; border-top:2px dashed #cfdaf2; padding-top:10px;}
+.mirro-brain label{font-size:13px; font-weight:600; color:#3b4a70;}
+.mb-weights{display:flex; flex-wrap:wrap; gap:4px; align-items:center;}
+.mb-w{border-radius:8px; padding:3px 7px; font-size:11px; font-weight:700; color:#fff; background:#845ef7;}
+.mb-w b{font-weight:800;}
+.mb-note{font-size:11px; color:#7a88ad; line-height:1.35;}
+.mirro-brain .quiz-feed{background:#eef3ff; border:2px solid #b9c8ea; color:var(--ink);}
+.mirro-brain .quiz-feed.ok{background:#e6f9ef; border-color:#2ecc8f; color:#1b8a5a;}
+.mirro-brain .quiz-feed.bad{background:#fdeeee; border-color:#ff6b6b; color:#b34040;}
 .dot-tools{display:flex; flex-direction:column; gap:6px; border-top:2px dashed #cfdaf2; padding-top:10px;}
 .dot-tools label{font-size:13px; font-weight:600; color:#3b4a70;}
 .dot-hint{font-size:11.5px; color:#7a88ad; line-height:1.35;}
@@ -418,6 +427,14 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
       <textarea id="pPrompt" rows="2" maxlength="200" placeholder="Напиши промт: «Ты — мой помощник по учёбе. Объясняй просто...»"></textarea>
       <button class="mini-btn" id="btnPassport" type="button">Собрать помощника</button>
       <div class="passport-result" id="passportResult"></div>
+    </div>
+
+    <div class="mirro-brain">
+      <label>🧠 Мозг Мирро — реальный перцептрон</label>
+      <div class="mb-weights" id="mbWeights"></div>
+      <div class="mb-note">Это настоящие веса и bias Мирро из <b>models/model_state.json</b>. Собери паспорт помощника и нажми кнопку — Мирро по-настоящему оценит твоего помощника своим перцептроном.</div>
+      <button class="mini-btn" id="btnBrain" type="button">Оценить помощника перцептроном Мирро</button>
+      <div id="brainResult" class="quiz-feed"></div>
     </div>
 
     <div class="dot-tools">
@@ -783,6 +800,86 @@ function makeData(level, rng) {
 
 /* ================= 6. НЕЙРОСЕТЬ ================= */
 const sigmoid = x => 1 / (1 + Math.exp(-x));
+
+/* ================= 6.1 МОЗГ МИРРО — реальный перцептрон ================= */
+const MIRRO_BRAIN = {
+  weights: { f0: 0.0431196070499588, f1: 0.019096292828190396, f2: -0.010450016683195479, f3: 0.0 },
+  bias: 0.0,
+  trained: true,
+  autoLearned: 30,
+  note: 'веса и bias из models/model_state.json Мирро'
+};
+
+function mirroTokenize(text) {
+  return String(text).toLowerCase().split(/[^a-zа-яё0-9]+/i).filter(Boolean);
+}
+function mirroVectorize(query, candidate) {
+  const q = mirroTokenize(query), c = mirroTokenize(candidate);
+  const qs = new Set(q), cs = new Set(c);
+  let common = 0;
+  qs.forEach(w => { if (cs.has(w)) common++; });
+  const f0 = common / Math.max(qs.size, 1);                                   // overlap ratio
+  const f1 = common / Math.max(cs.size, 1);                                   // recall
+  const f2 = Math.min(Math.log(candidate.length + 1) / 10, 1);                // length bonus
+  let f3 = 0;
+  for (const w of qs) if (candidate.toLowerCase().includes(w)) { f3 = 1; break; } // exact hit
+  return { feats: [f0, f1, f2, f3], names: ['f0','f1','f2','f3'] };
+}
+function mirroPredict(query, candidate) {
+  const v = mirroVectorize(query, candidate);
+  const W = MIRRO_BRAIN.weights;
+  let activation = MIRRO_BRAIN.bias;
+  for (let i = 0; i < v.feats.length; i++) activation += (W[v.names[i]] || 0) * v.feats[i];
+  const score = 1 / (1 + Math.exp(-activation));
+  return { score, activation, feats: v.feats, names: v.names };
+}
+function renderBrainWeights() {
+  const host = $('mbWeights'); if (!host) return;
+  const W = MIRRO_BRAIN.weights;
+  let html = '';
+  ['f0','f1','f2','f3'].forEach(n => {
+    html += '<span class="mb-w">' + n + ' <b>' + (W[n] || 0).toFixed(4) + '</b></span>';
+  });
+  html += '<span class="mb-w" style="background:#4d7cfe">bias <b>' + MIRRO_BRAIN.bias.toFixed(4) + '</b></span>' +
+          '<span class="mb-note">обучена на ' + MIRRO_BRAIN.autoLearned + ' ответах · trained=' + MIRRO_BRAIN.trained + '</span>';
+  host.innerHTML = html;
+}
+function runMirroBrain() {
+  const name = ($('pName')  ? $('pName').value  : '').trim();
+  const role = ($('pRole')  ? $('pRole').value  : '').trim();
+  const ch   = ($('pChar')  ? $('pChar').value  : '').trim();
+  const kn   = ($('pKnow')  ? $('pKnow').value  : '').trim();
+  const ru   = ($('pRules') ? $('pRules').value : '').trim();
+  const pr   = ($('pPrompt') ? $('pPrompt').value : '').trim();
+  const out  = $('brainResult');
+  if (!name && !role && !ch && !kn && !ru && !pr) {
+    out.textContent = 'Сначала собери паспорт помощника выше!';
+    Ui.toast('Заполни паспорт помощника выше!');
+    return;
+  }
+  const candidate = [name, role, ch, kn, ru].filter(Boolean).join(' ');
+  const query = pr || 'объясни по моей теме';
+  if (!candidate) {
+    out.textContent = 'Добавь хотя бы одно поле паспорта (имя, роль, характер...)';
+    Ui.toast('Заполни паспорт помощника выше!');
+    return;
+  }
+  const r = mirroPredict(query, candidate);
+  const pct = Math.round(r.score * 100);
+  const f0 = r.feats[0], f3 = r.feats[3];
+  let verdict, cls;
+  if (f3 > 0 && f0 > 0.3)      { verdict = 'Мирро видит прямую связь промта и паспорта — отличный связанный помощник!'; cls = 'ok'; }
+  else if (f0 > 0)             { verdict = 'Есть пересечение с промтом. Добавь ещё слов из промта в роль/характер/правила.'; cls = ''; }
+  else                         { verdict = 'Паспорт почти не повторяет промт. Впиши ключевые слова из промта (роль, предмет, правило).'; cls = 'bad'; }
+  out.className = 'quiz-feed ' + cls;
+  out.innerHTML =
+    'Оценка Мирро: <b>' + pct + '%</b> (реальные веса из model_state.json · сигмоид=' + r.activation.toFixed(3) + ')<br>' +
+    '<span style="font-size:12px">Признаки: ' +
+    r.names.map((n, i) => n + '=' + r.feats[i].toFixed(2)).join(', ') + '</span><br>' +
+    verdict + '<br>' +
+    '<span class="mb-note">Веса пока почти нулевые — Мирро молодая (обучена на ' + MIRRO_BRAIN.autoLearned +
+    ' ответах), поэтому её уверенность близка к 50%. Делись с ней лайками и ответами — веса станут «решительнее»!</span>';
+}
 
 function NeuralNet(sizes) {
   this.sizes = sizes;
@@ -1913,6 +2010,8 @@ function bindControls() {
     Levels.load(0);
     Sfx.beep(660, 0.12, 'triangle', 0.08);
   });
+  const btnBrain = $('btnBrain');
+  if (btnBrain) btnBrain.addEventListener('click', runMirroBrain);
   $('btnQuiz').addEventListener('click', () => {
     const q1 = document.querySelector('input[name="q1"]:checked');
     const q2 = document.querySelector('input[name="q2"]:checked');
@@ -2040,6 +2139,7 @@ function boot() {
   bindControls();
   Scratch.bind();
   Tasks.bind();
+  renderBrainWeights();
   Levels.load(0);
   Hud.updateStats();
   Ui.open('mIntro');
