@@ -33,6 +33,9 @@ restore/
 backups/*
 !backups/*.dec
 
+# Build artifacts
+dist/
+
 # OS
 .DS_Store
 Thumbs.db
