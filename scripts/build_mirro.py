@@ -109,6 +109,28 @@ def check_smoke():
     except Exception as e:
         print("[smoke] cipher ERROR:", e)
         ok = False
+    try:
+        sys.path.insert(0, str(ROOT))
+        from scripts.providers import status as pv_status
+        st = pv_status()
+        good = isinstance(st, dict)
+        ok = ok and good
+        print("[smoke] providers status:", "OK" if good else "FAIL", st)
+    except Exception as e:
+        print("[smoke] providers ERROR:", e)
+        ok = False
+    try:
+        import json as _json
+        st = _json.loads((ROOT / "models" / "model_state.json").read_text("utf-8"))
+        w = st.get("perceptron_weights") or {}
+        good = all(k in w for k in ("f0", "f1", "f2", "f3")) and \
+               isinstance(st.get("perceptron_bias"), (int, float))
+        ok = ok and good
+        print("[smoke] perceptron state:", "OK" if good else "FAIL",
+              {k: round(w[k], 4) for k in ("f0", "f1", "f2", "f3")})
+    except Exception as e:
+        print("[smoke] perceptron state ERROR:", e)
+        ok = False
     return ok
 
 
