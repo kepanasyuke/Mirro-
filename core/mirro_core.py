@@ -188,6 +188,15 @@ def try_humor(query):
     except: pass
     return None
 
+def try_jarvis(query):
+    """ДЖАРВИС-режим: короткий статусный ответ в его стиле."""
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from scripts.voice import try_jarvis as _try_jarvis
+        return _try_jarvis(query)
+    except Exception:
+        return None
+
 def try_tfidf(query, cluster):
     try:
         sys.path.insert(0, str(MIRRO_HOME))
@@ -269,6 +278,8 @@ def build_response(prompt, cluster):
         if think_result: return {"content": think_result, "strategy": "think"}
         humor_result = try_humor(prompt)
         if humor_result: return {"content": humor_result, "strategy": "humor"}
+        jarvis_msg = try_jarvis(prompt)
+        if jarvis_msg: return {"content": jarvis_msg, "strategy": "direct"}
         results = try_tfidf(prompt, cluster)
         if not results: results = try_rag(prompt, cluster)
         best_answer, best_score, reason = choose_best(prompt, results, preferred=cluster)
