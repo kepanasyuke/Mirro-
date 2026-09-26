@@ -179,6 +179,12 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
   font-size:13px; font-family:inherit; color:var(--ink); background:#fff; resize:vertical;
 }
 .mirro-brain textarea:focus{outline:none; border-color:var(--blue);}
+.mirror-chips{display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:12px; color:#7a88ad;}
+.mirror-chips .mini-chip{
+  border:2px solid #cfdaf2; background:#fff; border-radius:999px; padding:4px 10px;
+  font-size:12px; font-weight:600; color:#5a6a92; cursor:pointer;
+}
+.mirror-chips .mini-chip:hover{background:#eaf1ff; border-color:var(--blue);}
 .mb-weights{display:flex; flex-wrap:wrap; gap:4px; align-items:center;}
 .mb-w{border-radius:8px; padding:3px 7px; font-size:11px; font-weight:700; color:#fff; background:#845ef7;}
 .mb-w b{font-weight:800;}
@@ -447,6 +453,13 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
     <div class="mirro-brain">
       <label>🪞 Мирро-зеркало — твои «Я»</label>
       <textarea id="mirrorInput" rows="2" maxlength="200" placeholder="Я — мама, Мирро, автор, друг, ученица..."></textarea>
+      <div class="mirror-chips">Кто ты сегодня?
+        <button class="mini-chip" type="button" data-i="Я — мама">мама</button>
+        <button class="mini-chip" type="button" data-i="Я — автор">автор</button>
+        <button class="mini-chip" type="button" data-i="Я — ученица">ученица</button>
+        <button class="mini-chip" type="button" data-i="Я — мечтатель">мечтатель</button>
+        <button class="mini-chip" type="button" data-i="Я — герой">герой</button>
+      </div>
       <button class="mini-btn" id="btnMirror" type="button">Отразить</button>
       <div id="mirrorResult" class="quiz-feed"></div>
     </div>
@@ -2083,6 +2096,11 @@ function bindControls() {
   if (btnAsk) btnAsk.addEventListener('click', askMirro);
   const btnMirror = $('btnMirror');
   if (btnMirror) btnMirror.addEventListener('click', runMirroMirror);
+  document.querySelectorAll('.mirror-chips .mini-chip').forEach(ch =>
+    ch.addEventListener('click', () => {
+      const inp = $('mirrorInput');
+      if (inp) { inp.value = ch.getAttribute('data-i'); runMirroMirror(); }
+    }));
   $('btnQuiz').addEventListener('click', () => {
     const q1 = document.querySelector('input[name="q1"]:checked');
     const q2 = document.querySelector('input[name="q2"]:checked');
