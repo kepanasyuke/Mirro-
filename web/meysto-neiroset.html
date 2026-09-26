@@ -174,6 +174,11 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
 }
 .mirro-brain{display:flex; flex-direction:column; gap:6px; border-top:2px dashed #cfdaf2; padding-top:10px;}
 .mirro-brain label{font-size:13px; font-weight:600; color:#3b4a70;}
+.mirro-brain textarea{
+  border:2px solid #d3ddf2; border-radius:10px; padding:8px 10px;
+  font-size:13px; font-family:inherit; color:var(--ink); background:#fff; resize:vertical;
+}
+.mirro-brain textarea:focus{outline:none; border-color:var(--blue);}
 .mb-weights{display:flex; flex-wrap:wrap; gap:4px; align-items:center;}
 .mb-w{border-radius:8px; padding:3px 7px; font-size:11px; font-weight:700; color:#fff; background:#845ef7;}
 .mb-w b{font-weight:800;}
@@ -437,6 +442,13 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
       <div id="brainResult" class="quiz-feed"></div>
       <button class="mini-btn" id="btnAskMirro" type="button">💬 Спросить Мирро (живой ответ)</button>
       <div id="askMirroResult" class="quiz-feed"></div>
+    </div>
+
+    <div class="mirro-brain">
+      <label>🪞 Мирро-зеркало — твои «Я»</label>
+      <textarea id="mirrorInput" rows="2" maxlength="200" placeholder="Я — мама, Мирро, автор, друг, ученица..."></textarea>
+      <button class="mini-btn" id="btnMirror" type="button">Отразить</button>
+      <div id="mirrorResult" class="quiz-feed"></div>
     </div>
 
     <div class="dot-tools">
@@ -865,6 +877,28 @@ function askMirro() {
     out.textContent = 'Сервер Мирро не отвечает (' + String(err.message).split('\n')[0] +
                       '). Запусти mirro_launcher.pyw и нажми ещё раз.';
   });
+}
+function runMirroMirror() {
+  const raw = ($('mirrorInput') ? $('mirrorInput').value : '').trim();
+  const out = $('mirrorResult');
+  if (!raw) {
+    out.className = 'quiz-feed';
+    out.textContent = 'Напиши «Я — ...» — Мирро отразит тебя.';
+    return;
+  }
+  const parts = raw.split(/[;,]+/).map(s => s.trim()).filter(Boolean);
+  const list = parts.map(p => p.replace(/^(я|Я)\s*[—\-:–]*\s*/, '')).filter(Boolean);
+  const used = list.length ? list : [raw.replace(/^(я|Я)\s*[—\-:–]*\s*/, '')];
+  let html = 'Мирро отражает тебя:';
+  used.forEach(x => { html += '<div style="margin:3px 0"><b>Я</b> — ' + escapeHtml(x) + '</div>'; });
+  const n = used.length;
+  let warm;
+  if (n >= 3) warm = 'Сколько же в тебе «Я» — целая вселенная!';
+  else if (n === 2) warm = 'Два «Я» и больше — красота многогранности.';
+  else warm = 'Одно, но настоящее.';
+  html += '<div class="mb-note" style="margin-top:6px">' + warm + ' И любое из них стоит того, чтобы его беречь. 💙</div>';
+  out.className = 'quiz-feed ok';
+  out.innerHTML = html;
 }
 function renderBrainWeights() {
   const host = $('mbWeights'); if (!host) return;
@@ -2047,6 +2081,8 @@ function bindControls() {
   if (btnBrain) btnBrain.addEventListener('click', runMirroBrain);
   const btnAsk = $('btnAskMirro');
   if (btnAsk) btnAsk.addEventListener('click', askMirro);
+  const btnMirror = $('btnMirror');
+  if (btnMirror) btnMirror.addEventListener('click', runMirroMirror);
   $('btnQuiz').addEventListener('click', () => {
     const q1 = document.querySelector('input[name="q1"]:checked');
     const q2 = document.querySelector('input[name="q2"]:checked');
