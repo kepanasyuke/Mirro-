@@ -84,6 +84,34 @@ def build_zip():
     return True
 
 
+def check_smoke():
+    """Делаем сборку самопроверяющейся: функциональные проверки, а не только компиляция."""
+    ok = True
+    try:
+        sys.path.insert(0, str(ROOT))
+        from scripts.voice import try_jarvis
+        j = try_jarvis("мама джарвис доложи обстановку")
+        good = isinstance(j, str) and "Слушаю" in j
+        ok = ok and good
+        print("[smoke] jarvis trigger:", "OK" if good else "FAIL")
+    except Exception as e:
+        print("[smoke] jarvis ERROR:", e)
+        ok = False
+    try:
+        sys.path.insert(0, str(ROOT))
+        from scripts.cipher import encode, decode
+        data = b"Mirro self-check \x00\xff ok"
+        key = b"kluch-dlya-proverki"
+        restored = bytes(decode(encode(data, key), key))
+        good = restored == data
+        ok = ok and good
+        print("[smoke] cipher round-trip:", "OK" if good else "FAIL")
+    except Exception as e:
+        print("[smoke] cipher ERROR:", e)
+        ok = False
+    return ok
+
+
 def main():
     ap = argparse.ArgumentParser(description="Mirro build / assembly check")
     ap.add_argument("--check", action="store_true", help="only checks, no zip")
@@ -93,6 +121,7 @@ def main():
     ok &= check_python()
     ok &= check_files()
     ok &= compile_all()
+    ok &= check_smoke()
     print("[summary]", "ALL CHECKS PASSED" if ok else "SOME CHECKS FAILED")
     if not args.check and ok:
         build_zip()
