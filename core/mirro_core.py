@@ -112,40 +112,12 @@ def autonomous_learning_loop(interval_sec=3600):
     t = threading.Thread(target=_loop, daemon=True); t.start(); return t
 
 # ========== REASONING ENGINE ==========
-def _tokenize(text): return _re.findall(r"[а-яёa-z0-9]+", text.lower())
-
-def score_candidate(query, out, cluster, tfidf_score, preferred=None):
-    s = tfidf_score * 2.5
-    reasons = []
-    if preferred:
-        if cluster == preferred: s += 5.0
-        elif cluster == "generated": s -= 4.0
-        else: s -= 2.0
-    q_set = set(_tokenize(query))
-    a_set = set(_tokenize(out))
-    overlap = len(q_set & a_set)
-    if overlap > 0: s += overlap * 0.8; reasons.append(f"слова:{overlap}")
-    if len(out) < 20: s -= 0.5
-    if q_set and a_set and len(q_set & a_set) / max(len(q_set | a_set), 1) > 0.7: s -= 1.0
-    return s, reasons
-
-def choose_best(query, candidates, preferred=None):
-    if not candidates: return None, 0.0, "нет кандидатов"
-    # Всегда исключаем шумный generated, если есть альтернативы
-    cands = [c for c in candidates if c[0][2] != "generated"] or candidates
-    if preferred:
-        same = [(inst, out, cl, sc) for (inst, out, cl), sc in cands if cl == preferred]
-        if same:
-            best = max(same, key=lambda x: score_candidate(query, x[1], x[2], x[3], preferred)[0])
-            sc, _ = score_candidate(query, best[1], best[2], best[3], preferred)
-            return best[1], sc, f"кластер {best[2]}"
-        # В предпочтительном кластере нет ответа — не тянем мусор из чужих кластеров
-        return None, 0.0, f"нет в кластере {preferred}"
-    b_out, b_sc, b_r = None, -999, ""
-    for (inst, out, cl), tfidf_score in cands[:5]:
-        sc, rs = score_candidate(query, out, cl, tfidf_score, preferred)
-        if sc > b_sc: b_sc, b_out, b_r = sc, out, "; ".join(rs) if rs else "базовый"
-    return b_out, b_sc, b_r
+# Чистая логика вынесена в scripts/reasoning_engine.py (легко тестировать без
+# построения индекса в память). Здесь только аккуратный локальный импорт.
+def _reasoning():
+    sys.path.insert(0, str(MIRRO_HOME))
+    from scripts.reasoning_engine import score_candidate, choose_best, _tokenize
+    return score_candidate, choose_best, _tokenize
 
 def try_greetings(query):
     q = query.lower().strip()
@@ -282,6 +254,7 @@ def build_response(prompt, cluster):
         if jarvis_msg: return {"content": jarvis_msg, "strategy": "direct"}
         results = try_tfidf(prompt, cluster)
         if not results: results = try_rag(prompt, cluster)
+        _, choose_best, _ = _reasoning()
         best_answer, best_score, reason = choose_best(prompt, results, preferred=cluster)
         has_result = best_answer is not None and best_score > 1.0
 

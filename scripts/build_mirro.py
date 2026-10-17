@@ -131,6 +131,17 @@ def check_smoke():
     except Exception as e:
         print("[smoke] perceptron state ERROR:", e)
         ok = False
+    try:
+        sys.path.insert(0, str(ROOT))
+        from scripts.reasoning_engine import run_self_check
+        good, details = run_self_check()
+        ok = ok and good
+        print("[smoke] reasoning cluster logic:", "OK" if good else "FAIL")
+        for line in details.splitlines():
+            print("         " + line)
+    except Exception as e:
+        print("[smoke] reasoning ERROR:", e)
+        ok = False
     return ok
 
 
