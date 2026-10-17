@@ -14,7 +14,7 @@ Mirro Algorithms — все алгоритмы нейросетей и NLP на 
 8. QA scoring — оценка качества ответа
 """
 
-import json, math, re as _re, collections, random, time
+import json, math, re as _re, collections, random, time, os
 from pathlib import Path
 from collections import Counter, defaultdict
 
@@ -123,7 +123,9 @@ class MirroAlgorithms:
                 self.term_freq = state["term_freq"]
                 self.total_docs = state["total_docs"]
                 self.term_docs = state["term_docs"]
-                self.doc_tf = state["doc_tf"]
+                # doc_tf не храним в кэше (сильно раздувает), а пересчитываем
+                # в памяти из examples — это секунды, а не полная пересборка.
+                self.doc_tf = state.get("doc_tf")
                 self._stem_cache = state.get("stem_cache", {})
                 self.nb_priors = state.get("nb_priors", Counter())
                 self.nb_word_probs = state.get("nb_word_probs", defaultdict(Counter))
@@ -135,12 +137,21 @@ class MirroAlgorithms:
                     if corpus_dir.exists():
                         for f in corpus_dir.glob("*.jsonl"):
                             self._ingested_corpus_files.add(f.name)
+                if self.doc_tf is None:
+                    dt0 = time.time()
+                    self.doc_tf = [Counter(self.tokenize(inst)) for inst, _, _ in self.examples]
+                    print(f"  doc_tf пересчитан из examples за {time.time()-dt0:.1f}s")
                 print(f"  Индекс загружен из кэша за {time.time()-t0:.1f}s ({len(self.examples)} ex, {len(self.doc_freq)} terms)")
         except Exception as e:
             print(f"  Кэш индекса не загрузился: {e}")
 
     def _save_index(self):
-        """Сохраняет индекс в pickle для быстрого старта."""
+        """Сохраняет индекс в pickle для быстрого старта.
+
+        Пишет атомарно: полится во временный файл, затем переименовывается,
+        чтобы сбой на середине записи не оставил битый кэш (что вызывало
+        полную пересборку индекса при каждом старте).
+        """
         try:
             import pickle
             state = {
@@ -151,15 +162,18 @@ class MirroAlgorithms:
                 "term_freq": self.term_freq,
                 "total_docs": self.total_docs,
                 "term_docs": self.term_docs,
-                "doc_tf": self.doc_tf,
                 "stem_cache": self._stem_cache,
                 "nb_priors": self.nb_priors,
                 "nb_word_probs": self.nb_word_probs,
                 "nb_total_words": self.nb_total_words,
                 "ingested_corpus_files": self._ingested_corpus_files,
             }
-            with open(self.INDEX_CACHE, "wb") as f:
+            tmp = self.INDEX_CACHE.with_suffix(".pkl.tmp")
+            with open(tmp, "wb") as f:
                 pickle.dump(state, f, protocol=4)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, self.INDEX_CACHE)
             print(f"  Индекс сохранён в кэш ({self.INDEX_CACHE.stat().st_size/1e6:.0f} MB)")
         except Exception as e:
             print(f"  Не удалось сохранить кэш: {e}")

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json, os, time, random, re as _re, sys
 from pathlib import Path
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict, Counter
 from datetime import datetime as _datetime
 
@@ -394,7 +394,7 @@ def main():
     print("  Движок мышления: подфункции single return, юмор, схемы Босовой")
     print("\n  Запуск автономного обучения (каждые 60 мин)...")
     autonomous_learning_loop(interval_sec=3600)
-    server = HTTPServer((HOST, PORT), MirroAPI)
+    server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
     print(f"\n  → Слушаю на http://{HOST}:{PORT}")
     try: server.serve_forever()
     except KeyboardInterrupt: print("\n  Mirro остановлен."); server.server_close()
