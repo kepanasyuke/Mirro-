@@ -51,6 +51,12 @@ class MirroAI:
     def _tokenize(self, text):
         return [w for w in _re.findall(r"[а-яёa-z0-9]+", text.lower()) if len(w) > 1]
 
+    @staticmethod
+    def _boost_key(inst):
+        """Стабильный ключ буста: обычный hash() рандомизирован между
+        перезапусками Python (PYTHONHASHSEED), что теряло накопленный буст."""
+        return _re.sub(r"\W+", " ", inst.lower()).strip()[:120]
+
     def _build_index(self):
         """Строит TF-IDF индекс по всем данным."""
         print("Building Mirro AI index...")
@@ -107,8 +113,8 @@ class MirroAI:
             score = sum(query_tfidf.get(w, 0) for w in common)
             # Normalize by doc length
             score /= math.sqrt(len(inst_words))
-            # Boost from previous success
-            boost = self.boost_map.get(hash(inst) % 100000, 0)
+            # Boost from previous success (стабильный ключ, не hash() — он рандомизирован)
+            boost = self.boost_map.get(self._boost_key(inst), 0)
             score += boost
             if score > 0:
                 scored.append((score, output, inst, cluster))
@@ -154,7 +160,7 @@ class MirroAI:
                         coverage = len(gen_words & orig_words) / len(orig_words)
                         if coverage > 0.3:
                             # Good match — save as learned
-                            boost_key = hash(inst) % 100000
+                            boost_key = self._boost_key(inst)
                             self.boost_map[boost_key] = self.boost_map.get(boost_key, 0) + 0.1
                             learned += 1
         self._save_state()
@@ -162,7 +168,7 @@ class MirroAI:
 
     def learn_from_feedback(self, query, response, liked):
         """Учится на лайках/дизлайках пользователя."""
-        key = hash(query.strip().lower()) % 100000
+        key = self._boost_key(query)
         if liked:
             self.boost_map[key] = self.boost_map.get(key, 0) + 0.5
         else:
