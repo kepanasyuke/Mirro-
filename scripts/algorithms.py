@@ -537,6 +537,62 @@ class MirroAlgorithms:
         return score
 
     # ========================
+    #  6b. BLEU SELF-EVAL — сходство ответа с эталоном
+    # ========================
+    @staticmethod
+    def bleu_score(reference, hypothesis, max_n=4):
+        """BLEU-подобная метрика без внешних зависимостей (чистый Python).
+
+        Оценивает, насколько ответ (hypothesis) похож на эталон (reference)
+        из базы знаний, через точность n-грамм (1..max_n) с brevity-штрафом.
+        Возвращает float 0..1.
+        """
+        def _ngrams(words, n):
+            return [" ".join(words[i:i + n]) for i in range(max(0, len(words) - n + 1))]
+
+        def _precision(ref_tokens, hyp_tokens, n):
+            ref_ngrams = _ngrams(ref_tokens, n)
+            if not ref_ngrams:
+                return 1.0 if n == 1 else 0.0
+            hyp_ngrams = _ngrams(hyp_tokens, n)
+            if not hyp_ngrams:
+                return 0.0
+            from collections import Counter as _C
+            ref_counts = _C(ref_ngrams)
+            hyp_counts = _C(hyp_ngrams)
+            clipped = sum(min(c, ref_counts.get(g, 0)) for g, c in hyp_counts.items())
+            return clipped / len(hyp_ngrams)
+
+        import re as _re
+        ref_tokens = _re.findall(r"[а-яёa-z0-9]+", reference.lower())
+        hyp_tokens = _re.findall(r"[а-яёa-z0-9]+", hypothesis.lower())
+        if not ref_tokens or not hyp_tokens:
+            return 0.0
+
+        # Средняя точность n-грамм (shift от 1 для стабильности 0..1)
+        precisions = [_precision(ref_tokens, hyp_tokens, n) for n in range(1, max_n + 1)]
+        avg_prec = sum(precisions) / max_n
+
+        # Brevity penalty: штраф за слишком короткий ответ
+        bp = 1.0 if len(hyp_tokens) > len(ref_tokens) else max(0.0, min(1.0, len(hyp_tokens) / max(len(ref_tokens), 1)))
+
+        # Взвешиваем: unigram важнее, brevity-штраф умеренный
+        return min(1.0, avg_prec * (0.7 + 0.3 * bp))
+
+    def self_eval_bleu(self, question, answer):
+        """Self-eval: находит эталон из базы и сравнивает с ответом через BLEU.
+
+        Возвращает (bleu_score, reference), где reference — ближайший эталон
+        из базы (или None, если база пуста). Высокий балл = ответ хорошо
+        совпадает с эталоном знаний.
+        """
+        results = self.search_tfidf(question, top_n=1)
+        if not results:
+            return 0.0, None
+        (inst, ref, cl), sc = results[0]
+        return self.bleu_score(ref, answer), ref
+
+    # ========================
     #  7. SELF-CORRECTION
     # ========================
     def self_correct(self, question, initial_answer):
