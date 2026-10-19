@@ -64,8 +64,9 @@ print(f"  Всего задач: {len(IMPROVEMENTS)}")
 print()
 
 from collections import Counter
-by_status = Counter(i[4] for i in IMPROVEMENTS)
-by_area = Counter(i[5] for i in IMPROVEMENTS)
+# Формат записи: (num, name, priority, desc, AREA, STATUS)
+by_status = Counter(i[5] for i in IMPROVEMENTS)
+by_area = Counter(i[4] for i in IMPROVEMENTS)
 
 print("  Статусы:")
 for s, c in by_status.most_common():
@@ -75,9 +76,9 @@ print("  Области:")
 for a, c in by_area.most_common():
     print(f"    {a:12} {c}")
 print()
-print("  Осталось сделать:", sum(1 for i in IMPROVEMENTS if i[4] not in ("done", "in_progress")))
-print("  В процессе:", sum(1 for i in IMPROVEMENTS if i[4] == "in_progress"))
-print("  Сделано:", sum(1 for i in IMPROVEMENTS if i[4] == "done"))
+print("  Осталось сделать:", sum(1 for i in IMPROVEMENTS if i[5] not in ("done", "in_progress")))
+print("  В процессе:", sum(1 for i in IMPROVEMENTS if i[5] == "in_progress"))
+print("  Сделано:", sum(1 for i in IMPROVEMENTS if i[5] == "done"))
 print()
 
 # Save to file for mind map
