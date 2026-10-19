@@ -1,1 +1,1 @@
-{"perceptron_weights": {"f0": 0.03939821321111441, "f1": 0.026494933578493363, "f2": -0.01453970939641308, "f3": -0.01}, "perceptron_bias": 0.01, "perceptron_trained": true, "auto_learned": 30, "updated": "2026-10-19T02:40:14.964732"}
+{"perceptron_weights": {"f0": 0.040799091551673335, "f1": 0.024784326140386927, "f2": -0.020597928358989562, "f3": -0.02}, "perceptron_bias": 0.0, "perceptron_trained": true, "auto_learned": 30, "updated": "2026-10-19T21:17:55.276301"}
