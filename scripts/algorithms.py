@@ -37,7 +37,9 @@ class MirroAlgorithms:
         self.examples = []          # (instruction, output, cluster)
         self.vocab = []             # ordered word list
         self.word2idx = {}          # word -> index
-        self.qa_boost = {}          # query hash -> boost value
+        self.qa_boost = {}          # query key -> boost value
+        self.qa_boost_ts = {}       # query key -> последний ts обновления (для затухания)
+        self.boost_decay_hours = 168.0  # время полураспада буста (7 дней)
         self.cache = {}             # query -> cached answer
         self.cache_max = 200
         self._ingested_corpus_files = set()
@@ -106,6 +108,78 @@ class MirroAlgorithms:
             self._save_index()
 
     # ========================
+    #  BOOST — предпочтения, экспоненциально затухающие со временем
+    # ========================
+    @staticmethod
+    def _boost_key(inst):
+        """Стабильный ключ буста. Обычный hash() рандомизирован между
+        перезапусками Python (PYTHONHASHSEED), что теряло предпочтения."""
+        return _re.sub(r"\W+", " ", (inst or "").lower()).strip()[:120]
+
+    def _decay_boost(self, key, now=None):
+        """Возвращает текущий (затухший) буст и обновляет его временем.
+
+        Экспоненциальное затухание: за каждые boost_decay_hours буст делится
+        на 2. Старые предпочтения перестают доминировать.
+        """
+        if key not in self.qa_boost:
+            return 0.0
+        now = now or time.time()
+        last = self.qa_boost_ts.get(key, now)
+        elapsed = max(0.0, now - last) / 3600.0  # в часах
+        halflife = self.boost_decay_hours
+        factor = 0.5 ** (elapsed / halflife) if halflife > 0 else 1.0
+        current = self.qa_boost[key] * factor
+        # срезаем совсем малые значения
+        if current < 0.05:
+            self.qa_boost.pop(key, None)
+            self.qa_boost_ts.pop(key, None)
+            return 0.0
+        self.qa_boost[key] = current
+        self.qa_boost_ts[key] = now
+        return current
+
+    def _add_boost(self, key, delta):
+        """Добавляет буст к ключу (с пересчётом затухания до прибавки)."""
+        now = time.time()
+        cur = self._decay_boost(key, now)
+        self.qa_boost[key] = max(0.0, cur + delta)
+        self.qa_boost_ts[key] = now
+
+    def _save_boost_state(self):
+        """Лёгкая персистентность буста (без перезаписи 1.5 ГБ индекса).
+
+        Пишет отдельный маленький JSON рядом с индексом — так лайк/дизлайк
+        не вызывает дорогой _save_index() на каждом feedback.
+        """
+        try:
+            import json as _json
+            state = {
+                "qa_boost": self.qa_boost,
+                "qa_boost_ts": self.qa_boost_ts,
+                "boost_decay_hours": self.boost_decay_hours,
+            }
+            path = self.INDEX_CACHE.with_suffix(".boost.json")
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(_json.dumps(state, ensure_ascii=False), "utf-8")
+            os.replace(tmp, path)
+        except Exception as e:
+            print(f"  Не удалось сохранить буст: {e}")
+
+    def _load_boost_state(self):
+        """Восстанавливает буст из лёгкого JSON (если есть)."""
+        try:
+            import json as _json
+            path = self.INDEX_CACHE.with_suffix(".boost.json")
+            if path.exists():
+                state = _json.loads(path.read_text("utf-8"))
+                self.qa_boost = dict(state.get("qa_boost", {}))
+                self.qa_boost_ts = dict(state.get("qa_boost_ts", {}))
+                self.boost_decay_hours = float(state.get("boost_decay_hours", self.boost_decay_hours))
+        except Exception:
+            pass
+
+    # ========================
     #  PERSISTENT INDEX (pickle)
     # ========================
     def _try_load_index(self):
@@ -131,6 +205,9 @@ class MirroAlgorithms:
                 self.nb_word_probs = state.get("nb_word_probs", defaultdict(Counter))
                 self.nb_total_words = state.get("nb_total_words", Counter())
                 self._ingested_corpus_files = state.get("ingested_corpus_files", set())
+                self.qa_boost = state.get("qa_boost", {})
+                self.qa_boost_ts = state.get("qa_boost_ts", {})
+                self._load_boost_state()
                 self._loaded = True
                 if not self._ingested_corpus_files:
                     corpus_dir = DATA_DIR / "corpus_ready"
@@ -167,6 +244,8 @@ class MirroAlgorithms:
                 "nb_word_probs": self.nb_word_probs,
                 "nb_total_words": self.nb_total_words,
                 "ingested_corpus_files": self._ingested_corpus_files,
+                "qa_boost": self.qa_boost,
+                "qa_boost_ts": self.qa_boost_ts,
             }
             tmp = self.INDEX_CACHE.with_suffix(".pkl.tmp")
             with open(tmp, "wb") as f:
@@ -666,9 +745,18 @@ class MirroAlgorithms:
         return 1.0 / (1.0 + math.exp(-activation))
 
     def train_from_feedback(self, query, response, liked):
-        """Обучает перцептрон на feedback пользователя (лайк/дизлайк)."""
+        """Обучает перцептрон на feedback пользователя (лайк/дизлайк).
+
+        Дополнительно записывает экспоненциально затухающий буст: лайк
+        повышает предпочтение похожих вопросов, дизлайк понижает.
+        """
         label = 1 if liked else -1
-        return self.perceptron_train(query, response, label)
+        learned = self.perceptron_train(query, response, label)
+        # Буст на ключ ответа (помогает выбирать похожие ответы в будущем)
+        boost_key = self._boost_key(response)
+        self._add_boost(boost_key, 0.4 if liked else -0.3)
+        self._save_boost_state()
+        return learned
 
     # ========================
     #  8. COMPOSE ANSWER (improved)
@@ -688,7 +776,7 @@ class MirroAlgorithms:
             self.cache[cache_key] = None
             return None
 
-        # 2. Score candidates with perceptron + QA score
+        # 2. Score candidates with perceptron + QA score (+ затухающий буст предпочтений)
         scored = []
         seen = set()
         for (inst, out, cl), tfidf_score in results:
@@ -697,7 +785,8 @@ class MirroAlgorithms:
             seen.add(out[:50])
             nn_score = self.perceptron_predict(query, out)
             qa = self.qa_score(query, out)
-            combined = 0.3 * tfidf_score + 0.3 * nn_score + 0.4 * qa
+            boost = self._decay_boost(self._boost_key(out))
+            combined = 0.3 * tfidf_score + 0.3 * nn_score + 0.4 * qa + boost
             scored.append((combined, out, cl))
 
         if not scored:
