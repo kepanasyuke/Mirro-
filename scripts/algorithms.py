@@ -475,7 +475,8 @@ class MirroAlgorithms:
         best_log = -1e9
 
         for cl, prior in self.nb_priors.items():
-            log_prob = math.log(prior)
+            # Защита от math.log(0): кластер без примеров в выборке (prior=0).
+            log_prob = math.log(max(prior, 1e-9))
             total = max(self.nb_total_words[cl], 1)
             for w in words:
                 prob = (self.nb_word_probs[cl].get(w, 1)) / (total + len(self.vocab))
