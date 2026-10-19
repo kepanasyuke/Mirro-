@@ -95,8 +95,11 @@ def classify(query):
                         f"{nums[0]:g} / {nums[1]:g} = {nums[0]/nums[1]:.6g}")
 
     # --- проценты ---
-    m = re.search(r"(\d+[.,]?\d*)\s*%\s*(от|из|от числа)?\s*(\d+[.,]?\d*)?", q)
-    if m and "процент" in q or m:
+    # Поддерживаем и символ %, и словесную форму «15 процентов от 200».
+    m = re.search(
+        r"(\d+[.,]?\d*)\s*(?:%|процент(?:ов|а|у|ом)?)\s*(от|из|от числа|числа)?\s*(\d+[.,]?\d*)?",
+        q)
+    if m:
         pct = float(m.group(1).replace(",", "."))
         if m.group(3):
             base = float(m.group(3).replace(",", "."))
