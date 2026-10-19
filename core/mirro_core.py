@@ -230,6 +230,20 @@ def answer_looks_bad(query, answer):
     return False
 
 
+def _provider_help_hint():
+    """Подсказка, когда внешний провайдер недоступен (нет ключа)."""
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from scripts.providers import status as _pv_status
+        if any(_pv_status().values()):
+            return ""  # провайдер настроен — не морочим голову
+    except Exception:
+        pass
+    return (" Подсказка: чтобы я отвечала на такие вопросы, добавь ключ DeepSeek. "
+            "Положить его сюда: core/providers_secret.json "
+            '(формат {"deepseek": "sk-..."}) или задать переменную DEEPSEEK_API_KEY.)')
+
+
 def _voice(raw, query, strategy="base"):
     """Обернуть сырой ответ в голос Mirro (свои слова, характер)."""
     try:
@@ -277,7 +291,9 @@ def build_response(prompt, cluster):
         if provider_answer:
             return {"content": provider_answer[:2500], "strategy": "provider"}
 
-        return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос.", "strategy": "unknown"}
+        # Нет ответа в базе/вебе И провайдер недоступен — подскажем, как подключить.
+        hint = _provider_help_hint()
+        return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
     except Exception as e:
         return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
 
