@@ -112,7 +112,7 @@ def scan_raw_data():
     for dataset_dir in RAW.rglob("*"):
         if not dataset_dir.is_file():
             continue
-        if dataset_dir.suffix not in (".json", ".jsonl", ".parquet"):
+        if dataset_dir.suffix not in (".json", ".jsonl", ".parquet", ".gz"):
             continue
         if dataset_dir.stat().st_size == 0:
             continue
@@ -125,16 +125,19 @@ def scan_raw_data():
         try:
             items = []
             data = dataset_dir.read_bytes()
-            if dataset_dir.suffix == ".gz":
+            suffix = dataset_dir.suffix
+            # .gz — сначала распаковываем, затем определяем формат по настоящему имени
+            if suffix == ".gz":
                 with gzip.GzipFile(fileobj=io.BytesIO(data)) as f:
                     data = f.read()
+                suffix = Path(dataset_dir.stem).suffix  # "xx.jsonl.gz" -> ".jsonl"
 
-            if dataset_dir.suffix == ".jsonl":
+            if suffix == ".jsonl":
                 for line in data.decode("utf-8", errors="replace").split("\n"):
                     if line.strip():
                         try: items.append(json.loads(line))
                         except: pass
-            elif dataset_dir.suffix == ".json":
+            elif suffix == ".json":
                 try:
                     parsed = json.loads(data.decode("utf-8", errors="replace"))
                     if isinstance(parsed, list):
@@ -142,7 +145,7 @@ def scan_raw_data():
                     elif isinstance(parsed, dict):
                         items = [parsed]
                 except: pass
-            elif dataset_dir.suffix == ".parquet":
+            elif suffix == ".parquet":
                 continue  # skip parquet (needs pandas)
 
             for item in items:
