@@ -14,7 +14,7 @@ Mirro учится сама: ходит в открытые источники, 
   - Свой опыт (логи вызовов → дообучение)
 """
 
-import json, os, time, random, io, gzip, hashlib, urllib.request, urllib.error, threading
+import json, os, time, random, io, gzip, hashlib, urllib.request, urllib.error, urllib.parse, threading
 from pathlib import Path
 from datetime import datetime, timedelta
 
@@ -227,7 +227,7 @@ class SelfLearner:
                 # Get the article content
                 content_url = (
                     "https://ru.wikipedia.org/w/api.php"
-                    f"?action=query&titles={urllib.request.quote(title)}"
+                    f"?action=query&titles={urllib.parse.quote(title)}"
                     "&prop=extracts&exintro&explaintext&format=json"
                 )
                 content_data = self._fetch_json(content_url)
