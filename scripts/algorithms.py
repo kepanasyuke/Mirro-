@@ -40,6 +40,7 @@ class MirroAlgorithms:
         self.qa_boost = {}          # query key -> boost value
         self.qa_boost_ts = {}       # query key -> последний ts обновления (для затухания)
         self.boost_decay_hours = 168.0  # время полураспада буста (7 дней)
+        self.feedback_history = []  # (query, response, liked) — для батч-обучения
         self.cache = {}             # query -> cached answer
         self.cache_max = 200
         self._ingested_corpus_files = set()
@@ -115,6 +116,11 @@ class MirroAlgorithms:
         """Стабильный ключ буста. Обычный hash() рандомизирован между
         перезапусками Python (PYTHONHASHSEED), что теряло предпочтения."""
         return _re.sub(r"\W+", " ", (inst or "").lower()).strip()[:120]
+
+    @staticmethod
+    def _now_iso():
+        from datetime import datetime as _dt
+        return _dt.utcnow().isoformat()
 
     def _decay_boost(self, key, now=None):
         """Возвращает текущий (затухший) буст и обновляет его временем.
@@ -752,11 +758,46 @@ class MirroAlgorithms:
         """
         label = 1 if liked else -1
         learned = self.perceptron_train(query, response, label)
+        # Копим в буфер для батч-обучения (см. train_from_history)
+        self.feedback_history.append((query, response, liked))
+        if len(self.feedback_history) > 500:
+            self.feedback_history.pop(0)
         # Буст на ключ ответа (помогает выбирать похожие ответы в будущем)
         boost_key = self._boost_key(response)
         self._add_boost(boost_key, 0.4 if liked else -0.3)
         self._save_boost_state()
         return learned
+
+    def train_from_history(self, batch_size=32, epochs=1):
+        """Пакетное обучение перцептрона на накопленной истории feedback.
+
+        Пере-обучает на батче оценённых пользователем (query, response, liked)
+        пар. Более устойчиво, чем одиночные шаги: каждый пример обновляется
+        без хрупкой последовательности (epochs проходов по батчу).
+        Возвращает количество отработанных примеров.
+        """
+        if not self.feedback_history:
+            return 0
+        batch = self.feedback_history[-batch_size:]
+        processed = 0
+        for _ in range(max(1, epochs)):
+            for query, response, liked in batch:
+                label = 1 if liked else -1
+                self.perceptron_train(query, response, label)
+                processed += 1
+        # Сохраняем одиночную персистентность модели (буст уже в JSON)
+        try:
+            import json as _json
+            state = {"perceptron_weights": self.perceptron_weights,
+                     "perceptron_bias": self.perceptron_bias,
+                     "perceptron_trained": self.perceptron_trained,
+                     "auto_learned": len(self.feedback_history),
+                     "updated": self._now_iso()}
+            path = self.INDEX_CACHE.with_suffix(".perceptron.json")
+            path.write_text(_json.dumps(state, ensure_ascii=False), "utf-8")
+        except Exception:
+            pass
+        return processed
 
     # ========================
     #  8. COMPOSE ANSWER (improved)
