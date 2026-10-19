@@ -437,7 +437,7 @@ draw();
   <div class="logo">
     <div>
       <div class="name">Mirro</div>
-      <div class="ver">эволюционная нейросеть · v0.2</div>
+      <div class="ver">эволюционная нейросеть · v0.3</div>
     </div>
   </div>
 
@@ -552,7 +552,7 @@ draw();
         <li>Детектор галлюцинаций</li>
         <li>Веб-поиск (Wikidata) по актуальным темам</li>
       </ul>
-      <p style="margin-top:12px" class="muted">Версия 0.2 · Российская Федерация</p>
+      <p style="margin-top:12px" class="muted">Версия 0.3 · Российская Федерация</p>
     </div>
     <div class="d-foot"><button class="btn accent" onclick="closeDialog('ovAbout')">Понятно</button></div>
   </div>
@@ -846,7 +846,7 @@ async function exportKnowledge() {
     let md = '# Mirro — дайджест знаний\n\n';
     md += '**Дата:** ' + now + '  \n';
     md += '**Всего примеров:** ' + (d.total_examples || 0).toLocaleString() + '  \n';
-    md += '**Версия:** ' + (d.version || '0.2') + '  \n\n';
+    md += '**Версия:** ' + (d.version || '0.3') + '  \n\n';
     md += '## Алгоритмы\n\n';
     md += '- TF-IDF + BM25 поиск\n- TextRank суммаризация\n- Naive Bayes классификация\n- Перцептрон (обучение на оценках)\n- Детектор галлюцинаций\n- Стемминг русских слов\n- Web-поиск (Wikidata)\n- Кэш частых запросов\n- Автономное обучение\n\n';
     md += '## Кластеры знаний\n\n';

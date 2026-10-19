@@ -76,7 +76,7 @@ class MirroCore:
             prov = _pv_status()
         except Exception:
             prov = {}
-        return {"name": "Mirro", "version": "0.2", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
+        return {"name": "Mirro", "version": "0.3", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
     def corpus_total(self):
         if not hasattr(self, "_corpus_total"):
             t = 0
@@ -387,17 +387,21 @@ class MirroAPI(BaseHTTPRequestHandler):
             except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
             return
         self._json({"error": "not found"}, 404)
+    def do_DELETE(self):
+        # У Mirro нет изменяемых ресурсов, удаляемых через DELETE —
+        # отвечаем JSON-404 единообразно с остальным API (вместо HTML-501).
+        self._json({"error": "not found"}, 404)
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
     def log_message(self, fmt, *args): pass
 
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
-    print("MIRRO v0.2 - Единая нейросеть знаний")
+    print("MIRRO v0.3 - Единая нейросеть знаний")
     print(f"  API: http://{HOST}:{PORT}")
     print(f"  Загружено: {core.stats['total_examples']} примеров")
     for cl, info in core.get_cluster_info().items():
