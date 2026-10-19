@@ -99,3 +99,17 @@ GET  /catalog.json         — каталог датасетов
 | Лаунчер (рекомендуется) | двойной клик `mirro_launcher.pyw` |
 | Python напрямую | `python core/mirro_core.py` |
 | PowerShell | `.\Start-Mirro.ps1` |
+
+## Тесты
+
+Набор юнит- и интеграционных тестов на стандартном `unittest` (без внешних
+зависимостей). Запуск:
+
+```
+python -m unittest discover -s tests -v
+```
+
+Покрывает: движок мышления (`algos/think.py`), reasoning-кластеризацию,
+голос/характер (`scripts/voice.py`), провайдеров (`scripts/providers.py`),
+хелперы ядра и живой API (health, чат, модели, обработка ошибок). Тесты
+интеграции с живым API пропускаются, если сервер Mirro не запущен.
