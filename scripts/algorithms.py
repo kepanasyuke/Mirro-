@@ -88,6 +88,10 @@ class MirroAlgorithms:
         self.cooc_matrix = defaultdict(Counter)
         self.embedding_size = 0
         self.word_vectors = {}
+        # CBOW (собственные word embeddings через скользящее окно)
+        self.cbow_dim = 32
+        self.cbow_vectors = {}   # word -> [float] (нормированный вектор)
+        self._cbow_built = False
 
         # TextRank graph
         self.graph_ready = False
@@ -526,6 +530,75 @@ class MirroAlgorithms:
                 self.word_vectors[w] = [v / max_v for v in vec]
 
         print(f"  {len(self.word_vectors)} word vectors")
+
+    def build_cbow_embeddings(self, window=2, max_examples=20000):
+        """Строит собственные word embeddings через CBOW (без numpy).
+
+        Для каждого окна контекста предсказывает целевое слово по среднему
+        контекста; обновляет входные/выходные векторы. Затем нормирует.
+        Результат — self.cbow_vectors: word -> float[dim].
+        """
+        if self._cbow_built or not self.word2idx:
+            return
+        import random as _rnd
+        rnd = _rnd.Random(42)
+        vocab = list(self.word2idx.keys())
+        idx2w = {v: k for k, v in self.word2idx.items()}
+        dim = max(4, min(self.cbow_dim, len(vocab) // 2 or 1))
+
+        # Инициализация векторов: случайные малые значения (уникальны на слово)
+        in_vec = {w: [rnd.uniform(-0.01, 0.01) for _ in range(dim)] for w in vocab}
+        out_vec = {w: [0.0] * dim for w in vocab}
+
+        def dot(a, b):
+            return sum(x * y for x, y in zip(a, b))
+
+        def collect_windows():
+            for _, text, _ in self.examples[:max_examples]:
+                words = self.tokenize(text)
+                if len(words) < 2:
+                    continue
+                for i, target in enumerate(words):
+                    if target not in self.word2idx:
+                        continue
+                    ctx = [words[j] for j in range(max(0, i - window), min(len(words), i + window + 1)) if j != i]
+                    yield target, ctx
+
+        lr = 0.05
+        for target, ctx in collect_windows():
+            ctx = [w for w in ctx if w in self.word2idx]
+            if not ctx:
+                continue
+            # Усреднённый контекстный вектор
+            avg = [sum(in_vec[w][d] for w in ctx) / len(ctx) for d in range(dim)]
+            score = dot(avg, out_vec[target])
+            # простая сигмоидная ошибка: p - 1 (для положительного примера)
+            error = (1.0 / (1.0 + math.exp(-score))) - 1.0
+            # Обновление выходного вектора цели
+            for d in range(dim):
+                out_vec[target][d] -= lr * error * avg[d]
+            # Обновление входных векторов контекста
+            for w in ctx:
+                for d in range(dim):
+                    in_vec[w][d] -= (lr * error * out_vec[target][d]) / len(ctx)
+
+        # Нормируем и сохраняем
+        self.cbow_vectors = {}
+        for w in vocab:
+            v = in_vec[w]
+            norm = math.sqrt(sum(x * x for x in v)) or 1.0
+            self.cbow_vectors[w] = [x / norm for x in v]
+        self.cbow_dim = dim
+        self._cbow_built = True
+        print(f"  CBOW: {len(self.cbow_vectors)} векторов, dim={dim}")
+
+    def cbow_similarity(self, word_a, word_b):
+        """Косинусная близость по CBOW-векторам (0..1)."""
+        if not self._cbow_built or word_a not in self.cbow_vectors or word_b not in self.cbow_vectors:
+            return 0.0
+        va = self.cbow_vectors[word_a]
+        vb = self.cbow_vectors[word_b]
+        return sum(x * y for x, y in zip(va, vb))
 
     def cosine_similarity(self, text1, text2):
         """Cosine similarity between two texts."""
