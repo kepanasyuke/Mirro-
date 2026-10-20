@@ -804,16 +804,26 @@ async function runLearn() {
   const bar = document.getElementById('learnBar');
   const txt = document.getElementById('learnTxt');
   btn.disabled = true; txt.textContent = 'Обучение... (до минуты)';
-  bar.style.width = '20%';
+  // Плавная «дышащая» анимация, пока сервер обучается (реальный инкремент
+  // невозможен — /v1/self-learn один блокирующий вызов).
+  bar.style.width = '15%';
+  let p = 15;
+  const iv = setInterval(() => {
+    p = Math.min(92, p + (92 - p) * 0.06 + 1);
+    bar.style.width = p + '%';
+  }, 700);
   try {
     const r = await fetch(API + '/v1/self-learn', {
       method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}'
     });
     const d = await r.json();
+    clearInterval(iv);
     bar.style.width = '100%';
-    txt.textContent = 'Усвоено приёмов: ' + (d.learned || 0);
+    txt.textContent = 'Усвоено приёмов: ' + (d.learned || 0) + ' из ' + (d.checked || 0);
     toast('Обучение завершено', 'ok');
   } catch(e) {
+    clearInterval(iv);
+    bar.style.width = '15%';
     txt.textContent = 'Ошибка: ' + e.message;
     toast('Ошибка обучения', 'err');
   }
