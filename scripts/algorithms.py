@@ -94,6 +94,7 @@ class MirroAlgorithms:
 
         # Naive Bayes
         self.nb_priors = Counter()
+        self.nb_priors_calib = {}  # калиброванные (смягчённые) априорные вероятности
         self.nb_word_probs = defaultdict(Counter)
         self.nb_total_words = Counter()
 
@@ -211,6 +212,7 @@ class MirroAlgorithms:
                 self.doc_tf = state.get("doc_tf")
                 self._stem_cache = state.get("stem_cache", {})
                 self.nb_priors = state.get("nb_priors", Counter())
+                self.nb_priors_calib = state.get("nb_priors_calib", {})
                 self.nb_word_probs = state.get("nb_word_probs", defaultdict(Counter))
                 self.nb_total_words = state.get("nb_total_words", Counter())
                 self._ingested_corpus_files = state.get("ingested_corpus_files", set())
@@ -251,6 +253,7 @@ class MirroAlgorithms:
                 "term_docs": self.term_docs,
                 "stem_cache": self._stem_cache,
                 "nb_priors": self.nb_priors,
+                "nb_priors_calib": self.nb_priors_calib,
                 "nb_word_probs": self.nb_word_probs,
                 "nb_total_words": self.nb_total_words,
                 "ingested_corpus_files": self._ingested_corpus_files,
@@ -555,7 +558,24 @@ class MirroAlgorithms:
         for cl in self.nb_priors:
             self.nb_priors[cl] /= total
 
+        # Калибровка априорных вероятностей: при сильном дисбалансе кластеров
+        # (ru ~650k против design ~6k) частотные prior подавляют редкие кластеры.
+        # Смягчаем: нормируем sqrt-шкалу, чтобы редкие классы не забивались.
+        self.nb_priors_calib = self._calibrate_priors(dict(self.nb_priors))
+
         print(f"  {len(self.nb_priors)} classes trained")
+
+    def _calibrate_priors(self, priors, alpha=0.5):
+        """Возвращает смягчённые априорные вероятности.
+
+        alpha=1.0 — частотные (без изменений); меньше 1 — сильнее выравнивает
+        дисбаланс (калибровка). Сумма нормируется к 1.
+        """
+        if not priors:
+            return {}
+        vals = {cl: (p ** alpha) for cl, p in priors.items() if p > 0}
+        s = sum(vals.values()) or 1.0
+        return {cl: v / s for cl, v in vals.items()}
 
     def nb_classify(self, text):
         """Naive Bayes классификация текста по кластерам."""
@@ -563,7 +583,10 @@ class MirroAlgorithms:
         best_cl = None
         best_log = -1e9
 
-        for cl, prior in self.nb_priors.items():
+        # Используем КАЛИБРОВАННЫЕ априорные вероятности (смягчение дисбаланса),
+        # если они вычислены; иначе — обычные частотные.
+        priors = self.nb_priors_calib if self.nb_priors_calib else self.nb_priors
+        for cl, prior in priors.items():
             # Защита от math.log(0): кластер без примеров в выборке (prior=0).
             log_prob = math.log(max(prior, 1e-9))
             total = max(self.nb_total_words[cl], 1)
