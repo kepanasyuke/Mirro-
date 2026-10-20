@@ -77,12 +77,31 @@ def try_jarvis(query):
 
 
 def _clean(text):
-    """Убираем служебный мусор из ответов базы (br, код-обёртки, ссылки)."""
-    text = _re.sub(r"<br\s*/?>", " ", text)
+    """Убираем служебный мусор из ответов базы (br, код-обёртки, ссылки).
+
+    Важно: датасеты часто содержат сырой HTML (<code>, <a>, <sup> и т.п.),
+    который иначе показывается пользователю как исходный код. Полностью
+    снимаем теги, а у ссылок оставляем только текст (и убираем URL, чтобы
+    не светились голые «https://…»).
+    """
+    text = _re.sub(r"<br\s*/?>", " ", text, flags=_re.IGNORECASE)
+    # Ссылки: <a href="...">текст</a> -> текст
+    text = _re.sub(r"<a\b[^>]*>", "", text, flags=_re.IGNORECASE)
+    text = _re.sub(r"</a>", "", text, flags=_re.IGNORECASE)
+    # Код-обёртки и переносы строк, скобки внутри тегов
     text = _re.sub(r"<pre><code[^>]*>|</code></pre>|```[a-z]*", "", text)
+    # Все оставшиеся теги (code, sup, span, strong, b, i, em, div, p …) — снимаем
+    text = _re.sub(r"</?[a-zA-Z][^>]*>", "", text)
     # Убираем служебные метки веб-поиска: [Веб] заголовок / Источник: URL
     text = _re.sub(r"\[Веб\]\s*", "", text)
     text = _re.sub(r"\s*Источник:\s*\S+", "", text)
+    # Голые URL (без текста-якоря): убираем URL, но сохраняем конечную
+    # пунктуацию предложения (точку/запятую после адреса).
+    def _drop_bare_url(m):
+        url = m.group(1)
+        tail = "" if not url else _re.sub(r"^.*?([.,!?;:)]+)$", r"\1", url)
+        return tail if tail != url else ""
+    text = _re.sub(r"\s*https?://(\S+)", _drop_bare_url, text)
     text = _re.sub(r"\s+", " ", text).strip()
     return text
 

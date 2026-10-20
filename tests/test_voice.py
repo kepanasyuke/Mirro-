@@ -36,6 +36,21 @@ class TestClean(unittest.TestCase):
     def test_whitespace_normalized(self):
         self.assertEqual(_clean("много   пробелов\n\nи перевода"), "много пробелов и перевода")
 
+    def test_inline_code_tag_stripped(self):
+        self.assertEqual(_clean("По сути, <code>gem -v</code> вот надо."),
+                         "По сути, gem -v вот надо.")
+
+    def test_link_tag_reduced_to_text(self):
+        self.assertEqual(_clean('Смотри <a href="https://jekyllrb.com">официальный сайт</a>.'),
+                         "Смотри официальный сайт.")
+
+    def test_all_html_tags_stripped(self):
+        text = '<b>Важно:</b> ставь <sup>2</sup> и <span style="color:red">красным</span>.'
+        self.assertEqual(_clean(text), "Важно: ставь 2 и красным.")
+
+    def test_bare_url_removed(self):
+        self.assertEqual(_clean("Читай https://example.com/docs."), "Читай.")
+
 
 class TestRephrase(unittest.TestCase):
     def test_lowercases_stilted_words(self):
