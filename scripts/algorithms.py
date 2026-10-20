@@ -976,6 +976,14 @@ class MirroAlgorithms:
             self.perceptron_trained = True
             learned += 1
 
+        # Реплей-буфер: пере-играем оценённые пользователем пары (feedback),
+        # чтобы модель не забывала явные предпочтения.
+        if self.feedback_history:
+            replay = sum(
+                self.perceptron_train(q, r, 1 if liked else -1)
+                for q, r, liked in self.feedback_history)
+            learned += replay
+
         return learned
 
     # ========================
