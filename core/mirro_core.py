@@ -253,12 +253,16 @@ def try_web(query):
     except: pass
     return None
 
-def try_provider(query):
-    """Финальный фоллбэк: внешний ИИ-провайдер (DeepSeek и др.), если всё остальное не ответило."""
+def try_provider(query, context=""):
+    """Финальный фоллбэк: внешний ИИ-провайдер (DeepSeek и др.), если всё остальное не ответило.
+
+    context — история диалога; провайдеру передаётся, чтобы он учитывал
+    предыдущие реплики и не терял нить разговора.
+    """
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.providers import fallback
-        return fallback(query)
+        return fallback(query, system=context or None)
     except: pass
     return None
 
@@ -313,7 +317,8 @@ def _voice(raw, query, strategy="base"):
         return raw
 
 
-def build_response(prompt, cluster):
+def build_response(prompt, cluster, context=""):
+    """Построить ответ. prompt — актуальный вопрос, context — история диалога."""
     try:
         greeting = try_greetings(prompt)
         if greeting: return {"content": greeting, "strategy": "direct"}
@@ -409,10 +414,25 @@ class MirroAPI(BaseHTTPRequestHandler):
             model = body.get("model", "mirro/default")
             stream = body.get("stream", False)
             if not messages: return self._json({"error": "no messages"}, 400)
-            prompt = " ".join(m.get("content", "") for m in messages)
-            cluster = core.classify_task(prompt)
+
+            # Контекст диалога: главный запрос — последняя реплика ПОЛЬЗОВАТЕЛЯ,
+            # а предыдущие реплики — контекст (иначе их склейка размывает
+            # актуальный вопрос и портит поиск по базе).
+            conversation = []
+            last_user = ""
+            for m in messages:
+                role = (m.get("role") or "").lower()
+                content = (m.get("content") or "").strip()
+                if not content:
+                    continue
+                conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
+                if role in ("user", "human"):
+                    last_user = content
+            prompt = last_user or " ".join(m.get("content", "") for m in messages)
+            context = "\n".join(conversation)
+            cluster = core.classify_task(prompt or context)
             t0 = time.time()
-            response = build_response(prompt, cluster)
+            response = build_response(prompt, cluster, context)
             try:
                 if response.get("strategy") in ("base",) and response.get("content"):
                     algo = _grab_algo()
