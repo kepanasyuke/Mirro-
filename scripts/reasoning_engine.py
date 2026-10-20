@@ -86,6 +86,9 @@ def score_candidate(query, inst, out, cluster, tfidf_score, preferred=None):
         reasons.append(f"тема:{overlap}")
         if overlap == 0:
             # Ни одного смыслового слова вопроса в (вопрос+ответ) — это мимо темы.
+            # Обнуляем вклад TF-IDF (он и выдал мусор) и сильно штрафуем,
+            # чтобы «расскажи про роботов»→певица никогда не выигрывало.
+            s += -2.5 * tfidf_score
             s -= 8.0
             reasons.append("мимо-темы")
         elif jac < 0.15:

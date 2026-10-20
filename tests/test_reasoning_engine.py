@@ -49,6 +49,23 @@ class TestScoreCandidate(unittest.TestCase):
         self.assertGreater(s_on, s_off)
         self.assertTrue(any("мимо" in r for r in reasons))
 
+    def test_relevant_survives_threshold(self):
+        q = "расскажи про роботов"
+        best, sc, reason = choose_best(q,
+            [(("роботы устройства", "Роботы — автоматические устройства для работы.", "ru"), 2.0)],
+            preferred="ru")
+        self.assertIsNotNone(best)
+        self.assertGreater(sc, 4.0)
+
+    def test_off_topic_rejected_by_choose_best(self):
+        # Детектор «не по теме»: вопрос про роботов, кандидат про певицу.
+        q = "расскажи про роботов"
+        best, sc, reason = choose_best(q,
+            [(("Пугачёва певица", "Алла Пугачёва — эстрадная певица.", "ru"), 7.0)],
+            preferred="ru")
+        self.assertIsNone(best)
+        self.assertIn("слабый результат", reason)
+
 
 class TestChooseBest(unittest.TestCase):
     def test_no_candidates(self):
