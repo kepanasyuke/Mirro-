@@ -66,6 +66,15 @@ class MirroCore:
         self.stats["clusters_used"][cluster] = self.stats["clusters_used"].get(cluster, 0) + 1
         with open(LOGS / "calls.jsonl", "a", encoding="utf-8") as f:
             f.write(json.dumps({"ts": _datetime.utcnow().isoformat(), "cluster": cluster, "provider": provider, "latency_ms": latency_ms, "success": success, "prompt_len": len(prompt)}, ensure_ascii=False) + "\n")
+        # ТОП-вопросов: считаем нормализованные запросы (ТОП-30)
+        self.stats.setdefault("top_questions", {})
+        q = " ".join(prompt.split())[:60].lower()
+        if q:
+            self.stats["top_questions"][q] = self.stats["top_questions"].get(q, 0) + 1
+            # держим не более 30 ключей — отсекаем самый редкий
+            if len(self.stats["top_questions"]) > 30:
+                rare = min(self.stats["top_questions"], key=self.stats["top_questions"].get)
+                self.stats["top_questions"].pop(rare, None)
         self._save_json(CORE / "stats.json", dict(self.stats))
     def get_cluster_info(self):
         return {name: {**info, "examples": len(self.knowledge_base.get(name, [])), "calls": self.stats["clusters_used"].get(name, 0)} for name, info in KNOWLEDGE_CLUSTERS.items()}
@@ -335,6 +344,10 @@ class MirroAPI(BaseHTTPRequestHandler):
                 {"id": "mirro/default", "object": "model", "created": t, "owned_by": "mirro"},
                 {"id": "mirro/ru", "object": "model", "created": t, "owned_by": "mirro"},
             ]}); return
+        elif self.path == "/v1/top-questions":
+            top = core.stats.get("top_questions", {})
+            ranked = sorted(top.items(), key=lambda x: -x[1])[:15]
+            self._json({"questions": [{"q": q, "count": c} for q, c in ranked]}); return
         self._json({"error": "not found"}, 404)
     def do_POST(self):
         if self.path == "/v1/chat/completions":
