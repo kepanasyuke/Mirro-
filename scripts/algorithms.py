@@ -810,7 +810,12 @@ class MirroAlgorithms:
 #  9. PERCEPTRON — мини-нейросеть
 # ========================
     def perceptron_vectorize(self, query, candidate):
-        """Преобразует вопрос+кандидат в вектор признаков."""
+        """Преобразует вопрос+кандидат в вектор признаков.
+
+        №08 «Контекстный перцептрон»: добавляем признаки контекста, которые
+        вычисляются из самого кандидата и помогают отличать «код» от «текста»
+        и учитывать язык, — без смены сигнатуры вызовов.
+        """
         q_words = set(self.tokenize(query))
         c_words = set(self.tokenize(candidate))
         common = q_words & c_words
@@ -819,7 +824,14 @@ class MirroAlgorithms:
         f2 = len(common) / max(len(c_words), 1)                    # recall
         f3 = math.log(len(candidate) + 1) / 10                     # length bonus
         f4 = 1.0 if any(w in candidate.lower() for w in q_words) else 0.0  # exact hit
-        return [f1, f2, min(f3, 1.0), f4]
+        # Контекстные признаки (улучшение №08):
+        #  f5 — «код-подобность»: доля символов, характерных для кода
+        code_chars = sum(1 for ch in candidate if ch in "{}[]();=<>#/*")
+        f5 = min(1.0, code_chars / max(len(candidate), 1) * 10)
+        #  f6 — «русскость»: доля кириллических букв
+        cyr = sum(1 for ch in candidate.lower() if 'а' <= ch <= 'я')
+        f6 = min(1.0, cyr / max(len(candidate), 1))
+        return [f1, f2, min(f3, 1.0), f4, f5, f6]
 
     def _hidden_forward(self, x):
         """Прямой проход через скрытый слой (tanh). Возвращает вектор h."""
