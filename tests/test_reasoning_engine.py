@@ -24,21 +24,30 @@ class TestTokenizer(unittest.TestCase):
 class TestScoreCandidate(unittest.TestCase):
     def test_favors_preferred_cluster(self):
         q = "что такое ндс"
-        s_same, _ = score_candidate(q, "НДС — налог.", "ru", 1.0, preferred="ru")
-        s_other, _ = score_candidate(q, "сторонний текст", "general", 1.0, preferred="ru")
+        # (query, inst, out, cluster, tfidf_score, preferred)
+        s_same, _ = score_candidate(q, "что такое ндс", "НДС — налог.", "ru", 1.0, preferred="ru")
+        s_other, _ = score_candidate(q, "другой", "сторонний текст", "general", 1.0, preferred="ru")
         self.assertGreater(s_same, s_other)
 
     def test_penalizes_generated(self):
         q = "как дела"
-        s_gen, _ = score_candidate(q, "что-то сгенерированное", "generated", 1.0, preferred="ru")
-        s_norm, _ = score_candidate(q, "обычный ответ", "ru", 1.0, preferred="ru")
+        s_gen, _ = score_candidate(q, "что-то сгенерированное", "что-то сгенерированное", "generated", 1.0, preferred="ru")
+        s_norm, _ = score_candidate(q, "обычный ответ", "обычный ответ", "ru", 1.0, preferred="ru")
         self.assertGreater(s_norm, s_gen)
 
     def test_word_overlap_bonus(self):
         q = "столица франции"
-        s_overlap, _ = score_candidate(q, "Франция — большая страна, столица — Париж.", "ru", 1.0)
-        s_none, _ = score_candidate(q, "не имеет ничего общего", "ru", 1.0)
+        s_overlap, _ = score_candidate(q, "столица франции", "Франция — большая страна, столица — Париж.", "ru", 1.0)
+        s_none, _ = score_candidate(q, "погода", "не имеет ничего общего", "ru", 1.0)
         self.assertGreater(s_overlap, s_none)
+
+    def test_off_topic_heavily_penalized(self):
+        # Вопрос про роботов, ответ про певицу — «мимо темы».
+        q = "расскажи про роботов"
+        s_off, reasons = score_candidate(q, "Пугачёва", "Алла Пугачёва — певица.", "ru", 5.0, preferred="ru")
+        s_on, _ = score_candidate(q, "роботы", "Роботы — автоматические устройства.", "ru", 3.0, preferred="ru")
+        self.assertGreater(s_on, s_off)
+        self.assertTrue(any("мимо" in r for r in reasons))
 
 
 class TestChooseBest(unittest.TestCase):

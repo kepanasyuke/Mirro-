@@ -13,11 +13,52 @@ choose_best) без изменения семантики, чтобы не за�
 import re as _re
 
 
+STOPWORDS = {
+    "и", "в", "на", "с", "по", "за", "от", "до", "из", "у", "для", "о",
+    "не", "ни", "все", "это", "как", "так", "что", "кто", "где", "когда",
+    "к", "об", "под", "над", "чем", "какие", "какой", "какая", "расскажи",
+    "напиши", "про", "при", "или", "из", "ещё", "же", "бы", "а", "но",
+    "a", "an", "the", "to", "of", "for", "and", "or", "in", "on", "by",
+}
+
+
 def _tokenize(text):
     return _re.findall(r"[а-яёa-z0-9]+", text.lower())
 
 
-def score_candidate(query, out, cluster, tfidf_score, preferred=None):
+# Лёгкий стемминг: срезаем частые окончания русских слов, чтобы «роботов/роботы»
+# и «функцию/функция» совпадали без полного морфологического анализа.
+_ENDINGS = (
+    ("ами", ""), ("ями", ""), ("ого", ""), ("ому", ""), ("ими", ""),
+    ("ых", ""), ("их", ""), ("ий", ""), ("ый", ""), ("ая", ""), ("яя", ""),
+    ("ое", ""), ("ее", ""), ("ие", ""), ("ые", ""), ("а", ""), ("я", ""),
+    ("о", ""), ("е", ""), ("ы", ""), ("и", ""), ("у", ""), ("ю", ""),
+    ("ой", ""), ("ей", ""), ("ом", ""), ("ем", ""), ("ах", ""), ("ях", ""),
+    ("ам", ""), ("ям", ""), ("ов", ""), ("ев", ""), ("ей", ""), ("ом", ""),
+    ("сь", ""), ("ть", ""), ("ет", ""), ("ит", ""), ("ут", ""), ("ют", ""),
+)
+
+
+def _stem(word):
+    w = word
+    if len(w) <= 4:
+        return w
+    for suf, rep in _ENDINGS:
+        if w.endswith(suf) and len(w) - len(suf) >= 3:
+            return w[: len(w) - len(suf)]
+    return w
+
+
+def _tokenize_stem(text):
+    return [_stem(w) for w in _tokenize(text)]
+
+
+def _content_words(text):
+    """Стеммированные слова без стоп-слов — носители смысла."""
+    return {_stem(w) for w in _tokenize(text) if w not in STOPWORDS}
+
+
+def score_candidate(query, inst, out, cluster, tfidf_score, preferred=None):
     s = tfidf_score * 2.5
     reasons = []
     if preferred:
@@ -27,14 +68,34 @@ def score_candidate(query, out, cluster, tfidf_score, preferred=None):
             s -= 4.0
         else:
             s -= 2.0
-    q_set = set(_tokenize(query))
-    a_set = set(_tokenize(out))
-    overlap = len(q_set & a_set)
-    if overlap > 0:
-        s += overlap * 0.8
-        reasons.append(f"слова:{overlap}")
+
+    # СЕМАНТИЧЕСКАЯ РЕЛЕВАНТНОСТЬ: совпадение со стеммированным СМЫСЛОМ.
+    q_content = _content_words(query)
+    # Основной сигнал — совпадение со ВОПРОСОМ, к которому относится этот ответ
+    # (inst), т.к. ответ может содержать текст о другом. Запас — содержимое out.
+    a_base = q_content
+    ref_set = _content_words(inst or "") or a_base
+    out_set = _content_words(out or "")
+    # объединяем: слова и инструкции, и ответа
+    ref = ref_set | out_set
+
+    overlap = len(q_content & ref) if q_content else 0
+    if q_content:
+        jac = overlap / max(len(q_content | ref), 1)
+        s += overlap * 1.5
+        reasons.append(f"тема:{overlap}")
+        if overlap == 0:
+            # Ни одного смыслового слова вопроса в (вопрос+ответ) — это мимо темы.
+            s -= 8.0
+            reasons.append("мимо-темы")
+        elif jac < 0.15:
+            s -= 1.5
+            reasons.append("слабая-тема")
+
     if len(out) < 20:
         s -= 0.5
+    q_set = set(_tokenize_stem(query))
+    a_set = set(_tokenize_stem(out))
     if q_set and a_set and len(q_set & a_set) / max(len(q_set | a_set), 1) > 0.7:
         s -= 1.0
     return s, reasons
@@ -43,21 +104,24 @@ def score_candidate(query, out, cluster, tfidf_score, preferred=None):
 def choose_best(query, candidates, preferred=None):
     if not candidates:
         return None, 0.0, "нет кандидатов"
-    # Всегда исключаем шумный generated, если есть альтернативы
     cands = [c for c in candidates if c[0][2] != "generated"] or candidates
+
     if preferred:
         same = [(inst, out, cl, sc) for (inst, out, cl), sc in cands if cl == preferred]
         if same:
-            best = max(same, key=lambda x: score_candidate(query, x[1], x[2], x[3], preferred)[0])
-            sc, _ = score_candidate(query, best[1], best[2], best[3], preferred)
-            return best[1], sc, f"кластер {best[2]}"
-        # В предпочтительном кластере нет ответа — не тянем мусор из чужих кластеров
+            best = max(same, key=lambda x: score_candidate(query, x[0], x[1], x[2], x[3], preferred)[0])
+            sc, _ = score_candidate(query, best[0], best[1], best[2], best[3], preferred)
+            if sc >= 4.0:
+                return best[1], sc, f"кластер {best[2]}"
+            return None, 0.0, f"слабый результат в кластере {preferred}"
         return None, 0.0, f"нет в кластере {preferred}"
     b_out, b_sc, b_r = None, -999, ""
     for (inst, out, cl), tfidf_score in cands[:5]:
-        sc, rs = score_candidate(query, out, cl, tfidf_score, preferred)
+        sc, rs = score_candidate(query, inst, out, cl, tfidf_score, preferred)
         if sc > b_sc:
             b_sc, b_out, b_r = sc, out, "; ".join(rs) if rs else "базовый"
+    if b_sc < 4.0:
+        return None, 0.0, f"слабый результат ({b_sc:.1f})"
     return b_out, b_sc, b_r
 
 
