@@ -45,9 +45,12 @@ class MirroAlgorithms:
         self.cache_max = 200
         self._ingested_corpus_files = set()
 
-        # Перцептрон (1-слойная нейросеть)
-        self.perceptron_weights = {}  # word -> weight
+        # Перцептрон → MLP (2 слоя: скрытый + выходной)
+        self.perceptron_weights = {}    # output layer: feature -> weight (обратная совместимость)
         self.perceptron_bias = 0.0
+        self.perceptron_hidden = {}     # hidden layer: "h{j}_w{i}" -> weight (j-нейрон, i-вход)
+        self.perceptron_hidden_bias = {}  # hidden layer biases: "h{j}" -> bias
+        self.hidden_units = 6           # число нейронов скрытого слоя
         self.perceptron_trained = False
         self.perceptron_lr = 0.01
 
@@ -214,6 +217,7 @@ class MirroAlgorithms:
                 self.qa_boost = state.get("qa_boost", {})
                 self.qa_boost_ts = state.get("qa_boost_ts", {})
                 self._load_boost_state()
+                self._load_perceptron()
                 self._loaded = True
                 if not self._ingested_corpus_files:
                     corpus_dir = DATA_DIR / "corpus_ready"
@@ -721,34 +725,86 @@ class MirroAlgorithms:
         f4 = 1.0 if any(w in candidate.lower() for w in q_words) else 0.0  # exact hit
         return [f1, f2, min(f3, 1.0), f4]
 
+    def _hidden_forward(self, x):
+        """Прямой проход через скрытый слой (tanh). Возвращает вектор h."""
+        h = []
+        for j in range(self.hidden_units):
+            acc = self.perceptron_hidden_bias.get(f"h{j}", 0.0)
+            for i in range(len(x)):
+                acc += self.perceptron_hidden.get(f"h{j}_w{i}", 0.0) * x[i]
+            # tanh-активация скрытого слоя
+            h.append(math.tanh(acc) if acc else 0.0)
+        return h
+
+    @staticmethod
+    def _sigmoid(z):
+        try:
+            return 1.0 / (1.0 + math.exp(-z))
+        except OverflowError:
+            return 0.0 if z < 0 else 1.0
+
+    def _mlp_activation(self, x):
+        """Совместный проход: вход → скрытый → выход (без сигмоиды на конце).
+        Возвращает (output_activation, hidden_activations)."""
+        h = self._hidden_forward(x)
+        out = self.perceptron_bias
+        for j in range(self.hidden_units):
+            out += self.perceptron_weights.get(f"h{j}_out", 0.0) * h[j]
+        return out, h
+
     def perceptron_train(self, query, candidate, label):
-        """Обучает перцептрон на одном примере (label = 1 хороший, -1 плохой)."""
+        """Обучает MLP (2 слоя) на одном примере (label = 1 хороший, -1 плохой).
+
+        Инициализация весов первого слоя при первом вызове. Обновление —
+        через градиент первого порядка (знак ошибки), как у перцептрона,
+        но по обоим слоям обратным распространением.
+        """
         x = self.perceptron_vectorize(query, candidate)
-        features = [f"f{i}" for i in range(len(x))]
-        # Инициализация весов при первом вызове
-        for fname in features:
-            if fname not in self.perceptron_weights:
-                self.perceptron_weights[fname] = 0.0
+        nin = len(x)
 
-        # Прямой проход
-        activation = sum(self.perceptron_weights.get(f, 0) * x[i] for i, f in enumerate(features)) + self.perceptron_bias
-        prediction = 1 if activation >= 0 else -1
+        # Инициализация скрытого слоя и выходного слоя при первом вызове
+        if not self.perceptron_weights:
+            for j in range(self.hidden_units):
+                for i in range(nin):
+                    self.perceptron_hidden.setdefault(f"h{j}_w{i}", 0.0)
+                self.perceptron_hidden_bias.setdefault(f"h{j}", 0.0)
+                # веса выходного слоя индексируются как h{j}_out (обратная
+                # совместимость с однослойной формой f{i} сохраняется ниже)
+                self.perceptron_weights.setdefault(f"h{j}_out", 0.0)
 
-        # Обновление весов если ошибка
+        out, h = self._mlp_activation(x)
+        prediction = 1 if out >= 0 else -1
+
         if prediction != label:
-            for i, fname in enumerate(features):
-                self.perceptron_weights[fname] += self.perceptron_lr * label * x[i]
-            self.perceptron_bias += self.perceptron_lr * label
+            err = label if label in (1, -1) else 0
+            lr = self.perceptron_lr
+            # Обновление выходного слоя
+            for j in range(self.hidden_units):
+                self.perceptron_weights[f"h{j}_out"] += lr * err * h[j]
+            self.perceptron_bias += lr * err
+            # Обратное распространение в скрытый слой (производная tanh = 1 - h^2)
+            for j in range(self.hidden_units):
+                d_out_j = err * self.perceptron_weights.get(f"h{j}_out", 0.0)
+                g_j = d_out_j * (1 - h[j] * h[j])
+                self.perceptron_hidden_bias[f"h{j}"] += lr * g_j
+                for i in range(nin):
+                    self.perceptron_hidden[f"h{j}_w{i}"] += lr * g_j * x[i]
 
+        self.perceptron_trained = True
         return prediction == label
 
     def perceptron_predict(self, query, candidate):
-        """Предсказывает релевантность ответа (0..1)."""
+        """Предсказывает релевантность ответа (0..1) через MLP."""
         x = self.perceptron_vectorize(query, candidate)
-        features = [f"f{i}" for i in range(len(x))]
-        activation = sum(self.perceptron_weights.get(f, 0) * x[i] for i, f in enumerate(features)) + self.perceptron_bias
-        # Sigmoid-like scaling to 0..1
-        return 1.0 / (1.0 + math.exp(-activation))
+        # Инициализация при первом использовании (если ещё не тренировались)
+        if not self.perceptron_weights and self.hidden_units:
+            for j in range(self.hidden_units):
+                for i in range(len(x)):
+                    self.perceptron_hidden.setdefault(f"h{j}_w{i}", 0.0)
+                self.perceptron_hidden_bias.setdefault(f"h{j}", 0.0)
+                self.perceptron_weights.setdefault(f"h{j}_out", 0.0)
+        out, _ = self._mlp_activation(x)
+        return 1.0 / (1.0 + math.exp(-out))
 
     def train_from_feedback(self, query, response, liked):
         """Обучает перцептрон на feedback пользователя (лайк/дизлайк).
@@ -786,18 +842,43 @@ class MirroAlgorithms:
                 self.perceptron_train(query, response, label)
                 processed += 1
         # Сохраняем одиночную персистентность модели (буст уже в JSON)
+        self._save_perceptron()
+        return processed
+
+    def _save_perceptron(self):
+        """Лёгкая персистентность весов MLP (выходной + скрытый слой)."""
         try:
             import json as _json
             state = {"perceptron_weights": self.perceptron_weights,
                      "perceptron_bias": self.perceptron_bias,
+                     "perceptron_hidden": self.perceptron_hidden,
+                     "perceptron_hidden_bias": self.perceptron_hidden_bias,
+                     "hidden_units": self.hidden_units,
                      "perceptron_trained": self.perceptron_trained,
                      "auto_learned": len(self.feedback_history),
                      "updated": self._now_iso()}
             path = self.INDEX_CACHE.with_suffix(".perceptron.json")
-            path.write_text(_json.dumps(state, ensure_ascii=False), "utf-8")
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(_json.dumps(state, ensure_ascii=False), "utf-8")
+            os.replace(tmp, path)
         except Exception:
             pass
-        return processed
+
+    def _load_perceptron(self):
+        """Восстанавливает веса MLP (включая скрытый слой) из JSON, если есть."""
+        try:
+            import json as _json
+            path = self.INDEX_CACHE.with_suffix(".perceptron.json")
+            if path.exists():
+                st = _json.loads(path.read_text("utf-8"))
+                self.perceptron_weights = dict(st.get("perceptron_weights", {}))
+                self.perceptron_bias = float(st.get("perceptron_bias", 0.0))
+                self.perceptron_hidden = dict(st.get("perceptron_hidden", {}))
+                self.perceptron_hidden_bias = dict(st.get("perceptron_hidden_bias", {}))
+                self.hidden_units = int(st.get("hidden_units", self.hidden_units))
+                self.perceptron_trained = bool(st.get("perceptron_trained", False))
+        except Exception:
+            pass
 
     # ========================
     #  8. COMPOSE ANSWER (improved)

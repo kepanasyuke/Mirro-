@@ -33,6 +33,9 @@ _BATCH = _extract("train_from_history", "self, batch_size=32, epochs=1")
 _TRAIN = _extract("perceptron_train", "self, query, candidate, label")
 _VEC = _extract("perceptron_vectorize", "self, query, candidate")
 _NOW = _extract("_now_iso", "")
+_HF = _extract("_hidden_forward", "self, x")
+_MLA = _extract("_mlp_activation", "self, x")
+_SIG = _extract("_sigmoid", "z")
 
 
 class _Stub:
@@ -40,6 +43,9 @@ class _Stub:
     def __init__(self):
         self.perceptron_weights = {}
         self.perceptron_bias = 0.0
+        self.perceptron_hidden = {}
+        self.perceptron_hidden_bias = {}
+        self.hidden_units = 6
         self.perceptron_trained = False
         self.perceptron_lr = 0.01
         self.feedback_history = []
@@ -53,11 +59,24 @@ class _Stub:
     def perceptron_vectorize(self, query, candidate):
         return self._perceptron_vectorize(query, candidate)
 
+    def _hidden_forward(self, x):
+        return _HF.__get__(self, _Stub)(x)
+
+    def _mlp_activation(self, x):
+        return _MLA.__get__(self, _Stub)(x)
+
+    def _sigmoid(self, z):
+        return _SIG.__get__(self, _Stub)(z)
+
     def tokenize(self, text):
         return re.findall(r"[а-яёa-z0-9]+", text.lower())
 
     def train_from_history(self, batch_size=32, epochs=1):
         return _BATCH.__get__(self, _Stub)(batch_size, epochs)
+
+    def _save_perceptron(self):
+        # Лёгкая заглушка: пишет ничего/файл, но не падает.
+        self._saved = True
 
     def _now_iso(self):
         return "2026-01-01T00:00:00"
