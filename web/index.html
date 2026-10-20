@@ -31,6 +31,28 @@
   --fs-micro: 10px;     /* версия */
   --fs-icon: 16px;      /* глифы в кнопках */
 }
+/* ===== Светлая тема (переключается кнопкой в сайдбаре) ===== */
+html[data-theme="light"] {
+  --bg: #f6f5fb; --surface: #ffffff; --surface2: #ececf5;
+  --border: #e2e1ee; --border2: #cfcedf;
+  --text: #23232e; --text2: #5a5a6b; --muted: #8c8ca1;
+  --accent: #5b4bd8; --accent2: #7a66f0; --accent-dim: rgba(108,92,231,0.10);
+  --user-bubble: linear-gradient(135deg, #6c5ce7, #7d6cf0); --user-text: #fff;
+  --asst-bubble: #ffffff; --asst-border: #e5e4f0;
+  --success: #1fb37a; --warn: #d99a24; --danger: #d9534d;
+}
+html[data-theme="light"] body::after {
+  background:
+    radial-gradient(ellipse at 50% 20%, transparent 60%, rgba(60,55,90,.10) 100%),
+    linear-gradient(180deg, rgba(255,255,255,.30), transparent 30%, transparent 70%, rgba(120,115,160,.08));
+}
+html[data-theme="light"] .card,
+html[data-theme="light"] .cluster-item,
+html[data-theme="light"] .sidebar,
+html[data-theme="light"] .chat-input { background: var(--surface); }
+html[data-theme="light"] .msg.bot .bubble { background: var(--surface); }
+html[data-theme="light"] .code-card { background: rgba(10,10,16,.06); }
+html[data-theme="light"] code { background: rgba(0,0,0,.06); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 /* Плавный переход цветов при смене палитры */
 .sidebar, .main, .chat-input, .card, .cluster-item, .msg .bubble, .overlay, .dialog {
@@ -430,6 +452,32 @@ function draw() {
   requestAnimationFrame(draw);
 }
 draw();
+
+/* ===== Переключатель темы (тёмная/светлая) ===== */
+function toggleTheme() {
+  const html = document.documentElement;
+  const light = html.getAttribute('data-theme') === 'light';
+  if (light) {
+    html.removeAttribute('data-theme');
+  } else {
+    html.setAttribute('data-theme', 'light');
+  }
+  try { localStorage.setItem('mirro_theme', light ? 'dark' : 'light'); } catch (e) {}
+  updateThemeBtn(!light);
+}
+function updateThemeBtn(isLight) {
+  const b = document.getElementById('themeBtn');
+  if (b) b.textContent = isLight ? 'Тёмная тема' : 'Светлая тема';
+}
+(function applySavedTheme() {
+  try {
+    const saved = localStorage.getItem('mirro_theme');
+    if (saved === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      updateThemeBtn(true);
+    }
+  } catch (e) {}
+})();
 </script>
 
 <!-- ===================== SIDEBAR ===================== -->
@@ -456,6 +504,7 @@ draw();
   <div class="side-actions">
     <button class="s-btn primary" onclick="openLearn()">Запустить самообучение</button>
     <button class="s-btn" onclick="openAbout()">О системе</button>
+    <button class="s-btn" id="themeBtn" onclick="toggleTheme()">Светлая тема</button>
   </div>
 
   <div class="side-foot">
