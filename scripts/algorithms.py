@@ -357,8 +357,15 @@ class MirroAlgorithms:
 
         print(f"  Index: {len(self.examples)} ex, {len(self.vocab)} vocab, {time.time()-t0:.0f}s")
 
-        # После сборки индекса подгружаем корпусные сегменты
+        # После сборки индекса обучаем классификатор и вектора слов
         self._extend_from_corpus()
+        try:
+            if not self.nb_priors:
+                self.nb_train()
+            if not self._cbow_built:
+                self.build_cbow_embeddings(max_examples=20000)
+        except Exception as e:
+            print(f"  (побочное обучение пропущено: {e})")
 
     def _extend_from_corpus(self):
         """Добавляет примеры из corpus_ready в индекс без полной пересборки."""
