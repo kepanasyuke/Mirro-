@@ -115,6 +115,15 @@ class MirroAlgorithms:
             # Даже при загрузке из кэша подтягиваем новые файлы из corpus_ready
             self._extend_from_corpus()
             self._save_index()
+        # Общий триггер: обучаем NB и CBOW на любом пути (сборка ИЛИ кэш),
+        # чтобы status() показывал реальные nb_classes и embeddings.
+        try:
+            if not self.nb_priors:
+                self.nb_train()
+            if not self._cbow_built:
+                self.build_cbow_embeddings(max_examples=20000)
+        except Exception as e:
+            print(f"  (побочное обучение пропущено: {e})")
 
     # ========================
     #  BOOST — предпочтения, экспоненциально затухающие со временем
