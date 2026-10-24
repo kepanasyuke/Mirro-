@@ -218,8 +218,16 @@ def _gen_poem(query):
         ],
     }[topic]
     import random as _rnd
-    lines = _rnd.choice(variants)
+    # Не повторять предыдущий вариант подряд (храним последний в модуле),
+    # чтобы два одинаковых запроса гарантированно давали разные стихи.
+    key = f"poem_{topic}"
+    avail = [v for v in variants if v != _LAST_POEM.get(key)]
+    lines = _rnd.choice(avail) if avail else _rnd.choice(variants)
+    _LAST_POEM[key] = lines
     return "Напишу тебе так:\n" + "\n".join(lines)
+
+
+_LAST_POEM = {}
 
 def _gen_story(query):
     return ("Коротко придумаю так:\n"
