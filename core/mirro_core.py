@@ -255,6 +255,62 @@ def try_jarvis(query):
     except Exception:
         return None
 
+_DIALOG_STOPWORDS = {
+    "и", "в", "на", "с", "по", "за", "от", "до", "из", "у", "для", "о",
+    "не", "ни", "все", "это", "как", "так", "что", "кто", "где", "когда",
+    "ну", "во", "же", "бы", "а", "но", "или", "ещё", "про", "при", "просто",
+    "расскажи", "напиши", "подробнее", "можно", "мне", "меня", "то", "ли",
+    "the", "a", "an", "and", "of", "to", "in", "on", "for", "with",
+}
+
+def _tokenize_for_search(text):
+    """Токенизация для оценки «есть ли своя тема» и обогащения контекстом."""
+    return _re.findall(r"[а-яёa-z0-9]+", (text or "").lower())
+
+_DIALOG_REPLIES = {
+    "who": ("Я Mirro — эволюционная нейросеть знаний. Создана в России, живу полностью "
+            "на твоём компьютере: у меня своя база примеров, TF-IDF и RAG-поиск, "
+            "перцептрон, который я обучаю на твоих оценках, и доступ к веб-поиску."),
+    "can": ("Что умею: отвечаю на вопросы из своей базы и интернета, считаю и решаю "
+            "уравнения, пишу стихи, рассказы и загадки, помогаю по коду, налогам, "
+            "фактам. Ещё учусь сама: коплю примеры и улучшаю свои веса. Спрашивай — "
+            "что угодно."),
+    "learn": ("Учусь каждый день: автономно перебираю свою базу, генерирую вопросы и "
+             "проверяю, насколько хорошо отвечаю; запоминаю отклик на твои лайки и "
+             "дизлайки, пере-игрываю их (replay buffer) и постепенно пополняю знания из "
+             "открытых источников."),
+    "howami": ("У меня всё хорошо! Я постоянно расту: сегодня в моей базе уже больше "
+               "миллиона примеров, и я становлюсь умнее с каждым запуском."),
+    "status": ("Всё в порядке: сервер работает, знания на месте. Спрашивай, что "
+               "интересно — отвечу."),
+    "thanks": ("Пожалуйста! Рада помочь. Если захочешь ещё что-то — я здесь."),
+    "bye": ("До встречи! Буду рада снова с тобой пообщаться."),
+}
+
+def try_dialog(query):
+    """Разговорные реплики, которые НЕ должны идти в TF-IDF поиск.
+
+    Ключевая проблема: «Что ты умеешь?», «Как учишься?» и т.п. уходили в поиск
+    и возвращали случайные фрагменты базы (напр. «Агата Кристи» на вопрос про
+    алгоритмы). Перехватываем их здесь и отвечаем осмысленно.
+    """
+    q = query.lower().strip()
+    if any(w in q for w in ["кто ты", "что ты такое", "ты кто", "представься", "твоё имя"]):
+        return _DIALOG_REPLIES["who"]
+    if any(w in q for w in ["что ты умеешь", "что умеешь", "твои возможности", "на что способна"]):
+        return _DIALOG_REPLIES["can"]
+    if any(w in q for w in ["как ты учишься", "как учишься", "как обучаешься", "как запоминаешь"]):
+        return _DIALOG_REPLIES["learn"]
+    if any(w in q for w in ["как ты", "как твои дела", "как настроение", "ты в порядке"]):
+        return _DIALOG_REPLIES["howami"]
+    if any(w in q for w in ["статус", "всё ли в порядке", "ты работаешь"]):
+        return _DIALOG_REPLIES["status"]
+    if any(w in q for w in ["спасибо", "благодарю", "спс"]):
+        return _DIALOG_REPLIES["thanks"]
+    if any(w in q for w in ["пока", "до свидания", "до встречи", "прощай"]):
+        return _DIALOG_REPLIES["bye"]
+    return None
+
 def try_tfidf(query, cluster):
     try:
         sys.path.insert(0, str(MIRRO_HOME))
@@ -359,6 +415,24 @@ def build_response(prompt, cluster, context=""):
         if creative_result: return {"content": creative_result, "strategy": "creative"}
         jarvis_msg = try_jarvis(prompt)
         if jarvis_msg: return {"content": jarvis_msg, "strategy": "direct"}
+        dialog_msg = try_dialog(prompt)
+        if dialog_msg: return {"content": dialog_msg, "strategy": "dialog"}
+        # Follow-up: если реплика короткая и без своей темы (напр. «подробнее»,
+        # «а если наоборот?»), обогащаем поисковый запрос словами из истории —
+        # иначе уходим в мусор TF-IDF.
+        q_words = set(_tokenize_for_search(prompt))
+        content_words = {w for w in q_words if w not in _DIALOG_STOPWORDS}
+        # Follow-up без собственной темы (0-1 смысловых слова): «подробнее»,
+        # «ещё», «а если наоборот?» — обогащаем словами из истории, иначе
+        # уйдём в мусор TF-IDF.
+        if len(content_words) < 2 and context:
+            hist_words = set()
+            for line in context.split("\n"):
+                for w in _tokenize_for_search(line.replace("Пользователь:", " ").replace("Mirro:", " ")):
+                    if w not in _DIALOG_STOPWORDS:
+                        hist_words.add(w)
+            enrichment = " ".join(sorted(hist_words)[:60])
+            prompt = (prompt + " " + enrichment).strip()
         results = try_tfidf(prompt, cluster)
         if not results: results = try_rag(prompt, cluster)
         _, choose_best, _ = _reasoning()
