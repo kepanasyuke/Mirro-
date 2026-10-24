@@ -182,6 +182,29 @@ body::after {
 .nav-item:hover .ico { transform: scale(1.1); opacity: 1; }
 .nav-item.active .ico { opacity: 1; }
 .side-actions { padding: 10px 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+/* Переключатель темы (как выключатель на лампочке) */
+.theme-toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  padding: 7px 10px; border-radius: 8px; user-select: none;
+  font-size: var(--fs-ui); color: var(--text2);
+  transition: background .18s var(--ease), color .18s var(--ease);
+}
+.theme-toggle:hover { background: var(--accent-dim); color: var(--text); }
+.theme-toggle .tt-icon { font-size: 14px; flex: 0 0 auto; }
+.theme-toggle .tt-track {
+  position: relative; width: 34px; height: 18px; border-radius: 20px; flex: 0 0 auto;
+  background: var(--border2); transition: background .25s var(--ease);
+}
+.theme-toggle .tt-knob {
+  position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--text); transition: transform .25s var(--ease), background .25s var(--ease);
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+.theme-toggle .tt-label { flex: 0 0 auto; min-width: 52px; }
+/* Активное (светлое) состояние */
+html[data-theme="light"] .theme-toggle .tt-track { background: var(--accent); }
+html[data-theme="light"] .theme-toggle .tt-knob { transform: translateX(16px); background: #fff; }
+html[data-theme="light"] .theme-toggle .tt-label { color: var(--accent); }
 .s-btn {
   padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
   background: var(--surface2); color: var(--accent2); font-size: var(--fs-ui); cursor: pointer;
@@ -466,8 +489,13 @@ function toggleTheme() {
   updateThemeBtn(!light);
 }
 function updateThemeBtn(isLight) {
-  const b = document.getElementById('themeBtn');
-  if (b) b.textContent = isLight ? 'Тёмная тема' : 'Светлая тема';
+  const t = document.getElementById('themeBtn');
+  if (!t) return;
+  t.setAttribute('aria-checked', isLight ? 'true' : 'false');
+  const lab = t.querySelector('.tt-label');
+  if (lab) lab.textContent = isLight ? 'Светлая' : 'Тёмная';
+  const ic = t.querySelector('.tt-icon');
+  if (ic) ic.textContent = isLight ? '☀' : '☾';
 }
 (function applySavedTheme() {
   try {
@@ -504,7 +532,11 @@ function updateThemeBtn(isLight) {
   <div class="side-actions">
     <button class="s-btn primary" onclick="openLearn()">Запустить самообучение</button>
     <button class="s-btn" onclick="openAbout()">О системе</button>
-    <button class="s-btn" id="themeBtn" onclick="toggleTheme()">Светлая тема</button>
+    <div class="theme-toggle" id="themeBtn" role="switch" aria-checked="false" aria-label="Тема (темная/светлая)" onclick="toggleTheme()">
+      <span class="tt-icon">☾</span>
+      <span class="tt-track"><span class="tt-knob"></span></span>
+      <span class="tt-label">Тёмная</span>
+    </div>
   </div>
 
   <div class="side-foot">
