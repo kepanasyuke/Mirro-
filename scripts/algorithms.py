@@ -1128,7 +1128,8 @@ class MirroAlgorithms:
         return {
             "examples": len(self.examples),
             "vocab": len(self.vocab),
-            "embeddings": len(self.word_vectors),
+            "embeddings": len(self.cbow_vectors or self.word_vectors),
+            "embedding_dim": getattr(self, "cbow_dim", 0),
             "nb_classes": dict(self.nb_priors),
             "new_algorithms": {
                 "jaccard": True, "spellcheck": True,
