@@ -334,6 +334,8 @@ def try_dialog(query):
                             "ты живая", "ты настоящая", "ты робот", "ты искусственный интеллект",
                             "ты нейросеть"]):
         return _DIALOG_REPLIES["program"]
+    if q.strip() in ("программа", "программу", "что такое программа"):
+        return _DIALOG_REPLIES["program"]
     if any(w in q for w in ["что ты умеешь", "что умеешь", "твои возможности", "на что способна"]):
         return _DIALOG_REPLIES["can"]
     if any(w in q for w in ["как ты учишься", "как учишься", "как обучаешься", "как запоминаешь"]):
