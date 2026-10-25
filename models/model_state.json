@@ -1,1 +1,1 @@
-{"perceptron_weights": {"h0_out": 0.0, "h1_out": 0.0, "h2_out": 0.0, "h3_out": 0.0, "h4_out": 0.0, "h5_out": 0.0}, "perceptron_bias": 0.0, "perceptron_trained": true, "auto_learned": 30, "updated": "2026-10-24T19:45:06.172517"}
+{"perceptron_weights": {"h0_out": 0.0, "h1_out": 0.0, "h2_out": 0.0, "h3_out": 0.0, "h4_out": 0.0, "h5_out": 0.0}, "perceptron_bias": -0.01, "perceptron_trained": true, "auto_learned": 30, "updated": "2026-10-25T22:57:06.153996"}
