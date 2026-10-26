@@ -182,29 +182,35 @@ body::after {
 .nav-item:hover .ico { transform: scale(1.1); opacity: 1; }
 .nav-item.active .ico { opacity: 1; }
 .side-actions { padding: 10px 10px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
-/* Переключатель темы (как выключатель на лампочке) */
+/* Переключатель темы (тумблер-выключатель на лампочке) */
 .theme-toggle {
-  display: flex; align-items: center; gap: 8px; cursor: pointer;
-  padding: 7px 10px; border-radius: 8px; user-select: none;
-  font-size: var(--fs-ui); color: var(--text2);
-  transition: background .18s var(--ease), color .18s var(--ease);
+  display: flex; align-items: center; gap: 7px; cursor: pointer;
+  padding: 4px 6px; border-radius: 20px; user-select: none;
+  font-size: var(--fs-small); color: var(--text2); line-height: 1;
+  transition: background .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease);
 }
 .theme-toggle:hover { background: var(--accent-dim); color: var(--text); }
-.theme-toggle .tt-icon { font-size: 14px; flex: 0 0 auto; }
+.theme-toggle .tt-icon { font-size: 13px; flex: 0 0 auto; filter: drop-shadow(0 0 4px rgba(240,185,78,.4)); }
 .theme-toggle .tt-track {
-  position: relative; width: 34px; height: 18px; border-radius: 20px; flex: 0 0 auto;
-  background: var(--border2); transition: background .25s var(--ease);
+  position: relative; width: 36px; height: 19px; border-radius: 20px; flex: 0 0 auto;
+  background: var(--border2); transition: background .25s var(--ease), box-shadow .25s var(--ease);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.25);
 }
 .theme-toggle .tt-knob {
-  position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
-  background: var(--text); transition: transform .25s var(--ease), background .25s var(--ease);
-  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--text2), var(--text));
+  transition: transform .28s var(--ease), background .25s var(--ease);
+  box-shadow: 0 1px 3px rgba(0,0,0,.35);
 }
-.theme-toggle .tt-label { flex: 0 0 auto; min-width: 52px; }
+.theme-toggle .tt-label { flex: 0 0 auto; min-width: 54px; font-weight: 500; }
 /* Активное (светлое) состояние */
-html[data-theme="light"] .theme-toggle .tt-track { background: var(--accent); }
-html[data-theme="light"] .theme-toggle .tt-knob { transform: translateX(16px); background: #fff; }
+html[data-theme="light"] .theme-toggle .tt-track {
+  background: linear-gradient(135deg, #ffd76a, #f0b94e);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.2), 0 0 8px rgba(240,185,78,.45);
+}
+html[data-theme="light"] .theme-toggle .tt-knob { transform: translateX(17px); background: #fff; }
 html[data-theme="light"] .theme-toggle .tt-label { color: var(--accent); }
+.side-foot .theme-toggle { gap: 6px; }
 .s-btn {
   padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
   background: var(--surface2); color: var(--accent2); font-size: var(--fs-ui); cursor: pointer;
@@ -532,15 +538,14 @@ function updateThemeBtn(isLight) {
   <div class="side-actions">
     <button class="s-btn primary" onclick="openLearn()">Запустить самообучение</button>
     <button class="s-btn" onclick="openAbout()">О системе</button>
-    <div class="theme-toggle" id="themeBtn" role="switch" aria-checked="false" aria-label="Тема (темная/светлая)" onclick="toggleTheme()">
-      <span class="tt-icon">☾</span>
-      <span class="tt-track"><span class="tt-knob"></span></span>
-      <span class="tt-label">Тёмная</span>
-    </div>
   </div>
 
   <div class="side-foot">
-    <span>Mirro · 7.6M знаний</span>
+    <span class="theme-toggle" id="themeBtn" role="switch" aria-checked="false" aria-label="Тема (темная/светлая)" onclick="toggleTheme()">
+      <span class="tt-icon">☾</span>
+      <span class="tt-track"><span class="tt-knob"></span></span>
+      <span class="tt-label">Тёмная</span>
+    </span>
     <span class="status-pill off" id="pill"><i class="d"></i><span id="pillTxt">оффлайн</span></span>
   </div>
 </aside>
