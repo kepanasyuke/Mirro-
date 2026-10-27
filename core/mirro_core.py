@@ -111,10 +111,20 @@ def autonomous_learning_loop(interval_sec=3600):
             try:
                 algo = _grab_algo(); n = algo.autonomous_learn(cycles=30)
                 print(f"  [автообучение] усвоила {n} примеров")
-                try: MODEL_STATE_FILE.write_text(json.dumps({
-                    "perceptron_weights": algo.perceptron_weights, "perceptron_bias": algo.perceptron_bias,
-                    "perceptron_trained": algo.perceptron_trained, "auto_learned": n,
-                    "updated": _datetime.utcnow().isoformat()}, ensure_ascii=False), "utf-8")
+                try:
+                    # Не затирать trainer-метрики (trainer_cycles/accuracy/clusters):
+                    # читаем текущее состояние и обновляем только авто-поля.
+                    prev = {}
+                    if MODEL_STATE_FILE.exists():
+                        try: prev = json.loads(MODEL_STATE_FILE.read_text("utf-8"))
+                        except Exception: prev = {}
+                    merged = dict(prev)
+                    merged["perceptron_weights"] = algo.perceptron_weights
+                    merged["perceptron_bias"] = algo.perceptron_bias
+                    merged["perceptron_trained"] = algo.perceptron_trained
+                    merged["auto_learned"] = (prev.get("auto_learned") or 0) + (n or 0)
+                    merged["updated"] = _datetime.utcnow().isoformat()
+                    MODEL_STATE_FILE.write_text(json.dumps(merged, ensure_ascii=False), "utf-8")
                 except: pass
             except Exception as e: print(f"  [автообучение] ошибка: {e}")
             time.sleep(interval_sec)
@@ -590,6 +600,8 @@ class MirroAPI(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path in ("/", "/index.html"):
             if self._serve_file(MIRRO_HOME / "web" / "index.html", "text/html; charset=utf-8"): return
+        elif self.path == "/meysto-neiroset.html":
+            if self._serve_file(MIRRO_HOME / "web" / "meysto-neiroset.html", "text/html; charset=utf-8"): return
         elif self.path == "/catalog.json":
             if self._serve_file(DATA / "catalog_phase1.json", "application/json; charset=utf-8"): return
         elif self.path == "/health":
