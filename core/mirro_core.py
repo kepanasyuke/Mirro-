@@ -607,7 +607,42 @@ class MirroAPI(BaseHTTPRequestHandler):
             top = core.stats.get("top_questions", {})
             ranked = sorted(top.items(), key=lambda x: -x[1])[:15]
             self._json({"questions": [{"q": q, "count": c} for q, c in ranked]}); return
+        elif self.path == "/v1/learn-report":
+            self._json(self._learn_report()); return
         self._json({"error": "not found"}, 404)
+
+    def _learn_report(self):
+        """Живой отчёт об обучении Mirro: реальные веса MLP, статус, метрики.
+
+        Читается из models/model_state.json (персистентный перцептрон/MLP) и
+        core/stats.json (счётчики вызовов/кластеры). Без вызова тяжёлого индекса.
+        """
+        report = {"weights": {}, "bias": 0, "hidden": {}, "trained": False,
+                  "auto_learned": 0, "trainer_cycles": 0, "trainer_accuracy": 0,
+                  "clusters": {}, "total_examples": core.stats.get("total_examples", 0),
+                  "calls": core.stats.get("calls", 0)}
+        try:
+            st = {}
+            _msf = MODELS / "model_state.json"
+            if _msf.exists():
+                st = json.loads(_msf.read_text("utf-8"))
+            report["weights"] = st.get("perceptron_weights", {}) or {}
+            report["bias"] = st.get("perceptron_bias", 0) or 0
+            report["hidden"] = st.get("perceptron_hidden", {}) or {}
+            report["hidden_bias"] = st.get("perceptron_hidden_bias", {}) or {}
+            report["trained"] = bool(st.get("perceptron_trained"))
+            report["auto_learned"] = st.get("auto_learned", 0)
+            report["trainer_cycles"] = st.get("trainer_cycles", 0)
+            report["trainer_accuracy"] = st.get("trainer_accuracy", 0)
+            report["trainer_clusters"] = st.get("trainer_clusters", {}) or {}
+            report["updated"] = st.get("updated")
+        except Exception:
+            pass
+        report["clusters"] = {k: v.get("examples", 0) for k, v in core.get_cluster_info().items()}
+        report["clusters_calls"] = dict(core.stats.get("clusters_used", {}))
+        # Соответствие весов формату «Мозг Мирро» в Мейсто (f0..f3) — если MLP,
+        # отдаём и выходные h*_out, и плоские f* для простого предсказания.
+        return report
     def do_POST(self):
         if self.path == "/v1/chat/completions":
             try: body = self._read()

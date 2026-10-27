@@ -444,6 +444,7 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
       <label>🧠 Мозг Мирро — реальный перцептрон</label>
       <div class="mb-weights" id="mbWeights"></div>
       <div class="mb-note">Это настоящие веса и bias Мирро из <b>models/model_state.json</b>. Собери паспорт помощника и нажми кнопку — Мирро по-настоящему оценит твоего помощника своим перцептроном.</div>
+      <div class="mb-weights" id="learnReport"></div>
       <button class="mini-btn" id="btnBrain" type="button">Оценить помощника перцептроном Мирро</button>
       <div id="brainResult" class="quiz-feed"></div>
       <button class="mini-btn" id="btnAskMirro" type="button">💬 Спросить Мирро (живой ответ)</button>
@@ -462,6 +463,24 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
       </div>
       <button class="mini-btn" id="btnMirror" type="button">Отразить</button>
       <div id="mirrorResult" class="quiz-feed"></div>
+    </div>
+
+    <div class="mirro-brain">
+      <label>🧊 Мир мерностей — матрица по диагонали → форма → топология → Гильберт</label>
+      <div class="dims-wrap">
+        <svg id="dimsSvg" viewBox="0 0 560 120" class="dims-svg"></svg>
+      </div>
+      <div class="mb-note" id="dimsExpl"></div>
+      <div class="mb-note dims-legend">
+        <b>переходы:</b>
+        <button class="mini-chip" type="button" data-w="0">мир 0 — точка/начало</button>
+        <button class="mini-chip" type="button" data-w="1">мир 1 — лента (строка)</button>
+        <button class="mini-chip" type="button" data-w="2">мир 2 — плоскость/матрица</button>
+        <button class="mini-chip" type="button" data-w="3">мир 3 — объём</button>
+        <button class="mini-chip" type="button" data-w="4">мир 4 — сдвиг по диагонали</button>
+        <button class="mini-chip" type="button" data-w="5">мир 5 — форма = другая форма (топология)</button>
+        <button class="mini-chip" type="button" data-w="6">мир 6 — Гильберт (счётная бесконечность)</button>
+      </div>
     </div>
 
     <div class="dot-tools">
@@ -923,6 +942,79 @@ function renderBrainWeights() {
   html += '<span class="mb-w" style="background:#4d7cfe">bias <b>' + MIRRO_BRAIN.bias.toFixed(4) + '</b></span>' +
           '<span class="mb-note">обучена на ' + MIRRO_BRAIN.autoLearned + ' ответах · trained=' + MIRRO_BRAIN.trained + '</span>';
   host.innerHTML = html;
+}
+function fmtNum(v, d) { v = Number(v) || 0; return d == null ? Math.round(v) : v.toFixed(d); }
+/* ===== Мир мерностей: матрица → диагональ → форма → топология → Гильберт ===== */
+const DIMS = [
+  { name: 'Мир 0 — точка', esc: '"точка" — начало, единственная мерность с ratio 0/0', tag: 'точка' },
+  { name: 'Мир 1 — лента', esc: 'простая строка/поток — как лента Цузе: 1 измерение x', tag: 'линия' },
+  { name: 'Мир 2 — матрица', esc: 'плоскость: две оси x,y. Здесь «рядком» уже не пишут — ты пишешь матрицей', tag: 'квадрат' },
+  { name: 'Мир 3 — объём', esc: 'три оси x,y,z — мир с толщиной (объём)', tag: 'куб' },
+  { name: 'Мир 4 — диагональ', esc: 'эта мерность «из матрицы»: после плоскости появляется сдвиг по диагонали, промежутки между элементами начинают жить', tag: 'диагональ' },
+  { name: 'Мир 5 — форма = форма', esc: 'топология: одна форма переходит в другую (гомотопия) — но «только какое-то время», т.е. непрерывно, без разрывов', tag: 'переход' },
+  { name: 'Мир 6 — Гильберт', esc: 'счётная бесконечность измерений: бесконечное удлинение почти «зависает», но это пространство, где живут функции', tag: 'гильберт' },
+];
+function renderDims(w) {
+  const sv = $('dimsSvg'); const ex = $('dimsExpl'); if (!sv) return;
+  const W = 560, H = 120, cx = 40, gap = (W - 120) / 6;
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const x = cx + i * gap + (i ? 6 : 0);
+    const active = (i === w);
+    const col = active ? '#6c5ce7' : (i > w ? '#55505f' : '#9a90c9');
+    // 0=точка, 1=линия, 2=квадрат, 3=куб, 4=диагональ(линии крестом), 5=две дуги переход, 6=гильберт(вертикальные линии)
+    let glyph = '';
+    if (i === 0) glyph = '<circle cx="' + x + '" cy="70" r="6" fill="' + col + '"/>';
+    else if (i === 1) glyph = '<line x1="' + (x-22) + '" y1="70" x2="' + (x+22) + '" y2="70" stroke="' + col + '" stroke-width="3"/>';
+    else if (i === 2) glyph = '<rect x="' + (x-22) + '" y="55" width="44" height="30" fill="none" stroke="' + col + '" stroke-width="3"/>';
+    else if (i === 3) glyph = '<rect x="' + (x-20) + '" y="58" width="34" height="26" fill="none" stroke="' + col + '" stroke-width="3"/><line x1="' + (x-8) + '" y1="58" x2="' + (x-24) + '" y2="52" stroke="' + col + '" stroke-width="3"/><line x1="' + (x+14) + '" y1="58" x2="' + (x+34) + '" y2="52" stroke="' + col + '" stroke-width="3"/><line x1="' + (x-24) + '" y1="52" x2="' + (x+34) + '" y2="52" stroke="' + col + '" stroke-width="3"/>';
+    else if (i === 4) glyph = '<line x1="' + (x-24) + '" y1="80" x2="' + (x+24) + '" y2="60" stroke="' + col + '" stroke-width="3"/><line x1="' + (x-24) + '" y1="60" x2="' + (x+24) + '" y2="80" stroke="' + col + '" stroke-width="3"/>';
+    else if (i === 5) glyph = '<path d="M ' + (x-26) + ' 70 q 26 -46 52 0" fill="none" stroke="' + col + '" stroke-width="3"/><path d="M ' + (x-26) + ' 76 q 26 46 52 0" fill="none" stroke="' + col + '" stroke-width="3"/>';
+    else glyph = '<line x1="' + (x-24) + '" y1="70" x2="' + (x-24) + '" y2="30" stroke="' + col + '" stroke-width="2"/><line x1="' + (x-24) + '" y1="40" x2="' + (x+24) + '" y2="40" stroke="' + col + '" stroke-width="2"/><line x1="' + (x-24) + '" y1="55" x2="' + (x+24) + '" y2="55" stroke="' + col + '" stroke-width="2"/><line x1="' + (x-24) + '" y1="70" x2="' + (x+24) + '" y2="70" stroke="' + col + '" stroke-width="2"/>';
+    html += glyph + '<text x="' + x + '" y="' + (i === 1 ? 84 : 92) + '" text-anchor="middle" fill="' + col + '" font-size="11">мир ' + i + '</text>';
+  }
+  sv.innerHTML = html;
+  if (ex) {
+    const d = DIMS[w];
+    ex.innerHTML = '<b>' + d.name + ':</b> ' + d.esc;
+  }
+}
+function bindDims() {
+  document.querySelectorAll('.dims-legend .mini-chip').forEach(b =>
+    b.addEventListener('click', () => renderDims(parseInt(b.getAttribute('data-w'), 10))));
+}
+function renderLearnReport(data) {
+  const host = $('learnReport'); if (!host) return;
+  if (!data) { host.innerHTML = '<span class="mb-note">Сервер не отвечает — запусти Mirro.</span>'; return; }
+  const weights = data.weights || {}, hidden = data.hidden || {};
+  const trained = data.trained ? 'да' : 'нет';
+  const acc = data.trainer_accuracy ? (data.trainer_accuracy * 100).toFixed(1) + '%' : '—';
+  let w = '';
+  // Выходной слой MLP (h0_out..) прогресс-барами
+  Object.keys(weights).slice(0, 12).forEach(k => {
+    const v = Number(weights[k]) || 0;
+    const pct = Math.max(2, Math.min(100, Math.abs(v) * 200));
+    const col = v >= 0 ? '#2ecc8f' : '#ff8a7a';
+    w += '<span class="mb-note" style="display:block;width:160px">' + escapeHtml(k) +
+         ' <b>' + v.toFixed(4) + '</b><span style="display:inline-block;height:6px;width:60px;background:#eee;vertical-align:middle;border-radius:3px"><span style="display:inline-block;height:6px;width:' + pct +
+         '%;background:' + col + ';border-radius:3px"></span></span></span>';
+  });
+  let h = '';
+  Object.keys(hidden).slice(0, 12).forEach(k => { h += '<span class="mb-note">' + escapeHtml(k) + '=<b>' + fmtNum(hidden[k], 4) + '</b></span>'; });
+  host.innerHTML =
+    '<div style="margin-top:6px"><b>Обучение Mirro — живой отчёт</b> ' +
+    '<button class="mini-btn" type="button" onclick="loadLearnReport()" style="padding:1px 6px;font-size:11px">⟳</button></div>' +
+    '<div class="mb-note">trained: ' + trained + ' · авто-обучено: ' + fmtNum(data.auto_learned) +
+    ' · тренировка: ' + fmtNum(data.trainer_cycles) + ' примеров · точность: ' + acc + '</div>' +
+    '<div class="mb-note">вызовов: ' + fmtNum(data.calls) + ' · примеров в базе: ' + fmtNum(data.total_examples) + '</div>' +
+    '<div style="margin-top:4px">' + (w || '<span class="mb-note">веса пусты</span>') + '</div>' +
+    (h ? '<div style="margin-top:4px">' + h + '</div>' : '') +
+    '<div style="margin-top:4px" class="mb-note">кластеры (примеров): ' +
+    Object.entries(data.clusters || {}).map(([k, v]) => k + '=' + v).join(', ') + '</div>';
+}
+function loadLearnReport() {
+  fetch('http://127.0.0.1:3443/v1/learn-report').then(r => r.json()).then(renderLearnReport)
+    .catch(() => renderLearnReport(null));
 }
 function runMirroBrain() {
   const name = ($('pName')  ? $('pName').value  : '').trim();
@@ -2229,6 +2321,9 @@ function boot() {
   Scratch.bind();
   Tasks.bind();
   renderBrainWeights();
+  loadLearnReport();
+  renderDims(0);
+  bindDims();
   Levels.load(0);
   Hud.updateStats();
   Ui.open('mIntro');
