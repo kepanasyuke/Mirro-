@@ -457,7 +457,7 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
       <button class="mini-btn" id="btnSelfLearn" type="button">⚡ Обучить сейчас (автообучение)</button>
       <div id="selfLearnResult" class="quiz-feed"></div>
       <div class="mb-note" style="margin-top:6px">Научить паре:</div>
-      <input type="text" id="pairQ" maxlength="160" placeholder="Вопрос (например: Что такое НДС?)">
+      <input type="text" id="pairQ" maxlength="160" placeholder="Вопрос (например: Сколько будет 2 + 2?)">
       <input type="text" id="pairA" maxlength="200" placeholder="Правильный ответ (например: Налог на добавленную стоимость.)">
       <button class="mini-btn" id="btnLearnPair" type="button">➕ Научить этой паре</button>
       <div id="pairResult" class="quiz-feed"></div>
@@ -1083,21 +1083,31 @@ function runMirroBrain() {
     Ui.toast('Заполни паспорт помощника выше!');
     return;
   }
-  const r = mirroPredict(query, candidate);
-  const pct = Math.round(r.score * 100);
-  const f0 = r.feats[0], f3 = r.feats[3];
-  let verdict, cls;
-  if (f3 > 0 && f0 > 0.3)      { verdict = 'Мирро видит прямую связь промта и паспорта — отличный связанный помощник!'; cls = 'ok'; }
-  else if (f0 > 0)             { verdict = 'Есть пересечение с промтом. Добавь ещё слов из промта в роль/характер/правила.'; cls = ''; }
-  else                         { verdict = 'Паспорт почти не повторяет промт. Впиши ключевые слова из промта (роль, предмет, правило).'; cls = 'bad'; }
-  out.className = 'quiz-feed ' + cls;
-  out.innerHTML =
-    'Оценка Мирро: <b>' + pct + '%</b> (реальные веса из model_state.json · сигмоид=' + r.activation.toFixed(3) + ')<br>' +
-    '<span style="font-size:12px">Признаки: ' +
-    r.names.map((n, i) => n + '=' + r.feats[i].toFixed(2)).join(', ') + '</span><br>' +
-    verdict + '<br>' +
-    '<span class="mb-note">Веса пока почти нулевые — Мирро молодая (обучена на ' + MIRRO_BRAIN.autoLearned +
-    ' ответах), поэтому её уверенность близка к 50%. Делись с ней лайками и ответами — веса станут «решительнее»!</span>';
+  out.className = 'quiz-feed';
+  out.textContent = 'Мирро оценивает реальным перцептроном...';
+  // Честная связь: оценка идёт через сервер Mirro на НАСТОЯЩЕМ MLP-перцептроне
+  // (не на локальной заглушке весов в браузере).
+  fetch('http://127.0.0.1:3443/v1/brain-eval', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: query, candidate: candidate })
+  })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(d => {
+    const score = Number(d.score) || 0.5;
+    const pct = Math.round(score * 100);
+    let verdict, cls;
+    if (score > 0.65)      { verdict = 'Мирро (реальным перцептроном) видит хорошую связь промта и паспорта — уверенный помощник!'; cls = 'ok'; }
+    else if (score > 0.5)  { verdict = 'Есть связь, но слабоватая. Добавь ключевые слова из промта в роль/характер/правила.'; cls = 'ok'; }
+    else                   { verdict = 'Паспорт почти не связан с промтом. Впиши слова из промта (роль, предмет, правило).'; cls = 'bad'; }
+    out.className = 'quiz-feed ' + cls;
+    out.innerHTML = 'Оценка Мирро: <b>' + pct + '%</b> (реальный MLP Мирро, уверенность по сигмоиду = ' + score.toFixed(3) + ')<br>' + verdict;
+    loadLearnReport();
+  })
+  .catch(e => {
+    out.className = 'quiz-feed';
+    out.textContent = 'Сервер Мирро не отвечает: ' + String(e.message).split('\n')[0] + '. Запусти mirro_launcher.pyw и попробуй ещё.';
+  });
 }
 
 function NeuralNet(sizes) {
@@ -1590,6 +1600,22 @@ const Trainer = (() => {
     S.lastLoss = L;
     S.lossHist.push(L);
     if (S.lossHist.length > 600) S.lossHist = downsample(S.lossHist, 300);
+    // Связь Мейсто ↔ Мирро: раз в N эпох отправляем результат обучения
+    // визуальной сети Мейсто как feedback для перцептрона Мирро (лайк =
+    // сеть хорошо сошлась). Нечасто, чтобы не нагружать сервер.
+    if (S.epochs % 30 === 0) {
+      try {
+        fetch('http://127.0.0.1:3443/v1/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: 'место точка классификация эпоха',
+            response: 'Meyesto: эпох=' + S.epochs + ', loss=' + L.toFixed(4) + ', acc=' + (S.acc * 100).toFixed(1) + '%',
+            liked: S.acc > 0.85
+          })
+        });
+      } catch (e) {}
+    }
   }
 
   function start() {

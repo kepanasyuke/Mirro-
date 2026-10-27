@@ -720,6 +720,18 @@ class MirroAPI(BaseHTTPRequestHandler):
                 self._json({"status": "ok", "learned": learned, "checked": n})
             except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
             return
+        elif self.path == "/v1/brain-eval":
+            # Оценка паспорта/пары на НАСТОЯЩЕМ MLP-перцептроне Мирро
+            # (в отличие от локальной заглушки весов в браузере).
+            try:
+                body = self._read(); algo = _grab_algo()
+                q = body.get("query", "") or ""; c = body.get("candidate", "") or ""
+                if not c: c = body.get("candidate", "")
+                score = algo.perceptron_predict(q, c) if (q or c) else 0.5
+                self._json({"status": "ok", "score": round(float(score), 4),
+                            "trained": bool(getattr(algo, "perceptron_trained", False))})
+            except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
+            return
         self._json({"error": "not found"}, 404)
     def do_DELETE(self):
         # У Mirro нет изменяемых ресурсов, удаляемых через DELETE —
