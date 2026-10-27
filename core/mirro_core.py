@@ -465,6 +465,21 @@ def _voice(raw, query, strategy="base"):
         return raw
 
 
+def try_bosova_engine(prompt):
+    """Выполнимые алгоритмы по правилам Босовой: арифметика по конструкциям
+    ЕСЛИ/ТО/ЦИКЛ ПОКА, схемы мышления, тройственное рассуждение «нейрон-нигде».
+    Возвращает готовый ответ или None, если вопрос не подходит."""
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from algos.bosova_engine import применить
+        res = применить(prompt)
+        if not res:
+            return None
+        return res["answer"]
+    except Exception:
+        return None
+
+
 def build_response(prompt, cluster, context=""):
     """Построить ответ. prompt — актуальный вопрос, context — история диалога."""
     try:
@@ -482,6 +497,8 @@ def build_response(prompt, cluster, context=""):
         if jarvis_msg: return {"content": jarvis_msg, "strategy": "direct"}
         dialog_msg = try_dialog(prompt)
         if dialog_msg: return {"content": dialog_msg, "strategy": "dialog"}
+        bosova_msg = try_bosova_engine(prompt)
+        if bosova_msg: return {"content": bosova_msg, "strategy": "algo"}
         # Follow-up: если реплика короткая и без своей темы (напр. «подробнее»,
         # «а если наоборот?»), обогащаем поисковый запрос словами из истории —
         # иначе уходим в мусор TF-IDF.
@@ -498,6 +515,25 @@ def build_response(prompt, cluster, context=""):
                         hist_words.add(w)
             enrichment = " ".join(sorted(hist_words)[:60])
             prompt = (prompt + " " + enrichment).strip()
+
+        # Актуальность: если запрос содержит триггеры «свежести» (новости,
+        # сегодня, кто такой/кто сейчас, курс, рекорд, биография…) — идём в веб
+        # ПЕРЕД базой, чтобы не отдать устаревший текст из базы.
+        # Внимание: decide() возвращает 'web' и как дефолт (нет базы), поэтому
+        # проверяем именно реальные триггеры WEB_TRIGGERS, а не сам 'web'.
+        try:
+            sys.path.insert(0, str(MIRRO_HOME))
+            from scripts.thinking import thinking as _th
+            # Триггеры заданы в нижнем регистре — сравниваем с нижним регистром prompt,
+            # иначе запрос «Кто сейчас …» с заглавной буквы не попадает в веб-first.
+            web_hits = sum(1 for t in _th.WEB_TRIGGERS if t in prompt.lower())
+            if web_hits > 0:
+                web_first = try_web(prompt)
+                if web_first:
+                    return {"content": _voice(web_first, prompt, "web"), "strategy": "web"}
+        except Exception:
+            pass
+
         results = try_tfidf(prompt, cluster)
         if not results: results = try_rag(prompt, cluster)
         _, choose_best, _ = _reasoning()
