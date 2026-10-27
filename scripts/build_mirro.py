@@ -123,11 +123,14 @@ def check_smoke():
         import json as _json
         st = _json.loads((ROOT / "models" / "model_state.json").read_text("utf-8"))
         w = st.get("perceptron_weights") or {}
-        good = all(k in w for k in ("f0", "f1", "f2", "f3")) and \
-               isinstance(st.get("perceptron_bias"), (int, float))
+        # Перцептрон переведён на двухслойный MLP: веса выходного слоя хранятся
+        # как h{i}_out (вместо однослойного f{i}). Принимаем оба формата.
+        legacy = all(k in w for k in ("f0", "f1", "f2", "f3"))
+        mlp = any(k.endswith("_out") for k in w) and isinstance(st.get("perceptron_bias"), (int, float))
+        good = (legacy or mlp) and isinstance(st.get("perceptron_bias"), (int, float))
         ok = ok and good
-        print("[smoke] perceptron state:", "OK" if good else "FAIL",
-              {k: round(w[k], 4) for k in ("f0", "f1", "f2", "f3")})
+        shown = {k: round(v, 4) for k, v in list(w.items())[:6]}
+        print("[smoke] perceptron state:", "OK" if good else "FAIL", shown)
     except Exception as e:
         print("[smoke] perceptron state ERROR:", e)
         ok = False
