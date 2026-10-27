@@ -452,6 +452,18 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
     </div>
 
     <div class="mirro-brain">
+      <label>🎓 Обучение Мирро — живая тренировка прямо из Мейсто</label>
+      <div class="mb-note">Запусти автообучение или научи паре «вопрос → ответ». Результат сразу виден в отчёте снизу (веса, точность, кластеры).</div>
+      <button class="mini-btn" id="btnSelfLearn" type="button">⚡ Обучить сейчас (автообучение)</button>
+      <div id="selfLearnResult" class="quiz-feed"></div>
+      <div class="mb-note" style="margin-top:6px">Научить паре:</div>
+      <input type="text" id="pairQ" maxlength="160" placeholder="Вопрос (например: Что такое НДС?)">
+      <input type="text" id="pairA" maxlength="200" placeholder="Правильный ответ (например: Налог на добавленную стоимость.)">
+      <button class="mini-btn" id="btnLearnPair" type="button">➕ Научить этой паре</button>
+      <div id="pairResult" class="quiz-feed"></div>
+    </div>
+
+    <div class="mirro-brain">
       <label>🪞 Мирро-зеркало — твои «Я»</label>
       <textarea id="mirrorInput" rows="2" maxlength="200" placeholder="Я — мама, Мирро, автор, друг, ученица..."></textarea>
       <div class="mirror-chips">Кто ты сегодня?
@@ -1015,6 +1027,41 @@ function renderLearnReport(data) {
 function loadLearnReport() {
   fetch('http://127.0.0.1:3443/v1/learn-report').then(r => r.json()).then(renderLearnReport)
     .catch(() => renderLearnReport(null));
+}
+function runSelfLearn() {
+  const out = $('selfLearnResult'); if (!out) return;
+  out.className = 'quiz-feed';
+  out.textContent = 'Мирро учится... (может занять время)';
+  fetch('http://127.0.0.1:3443/v1/self-learn', { method: 'POST' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => {
+      out.className = 'quiz-feed ok';
+      out.textContent = 'Автообучение: усвоено/проверено ' + (d.checked || 0) +
+        ', усвоила ' + (d.learned || 0) + ' ответов. Отчёт обновлён.';
+      loadLearnReport();
+    })
+    .catch(e => { out.className = 'quiz-feed'; out.textContent = 'Ошибка: ' + e.message; });
+}
+function learnPair() {
+  const out = $('pairResult'); if (!out) return;
+  const q = ($('pairQ') ? $('pairQ').value : '').trim();
+  const a = ($('pairA') ? $('pairA').value : '').trim();
+  if (!q || !a) { out.className = 'quiz-feed'; out.textContent = 'Заполни и вопрос, и ответ.'; return; }
+  fetch('http://127.0.0.1:3443/v1/feedback', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: q, response: a, liked: true })
+  })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => {
+      out.className = 'quiz-feed ok';
+      out.textContent = 'Мирро запомнила пару и обновила перцептрон (лайк).';
+      // очистим поля
+      const iq = $('pairQ'), ia = $('pairA');
+      if (iq) iq.value = ''; if (ia) ia.value = '';
+      loadLearnReport();
+    })
+    .catch(e => { out.className = 'quiz-feed'; out.textContent = 'Ошибка: ' + e.message; });
 }
 function runMirroBrain() {
   const name = ($('pName')  ? $('pName').value  : '').trim();
@@ -2186,6 +2233,10 @@ function bindControls() {
   if (btnBrain) btnBrain.addEventListener('click', runMirroBrain);
   const btnAsk = $('btnAskMirro');
   if (btnAsk) btnAsk.addEventListener('click', askMirro);
+  const btnSL = $('btnSelfLearn');
+  if (btnSL) btnSL.addEventListener('click', runSelfLearn);
+  const btnLP = $('btnLearnPair');
+  if (btnLP) btnLP.addEventListener('click', learnPair);
   const btnMirror = $('btnMirror');
   if (btnMirror) btnMirror.addEventListener('click', runMirroMirror);
   document.querySelectorAll('.mirror-chips .mini-chip').forEach(ch =>
