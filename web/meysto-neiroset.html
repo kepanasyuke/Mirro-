@@ -1016,7 +1016,7 @@ function renderLearnReport(data) {
   host.innerHTML =
     '<div style="margin-top:6px"><b>Обучение Mirro — живой отчёт</b> ' +
     '<button class="mini-btn" type="button" onclick="loadLearnReport()" style="padding:1px 6px;font-size:11px">⟳</button></div>' +
-    '<div class="mb-note">trained: ' + trained + ' · авто-обучено: ' + fmtNum(data.auto_learned) +
+    '<div class="mb-note">обучена: ' + trained + ' · авто-обучено: ' + fmtNum(data.auto_learned) +
     ' · тренировка: ' + fmtNum(data.trainer_cycles) + ' примеров · точность: ' + acc + '</div>' +
     '<div class="mb-note">вызовов: ' + fmtNum(data.calls) + ' · примеров в базе: ' + fmtNum(data.total_examples) + '</div>' +
     '<div style="margin-top:4px">' + (w || '<span class="mb-note">веса пусты</span>') + '</div>' +
@@ -1101,7 +1101,7 @@ function runMirroBrain() {
     else if (score > 0.5)  { verdict = 'Есть связь, но слабоватая. Добавь ключевые слова из промта в роль/характер/правила.'; cls = 'ok'; }
     else                   { verdict = 'Паспорт почти не связан с промтом. Впиши слова из промта (роль, предмет, правило).'; cls = 'bad'; }
     out.className = 'quiz-feed ' + cls;
-    out.innerHTML = 'Оценка Мирро: <b>' + pct + '%</b> (реальный MLP Мирро, уверенность по сигмоиду = ' + score.toFixed(3) + ')<br>' + verdict;
+    out.innerHTML = 'Оценка Мирро: <b>' + pct + '%</b> (реальная сеть Мирро — многослойный перцептрон; сигмоид — кривая уверенности: чем ближе к 1, тем увереннее) = ' + score.toFixed(3) + ')<br>' + verdict;
     loadLearnReport();
   })
   .catch(e => {
