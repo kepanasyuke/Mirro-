@@ -322,52 +322,25 @@ class MirroAlgorithms:
         except ValueError:
             return 99
 
-    def _build(self):
-        print("  [Mirro Algorithms] building indexes...")
-        t0 = time.time()
-
+    def _load_processed_files(self):
+        """Файлы processed, отсортированные по приоритету кластера. Один return: list."""
         files = sorted((DATA_DIR / "processed").glob("*.jsonl"))
         files.sort(key=lambda f: self._cluster_priority(f.stem))
+        return files
 
-        for f in files:
-            with open(f, "r", encoding="utf-8") as fh:
-                for line in fh:
-                    if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
-                        break
-                    if not line.strip():
-                        continue
-                    try:
-                        ex = json.loads(line)
-                        inst = ex.get("instruction", ex.get("user", ""))
-                        out = ex.get("output", ex.get("assistant", ""))
-                        if inst and out and len(out) > 5:
-                            idx = len(self.examples)
-                            self.examples.append((inst, out, f.stem))
-                            words = self.tokenize(inst + " " + out[:200])
-                            self.term_freq.update(words)
-                            for w in set(words):
-                                self.doc_freq[w] += 1
-                                self.term_docs[w].add(idx)
-                    except Exception:
-                        pass
-            if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
-                print(f"  Достигнут лимит памяти ({MAX_INMEMORY_EXAMPLES}) — остальное отдаётся RAG-индексу")
-                break
-
+    def _build_doc_index(self):
+        """Строит total_docs/vocab/word2idx/doc_tf. Один return: None."""
         self.total_docs = max(len(self.examples), 1)
         self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
         self.word2idx = {w: i for i, w in enumerate(self.vocab)}
         self.embedding_size = min(300, len(self.vocab))
-
-        # Pre-compute TF vectors for fast search
-        self.doc_tf = []  # list of {word: count} per document
+        self.doc_tf = []
         for inst, out, cl in self.examples:
             self.doc_tf.append(Counter(self.tokenize(inst)))
+        return None
 
-        print(f"  Index: {len(self.examples)} ex, {len(self.vocab)} vocab, {time.time()-t0:.0f}s")
-
-        # После сборки индекса обучаем классификатор и вектора слов
-        self._extend_from_corpus()
+    def _train_side(self):
+        """Побочное обучение (NB, CBOW). Один return: None."""
         try:
             if not self.nb_priors:
                 self.nb_train()
@@ -375,59 +348,86 @@ class MirroAlgorithms:
                 self.build_cbow_embeddings(max_examples=20000)
         except Exception as e:
             print(f"  (побочное обучение пропущено: {e})")
+        return None
+
+    def _build(self):
+        print("  [Mirro Algorithms] building indexes...")
+        t0 = time.time()
+        for f in self._load_processed_files():
+            with open(f, "r", encoding="utf-8") as fh:
+                self._ingest_lines(fh, f.stem)
+            if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                print(f"  Достигнут лимит памяти ({MAX_INMEMORY_EXAMPLES}) — остальное отдаётся RAG-индексу")
+                break
+        self._build_doc_index()
+        print(f"  Index: {len(self.examples)} ex, {len(self.vocab)} vocab, {time.time()-t0:.0f}s")
+        self._extend_from_corpus()
+        self._train_side()
+
+    def _ingest_example(self, inst, out, cluster):
+        """Добавляет один пример в индексы. Один return: int idx добавленного."""
+        idx = len(self.examples)
+        self.examples.append((inst, out, cluster))
+        words = self.tokenize(inst + " " + out[:200])
+        self.term_freq.update(words)
+        for w in set(words):
+            self.doc_freq[w] += 1
+            self.term_docs[w].add(idx)
+        return idx
+
+    def _ingest_lines(self, fh, cluster):
+        """Добавляет примеры из файла-заглушки до лимита. Один return: int добавлено."""
+        added = 0
+        for line in fh:
+            if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                break
+            if not line.strip():
+                continue
+            try:
+                ex = json.loads(line)
+                inst = ex.get("instruction", ex.get("user", ""))
+                out = ex.get("output", ex.get("assistant", ""))
+                if inst and out and len(out) > 5:
+                    self._ingest_example(inst, out, cluster)
+                    added += 1
+            except Exception:
+                pass
+        return added
+
+    def _rebuild_after_extend(self, added):
+        """Перестраивает doc_tf/vocab после добавления. Один return: None."""
+        for i in range(len(self.examples) - added, len(self.examples)):
+            self.doc_tf.append(Counter(self.tokenize(self.examples[i][0])))
+        self.total_docs = max(len(self.examples), 1)
+        self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
+        self.word2idx = {w: i for i, w in enumerate(self.vocab)}
+        self.embedding_size = min(300, len(self.vocab))
+        print(f"  +{added} из корпуса, итого {len(self.examples)} примеров, {len(self.vocab)} слов")
+        return None
 
     def _extend_from_corpus(self):
-        """Добавляет примеры из corpus_ready в индекс без полной пересборки."""
-        # Корпус (4.8M+) обслуживается дисковым RAG-индексом — в память не грузим,
-        # чтобы не выйти за лимит RAM. Сюда попадают только файлы, которых
-        # ещё не было в индексе (инкрементальное добавление малых файлов).
+        """Добавляет примеры из corpus_ready в индекс без полной пересборки.
+        Один return: None."""
+        # Корпус обслуживается дисковым RAG-индексом — в память негрузим большие.
         corpus_dir = DATA_DIR / "corpus_ready"
         if not corpus_dir.exists():
-            return
+            return None
         added = 0
         for f in sorted(corpus_dir.glob("*.jsonl")):
-            # Пропускаем уже ингестированные файлы
             if f.name in self._ingested_corpus_files:
                 continue
-            # Пропускаем большие корпусные сегменты (4.8M+) — их обслуживает RAG на диске
-            if f.stat().st_size > 10_000_000:  # >10MB — значит это дисковый сегмент корпуса
+            if f.stat().st_size > 10_000_000:  # большой сегмент → RAG на диске
                 self._ingested_corpus_files.add(f.name)
                 continue
             with open(f, "r", encoding="utf-8") as fh:
-                for line in fh:
-                    if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
-                        break
-                    if not line.strip():
-                        continue
-                    try:
-                        ex = json.loads(line)
-                        inst = ex.get("instruction", ex.get("user", ""))
-                        out = ex.get("output", ex.get("assistant", ""))
-                        if inst and out and len(out) > 5:
-                            idx = len(self.examples)
-                            self.examples.append((inst, out, "corpus"))
-                            words = self.tokenize(inst + " " + out[:200])
-                            self.term_freq.update(words)
-                            for w in set(words):
-                                self.doc_freq[w] += 1
-                                self.term_docs[w].add(idx)
-                            added += 1
-                    except Exception:
-                        pass
+                added += self._ingest_lines(fh, "corpus")
             self._ingested_corpus_files.add(f.name)
             if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
                 print(f"  Достигнут лимит памяти ({MAX_INMEMORY_EXAMPLES}) — остальное отдаётся RAG-индексу")
                 break
         if added:
-            # построить doc_tf для добавленных
-            for i in range(len(self.examples) - added, len(self.examples)):
-                self.doc_tf.append(Counter(self.tokenize(self.examples[i][0])))
-            self.total_docs = max(len(self.examples), 1)
-            # Перестроить vocab и word2idx — включить новые слова
-            self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
-            self.word2idx = {w: i for i, w in enumerate(self.vocab)}
-            self.embedding_size = min(300, len(self.vocab))
-            print(f"  +{added} из корпуса, итого {len(self.examples)} примеров, {len(self.vocab)} слов")
+            self._rebuild_after_extend(added)
+        return None
 
     # ========================
     #  1. TF-IDF SEARCH
