@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T06:09:47",
+  "generated_at": "2026-10-28T06:15:08",
   "source": "local_server + github_repo",
   "health": {
     "name": "Mirro",
@@ -147,12 +147,54 @@
     "full_name": "kepanasyuke/Mirro-",
     "description": "Its Mirro, created by me and DeepSeek V4 Flash",
     "default_branch": "main",
-    "pushed_at": "2026-10-28T03:05:24Z",
+    "pushed_at": "2026-10-28T03:11:02Z",
     "stars_count": null,
     "forks_count": 0,
     "open_issues_count": 0
   },
   "repo_commits": [
+    {
+      "sha": "c8a2106f94b8fbf9340118389c79a9fa8d4fc19b",
+      "node_id": "C_kwDOUcYikNoAKGM4YTIxMDZmOTRiOGZiZjkzNDAxMTgzODljNzlhOWZhOGQ0ZmMxOWI",
+      "commit": {
+        "author": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T03:10:49Z"
+        },
+        "committer": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T03:10:49Z"
+        },
+        "message": "Auto-deploy script for VPS + refresh dashboard data snapshot\n\n- scripts/deploy_vps.sh: one-shot Ubuntu/Debian provisioning script — installs\n  deps, clones/updates the repo, creates a systemd unit (token + EnvFile for\n  DeepSeek key), configures nginx reverse proxy on :3443 and prints HTTPS via\n  certbot instructions. Secrets never committed (env/token come from env or\n  local file).\n- web/mirro-meysto-dashboard.html + data snapshot: refreshed with live data\n  (consciousness phi=0.86, current health/learn-report/repo commits).\n\nbuild --check: ALL CHECKS PASSED.",
+        "tree": {
+          "sha": "ce7815c94275dd3b469fc9428898eeee5cf72949",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/ce7815c94275dd3b469fc9428898eeee5cf72949"
+        },
+        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/c8a2106f94b8fbf9340118389c79a9fa8d4fc19b",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/c8a2106f94b8fbf9340118389c79a9fa8d4fc19b",
+      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/c8a2106f94b8fbf9340118389c79a9fa8d4fc19b",
+      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/c8a2106f94b8fbf9340118389c79a9fa8d4fc19b/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "d4df4510910d467234fdd2cfedb3a2846248b1d6",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/d4df4510910d467234fdd2cfedb3a2846248b1d6",
+          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/d4df4510910d467234fdd2cfedb3a2846248b1d6"
+        }
+      ]
+    },
     {
       "sha": "d4df4510910d467234fdd2cfedb3a2846248b1d6",
       "node_id": "C_kwDOUcYikNoAKGQ0ZGY0NTEwOTEwZDQ2NzIzNGZkZDJjZmVkYjNhMjg0NjI0OGIxZDY",
@@ -318,48 +360,6 @@
           "sha": "e25504e8ddd62acde420953ba74b2bc7a7e36eed",
           "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
           "html_url": "https://github.com/kepanasyuke/Mirro-/commit/e25504e8ddd62acde420953ba74b2bc7a7e36eed"
-        }
-      ]
-    },
-    {
-      "sha": "e25504e8ddd62acde420953ba74b2bc7a7e36eed",
-      "node_id": "C_kwDOUcYikNoAKGUyNTUwNGU4ZGRkNjJhY2RlNDIwOTUzYmE3NGIyYmM3YTdlMzZlZWQ",
-      "commit": {
-        "author": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-28T00:12:37Z"
-        },
-        "committer": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-28T00:12:37Z"
-        },
-        "message": "Trainer bot: split into small single-return functions\n\nRefactor scripts/trainer_bot.py per project convention 'small functions with\na single return': the flat 64-line run() is now 13 focused helpers\n(_build_sample, _coverage, _label_for, _train_one, _answer_for,\n_record_cluster, _maybe_progress, _save_model...), each with exactly one\nreturn, max 34 lines. Behavior unchanged (same CLI, same model_state output).\nAST-verified: every function has exactly 1 return.",
-        "tree": {
-          "sha": "ddc4eb0b55eb92538e9930b4d389e05c2c3c1281",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/ddc4eb0b55eb92538e9930b4d389e05c2c3c1281"
-        },
-        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
-        "comment_count": 0,
-        "verification": {
-          "verified": false,
-          "reason": "unsigned",
-          "signature": null,
-          "payload": null,
-          "verified_at": null
-        }
-      },
-      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
-      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
-      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed/comments",
-      "author": null,
-      "committer": null,
-      "parents": [
-        {
-          "sha": "4355a6575912be75802256a94463b0cef0bb7768",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/4355a6575912be75802256a94463b0cef0bb7768",
-          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/4355a6575912be75802256a94463b0cef0bb7768"
         }
       ]
     }
