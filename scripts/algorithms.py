@@ -437,23 +437,19 @@ class MirroAlgorithms:
         df = self.doc_freq.get(term, 1)
         return math.log(self.total_docs / (1 + df))
 
-    def search_tfidf(self, query, top_n=5):
-        """TF-IDF поиск с BM25-like нормализацией. Быстрый: использует предвычисленные TF."""
-        q_words = self.tokenize(query)
-        if not q_words:
-            return []
-        q_counts = Counter(q_words)
-
-        # Сортируем слова по редкости (IDF) — редкие дают больше информации
+    def _rare_scored_words(self, q_counts):
+        """Слова запроса по редкости (IDF). Один return: list (idf, word, qt)."""
         scored_words = [(self.tfidf(w), w, qt) for w, qt in q_counts.items()]
         scored_words.sort(key=lambda x: -x[0])
+        return scored_words
 
-        scores = {}  # ex_id -> accumulated score
+    def _accumulate_scores(self, scored_words):
+        """Аккумулирует BM25-оценки по документам. Один return: dict ex_id->score."""
+        scores = {}
         MAX_DOCS = 15000
-
         for idf, w, qt in scored_words:
             if idf < 0.5:
-                continue  # слишком частые слова пропускаем
+                continue
             doc_ids = self.term_docs.get(w, set())
             for ex_id in doc_ids:
                 if ex_id in scores:
@@ -466,12 +462,20 @@ class MirroAlgorithms:
                     break
             if len(scores) > MAX_DOCS:
                 break
+        return scores
 
-        if not scores:
-            return []
-
-        best = sorted(scores.items(), key=lambda x: -x[1])[:top_n]
-        return [(self.examples[ex_id], sc) for ex_id, sc in best]
+    def search_tfidf(self, query, top_n=5):
+        """TF-IDF поиск с BM25-like нормализацией. Быстрый: использует предвычисленные TF.
+        Один return: list of ((inst,out,cl), score)."""
+        result = []
+        q_words = self.tokenize(query)
+        if q_words:
+            scored_words = self._rare_scored_words(Counter(q_words))
+            scores = self._accumulate_scores(scored_words)
+            if scores:
+                best = sorted(scores.items(), key=lambda x: -x[1])[:top_n]
+                result = [(self.examples[ex_id], sc) for ex_id, sc in best]
+        return result
 
     # ========================
     #  2. TEXT RANK — суммаризация
@@ -1010,22 +1014,25 @@ class MirroAlgorithms:
     # ========================
     #  8. COMPOSE ANSWER (improved)
     # ========================
-    def compose_answer(self, query, top_n=8, max_len=4000):
-        """
-        Полный пайплайн: кэш → поиск → фильтрация перцептроном → дедупликация → TextRank → самокоррекция.
-        """
-        # 0. Cache check
+    def _cache_get(self, query):
+        """Поиск в кэше по ключу. Один return: str-ответ или None."""
         cache_key = query.strip().lower()[:100]
+        result = None
         if cache_key in self.cache:
-            return self.cache[cache_key]
+            result = self.cache[cache_key]
+        return result
 
-        # 1. TF-IDF search
-        results = self.search_tfidf(query, top_n=top_n)
-        if not results:
-            self.cache[cache_key] = None
-            return None
+    def _cache_put(self, query, value):
+        """Кладёт ответ в кэш с ограничением размера. Один return: None."""
+        cache_key = query.strip().lower()[:100]
+        if len(self.cache) >= self.cache_max:
+            oldest = next(iter(self.cache))
+            del self.cache[oldest]
+        self.cache[cache_key] = value
+        return None
 
-        # 2. Score candidates with perceptron + QA score (+ затухающий буст предпочтений)
+    def _score_answers(self, query, results):
+        """Оценивает кандидатов (перцептрон+qa+буст предпочтений). Один return: list."""
         scored = []
         seen = set()
         for (inst, out, cl), tfidf_score in results:
@@ -1037,12 +1044,10 @@ class MirroAlgorithms:
             boost = self._decay_boost(self._boost_key(out))
             combined = 0.3 * tfidf_score + 0.3 * nn_score + 0.4 * qa + boost
             scored.append((combined, out, cl))
+        return scored
 
-        if not scored:
-            self.cache[cache_key] = None
-            return None
-
-        # 3. Take top 3 from different clusters
+    def _pick_3_parts(self, scored):
+        """Берёт топ-3 ответа из разных кластеров. Один return: list строк."""
         scored.sort(key=lambda x: -x[0])
         parts = []
         used_cl = set()
@@ -1053,21 +1058,42 @@ class MirroAlgorithms:
                 continue
             parts.append(out[:1200].strip())
             used_cl.add(cl)
+        return parts
 
-        # 4. Combine and summarize
+    def _summarize_parts(self, parts, max_len):
+        """Склеивает и при необходимости суммаризирует. Один return: str."""
         combined = "\n\n".join(parts)[:max_len]
         if len(combined) > 1500 and len(parts) > 1:
             combined = self.textrank_summarize(combined, ratio=0.5)
+        return combined
 
-        # 5. Self-correction
-        corrected, _ = self.self_correct(query, combined)
-
-        # 6. Cache
-        if len(self.cache) >= self.cache_max:
-            oldest = next(iter(self.cache))
-            del self.cache[oldest]
-        self.cache[cache_key] = corrected
-        return corrected
+    def compose_answer(self, query, top_n=8, max_len=4000):
+        """
+        Полный пайплайн: кэш → поиск → фильтрация перцептроном → дедупликация → TextRank → самокоррекция.
+        Один return: str-ответ или None.
+        """
+        result = None
+        cached = self._cache_get(query)
+        if cached is not None:
+            result = cached
+        else:
+            results = self.search_tfidf(query, top_n=top_n)
+            if results:
+                scored = self._score_answers(query, results)
+                if scored:
+                    parts = self._pick_3_parts(scored)
+                    if parts:
+                        combined = self._summarize_parts(parts, max_len)
+                        corrected, _ = self.self_correct(query, combined)
+                        self._cache_put(query, corrected)
+                        result = corrected
+                    else:
+                        self._cache_put(query, None)
+                else:
+                    self._cache_put(query, None)
+            else:
+                self._cache_put(query, None)
+        return result
 
     # ========================
     #  AUTONOMOUS SELF-LEARNING (60-min loop)
