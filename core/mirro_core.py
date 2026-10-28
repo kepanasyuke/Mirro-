@@ -511,6 +511,7 @@ def _try_direct_handlers(prompt):
         ("direct", try_jarvis),
         ("dialog", try_dialog),
         ("algo", try_bosova_engine),
+        ("ai_history", try_ai_history),
     ]
     result = None
     for strategy, fn in handlers:
@@ -628,6 +629,18 @@ def build_response(prompt, cluster, context=""):
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
     return result
+
+def try_ai_history(prompt):
+    """Справочник «рост понимания: нейрочеловек и ИИ» (Тьюринг, Шеннон, Питтс,
+    Хебб, Розенблатт, IIT, GNWT и др.) — с авторами в записях. Один return:
+    str-ответ или None."""
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from algos.knowledge_ai_history import применить as _ai_hist
+        return _ai_hist(prompt)
+    except Exception:
+        return None
+
 
 # ========== HTTP API ==========
 class MirroAPI(BaseHTTPRequestHandler):
