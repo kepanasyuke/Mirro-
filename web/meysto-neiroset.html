@@ -464,6 +464,13 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
     </div>
 
     <div class="mirro-brain">
+      <label>📦 Паспорт Mirro из репо (GitHub) — кто открыл, тянет живые данные</label>
+      <div class="mb-note">Мейсто берёт данные прямо из публичного репозитория <b>github.com/kepanasyuke/Mirro-</b>: описание, алгоритмы, последние коммиты и отчёт обучения из <b>models/model_state.json</b>. Даже без локального сервера можно увидеть паспорт Mirro.</div>
+      <div id="repoPassport" class="quiz-feed"></div>
+      <button class="mini-btn" id="btnLoadRepo" type="button">🔗 Загрузить паспорт из репо</button>
+    </div>
+
+    <div class="mirro-brain">
       <label>🪞 Мирро-зеркало — твои «Я»</label>
       <textarea id="mirrorInput" rows="2" maxlength="200" placeholder="Я — мама, Мирро, автор, друг, ученица..."></textarea>
       <div class="mirror-chips">Кто ты сегодня?
@@ -1062,6 +1069,42 @@ function learnPair() {
       loadLearnReport();
     })
     .catch(e => { out.className = 'quiz-feed'; out.textContent = 'Ошибка: ' + e.message; });
+}
+const REPO = 'kepanasyuke/Mirro-';
+function ghGet(url) { return fetch(url).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); }
+function loadRepoPassport() {
+  const out = $('repoPassport'); if (!out) return;
+  out.className = 'quiz-feed';
+  out.textContent = 'Подключаюсь к репозиторию ...';
+  Promise.all([
+    ghGet('https://api.github.com/repos/' + REPO),
+    ghGet('https://api.github.com/repos/' + REPO + '/contents/algos'),
+    ghGet('https://api.github.com/repos/' + REPO + '/commits?per_page=3')
+  ])
+  .then(([repo, algos, commits]) => {
+    const branch = repo.default_branch || 'main';
+    fetch('https://raw.githubusercontent.com/' + REPO + '/' + branch + '/models/model_state.json')
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(model => {
+        const algoCount = Array.isArray(algos) ? algos.filter(x => x && x.name).length : 0;
+        const commitLines = (commits || []).slice(0, 3).map(c =>
+          '• ' + (c.commit && c.commit.message ? c.commit.message.split("\n")[0] : '') +
+          ' — ' + (c.commit && c.commit.author && c.commit.author.date ? c.commit.author.date.slice(0,10) : '')).join('<br>');
+        const trained = model && model.perceptron_trained ? 'да' : 'нет';
+        const acc = model && model.trainer_accuracy != null ? Math.round(model.trainer_accuracy * 100) + '%' : '—';
+        const cycles = model && model.trainer_cycles != null ? model.trainer_cycles : '—';
+        out.className = 'quiz-feed';
+        out.innerHTML =
+          '<b>Паспорт Mirro из репо</b> (github.com/' + REPO + ')<br>' +
+          (repo.description ? '«' + repo.description + '»<br>' : '') +
+          'Ветка: ' + branch +
+          ' · алгоритмов в algos/: <b>' + algoCount + '</b><br>' +
+          '<b>Отчёт обучения (model_state из репо):</b> обучена=' + trained +
+          ', тренировка циклов=' + cycles + ', точность=' + acc + '<br>' +
+          'Последние коммиты:<br>' + (commitLines || '—');
+      });
+  })
+  .catch(e => { out.className = 'quiz-feed'; out.textContent = 'Не удалось получить репозиторий: ' + String(e.message).split('\n')[0]; });
 }
 function runMirroBrain() {
   const name = ($('pName')  ? $('pName').value  : '').trim();
@@ -2263,6 +2306,8 @@ function bindControls() {
   if (btnSL) btnSL.addEventListener('click', runSelfLearn);
   const btnLP = $('btnLearnPair');
   if (btnLP) btnLP.addEventListener('click', learnPair);
+  const btnRepo = $('btnLoadRepo');
+  if (btnRepo) btnRepo.addEventListener('click', loadRepoPassport);
   const btnMirror = $('btnMirror');
   if (btnMirror) btnMirror.addEventListener('click', runMirroMirror);
   document.querySelectorAll('.mirror-chips .mini-chip').forEach(ch =>
@@ -2399,6 +2444,7 @@ function boot() {
   Tasks.bind();
   renderBrainWeights();
   loadLearnReport();
+  loadRepoPassport();
   renderDims(0);
   bindDims();
   Levels.load(0);
