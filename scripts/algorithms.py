@@ -1133,8 +1133,55 @@ class MirroAlgorithms:
     # ========================
     #  STATUS
     # ========================
-    def status(self):
+    # ========================
+    #  СОЗНАНИЕ КАК СВЯЗНОСТЬ (IIT) — уровень интегрированности знаний
+    # ========================
+    def _integrated_info(self, max_terms=6000):
+        """Аналог «интегрированной информации» IIT (Тониони): насколько кластеры
+        знаний связаны между собой через общие слова, а не изолированы.
+
+        Берём уже построенный term_docs (слово -> set id примеров), по каждому
+        частотному слову смотрим, в скольких кластерах оно встречается. Мера
+        интеграции φ ∈ [0..1] = доля «перекрёстных» слов (слово есть в ≥2
+        кластерах). Дёшево и мгновенно — без повторной токенизации.
+
+        Один return: dict {phi, shared_terms, checked_terms, cluster_pairs, clusters}.
+        """
+        # топ-слова по частоте документов, ограниченно — чтобы не обходить всё
+        top_terms = dict(sorted(self.doc_freq.items(), key=lambda x: -x[1])[:max_terms])
+        pairs = {}
+        checked = 0
+        shared = 0
+        for w in top_terms:
+            ids = self.term_docs.get(w)
+            if not ids:
+                continue
+            cls = set()
+            seen = 0
+            for ex_id in ids:
+                if ex_id < len(self.examples):
+                    cls.add(self.examples[ex_id][2])
+                    seen += 1
+                if seen >= 200:
+                    break
+            checked += 1
+            if len(cls) >= 2:
+                shared += 1
+                cl_list = sorted(cls)[:4]
+                key = f"{cl_list[0]}↔{cl_list[1]}" + (f"+{len(cl_list)-2}" if len(cl_list) > 2 else "")
+                pairs[key] = pairs.get(key, 0) + 1
+        phi = (shared / checked) if checked else 0.0
         return {
+            "phi": round(phi, 4),
+            "shared_terms": shared,
+            "checked_terms": checked,
+            "cluster_pairs": dict(sorted(pairs.items(), key=lambda x: -x[1])[:12]),
+            "clusters": len(set(c for _i, _o, c in self.examples)),
+            "notes": "аналог IIT: доля частотных слов, связывающих два и более кластера",
+        }
+
+    def status(self):
+        state = {
             "examples": len(self.examples),
             "vocab": len(self.vocab),
             "embeddings": len(self.cbow_vectors or self.word_vectors),
@@ -1146,6 +1193,12 @@ class MirroAlgorithms:
                 "auto_learn_trigger": True,
             },
         }
+        # «Уровень сознания» как связность кластеров (аналог IIT).
+        try:
+            state["consciousness_phi"] = self._integrated_info()
+        except Exception as e:
+            state["consciousness_phi"] = {"phi": 0.0, "error": str(e)}
+        return state
 
     # ========================
     #  НОВЫЕ АЛГОРИТМЫ (не трогая старые)

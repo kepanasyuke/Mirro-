@@ -75,6 +75,13 @@
   </table>
 </div>
 
+<div class="card">
+    <h3>Уровень сознания (IIT·связность кластеров)</h3>
+    <div id="cons_phi" class="big">—</div>
+    <div class="muted" style="font-size:12px" id="cons_note"></div>
+    <div style="margin-top:6px" id="cons_pairs"></div>
+  </div>
+
 <div style="margin-top:14px" class="card">
   <h3>NB-распределение (приоритет кластеров)</h3>
   <div id="nb"></div>
@@ -87,12 +94,12 @@
 
 <script>
 const D = {
-  "generated_at": "2026-10-28T03:07:14",
+  "generated_at": "2026-10-28T03:44:50",
   "source": "local_server + github_repo",
   "health": {
     "name": "Mirro",
     "version": "0.3",
-    "total_calls": 419,
+    "total_calls": 420,
     "total_examples": 2793612,
     "providers": {
       "deepseek": false,
@@ -133,7 +140,7 @@ const D = {
         "desc": "Общие инструкции и диалоги",
         "priority": 7,
         "examples": 14990,
-        "calls": 67
+        "calls": 68
       }
     },
     "api": "http://127.0.0.1:3443/v1/chat/completions",
@@ -162,6 +169,27 @@ const D = {
         "query_expansion": true,
         "sentence_rank": true,
         "auto_learn_trigger": true
+      },
+      "consciousness_phi": {
+        "phi": 0.8618,
+        "shared_terms": 5171,
+        "checked_terms": 6000,
+        "cluster_pairs": {
+          "generated↔ru": 2843,
+          "general↔generated+2": 677,
+          "code↔general+2": 568,
+          "design↔general+2": 214,
+          "generated↔math+1": 199,
+          "code↔design+2": 191,
+          "general↔generated+1": 144,
+          "code↔generated+1": 138,
+          "code↔generated+2": 67,
+          "generated↔math": 53,
+          "design↔generated+2": 16,
+          "design↔generated+1": 11
+        },
+        "clusters": 12,
+        "notes": "аналог IIT: доля частотных слов, связывающих два и более кластера"
       }
     }
   },
@@ -177,7 +205,7 @@ const D = {
     "bias": 0,
     "hidden": {},
     "trained": true,
-    "auto_learned": 89,
+    "auto_learned": 149,
     "trainer_cycles": 29917,
     "trainer_accuracy": 0.6078,
     "clusters": {
@@ -189,7 +217,7 @@ const D = {
       "general": 14990
     },
     "total_examples": 2793612,
-    "calls": 419,
+    "calls": 420,
     "hidden_bias": {},
     "trainer_clusters": {
       "ru": 15156,
@@ -201,10 +229,10 @@ const D = {
       "research": 1,
       "system": 1
     },
-    "updated": "2026-10-27T23:56:55.102875",
+    "updated": "2026-10-28T00:44:20.654444",
     "clusters_calls": {
       "design": 12,
-      "general": 67,
+      "general": 68,
       "ru": 305,
       "code": 29,
       "knowledge": 6
@@ -214,12 +242,163 @@ const D = {
     "full_name": "kepanasyuke/Mirro-",
     "description": "Its Mirro, created by me and DeepSeek V4 Flash",
     "default_branch": "main",
-    "pushed_at": "2026-10-28T00:05:25Z",
+    "pushed_at": "2026-10-28T00:21:35Z",
     "stars_count": null,
     "forks_count": 0,
     "open_issues_count": 0
   },
   "repo_commits": [
+    {
+      "sha": "2df069742750127eae288b3d59736dc67da13589",
+      "node_id": "C_kwDOUcYikNoAKDJkZjA2OTc0Mjc1MDEyN2VhZTI4OGIzZDU5NzM2ZGM2N2RhMTM1ODk",
+      "commit": {
+        "author": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T00:21:25Z"
+        },
+        "committer": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T00:21:25Z"
+        },
+        "message": "mirro_core: split build_response and chat POST into small single-return helpers
+
+Per the project convention (small functions, single return) refactor the two
+longest request paths in core/mirro_core.py without changing behavior:
+- build_response: now 31 lines / 1 return; the pipeline moved into helpers
+  _try_direct_handlers, _enrich_followup, _try_web_first, _search_best,
+  _voice_or_none, _fallback_chain (each single-return, <=21 lines).
+- POST /v1/chat/completions: message parsing + response building moved into
+  _handle_chat and _chat_payload (single-return); do_POST stays a thin router.
+
+Verified: build --check ALL CHECKS PASSED; server restarted; /health and
+/v1/chat/completions return 200 after the refactor.",
+        "tree": {
+          "sha": "1b74bf1f8d63e24a4305a3acb35a2f94098af42b",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/1b74bf1f8d63e24a4305a3acb35a2f94098af42b"
+        },
+        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/2df069742750127eae288b3d59736dc67da13589",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/2df069742750127eae288b3d59736dc67da13589",
+      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/2df069742750127eae288b3d59736dc67da13589",
+      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/2df069742750127eae288b3d59736dc67da13589/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "e25504e8ddd62acde420953ba74b2bc7a7e36eed",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
+          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/e25504e8ddd62acde420953ba74b2bc7a7e36eed"
+        }
+      ]
+    },
+    {
+      "sha": "e25504e8ddd62acde420953ba74b2bc7a7e36eed",
+      "node_id": "C_kwDOUcYikNoAKGUyNTUwNGU4ZGRkNjJhY2RlNDIwOTUzYmE3NGIyYmM3YTdlMzZlZWQ",
+      "commit": {
+        "author": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T00:12:37Z"
+        },
+        "committer": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T00:12:37Z"
+        },
+        "message": "Trainer bot: split into small single-return functions
+
+Refactor scripts/trainer_bot.py per project convention 'small functions with
+a single return': the flat 64-line run() is now 13 focused helpers
+(_build_sample, _coverage, _label_for, _train_one, _answer_for,
+_record_cluster, _maybe_progress, _save_model...), each with exactly one
+return, max 34 lines. Behavior unchanged (same CLI, same model_state output).
+AST-verified: every function has exactly 1 return.",
+        "tree": {
+          "sha": "ddc4eb0b55eb92538e9930b4d389e05c2c3c1281",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/ddc4eb0b55eb92538e9930b4d389e05c2c3c1281"
+        },
+        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
+      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/e25504e8ddd62acde420953ba74b2bc7a7e36eed",
+      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/e25504e8ddd62acde420953ba74b2bc7a7e36eed/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "4355a6575912be75802256a94463b0cef0bb7768",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/4355a6575912be75802256a94463b0cef0bb7768",
+          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/4355a6575912be75802256a94463b0cef0bb7768"
+        }
+      ]
+    },
+    {
+      "sha": "4355a6575912be75802256a94463b0cef0bb7768",
+      "node_id": "C_kwDOUcYikNoAKDQzNTVhNjU3NTkxMmJlNzU4MDIyNTZhOTQ0NjNiMGNlZjBiYjc3Njg",
+      "commit": {
+        "author": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T00:08:52Z"
+        },
+        "committer": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-10-28T00:08:52Z"
+        },
+        "message": "Add Mirro-Meysto data snapshot and dashboard
+
+- data/mirro_meysto_data.json: combined snapshot (health + learn-report +
+  GitHub repo meta + last commits) collected live from the local server and
+  the public repo.
+- web/mirro-meysto-dashboard.html: self-contained visual dashboard (overview,
+  training report, clusters, NB distribution, repo commits) with the snapshot
+  embedded, openable without a server.",
+        "tree": {
+          "sha": "cd41f5fc18135d9d494d8ca4103caa502a6a416f",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/cd41f5fc18135d9d494d8ca4103caa502a6a416f"
+        },
+        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/4355a6575912be75802256a94463b0cef0bb7768",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/4355a6575912be75802256a94463b0cef0bb7768",
+      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/4355a6575912be75802256a94463b0cef0bb7768",
+      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/4355a6575912be75802256a94463b0cef0bb7768/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "3bee33bcccf2a17baeab0d2f9f7bdc46c4648a8f",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/3bee33bcccf2a17baeab0d2f9f7bdc46c4648a8f",
+          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/3bee33bcccf2a17baeab0d2f9f7bdc46c4648a8f"
+        }
+      ]
+    },
     {
       "sha": "3bee33bcccf2a17baeab0d2f9f7bdc46c4648a8f",
       "node_id": "C_kwDOUcYikNoAKDNiZWUzM2JjY2NmMmExN2JhZWFiMGQyZjlmN2JkYzQ2YzQ2NDhhOGY",
@@ -234,7 +413,17 @@ const D = {
           "email": "mirro@localhost",
           "date": "2026-10-28T00:05:14Z"
         },
-        "message": "Meysto <-> Mirro repo link: GitHub passport + state mirror script\n\n- web/meysto-neiroset.html: new 'Паспорт Mirro из репо' panel that fetches\n  live data from the public repo github.com/kepanasyuke/Mirro- (meta, algos\n  file list, last commits, and models/model_state.json report). Loads at boot\n  and via button, so anyone opening Meyesto sees Mirro's passport from GitHub\n  even without the local server.\n- scripts/mirror_state_to_git.py: optional manual script to commit/push\n  runtime model_state.json + stats.json as a learning-report mirror.\n\nJS braces balanced (543/543); server serves the new panel.",
+        "message": "Meysto <-> Mirro repo link: GitHub passport + state mirror script
+
+- web/meysto-neiroset.html: new 'Паспорт Mirro из репо' panel that fetches
+  live data from the public repo github.com/kepanasyuke/Mirro- (meta, algos
+  file list, last commits, and models/model_state.json report). Loads at boot
+  and via button, so anyone opening Meyesto sees Mirro's passport from GitHub
+  even without the local server.
+- scripts/mirror_state_to_git.py: optional manual script to commit/push
+  runtime model_state.json + stats.json as a learning-report mirror.
+
+JS braces balanced (543/543); server serves the new panel.",
         "tree": {
           "sha": "c028317388e239a6fbae9912544273922a10522f",
           "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/c028317388e239a6fbae9912544273922a10522f"
@@ -276,7 +465,15 @@ const D = {
           "email": "mirro@localhost",
           "date": "2026-10-28T00:00:54Z"
         },
-        "message": "Meysto: localize remaining visible tech terms to Russian with explanations\n\n- learn-report: 'trained:' -> 'обучена:'.\n- brain-eval result text: 'реальный MLP Мирро, сигмоид' -> 'реальная сеть Мирро —\n  многослойный перцептрон; сигмоид — кривая уверенности (чем ближе к 1, тем\n  увереннее)'.\n- Audited the rest: visible UI was already Russian; remaining latin words are\n  JS identifiers/class names (not user-visible).\nJS braces balanced (537/537); served page verified.",
+        "message": "Meysto: localize remaining visible tech terms to Russian with explanations
+
+- learn-report: 'trained:' -> 'обучена:'.
+- brain-eval result text: 'реальный MLP Мирро, сигмоид' -> 'реальная сеть Мирро —
+  многослойный перцептрон; сигмоид — кривая уверенности (чем ближе к 1, тем
+  увереннее)'.
+- Audited the rest: visible UI was already Russian; remaining latin words are
+  JS identifiers/class names (not user-visible).
+JS braces balanced (537/537); served page verified.",
         "tree": {
           "sha": "31f3fe80976ab4285087a3a04e5d7bec99ec31ea",
           "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/31f3fe80976ab4285087a3a04e5d7bec99ec31ea"
@@ -301,132 +498,6 @@ const D = {
           "sha": "d67d94631ff9fc0d674abfa8e2d8e51f804601c0",
           "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/d67d94631ff9fc0d674abfa8e2d8e51f804601c0",
           "html_url": "https://github.com/kepanasyuke/Mirro-/commit/d67d94631ff9fc0d674abfa8e2d8e51f804601c0"
-        }
-      ]
-    },
-    {
-      "sha": "d67d94631ff9fc0d674abfa8e2d8e51f804601c0",
-      "node_id": "C_kwDOUcYikNoAKGQ2N2Q5NDYzMWZmOWZjMGQ2NzRhYmZhOGUyZDhlNTFmODA0NjAxYzA",
-      "commit": {
-        "author": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-27T23:49:59Z"
-        },
-        "committer": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-27T23:49:59Z"
-        },
-        "message": "Deepen Mirro<->Meyesto link: real perceptron eval, training feedback, kid-safe example\n\n- core/mirro_core.py: new POST /v1/brain-eval evaluates a passport/pair on the\n  REAL MLP perceptron (algo.perceptron_predict), not the hardcoded stub.\n- web/meysto-neiroset.html:\n  * runMirroBrain now asks /v1/brain-eval instead of local weight stub.\n  * runOneEpoch sends periodic feedback to Mirro about the visual network's\n    progress (epoch/loss/acc, liked=acc>0.85).\n  * Training panel example placeholder changed from NDS (adult topic) to a\n    child-friendly arithmetic question; Meyesto is used to teach Mirro by kids.\n\nJS braces balanced (537/537); server compiles; served page verified.",
-        "tree": {
-          "sha": "c68baec8a9b439923b67730b4a50cacfd6ecbb2e",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/c68baec8a9b439923b67730b4a50cacfd6ecbb2e"
-        },
-        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/d67d94631ff9fc0d674abfa8e2d8e51f804601c0",
-        "comment_count": 0,
-        "verification": {
-          "verified": false,
-          "reason": "unsigned",
-          "signature": null,
-          "payload": null,
-          "verified_at": null
-        }
-      },
-      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/d67d94631ff9fc0d674abfa8e2d8e51f804601c0",
-      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/d67d94631ff9fc0d674abfa8e2d8e51f804601c0",
-      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/d67d94631ff9fc0d674abfa8e2d8e51f804601c0/comments",
-      "author": null,
-      "committer": null,
-      "parents": [
-        {
-          "sha": "48de509caa7b06b452add5e51375785e159ea427",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/48de509caa7b06b452add5e51375785e159ea427",
-          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/48de509caa7b06b452add5e51375785e159ea427"
-        }
-      ]
-    },
-    {
-      "sha": "48de509caa7b06b452add5e51375785e159ea427",
-      "node_id": "C_kwDOUcYikNoAKDQ4ZGU1MDljYWE3YjA2YjQ1MmFkZDVlNTEzNzU3ODVlMTU5ZWE0Mjc",
-      "commit": {
-        "author": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-27T23:44:43Z"
-        },
-        "committer": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-27T23:44:43Z"
-        },
-        "message": "Meysto: training panel - self-learn button + learn a pair\n\n- New 'Обучение Мирро' panel in Meysto: run POST /v1/self-learn\n  (runSelfLearn) and train a question->answer pair via POST /v1/feedback\n  with liked=true (learnPair). Both reload the live /v1/learn-report so\n  weights/accuracy/clusters update in place.\n- Buttons wired in bind(). JS braces balanced; served HTML verified.",
-        "tree": {
-          "sha": "6fd31315ee6afcf604f168fdd895a4819bea0fb1",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/6fd31315ee6afcf604f168fdd895a4819bea0fb1"
-        },
-        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/48de509caa7b06b452add5e51375785e159ea427",
-        "comment_count": 0,
-        "verification": {
-          "verified": false,
-          "reason": "unsigned",
-          "signature": null,
-          "payload": null,
-          "verified_at": null
-        }
-      },
-      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/48de509caa7b06b452add5e51375785e159ea427",
-      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/48de509caa7b06b452add5e51375785e159ea427",
-      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/48de509caa7b06b452add5e51375785e159ea427/comments",
-      "author": null,
-      "committer": null,
-      "parents": [
-        {
-          "sha": "fc8ab23704089b16bc146d79f8cdac71a5e5d5b8",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/fc8ab23704089b16bc146d79f8cdac71a5e5d5b8",
-          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/fc8ab23704089b16bc146d79f8cdac71a5e5d5b8"
-        }
-      ]
-    },
-    {
-      "sha": "fc8ab23704089b16bc146d79f8cdac71a5e5d5b8",
-      "node_id": "C_kwDOUcYikNoAKGZjOGFiMjM3MDQwODliMTZiYzE0NmQ3OWY4Y2RhYzcxYTVlNWQ1Yjg",
-      "commit": {
-        "author": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-27T23:31:29Z"
-        },
-        "committer": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-10-27T23:31:29Z"
-        },
-        "message": "Serve Meysto from server; autolearn keeps trainer metrics in model_state\n\n- core/mirro_core.py do_GET: also serve /meysto-neiroset.html (Meysto UI was\n  only reachable as a local file, 404 through the server).\n- autonomous_learning_loop: merge with existing model_state.json instead of\n  overwriting it, so trainer_cycles/trainer_accuracy/trainer_clusters survive;\n  auto_learned now accumulates. Fixes the bug where server startup autolearn\n  erased the g       lobal-training report.",
-        "tree": {
-          "sha": "d3b4d5cd272334827a470f3fad845773ff11f80e",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/d3b4d5cd272334827a470f3fad845773ff11f80e"
-        },
-        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/fc8ab23704089b16bc146d79f8cdac71a5e5d5b8",
-        "comment_count": 0,
-        "verification": {
-          "verified": false,
-          "reason": "unsigned",
-          "signature": null,
-          "payload": null,
-          "verified_at": null
-        }
-      },
-      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/fc8ab23704089b16bc146d79f8cdac71a5e5d5b8",
-      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/fc8ab23704089b16bc146d79f8cdac71a5e5d5b8",
-      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/fc8ab23704089b16bc146d79f8cdac71a5e5d5b8/comments",
-      "author": null,
-      "committer": null,
-      "parents": [
-        {
-          "sha": "f1bcde51d31ace8aecc7e27c150f8e279f605f0f",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/f1bcde51d31ace8aecc7e27c150f8e279f605f0f",
-          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/f1bcde51d31ace8aecc7e27c150f8e279f605f0f"
         }
       ]
     }
@@ -470,6 +541,21 @@ const rows = Object.keys(clusters).map(k=>{
     '<td>'+(c.examples||0)+'</td><td>'+(c.calls||0)+'</td></tr>';
 }).join('');
 document.getElementById('clusters').innerHTML = rows;
+
+const phiInfo = (h.algorithms && h.algorithms.consciousness_phi) || (alg.consciousness_phi) || null;
+if (phiInfo && phiInfo.phi != null) {
+  const pct = Math.round(phiInfo.phi * 100);
+  document.getElementById('cons_phi').textContent = (phiInfo.phi * 100).toFixed(1) + '%';
+  document.getElementById('cons_note').textContent = 'связных слов: ' + (phiInfo.shared_terms ?? 0) +
+    ' из ' + (phiInfo.checked_terms ?? 0) + ' проверенных · кластеров: ' + (phiInfo.clusters ?? '—') +
+    ' (' + (phiInfo.notes || '') + ')';
+  const pairs = phiInfo.cluster_pairs || {};
+  const pairHtml = Object.keys(pairs).slice(0, 6).map(k =>
+    '<span class="pill">' + k + '=' + pairs[k] + '</span>').join(' ');
+  document.getElementById('cons_pairs').innerHTML = pairHtml || '<span class="muted">перекрёстных связей нет</span>';
+} else {
+  document.getElementById('cons_note').textContent = 'данные появятся после пересборки отчёта (перезапусти сервер)';
+}
 
 const nb = alg.nb_classes||{};
 const nbMax = Math.max(...Object.values(nb), 1e-9);

@@ -590,26 +590,33 @@ def build_response(prompt, cluster, context=""):
         direct = _try_direct_handlers(prompt)
         if direct is not None:
             result = direct
+            result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
         else:
             prompt = _enrich_followup(prompt, context)
             web_first = _try_web_first(prompt)
             if web_first is not None:
                 result = web_first
+                result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
             else:
                 best_answer, best_score, has_result = _search_best(prompt, cluster)
                 if has_result and answer_looks_bad(prompt, best_answer):
                     bad_web = try_web(prompt)
                     if bad_web:
                         result = _voice_or_none(bad_web, prompt, "web")
+                        result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
                     else:
                         result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
+                        result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
                 elif not has_result and cluster in ("ru", "knowledge"):
                     cl_web = try_web(prompt)
                     result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
+                    result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
                 elif has_result:
                     result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
+                    result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
                 else:
                     result = _fallback_chain(prompt)
+                    result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
     return result
