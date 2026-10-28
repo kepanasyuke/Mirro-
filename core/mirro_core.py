@@ -15,6 +15,11 @@ for d in [CORE, LOGS, MODELS]: d.mkdir(parents=True, exist_ok=True)
 # Для доступа по локальной сети (WiFi/модем): $env:MIRRO_HOST="0.0.0.0"
 HOST = os.environ.get("MIRRO_HOST", "127.0.0.1")
 PORT = int(os.environ.get("MIRRO_PORT", "3443"))
+# Авторизация для публичного доступа. Если MIRRO_TOKEN задан (непустой),
+# все запросы должны нести его (заголовок Authorization: Bearer <token> или
+# query-параметр ?token=), иначе — 401. Пока токен пуст — локальный режим без
+# пароля (как раньше). Безопасность публичного режима держится на этом токене.
+AUTH_TOKEN = os.environ.get("MIRRO_TOKEN", "").strip()
 
 KNOWLEDGE_CLUSTERS = {
     "ru": {"desc": "Русский язык, диалоги, инструкции", "priority": 10},
@@ -646,29 +651,62 @@ class MirroAPI(BaseHTTPRequestHandler):
             self.end_headers(); self.wfile.write(body)
             return True
         return False
+    def _authorized(self):
+        """Проверяет токен доступа. Один return: bool.
+
+        Пропускает, если AUTH_TOKEN пуст (локальный режим). Иначе сверяет
+        заголовок Authorization: Bearer <token> или query-параметр ?token=.
+        """
+        if not AUTH_TOKEN:
+            return True
+        supplied = ""
+        auth = self.headers.get("Authorization", "")
+        if auth.lower().startswith("bearer "):
+            supplied = auth[7:].strip()
+        if not supplied:
+            from urllib.parse import urlparse, parse_qs
+            qs = parse_qs(urlparse(self.path).query)
+            supplied = (qs.get("token") or [""])[0]
+        return supplied == AUTH_TOKEN
+    def _require_auth(self):
+        """Если токен неверен — пишет 401. Один return: bool (разрешено)."""
+        if self._authorized():
+            return True
+        self._json({"error": "unauthorized"}, 401)
+        return False
+    def _route_path(self):
+        """Путь без query-параметров (для маршрутизации). Один return: str."""
+        try:
+            from urllib.parse import urlsplit
+            return urlsplit(self.path).path or "/"
+        except Exception:
+            return self.path.split("?", 1)[0]
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
+        if not self._require_auth():
+            return
+        route = self._route_path()
+        if route in ("/", "/index.html"):
             if self._serve_file(MIRRO_HOME / "web" / "index.html", "text/html; charset=utf-8"): return
-        elif self.path == "/meysto-neiroset.html":
+        elif route == "/meysto-neiroset.html":
             if self._serve_file(MIRRO_HOME / "web" / "meysto-neiroset.html", "text/html; charset=utf-8"): return
-        elif self.path == "/catalog.json":
+        elif route == "/catalog.json":
             if self._serve_file(DATA / "catalog_phase1.json", "application/json; charset=utf-8"): return
-        elif self.path == "/health":
+        elif route == "/health":
             status = core.status()
             try: status["algorithms"] = _grab_algo().status()
             except: status["algorithms"] = {}
             self._json(status); return
-        elif self.path == "/v1/models":
+        elif route == "/v1/models":
             t = int(time.time())
             self._json({"object": "list", "data": [
                 {"id": "mirro/default", "object": "model", "created": t, "owned_by": "mirro"},
                 {"id": "mirro/ru", "object": "model", "created": t, "owned_by": "mirro"},
             ]}); return
-        elif self.path == "/v1/top-questions":
+        elif route == "/v1/top-questions":
             top = core.stats.get("top_questions", {})
             ranked = sorted(top.items(), key=lambda x: -x[1])[:15]
             self._json({"questions": [{"q": q, "count": c} for q, c in ranked]}); return
-        elif self.path == "/v1/learn-report":
+        elif route == "/v1/learn-report":
             self._json(self._learn_report()); return
         self._json({"error": "not found"}, 404)
 
@@ -759,19 +797,22 @@ class MirroAPI(BaseHTTPRequestHandler):
         return None
 
     def do_POST(self):
-        if self.path == "/v1/chat/completions":
+        if not self._require_auth():
+            return
+        route = self._route_path()
+        if route == "/v1/chat/completions":
             try: body = self._read()
             except: return self._json({"error": "bad request"}, 400)
             self._handle_chat(body)
             return
-        elif self.path == "/v1/feedback":
+        elif route == "/v1/feedback":
             try:
                 body = self._read(); algo = _grab_algo()
                 algo.train_from_feedback(body.get("query",""), body.get("response",""), body.get("liked",True))
                 self._json({"status": "ok"})
             except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
             return
-        elif self.path == "/v1/self-learn":
+        elif route == "/v1/self-learn":
             try:
                 algo = _grab_algo(); n = min(50, len(algo.examples)); learned = 0
                 for inst, out, cl in algo.examples[::max(1, len(algo.examples)//n)][:n]:
@@ -781,7 +822,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                 self._json({"status": "ok", "learned": learned, "checked": n})
             except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
             return
-        elif self.path == "/v1/brain-eval":
+        elif route == "/v1/brain-eval":
             # Оценка паспорта/пары на НАСТОЯЩЕМ MLP-перцептроне Мирро
             # (в отличие от локальной заглушки весов в браузере).
             try:
