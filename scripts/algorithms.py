@@ -547,11 +547,53 @@ class MirroAlgorithms:
 
         print(f"  {len(self.word_vectors)} word vectors")
 
+    def _init_cbow(self, rnd, vocab, dim):
+        """Инициализация CBOW-векторов. Один return: (in_vec, out_vec)."""
+        in_vec = {w: [rnd.uniform(-0.01, 0.01) for _ in range(dim)] for w in vocab}
+        out_vec = {w: [0.0] * dim for w in vocab}
+        return in_vec, out_vec
+
+    def _iter_cbow_windows(self, window, max_examples, word2idx):
+        """Генератор (target, ctx) из выборки. Один return: (через yield)."""
+        for _, text, _ in self.examples[:max_examples]:
+            words = self.tokenize(text)
+            if len(words) < 2:
+                continue
+            for i, target in enumerate(words):
+                if target not in word2idx:
+                    continue
+                ctx = [words[j] for j in range(max(0, i - window), min(len(words), i + window + 1)) if j != i]
+                yield target, ctx
+
+    def _train_cbow_step(self, target, ctx, in_vec, out_vec, dim, lr):
+        """Один шаг обучения CBOW. Один return: None."""
+        ctx = [w for w in ctx if w in self.word2idx]
+        if not ctx:
+            return None
+        avg = [sum(in_vec[w][d] for w in ctx) / len(ctx) for d in range(dim)]
+        score = sum(x * y for x, y in zip(avg, out_vec[target]))
+        error = (1.0 / (1.0 + math.exp(-score))) - 1.0
+        for d in range(dim):
+            out_vec[target][d] -= lr * error * avg[d]
+        for w in ctx:
+            for d in range(dim):
+                in_vec[w][d] -= (lr * error * out_vec[target][d]) / len(ctx)
+        return None
+
+    def _normalize_cbow(self, in_vec, vocab):
+        """Нормирует и фиксирует CBOW-векторы. Один return: dict word->vec."""
+        import math as _m
+        out = {}
+        for w in vocab:
+            v = in_vec[w]
+            norm = _m.sqrt(sum(x * x for x in v)) or 1.0
+            out[w] = [x / norm for x in v]
+        return out
+
     def build_cbow_embeddings(self, window=2, max_examples=20000):
         """Строит собственные word embeddings через CBOW (без numpy).
 
         Для каждого окна контекста предсказывает целевое слово по среднему
-        контекста; обновляет входные/выходные векторы. Затем нормирует.
         Результат — self.cbow_vectors: word -> float[dim].
         """
         if self._cbow_built or not self.word2idx:
@@ -559,51 +601,12 @@ class MirroAlgorithms:
         import random as _rnd
         rnd = _rnd.Random(42)
         vocab = list(self.word2idx.keys())
-        idx2w = {v: k for k, v in self.word2idx.items()}
         dim = max(4, min(self.cbow_dim, len(vocab) // 2 or 1))
-
-        # Инициализация векторов: случайные малые значения (уникальны на слово)
-        in_vec = {w: [rnd.uniform(-0.01, 0.01) for _ in range(dim)] for w in vocab}
-        out_vec = {w: [0.0] * dim for w in vocab}
-
-        def dot(a, b):
-            return sum(x * y for x, y in zip(a, b))
-
-        def collect_windows():
-            for _, text, _ in self.examples[:max_examples]:
-                words = self.tokenize(text)
-                if len(words) < 2:
-                    continue
-                for i, target in enumerate(words):
-                    if target not in self.word2idx:
-                        continue
-                    ctx = [words[j] for j in range(max(0, i - window), min(len(words), i + window + 1)) if j != i]
-                    yield target, ctx
-
+        in_vec, out_vec = self._init_cbow(rnd, vocab, dim)
         lr = 0.05
-        for target, ctx in collect_windows():
-            ctx = [w for w in ctx if w in self.word2idx]
-            if not ctx:
-                continue
-            # Усреднённый контекстный вектор
-            avg = [sum(in_vec[w][d] for w in ctx) / len(ctx) for d in range(dim)]
-            score = dot(avg, out_vec[target])
-            # простая сигмоидная ошибка: p - 1 (для положительного примера)
-            error = (1.0 / (1.0 + math.exp(-score))) - 1.0
-            # Обновление выходного вектора цели
-            for d in range(dim):
-                out_vec[target][d] -= lr * error * avg[d]
-            # Обновление входных векторов контекста
-            for w in ctx:
-                for d in range(dim):
-                    in_vec[w][d] -= (lr * error * out_vec[target][d]) / len(ctx)
-
-        # Нормируем и сохраняем
-        self.cbow_vectors = {}
-        for w in vocab:
-            v = in_vec[w]
-            norm = math.sqrt(sum(x * x for x in v)) or 1.0
-            self.cbow_vectors[w] = [x / norm for x in v]
+        for target, ctx in self._iter_cbow_windows(window, max_examples, self.word2idx):
+            self._train_cbow_step(target, ctx, in_vec, out_vec, dim, lr)
+        self.cbow_vectors = self._normalize_cbow(in_vec, vocab)
         self.cbow_dim = dim
         self._cbow_built = True
         print(f"  CBOW: {len(self.cbow_vectors)} векторов, dim={dim}")
@@ -1300,21 +1303,15 @@ class MirroAlgorithms:
         return (score < 0.35) or (risk > 0.8)
 
     # 6. COMPOSE с новыми алгоритмами (надстройка, не меняя старый compose)
-    def compose_answer_v2(self, query, top_n=8, max_len=4000):
-        """Улучшенный пайплайн: spellcheck → query expansion → jaccard/rank."""
-        # 1. Исправляем опечатки в запросе
+    def _expanded_query(self, query):
+        """Spellcheck + query expansion. Один return: строка запроса."""
         clean_query = self.spellcheck(query)
-
-        # 2. Расширяем запрос ассоциациями
         expansion = self.query_expansion(clean_query)
         search_query = clean_query + " " + " ".join(expansion)
+        return search_query
 
-        # 3. Ищем (старый TF-IDF)
-        results = self.search_tfidf(search_query, top_n=top_n)
-        if not results:
-            return None
-
-        # 4. Ранжируем по jaccard + перцептрон + qa
+    def _score_candidates(self, query, clean_query, results):
+        """Ранжирует кандидатов (перцептрон+jaccard+qa). Один return: список."""
         scored = []
         seen = set()
         for (inst, out, cl), tfidf_score in results:
@@ -1326,10 +1323,10 @@ class MirroAlgorithms:
             qa = self.qa_score(clean_query, out)
             combined = 0.25 * tfidf_score + 0.25 * nn + 0.25 * ja + 0.25 * qa
             scored.append((combined, out, cl))
+        return scored
 
-        if not scored:
-            return None
-
+    def _pick_parts(self, clean_query, scored, max_len):
+        """Собирает до 3 частей из разных кластеров. Один return: строка."""
         scored.sort(key=lambda x: -x[0])
         parts = []
         used_cl = set()
@@ -1338,12 +1335,21 @@ class MirroAlgorithms:
                 break
             if cl in used_cl:
                 continue
-            # Ранжирование предложений внутри ответа
             top_sents = self.sentence_rank(clean_query, out, top_k=2)
             parts.append(" ".join(top_sents)[:1100])
             used_cl.add(cl)
-
         return "\n\n".join(parts)[:max_len]
+
+    def compose_answer_v2(self, query, top_n=8, max_len=4000):
+        """Улучшенный пайплайн: spellcheck → query expansion → jaccard/rank."""
+        search_query = self._expanded_query(query)
+        results = self.search_tfidf(search_query, top_n=top_n)
+        if not results:
+            return None
+        scored = self._score_candidates(query, self.spellcheck(query), results)
+        if not scored:
+            return None
+        return self._pick_parts(self.spellcheck(query), scored, max_len)
 
 
 # Singleton

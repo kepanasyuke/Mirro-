@@ -31,6 +31,11 @@ def _extract(name, signature):
 
 _CBOW_BUILD = _extract("build_cbow_embeddings", "self, window=2, max_examples=20000")
 _CBOW_SIM = _extract("cbow_similarity", "self, word_a, word_b")
+# build_cbow_embeddings разбита на помощники (single-return) — их тоже извлекаем
+_INIT = _extract("_init_cbow", "self, rnd, vocab, dim")
+_WINDOWS = _extract("_iter_cbow_windows", "self, window, max_examples, word2idx")
+_STEP = _extract("_train_cbow_step", "self, target, ctx, in_vec, out_vec, dim, lr")
+_NORM = _extract("_normalize_cbow", "self, in_vec, vocab")
 
 
 class _CbowStub:
@@ -58,6 +63,18 @@ class _CbowStub:
 
     def build_cbow_embeddings(self, window=2, max_examples=20000):
         return _CBOW_BUILD.__get__(self, _CbowStub)(window, max_examples)
+
+    def _init_cbow(self, rnd, vocab, dim):
+        return _INIT.__get__(self, _CbowStub)(rnd, vocab, dim)
+
+    def _iter_cbow_windows(self, window, max_examples, w2i):
+        return _WINDOWS.__get__(self, _CbowStub)(window, max_examples, w2i)
+
+    def _train_cbow_step(self, target, ctx, in_vec, out_vec, dim, lr):
+        return _STEP.__get__(self, _CbowStub)(target, ctx, in_vec, out_vec, dim, lr)
+
+    def _normalize_cbow(self, in_vec, vocab):
+        return _NORM.__get__(self, _CbowStub)(in_vec, vocab)
 
     def cbow_similarity(self, word_a, word_b):
         return _CBOW_SIM.__get__(self, _CbowStub)(word_a, word_b)

@@ -11,7 +11,10 @@ DATA = MIRRO_HOME / "data"
 LOGS = MIRRO_HOME / "logs"
 MODELS = MIRRO_HOME / "models"
 for d in [CORE, LOGS, MODELS]: d.mkdir(parents=True, exist_ok=True)
-HOST, PORT = "127.0.0.1", 3443
+# Хост/порт настраиваются через env. По умолчанию — 127.0.0.1 (только локально).
+# Для доступа по локальной сети (WiFi/модем): $env:MIRRO_HOST="0.0.0.0"
+HOST = os.environ.get("MIRRO_HOST", "127.0.0.1")
+PORT = int(os.environ.get("MIRRO_PORT", "3443"))
 
 KNOWLEDGE_CLUSTERS = {
     "ru": {"desc": "Русский язык, диалоги, инструкции", "priority": 10},
@@ -803,6 +806,29 @@ class MirroAPI(BaseHTTPRequestHandler):
         self.end_headers()
     def log_message(self, fmt, *args): pass
 
+def _lan_ip():
+    """Локальный IP машины (для доступа по сети). Один return: str или '127.0.0.1'."""
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    ip = "127.0.0.1"
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
+def _access_addresses():
+    """Список адресов, по которым доступен сервер. Один return: str."""
+    if HOST in ("0.0.0.0", ""):
+        lan = _lan_ip()
+        return (f"Локально:  http://127.0.0.1:{PORT}\n"
+                f"По сети (WiFi/модем): http://{lan}:{PORT}")
+    return f"Только локально: http://127.0.0.1:{PORT}"
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     print("MIRRO v0.3 - Единая нейросеть знаний")
@@ -820,6 +846,7 @@ def main():
     autonomous_learning_loop(interval_sec=3600)
     server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
     print(f"\n  → Слушаю на http://{HOST}:{PORT}")
+    print("  → Доступ:\n" + _access_addresses())
     try: server.serve_forever()
     except KeyboardInterrupt: print("\n  Mirro остановлен."); server.server_close()
 
