@@ -26,6 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DATA_FILE = ROOT / "data" / "mirro_meysto_data.json"
 DASH_FILE = ROOT / "web" / "mirro-meysto-dashboard.html"
+PHI_HIST_FILE = ROOT / "data" / "phi_history.json"
 
 BASE = os.environ.get("MIRRO_BASE", "http://127.0.0.1:3443")
 REPO = "https://api.github.com/repos/kepanasyuke/Mirro-"
@@ -85,6 +86,33 @@ def _embed(report):
     return True
 
 
+def _append_phi(report, max_points=720):
+    """Дописывает точку phi в историю. Один return: list точек."""
+    history = []
+    if PHI_HIST_FILE.exists():
+        try:
+            history = json.loads(PHI_HIST_FILE.read_text("utf-8"))
+        except Exception:
+            history = []
+    if not isinstance(history, list):
+        history = []
+    phi_raw = report.get("health", {}).get("algorithms", {}).get("consciousness_phi", {}).get("phi")
+    if phi_raw is None:
+        return history
+    point = {"ts": report.get("generated_at"), "phi": round(float(phi_raw), 4)}
+    if history and history[-1].get("ts") == point["ts"]:
+        history[-1] = point
+    else:
+        history.append(point)
+    if len(history) > max_points:
+        history = history[-max_points:]
+    try:
+        PHI_HIST_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), "utf-8")
+    except Exception:
+        pass
+    return history
+
+
 def main():
     print("MIRRO DASHBOARD REFRESH")
     report = _collect()
@@ -98,6 +126,10 @@ def main():
     # Сохраняем JSON-снимок для удобства
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     DATA_FILE.write_text(json.dumps(report, ensure_ascii=False, indent=2), "utf-8")
+
+    # История уровня сознания φ (тренд по времени)
+    history = _append_phi(report)
+    report["phi_history"] = history
 
     if _embed(report):
         phi = report.get("health", {}).get("algorithms", {}).get("consciousness_phi", {}).get("phi")

@@ -90,6 +90,11 @@ nginx -t
 systemctl reload nginx || true
 fi
 
+echo "==> Автобновление дашборда (cron, каждый час)"
+CRON_LINE="0 * * * * ${RUN_USER} MIRRO_TOKEN=${MIRRO_TOKEN} MIRRO_BASE=http://127.0.0.1:${MIRRO_PORT} /usr/bin/python3 ${APP_DIR}/scripts/refresh_dashboard.py >> /var/log/mirro-dashboard.log 2>&1"
+( crontab -u "$RUN_USER" 2>/dev/null | grep -v "refresh_dashboard.py"; echo "$CRON_LINE" ) | crontab -u "$RUN_USER" -
+echo "  cron добавлен: $CRON_LINE"
+
 echo "==> Запуск сервиса"
 systemctl restart mirro
 sleep 3

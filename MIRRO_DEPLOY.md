@@ -113,6 +113,15 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now mirro
 ```
 
+## 5.5 Автобновление дашборда (необязательно)
+
+`scripts/deploy_vps.sh` добавляет cron на каждый час, который запускает
+`scripts/refresh_dashboard.py` с токеном — так дашборд (`web/mirro-meysto-dashboard.html`)
+и история уровня сознания φ (`data/phi_history.json`) обновляются сами.
+
+Вручную (локально): `python scripts/refresh_dashboard.py` (или ежечасная задача
+Windows через `scripts/schedule_dashboard.ps1`).
+
 ## 6. Проверка
 
 ```bash
