@@ -490,90 +490,129 @@ def try_bosova_engine(prompt):
         return None
 
 
-def build_response(prompt, cluster, context=""):
-    """Построить ответ. prompt — актуальный вопрос, context — история диалога."""
+def _try_direct_handlers(prompt):
+    """Перебирает быстрые стратегии (приветствие, обучение, мышление, юмор,
+    творчество, Джарвис, диалог, босовские алгоритмы) и возвращает первый
+    подошедший ответ. Единственный return: dict-ответ или None."""
+    handlers = [
+        ("greeting", try_greetings),
+        ("learn", try_learn),
+        ("think", try_algos_think),
+        ("humor", try_humor),
+        ("creative", try_creative),
+        ("direct", try_jarvis),
+        ("dialog", try_dialog),
+        ("algo", try_bosova_engine),
+    ]
+    result = None
+    for strategy, fn in handlers:
+        msg = fn(prompt)
+        if msg is not None:
+            result = {"content": msg, "strategy": strategy}
+            break
+    return result
+
+
+def _enrich_followup(prompt, context):
+    """Если реплика слишком короткая и без своей темы, обогащает её словами из
+    истории диалога, чтобы поиск не ушёл в мусор. Единственный return: str."""
+    q_words = set(_tokenize_for_search(prompt))
+    content_words = {w for w in q_words if w not in _DIALOG_STOPWORDS}
+    enriched = prompt
+    if len(content_words) < 2 and context:
+        hist_words = set()
+        for line in context.split("\n"):
+            for w in _tokenize_for_search(line.replace("Пользователь:", " ").replace("Mirro:", " ")):
+                if w not in _DIALOG_STOPWORDS:
+                    hist_words.add(w)
+        enrichment = " ".join(sorted(hist_words)[:60])
+        enriched = (prompt + " " + enrichment).strip()
+    return enriched
+
+
+def _try_web_first(prompt):
+    """Если запрос содержит триггеры «свежести», сразу отвечает веб-поиском.
+    Единственный return: dict-ответ или None."""
+    result = None
     try:
-        greeting = try_greetings(prompt)
-        if greeting: return {"content": greeting, "strategy": "direct"}
-        learn_msg = try_learn(prompt)
-        if learn_msg: return {"content": learn_msg, "strategy": "learn"}
-        think_result = try_algos_think(prompt)
-        if think_result: return {"content": think_result, "strategy": "think"}
-        humor_result = try_humor(prompt)
-        if humor_result: return {"content": humor_result, "strategy": "humor"}
-        creative_result = try_creative(prompt)
-        if creative_result: return {"content": creative_result, "strategy": "creative"}
-        jarvis_msg = try_jarvis(prompt)
-        if jarvis_msg: return {"content": jarvis_msg, "strategy": "direct"}
-        dialog_msg = try_dialog(prompt)
-        if dialog_msg: return {"content": dialog_msg, "strategy": "dialog"}
-        bosova_msg = try_bosova_engine(prompt)
-        if bosova_msg: return {"content": bosova_msg, "strategy": "algo"}
-        # Follow-up: если реплика короткая и без своей темы (напр. «подробнее»,
-        # «а если наоборот?»), обогащаем поисковый запрос словами из истории —
-        # иначе уходим в мусор TF-IDF.
-        q_words = set(_tokenize_for_search(prompt))
-        content_words = {w for w in q_words if w not in _DIALOG_STOPWORDS}
-        # Follow-up без собственной темы (0-1 смысловых слова): «подробнее»,
-        # «ещё», «а если наоборот?» — обогащаем словами из истории, иначе
-        # уйдём в мусор TF-IDF.
-        if len(content_words) < 2 and context:
-            hist_words = set()
-            for line in context.split("\n"):
-                for w in _tokenize_for_search(line.replace("Пользователь:", " ").replace("Mirro:", " ")):
-                    if w not in _DIALOG_STOPWORDS:
-                        hist_words.add(w)
-            enrichment = " ".join(sorted(hist_words)[:60])
-            prompt = (prompt + " " + enrichment).strip()
+        sys.path.insert(0, str(MIRRO_HOME))
+        from scripts.thinking import thinking as _th
+        web_hits = sum(1 for t in _th.WEB_TRIGGERS if t in prompt.lower())
+        if web_hits > 0:
+            web_first = try_web(prompt)
+            if web_first:
+                result = {"content": _voice(web_first, prompt, "web"), "strategy": "web"}
+    except Exception:
+        result = None
+    return result
 
-        # Актуальность: если запрос содержит триггеры «свежести» (новости,
-        # сегодня, кто такой/кто сейчас, курс, рекорд, биография…) — идём в веб
-        # ПЕРЕД базой, чтобы не отдать устаревший текст из базы.
-        # Внимание: decide() возвращает 'web' и как дефолт (нет базы), поэтому
-        # проверяем именно реальные триггеры WEB_TRIGGERS, а не сам 'web'.
-        try:
-            sys.path.insert(0, str(MIRRO_HOME))
-            from scripts.thinking import thinking as _th
-            # Триггеры заданы в нижнем регистре — сравниваем с нижним регистром prompt,
-            # иначе запрос «Кто сейчас …» с заглавной буквы не попадает в веб-first.
-            web_hits = sum(1 for t in _th.WEB_TRIGGERS if t in prompt.lower())
-            if web_hits > 0:
-                web_first = try_web(prompt)
-                if web_first:
-                    return {"content": _voice(web_first, prompt, "web"), "strategy": "web"}
-        except Exception:
-            pass
 
-        results = try_tfidf(prompt, cluster)
-        if not results: results = try_rag(prompt, cluster)
-        _, choose_best, _ = _reasoning()
-        best_answer, best_score, reason = choose_best(prompt, results, preferred=cluster)
-        has_result = best_answer is not None and best_score > 1.0
+def _search_best(prompt, cluster):
+    """TF-IDF → RAG → выбор лучшего кандидата по кластеру.
+    Единственный return: кортеж (best_answer, best_score, has_result)."""
+    results = try_tfidf(prompt, cluster)
+    if not results:
+        results = try_rag(prompt, cluster)
+    _, choose_best, _ = _reasoning()
+    best_answer, best_score, _reason = choose_best(prompt, results, preferred=cluster)
+    has_result = best_answer is not None and best_score > 1.0
+    return best_answer, best_score, has_result
 
-        # Шлюз качества: если ответ мусорный — не отдаём, ищем в вебе
-        bad_answer = has_result and answer_looks_bad(prompt, best_answer)
-        if bad_answer:
-            web_answer = try_web(prompt)
-            if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
-            return {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
 
-        if not has_result and cluster in ("ru", "knowledge"):
-            web_answer = try_web(prompt)
-            if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
-        if has_result: return {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
-        web_answer = try_web(prompt)
-        if web_answer: return {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
+def _voice_or_none(raw, prompt, strategy):
+    """Оборачивает ответ в голос Мирро. Единственный return: dict-ответ или None."""
+    result = None
+    if raw:
+        result = {"content": _voice(raw, prompt, strategy), "strategy": strategy}
+    return result
 
-        # Финальный резерв — легальный ИИ-провайдер (DeepSeek), если база и веб пусты
+
+def _fallback_chain(prompt):
+    """Финальная цепочка: веб → провайдер → подсказка. Единственный return: dict."""
+    web_answer = try_web(prompt)
+    if web_answer:
+        result = {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
+    else:
         provider_answer = try_provider(prompt)
         if provider_answer:
-            return {"content": provider_answer[:2500], "strategy": "provider"}
+            result = {"content": provider_answer[:2500], "strategy": "provider"}
+        else:
+            hint = _provider_help_hint()
+            result = {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
+    return result
 
-        # Нет ответа в базе/вебе И провайдер недоступен — подскажем, как подключить.
-        hint = _provider_help_hint()
-        return {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
+
+def build_response(prompt, cluster, context=""):
+    """Построить ответ. prompt — актуальный вопрос, context — история диалога.
+    Единственный return: dict-ответ."""
+    result = {"content": f"[Mirro] Внутренняя ошибка: произошла ошибка", "strategy": "error"}
+    try:
+        direct = _try_direct_handlers(prompt)
+        if direct is not None:
+            result = direct
+        else:
+            prompt = _enrich_followup(prompt, context)
+            web_first = _try_web_first(prompt)
+            if web_first is not None:
+                result = web_first
+            else:
+                best_answer, best_score, has_result = _search_best(prompt, cluster)
+                if has_result and answer_looks_bad(prompt, best_answer):
+                    bad_web = try_web(prompt)
+                    if bad_web:
+                        result = _voice_or_none(bad_web, prompt, "web")
+                    else:
+                        result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
+                elif not has_result and cluster in ("ru", "knowledge"):
+                    cl_web = try_web(prompt)
+                    result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
+                elif has_result:
+                    result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
+                else:
+                    result = _fallback_chain(prompt)
     except Exception as e:
-        return {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
+        result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
+    return result
 
 # ========== HTTP API ==========
 class MirroAPI(BaseHTTPRequestHandler):
@@ -655,53 +694,65 @@ class MirroAPI(BaseHTTPRequestHandler):
         # Соответствие весов формату «Мозг Мирро» в Мейсто (f0..f3) — если MLP,
         # отдаём и выходные h*_out, и плоские f* для простого предсказания.
         return report
+    def _chat_payload(self, messages, model, response, prompt):
+        """Формирует итоговый JSON-ответ (не-SSE). Единственный return: dict."""
+        content = response.get("content", "") if response else "Ошибка"
+        return {"id": f"mirro-{int(time.time())}", "object": "chat.completion", "model": model,
+                "usage": {"prompt_tokens": len(prompt)//4, "completion_tokens": len(content)//4},
+                "choices": [{"index": 0, "message": {"role": "assistant", "content": content}}]}
+
+    def _handle_chat(self, body):
+        """Обрабатывает POST /v1/chat/completions. Единственный return: None.
+
+        Пишет ответ клиенту (SSE или JSON) внутри. Не возвращает значение."""
+        messages = body.get("messages", [])
+        model = body.get("model", "mirro/default")
+        stream = body.get("stream", False)
+        if not messages:
+            self._json({"error": "no messages"}, 400)
+            return None
+        conversation = []
+        last_user = ""
+        for m in messages:
+            role = (m.get("role") or "").lower()
+            content = (m.get("content") or "").strip()
+            if not content:
+                continue
+            conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
+            if role in ("user", "human"):
+                last_user = content
+        prompt = last_user or " ".join(m.get("content", "") for m in messages)
+        context = "\n".join(conversation)
+        cluster = core.classify_task(prompt or context)
+        t0 = time.time()
+        response = build_response(prompt, cluster, context)
+        try:
+            if response.get("strategy") in ("base",) and response.get("content"):
+                algo = _grab_algo()
+                if algo.should_auto_learn(prompt, response["content"]):
+                    algo.autonomous_learn(cycles=15)
+        except: pass
+        if response:
+            core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
+        content = response.get("content", "") if response else "Ошибка"
+        if stream:
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Cache-Control", "no-cache"); self.end_headers()
+            for chunk in content.split("\n"):
+                self.wfile.write(f"data: {json.dumps({'choices':[{'delta':{'content':chunk+chr(10)}}]}, separators=(',',':'))}\n\n".encode())
+                self.wfile.flush()
+            self.wfile.write(b"data: [DONE]\n\n")
+        else:
+            payload = self._chat_payload(messages, model, response, prompt)
+            self._json(payload)
+        return None
+
     def do_POST(self):
         if self.path == "/v1/chat/completions":
             try: body = self._read()
             except: return self._json({"error": "bad request"}, 400)
-            messages = body.get("messages", [])
-            model = body.get("model", "mirro/default")
-            stream = body.get("stream", False)
-            if not messages: return self._json({"error": "no messages"}, 400)
-
-            # Контекст диалога: главный запрос — последняя реплика ПОЛЬЗОВАТЕЛЯ,
-            # а предыдущие реплики — контекст (иначе их склейка размывает
-            # актуальный вопрос и портит поиск по базе).
-            conversation = []
-            last_user = ""
-            for m in messages:
-                role = (m.get("role") or "").lower()
-                content = (m.get("content") or "").strip()
-                if not content:
-                    continue
-                conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
-                if role in ("user", "human"):
-                    last_user = content
-            prompt = last_user or " ".join(m.get("content", "") for m in messages)
-            context = "\n".join(conversation)
-            cluster = core.classify_task(prompt or context)
-            t0 = time.time()
-            response = build_response(prompt, cluster, context)
-            try:
-                if response.get("strategy") in ("base",) and response.get("content"):
-                    algo = _grab_algo()
-                    if algo.should_auto_learn(prompt, response["content"]):
-                        algo.autonomous_learn(cycles=15)
-            except: pass
-            if response: core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
-            content = response.get("content", "") if response else "Ошибка"
-            if stream:
-                self.send_response(200)
-                self.send_header("Content-Type", "text/event-stream")
-                self.send_header("Cache-Control", "no-cache"); self.end_headers()
-                for chunk in content.split("\n"):
-                    self.wfile.write(f"data: {json.dumps({'choices':[{'delta':{'content':chunk+chr(10)}}]}, separators=(',',':'))}\n\n".encode())
-                    self.wfile.flush()
-                self.wfile.write(b"data: [DONE]\n\n")
-            else:
-                self._json({"id": f"mirro-{int(time.time())}", "object": "chat.completion", "model": model,
-                            "usage": {"prompt_tokens": len(prompt)//4, "completion_tokens": len(content)//4},
-                            "choices": [{"index": 0, "message": {"role": "assistant", "content": content}}]})
+            self._handle_chat(body)
             return
         elif self.path == "/v1/feedback":
             try:
