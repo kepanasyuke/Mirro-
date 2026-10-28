@@ -405,26 +405,30 @@ class MirroAlgorithms:
         print(f"  +{added} из корпуса, итого {len(self.examples)} примеров, {len(self.vocab)} слов")
         return None
 
-    def _extend_from_corpus(self):
-        """Добавляет примеры из corpus_ready в индекс без полной пересборки.
-        Один return: None."""
-        # Корпус обслуживается дисковым RAG-индексом — в память негрузим большие.
-        corpus_dir = DATA_DIR / "corpus_ready"
-        if not corpus_dir.exists():
-            return None
+    def _ingest_jsonl_dir(self, directory, cluster):
+        """Добавляет малые .jsonl из папки в индекс. Один return: int добавлено."""
+        if not directory.exists():
+            return 0
         added = 0
-        for f in sorted(corpus_dir.glob("*.jsonl")):
+        for f in sorted(directory.glob("*.jsonl")):
             if f.name in self._ingested_corpus_files:
                 continue
-            if f.stat().st_size > 10_000_000:  # большой сегмент → RAG на диске
+            if f.stat().st_size > 10_000_000:
                 self._ingested_corpus_files.add(f.name)
                 continue
             with open(f, "r", encoding="utf-8") as fh:
-                added += self._ingest_lines(fh, "corpus")
+                added += self._ingest_lines(fh, cluster)
             self._ingested_corpus_files.add(f.name)
             if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
-                print(f"  Достигнут лимит памяти ({MAX_INMEMORY_EXAMPLES}) — остальное отдаётся RAG-индексу")
                 break
+        return added
+
+    def _extend_from_corpus(self):
+        """Добавляет примеры из corpus_ready и self_learned в индекс без полной
+        пересборки (история ИИ и самообученные пары становятся искомыми).
+        Один return: None."""
+        added = self._ingest_jsonl_dir(DATA_DIR / "corpus_ready", "corpus")
+        added += self._ingest_jsonl_dir(DATA_DIR / "self_learned", "learned")
         if added:
             self._rebuild_after_extend(added)
         return None
