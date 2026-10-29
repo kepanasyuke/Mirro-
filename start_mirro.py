@@ -16,6 +16,9 @@ CORE = os.path.join(MIRRO, "core", "mirro_core.py")
 PORT = 3443
 URL = f"http://127.0.0.1:{PORT}"
 
+# Режим лёгкого запуска: --lite или --lite=1 ограничивает RAM (≈1.5 ГБ)
+LITE = "--lite" in sys.argv or "--lite=1" in sys.argv
+
 def say(tag, msg, color=""):
     print(f"[{tag}] {msg}")
 
@@ -80,6 +83,8 @@ def main():
     print()
     print("-" * 54)
     print("  Запуск Mirro... (первая индексация 3-5 минут)")
+    mode = "LIGHT (MIRRO_LITE=1, ~1.5 ГБ)" if LITE else "FULL (полный индекс, ~8 ГБ RAM)"
+    print(f"  Режим: {mode}")
     print(f"  Сервер: {URL}")
     print("-" * 54)
     print()
@@ -89,10 +94,14 @@ def main():
     log_err = os.path.join(MIRRO, "logs", "mirro_err.log")
     os.makedirs(os.path.dirname(log_out), exist_ok=True)
 
+    env = dict(os.environ)
+    if LITE:
+        env["MIRRO_LITE"] = "1"
+
     with open(log_out, "w") as fo, open(log_err, "w") as fe:
         proc = subprocess.Popen(
             [sys.executable, "-u", CORE],
-            stdout=fo, stderr=fe, cwd=MIRRO
+            stdout=fo, stderr=fe, cwd=MIRRO, env=env
         )
 
     # Ожидание готовности

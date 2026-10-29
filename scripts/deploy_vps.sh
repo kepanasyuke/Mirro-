@@ -20,6 +20,8 @@ MIRRO_PORT="3443"
 # Секреты/токены из env окружения или переменных ниже (НИКОГДА не коммить):
 MIRRO_TOKEN="${MIRRO_TOKEN:-CHANGE_ME_длинный_случайный_токен}"
 DEEPSEEK_KEY="${DEEPSEEK_KEY:-}"   # если пусто — DeepSeek включится позже
+# Режим памяти: lite (~1.5 ГБ) или full (~8 ГБ). "lite" ставит MIRRO_LITE=1.
+MIRRO_MODE="${MIRRO_MODE:-full}"  # full | lite
 # ---------------------------------------------------------------------------
 
 echo "==> [1/6] Базовые пакеты"
@@ -48,6 +50,9 @@ MIRRO_PORT=${MIRRO_PORT}
 MIRRO_TOKEN=${MIRRO_TOKEN}
 DEEPSEEK_API_KEY=${DEEPSEEK_KEY}
 ENV
+if [ "$MIRRO_MODE" = "lite" ]; then
+  echo "MIRRO_LITE=1" >> /etc/mirro.env
+fi
 chmod 600 /etc/mirro.env
 
 echo "==> [5/6] systemd-сервис"
