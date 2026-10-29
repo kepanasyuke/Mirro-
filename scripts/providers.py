@@ -52,7 +52,7 @@ def _resolve_key(provider):
     env_key = os.environ.get(cfg["env"], "").strip()
     if env_key:
         return env_key
-    # 2) файл секретов D:\Mirro\core\providers_secret.json (в .gitignore)
+    # 2) файл секретов <корень>/core/providers_secret.json (в .gitignore)
     try:
         secret_file = Path(__file__).resolve().parent.parent / "core" / "providers_secret.json"
         if secret_file.exists():

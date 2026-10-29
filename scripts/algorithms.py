@@ -19,8 +19,9 @@ from pathlib import Path
 from collections import Counter, defaultdict
 
 MAX_INMEMORY_EXAMPLES = 1_500_000
-DATA_DIR = Path(r"D:\Mirro\data")
-MODELS_DIR = Path(r"D:\Mirro\models")
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT_DIR / "data"
+MODELS_DIR = ROOT_DIR / "models"
 MODELS_DIR.mkdir(exist_ok=True)
 
 

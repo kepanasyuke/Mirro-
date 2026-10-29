@@ -11,8 +11,9 @@ import json, math, time, pickle, re as _re
 from pathlib import Path
 from collections import Counter, defaultdict
 
-CORPUS_DIR = Path(r"D:\Mirro\data\corpus_big")
-INDEX_DIR = Path(r"D:\Mirro\models\rag_index")
+ROOT_DIR = Path(__file__).resolve().parent.parent
+CORPUS_DIR = ROOT_DIR / "data" / "corpus_big"
+INDEX_DIR = ROOT_DIR / "models" / "rag_index"
 INDEX_DIR.mkdir(parents=True, exist_ok=True)
 
 SEG_SIZE = 200_000   # примеров в сегменте

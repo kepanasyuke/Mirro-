@@ -5,7 +5,7 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict, Counter
 from datetime import datetime as _datetime
 
-MIRRO_HOME = Path(r"D:\Mirro")
+MIRRO_HOME = Path(__file__).resolve().parent.parent
 CORE = MIRRO_HOME / "core"
 DATA = MIRRO_HOME / "data"
 LOGS = MIRRO_HOME / "logs"

@@ -23,7 +23,8 @@ try:
 except ImportError:
     _HAS_TPE = False
 
-DATA_DIR = Path(r"D:\Mirro\data")
+ROOT_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT_DIR / "data"
 WEB_CACHE = DATA_DIR / "web_cache.json"
 
 
