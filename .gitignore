@@ -17,6 +17,13 @@ data/web_cache.json
 models/*.pkl
 models/*.pickle
 models/rag_index/
+models/index_cache.boost.json
+models/index_cache.json
+
+# Runtime state (regeneradle, не коммитим)
+core/stats.json
+models/model_state.json
+data/mirro_meysto_data.json
 
 # Logs
 logs/

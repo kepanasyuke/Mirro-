@@ -51,12 +51,18 @@ class MirroCore:
         except: return None
     def _save_json(self, path, data): path.write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
     def _load_knowledge(self):
+        _lite = os.environ.get("MIRRO_LITE", "").strip().lower() in ("1", "true", "yes", "on")
+        cap = 100_000 if _lite else None
         for f in self.processed_dir.glob("*.jsonl"):
+            n = 0
             with open(f, "r", encoding="utf-8") as fh:
                 for line in fh:
                     if line.strip():
                         try: self.knowledge_base[f.stem].append(json.loads(line))
                         except: pass
+                        n += 1
+                        if cap and n >= cap:
+                            break
         self.stats["total_examples"] = sum(len(v) for v in self.knowledge_base.values())
     def classify_task(self, prompt):
         prompt_lower = prompt.lower(); scores = defaultdict(float)

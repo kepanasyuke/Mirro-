@@ -18,7 +18,8 @@ import json, math, re as _re, collections, random, time, os
 from pathlib import Path
 from collections import Counter, defaultdict
 
-MAX_INMEMORY_EXAMPLES = 1_500_000
+LITE_MODE = os.environ.get("MIRRO_LITE", "").strip().lower() in ("1", "true", "yes", "on")
+MAX_INMEMORY_EXAMPLES = 100_000 if LITE_MODE else 1_500_000
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / "data"
 MODELS_DIR = ROOT_DIR / "models"
@@ -45,6 +46,7 @@ class MirroAlgorithms:
         self.cache = {}             # query -> cached answer
         self.cache_max = 200
         self._ingested_corpus_files = set()
+        self.doc_tf = None
 
         # Перцептрон → MLP (2 слоя: скрытый + выходной)
         self.perceptron_weights = {}    # output layer: feature -> weight (обратная совместимость)
@@ -118,11 +120,13 @@ class MirroAlgorithms:
             self._save_index()
         # Общий триггер: обучаем NB и CBOW на любом пути (сборка ИЛИ кэш),
         # чтобы status() показывал реальные nb_classes и embeddings.
+        # В lite-режиме пропускаем — они сильно раздувают RAM.
         try:
-            if not self.nb_priors:
-                self.nb_train()
-            if not self._cbow_built:
-                self.build_cbow_embeddings(max_examples=20000)
+            if not LITE_MODE:
+                if not self.nb_priors:
+                    self.nb_train()
+                if not self._cbow_built:
+                    self.build_cbow_embeddings(max_examples=20000)
         except Exception as e:
             print(f"  (побочное обучение пропущено: {e})")
 
@@ -233,17 +237,22 @@ class MirroAlgorithms:
                 self.qa_boost = state.get("qa_boost", {})
                 self.qa_boost_ts = state.get("qa_boost_ts", {})
                 self._load_boost_state()
-                self._load_perceptron()
+                self._loaded = True
+                if not LITE_MODE:
+                    self._load_perceptron()
                 self._loaded = True
                 if not self._ingested_corpus_files:
                     corpus_dir = DATA_DIR / "corpus_ready"
                     if corpus_dir.exists():
                         for f in corpus_dir.glob("*.jsonl"):
                             self._ingested_corpus_files.add(f.name)
-                if self.doc_tf is None:
+                if not LITE_MODE and self.doc_tf is None:
                     dt0 = time.time()
                     self.doc_tf = [Counter(self.tokenize(inst)) for inst, _, _ in self.examples]
                     print(f"  doc_tf пересчитан из examples за {time.time()-dt0:.1f}s")
+                elif LITE_MODE:
+                    self.doc_tf = None
+                    self._apply_lite_cap()
                 print(f"  Индекс загружен из кэша за {time.time()-t0:.1f}s ({len(self.examples)} ex, {len(self.doc_freq)} terms)")
         except Exception as e:
             print(f"  Кэш индекса не загрузился: {e}")
@@ -335,9 +344,12 @@ class MirroAlgorithms:
         self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
         self.word2idx = {w: i for i, w in enumerate(self.vocab)}
         self.embedding_size = min(300, len(self.vocab))
-        self.doc_tf = []
-        for inst, out, cl in self.examples:
-            self.doc_tf.append(Counter(self.tokenize(inst)))
+        if not LITE_MODE:
+            self.doc_tf = []
+            for inst, out, cl in self.examples:
+                self.doc_tf.append(Counter(self.tokenize(inst)))
+        else:
+            self.doc_tf = None
         return None
 
     def _train_side(self):
@@ -363,7 +375,8 @@ class MirroAlgorithms:
         self._build_doc_index()
         print(f"  Index: {len(self.examples)} ex, {len(self.vocab)} vocab, {time.time()-t0:.0f}s")
         self._extend_from_corpus()
-        self._train_side()
+        if not LITE_MODE:
+            self._train_side()
 
     def _ingest_example(self, inst, out, cluster):
         """Добавляет один пример в индексы. Один return: int idx добавленного."""
@@ -397,8 +410,9 @@ class MirroAlgorithms:
 
     def _rebuild_after_extend(self, added):
         """Перестраивает doc_tf/vocab после добавления. Один return: None."""
-        for i in range(len(self.examples) - added, len(self.examples)):
-            self.doc_tf.append(Counter(self.tokenize(self.examples[i][0])))
+        if not LITE_MODE and self.doc_tf is not None:
+            for i in range(len(self.examples) - added, len(self.examples)):
+                self.doc_tf.append(Counter(self.tokenize(self.examples[i][0])))
         self.total_docs = max(len(self.examples), 1)
         self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
         self.word2idx = {w: i for i, w in enumerate(self.vocab)}
@@ -448,6 +462,37 @@ class MirroAlgorithms:
         scored_words.sort(key=lambda x: -x[0])
         return scored_words
 
+    def _tf_lazy(self, ex_id, w):
+        """Ленивый подсчёт tf для lite-режима (doc_tf не хранится в RAM).
+        Один return: int частота слова в документе."""
+        cnt = Counter(self.tokenize(self.examples[ex_id][0]))
+        return cnt.get(w, 0)
+
+    def _apply_lite_cap(self):
+        """Обрезает загруженный индекс под lite-режим: оставляет первые
+        MAX_INMEMORY_EXAMPLES примеров и пересобирает term_docs на их основе.
+        Это компактнее, чем set-of-int на весь объём. Один return: None."""
+        if len(self.examples) <= MAX_INMEMORY_EXAMPLES:
+            return None
+        keep = MAX_INMEMORY_EXAMPLES
+        self.examples = self.examples[:keep]
+        self.total_docs = max(len(self.examples), 1)
+        self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
+        self.word2idx = {w: i for i, w in enumerate(self.vocab)}
+        new_term_docs = defaultdict(set)
+        for idx, (inst, out, _cl) in enumerate(self.examples):
+            valid = set(self.tokenize(inst + " " + out[:200]))
+            for w in valid:
+                new_term_docs[w].add(idx)
+        self.term_docs = new_term_docs
+        # Обрезаем частотные словари до слов, реально оставшихся в индексе
+        if self.doc_freq:
+            self.doc_freq = Counter({w: self.doc_freq[w] for w in set(self.doc_freq) & set(new_term_docs)})
+        if self.term_freq:
+            self.term_freq = Counter({w: self.term_freq[w] for w in set(self.term_freq) & set(new_term_docs)})
+        print(f"  lite-режим: индекс обрезан до {len(self.examples)} примеров, {len(self.doc_freq)} terms")
+        return None
+
     def _accumulate_scores(self, scored_words):
         """Аккумулирует BM25-оценки по документам. Один return: dict ex_id->score."""
         scores = {}
@@ -460,7 +505,10 @@ class MirroAlgorithms:
                 if ex_id in scores:
                     scores[ex_id] += qt * idf * 0.5
                 else:
-                    tf = self.doc_tf[ex_id].get(w, 0)
+                    if self.doc_tf is not None:
+                        tf = self.doc_tf[ex_id].get(w, 0)
+                    else:
+                        tf = self._tf_lazy(ex_id, w)
                     bm25 = idf * (tf * 1.5) / (tf + 1.5)
                     scores[ex_id] = bm25 * qt
                 if len(scores) > MAX_DOCS:
