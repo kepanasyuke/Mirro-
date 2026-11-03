@@ -80,6 +80,21 @@ class KnowledgeGraph:
     def _norm(name):
         return _re.sub(r"\s+", " ", name or "").strip().lower().rstrip(".!?;")
 
+    def prune_stopwords(self, stopwords):
+        """Удаляет узлы-связки (мусорные слова типа «однако», «затем») из графа
+        и связанные с ними рёбра. Один return: int — число удалённых узлов."""
+        if not stopwords:
+            return 0
+        dead = {n for n in self.nodes if n in stopwords or n.strip() in stopwords}
+        for d in dead:
+            del self.nodes[d]
+            if d in self._adj:
+                del self._adj[d]
+        self.edges = {k: w for k, w in self.edges.items() if k[0] not in dead and k[2] not in dead}
+        # пересобрать индекс соседей
+        self._rebuild_adj()
+        return len(dead)
+
     # ---------- вопросы ----------
     def _forward_links(self, name):
         """Исходящие связи узла (p, other, w). Один return: list."""
