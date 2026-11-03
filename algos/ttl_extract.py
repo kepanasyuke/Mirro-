@@ -24,8 +24,17 @@ _VERBS = [
     "содержит", "порождает", "создаёт", "вызывает", "влияет на", "управляет",
     "относится к", "зависит от", "приводит к", "использует", "принадлежит",
     "находится в", "производит", "похож на", "противоположен", "часть",
+    # дополнения под математику/код
+    "называется", "равно", "равняется", "решается", "представляет",
+    "вычисляет", "возвращает", "принимает", "выражается через", "равен",
+    "требует", "используется для", "решает", "определяет", "преобразует",
+    "находит", "является аргументом", "соединяет",
 ]
 _VERBS_RE = "|".join(sorted(map(_re.escape, _VERBS), key=len, reverse=True))
+
+# Шаблон условия: «если X, то Y» / «X, если Y»
+_IF_RE = _re.compile(r"^(?:если|если бы)\s+(.+?)[,;]?\s+то\s+(.+)$", flags=_re.I)
+_IF_POST_RE = _re.compile(r"^(.+?)[,;]?\s+если\s+(.+)$", flags=_re.I)
 
 # Отфыртруем мусорные «слова»
 _STOP = {"и", "это", "что", "как", "то", "а", "но", "в", "на", "по", "с", "для"}
@@ -34,6 +43,26 @@ _STOP = {"и", "это", "что", "как", "то", "а", "но", "в", "на",
 def _clean(w):
     w = _re.sub(r"[^а-яёa-z0-9\s\-]", "", w.lower()).strip()
     return w
+
+
+def _clean_sentence(s):
+    """Чистит предложение от мусорных вводных. Один return: str."""
+    return _re.sub(r"^(напиши|как|объясни|расскажи,?)\s+", "", s.strip())
+
+
+def _match_condition(s):
+    """Ловит «если X то Y»/«X если Y» -> (X, 'условие для', Y). Один return: tuple|None."""
+    m = _IF_RE.search(s)
+    if m:
+        cond, then = _clean(m.group(1)), _clean(m.group(2))
+        if cond and then:
+            return (cond, "условие для", then)
+    m2 = _IF_POST_RE.search(s)
+    if m2:
+        then, cond = _clean(m2.group(1)), _clean(m2.group(2))
+        if then and cond:
+            return (then, "если", cond)
+    return None
 
 
 def _sentences(text):
@@ -61,8 +90,9 @@ def extract(text, min_subj=1, min_obj=1):
     """Из текста строит список триплетов (subj, pred, obj). Один return: list."""
     triples = []
     if text and len(text) >= 8:
-        for s in _sentences(text):
-            triple = _match_triple(s)
+        for raw in _sentences(text):
+            s = _clean_sentence(raw)
+            triple = _match_triple(s) or _match_condition(s)
             if triple and _valid(triple, min_subj, min_obj):
                 triples.append(triple)
     return triples

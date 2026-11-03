@@ -542,6 +542,12 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_neuromod(q):
+        try:
+            from algos.neuromodulators import try_neuromod as _f
+            return _f(q)
+        except Exception:
+            return None
     handlers = [
         ("greeting", try_greetings),
         ("learn", try_learn),
@@ -557,6 +563,7 @@ def _try_direct_handlers(prompt):
         ("dialogue_memory", try_dialogue_memory),
         ("zero_dim", try_zero_dim),
         ("growth", try_growth),
+        ("neuromod", try_neuromod),
     ]
     result = None
     for strategy, fn in handlers:
@@ -989,7 +996,7 @@ def _seed_knowledge_graph():
         for db in ("ru.jsonl", "math.jsonl", "code.jsonl", "general.jsonl", "design.jsonl"):
             src = DATA / "processed" / db
             try:
-                limit = 20_000_000 if db == "ru.jsonl" else 250_000
+                limit = 50_000_000 if db == "ru.jsonl" else 250_000
                 sample = _read_small_head(src, limit)
                 if sample:
                     total += kg.from_triples(extract(_jsonl_to_text(sample)))
