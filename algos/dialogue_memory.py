@@ -1,0 +1,105 @@
+# -*- coding: utf-8 -*-
+"""Mirro Algorithms — 22 · Эмоциональная память диалога (Affective Dialogue Memory)
+
+Инновация: превращает поток отдельных сообщений в СВЯЗНУЮ беседу.
+Запоминает:
+  - тему разговора (последние темы),
+  - «что о чём говорили» (контекстные пары),
+  - эмоциональную тональность прошлых реплик,
+чтобы отвечать с опорой на предысторию: «как ты обычно…», «повтори, что я просил»,
+«в прошлый раз ты говорил про X».
+
+Лёгкий, без внешних библиотек; состояние хранится в памяти процесса.
+"""
+import re as _re
+from collections import deque
+
+# стоп-слова для извлечения «темы» из реплики
+_STOP = set(("и","или","а","но","то","как","что","это","мне","меня","меня","ты","я",
+             "могу","быть","есть","был","была","в","на","по","с","из","для","не","про"))
+
+
+def _keywords(text):
+    words = _re.findall(r"[а-яёa-z]+", (text or "").lower())
+    return [w for w in words if len(w) > 3 and w not in _STOP]
+
+
+class DialogueMemory:
+    def __init__(self, max_topics=8, max_context=30):
+        self.topics = deque(maxlen=max_topics)     # темы последних реплик
+        self.context = deque(maxlen=max_context)   # (user_keywords, bot_reply_keywords)
+        self.emotion = 0.0                          # скользящая тональность -1..1
+        self.pos_words = {"спасибо","отлично","круто","здорово","супер","люблю","нравится","помогло"}
+        self.neg_words = {"плохо","грустно","злюсь","не работает","ошибка","не получается","жаль","ужас","ненавижу"}
+
+    def remember(self, user_text, bot_reply=""):
+        """Фиксирует реплику: тему + тональность + контекст."""
+        kw = _keywords(user_text)
+        if kw:
+            self.topics.append(tuple(kw[:4]))
+        # тональность простым счётчиком совпадений
+        seg = (user_text + " " + bot_reply).lower()
+        pos = sum(w in seg for w in self.pos_words)
+        neg = sum(w in seg for w in self.neg_words)
+        delta = 0.1 if pos > neg else (-0.1 if neg > pos else 0.0)
+        self.emotion = max(-1.0, min(1.0, self.emotion + delta))
+        self.context.append((kw, _keywords(bot_reply)))
+        return kw
+
+    # ----- интерфейс для try_* -----
+    def last_topic(self):
+        """Свежая тема последней реплики."""
+        for t in reversed(self.topics):
+            if t:
+                return " ".join(t)
+        return None
+
+    def topic_context(self, user_text):
+        """Есть ли похожая тема в истории? Возвращает найденную тему или None."""
+        kw = set(_keywords(user_text))
+        if not kw:
+            return None
+        for t in reversed(self.topics):
+            if set(t) & kw:
+                return " ".join(t)
+        return None
+
+    def mood(self, word_ru="да"):
+        """Разговорная фраза о текущем настроении диалога."""
+        if self.emotion > 0.3:
+            return "Разговор тёплый, иду навстречу."
+        if self.emotion < -0.3:
+            return "Разговор напряжённый — отвечу аккуратнее."
+        return "Нейтральный тон, слушаю внимательно."
+
+    def summarize(self):
+        return f"тем: {len(self.topics)}, реплик в памяти: {len(self.context)}, тон: {self.emotion:+.2f}"
+
+
+# синглтон памяти для всего сервера
+dm = DialogueMemory()
+
+
+def try_dialogue_memory(query):
+    """Возвращает ответ строкой, если вопрос про память/историю, иначе None."""
+    q = (query or "").strip().lower()
+    if any(w in q for w in ["помнишь что я говорил", "помнишь про", "что мы обсуждали",
+                            "о чём мы говорили", "что я просил", "что я просила",
+                            "в прошлый раз", "недавно говорил", "недавно говорила"]):
+        topic = dm.topic_context(query) or dm.last_topic()
+        return "Помню: мы говорили про «" + topic + "»." if topic else "Мы ещё не обсуждали это — давай начнём."
+    if any(w in q for w in ["как у нас разговор", "наше настроение", "как протекает", "какой тон"]):
+        return dm.mood()
+    if any(w in q for w in ["сколько ты помнишь", "что ты помнишь", "твоя память"]):
+        return "В краткосрочной памяти держу последние темы и тон диалога. " + dm.summarize() + "."
+    return None
+
+
+if __name__ == "__main__":
+    dm.remember("Расскажи про нейронные сети")
+    dm.remember("Как работает градиентный спуск?", "Градиентный спуск итеративно находит минимум функции потерь.")
+    dm.remember("Спасибо, помогло!", "Пожалуйста!")
+    print(dm.summarize())
+    print("вопрос про память:", try_dialogue_memory("помнишь что я говорил?"))
+    print("тема свежая:", dm.last_topic())
+    print("контекст 'спуск':", dm.topic_context("что такое градиентный спуск?"))

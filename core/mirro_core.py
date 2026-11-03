@@ -508,6 +508,28 @@ def _try_direct_handlers(prompt):
     """Перебирает быстрые стратегии (приветствие, обучение, мышление, юмор,
     творчество, Джарвис, диалог, босовские алгоритмы) и возвращает первый
     подошедший ответ. Единственный return: dict-ответ или None."""
+    # Ленивые импорты новых граф/память/вывод-модулей (как принято в этом файле)
+    import sys as _sys
+    if str(MIRRO_HOME) not in _sys.path:
+        _sys.path.insert(0, str(MIRRO_HOME))
+    def try_knowledge_graph(q):
+        try:
+            from algos.knowledge_graph import try_knowledge_graph as _f
+            return _f(q)
+        except Exception:
+            return None
+    def try_graph_infer(q):
+        try:
+            from algos.graph_infer import try_graph_infer as _f
+            return _f(q)
+        except Exception:
+            return None
+    def try_dialogue_memory(q):
+        try:
+            from algos.dialogue_memory import try_dialogue_memory as _f
+            return _f(q)
+        except Exception:
+            return None
     handlers = [
         ("greeting", try_greetings),
         ("learn", try_learn),
@@ -518,10 +540,16 @@ def _try_direct_handlers(prompt):
         ("dialog", try_dialog),
         ("algo", try_bosova_engine),
         ("ai_history", try_ai_history),
+        ("knowledge_graph", try_knowledge_graph),
+        ("graph_infer", try_graph_infer),
+        ("dialogue_memory", try_dialogue_memory),
     ]
     result = None
     for strategy, fn in handlers:
-        msg = fn(prompt)
+        try:
+            msg = fn(prompt)
+        except Exception:
+            msg = None
         if msg is not None:
             result = {"content": msg, "strategy": strategy}
             break
@@ -889,6 +917,77 @@ def _access_addresses():
                 f"По сети (WiFi/модем): http://{lan}:{PORT}")
     return f"Только локально: http://127.0.0.1:{PORT}"
 
+def _seed_knowledge_graph():
+    """Наполняет знаниевый граф при старте: понятия из корпусов + ТТЛ-извлечение
+    из маленьких файлов и истории ИИ. Тихий вызов — не роняет сервер при ошибке.
+    Единственный return: None."""
+    try:
+        import sys as _sys
+        if str(MIRRO_HOME) not in _sys.path:
+            _sys.path.insert(0, str(MIRRO_HOME))
+        from algos.knowledge_graph import kg
+        from algos.ttl_extract import extract
+        # 1) Базовые понятия (вручную, всегда известные)
+        kg.from_triples([
+            ("Нейрон", "принадлежит", "мозг"),
+            ("Нейрон", "передаёт", "сигнал"),
+            ("Сигнал", "формирует", "мысль"),
+            ("Мысль", "порождает", "понимание"),
+            ("Знание", "строится на", "понимание"),
+            ("Внимание", "влияет на", "память"),
+            ("Память", "укрепляет", "понимание"),
+            ("Граф", "хранит", "связи"),
+            ("Алгоритм", "решает", "задачу"),
+            # --- постоянные знания о мире (чтобы граф не был пуст) ---
+            ("Вода", "кипит при", "100 градусов"),
+            ("Земля", "вращается вокруг", "Солнце"),
+            ("Луна", "вращается вокруг", "Земля"),
+            ("Люди", "дышат", "кислород"),
+            ("Растения", "поглощают", "углекислый газ"),
+            ("Растения", "выделяют", "кислород"),
+            ("Белки", "состоят из", "аминокислоты"),
+            ("ДНК", "хранит", "наследственность"),
+            ("Нейрон", "соединён с", "нейрон"),
+            ("Мозг", "состоит из", "нейроны"),
+            ("Информация", "уменьшает", "неопределённость"),
+            ("Энтропия", "измеряет", "неопределённость"),
+            ("Память", "сохраняет", "информация"),
+            ("Обучение", "изменяет", "память"),
+            ("Внимание", "усиливает", "обучение"),
+            ("Эмоции", "влияют на", "память"),
+            ("Сон", "укрепляет", "память"),
+            ("Повторение", "укрепляет", "память"),
+        ])
+        # 2) Извлечение триплетов из малых текстовых корпусов (не из .py — код) 
+        srcs = []
+        for d in (DATA / "self_learned", DATA / "corpus_ready"):
+            if d.exists():
+                for f in d.glob("*.jsonl"):
+                    if f.stat().st_size <= 1_000_000:
+                        srcs.append(f)
+        total = 0
+        for f in srcs[:40]:
+            try:
+                head = _read_small_head(f, 8000)
+                if head:
+                    total += kg.from_triples(extract(head))
+            except Exception:
+                continue
+        print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total})")
+    except Exception as e:
+        print(f"  (граф знаний пропущен: {e})")
+    return None
+
+
+def _read_small_head(path, limit):
+    """Читает первые `limit` символов файла (utf-8, с запасом). Один return: str."""
+    try:
+        with open(str(path), "r", encoding="utf-8", errors="ignore") as fh:
+            return fh.read(limit)
+    except Exception:
+        return ""
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     print("MIRRO v0.3 - Единая нейросеть знаний")
@@ -901,7 +1000,9 @@ def main():
     from scripts.algorithms import algo
     st = algo.status()
     print(f"  Индекс: {st['examples']} примеров, {st['vocab']} слов")
-    print("  Движок мышления: подфункции single return, юмор, схемы Босовой")
+    # Автонаполнение знаниевого графа: маленькие кластеры + self_learned + история ИИ
+    _seed_knowledge_graph()
+    print("  Движок мышления: подфункции single return, юмор, схемы Босовой, граф знаний")
     print("\n  Запуск автономного обучения (каждые 60 мин)...")
     autonomous_learning_loop(interval_sec=3600)
     server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
