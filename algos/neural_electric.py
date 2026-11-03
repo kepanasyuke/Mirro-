@@ -31,7 +31,7 @@ def _threshold_for(e, base=0.5, dip=0.15, ser=0.15, nor=0.2):
     return max(0.05, min(0.95, base - nor + (dip + ser) * 0.2))
 
 
-def fire(graph, start, neuromod=None, voltage=1.0, max_hops=4, decay=0.5):
+def fire(graph, start, neuromod=None, voltage=1.0, max_hops=4, decay=0.5, learn=False):
     """Запускает импульс от узла start по графу.
 
     Возвращает список (узел, hop, остаточное_напряжение). Один return: list.
@@ -62,6 +62,9 @@ def fire(graph, start, neuromod=None, voltage=1.0, max_hops=4, decay=0.5):
             nv = v * decay * (0.5 + w) if w else v * decay * 0.6
             if nv >= threshold:
                 frontier.append((other, hop + 1, nv))
+                # Хебб: импульс, прошедший по связи, её укрепляет
+                if learn and hasattr(graph, "hebbian_learn"):
+                    graph.hebbian_learn(node, other, amount=0.03)
     return activated
 
 
@@ -87,7 +90,7 @@ def visualize_chain(chain):
     return "\n".join(rows)
 
 
-def activate_chain(graph, start, neuromod=None, report_growth=True, viz=False):
+def activate_chain(graph, start, neuromod=None, report_growth=True, viz=False, learn=False):
     """Осмысленная цепочка активированных понятий. Один return: str.
 
     Нуль-точка: если start изолирован (нет связей) — это «точка нигде»,
@@ -98,7 +101,7 @@ def activate_chain(graph, start, neuromod=None, report_growth=True, viz=False):
         return f"Понятие «{start}» ещё не в графе — импульс не от чего оттолкнуться."
     if not graph.neighbors(start.strip().lower()):
         return f"«{start}» — изолированная нуль-точка: нет связей, электричество не побежало."
-    chain = fire(graph, start, neuromod=neuromod)
+    chain = fire(graph, start, neuromod=neuromod, learn=learn)
     if not chain:
         return f"Импульс от «{start}» затух — порог медиаторов слишком высок."
     parts = [f"{n}@{hop}:{v}" for n, hop, v in chain]
@@ -120,6 +123,8 @@ def try_neural_electric(query, kg=None):
     m = None
     import re as _re
     for pat in (r"пусти (?:импульс|электричество|ток) (?:от|из) (.+)",
+                r"обуч(?:и|ить).{0,8}импульс.{0,8}(?:от|из) (.+)",
+                r"выучи (?:понятие\s+)?(.+)",
                 r"активируй (.+)",
                 r"какую (?:связь|цепочку).{0,10}(.+)",
                 r"возбуди (.+)"):
@@ -141,7 +146,20 @@ def try_neural_electric(query, kg=None):
         if anchor is not None:
             m = anchor
         want_viz = any(w in q for w in ["покажи", "визуализ", "схема", "карта", "нарисуй"])
-        ans = activate_chain(g, m, neuromod=nm.level, viz=want_viz)
+        learn = any(w in q for w in ["обуч", "выучи", "запомн", "укрепи"])
+        # обучение через импульс: извлечь ТТЛ-факты из запроса и влить в граф
+        learned = 0
+        if learn:
+            try:
+                from ttl_extract import extract
+                facts = extract(q)
+                if facts:
+                    learned = g.from_triples(facts)
+            except Exception:
+                learned = 0
+        ans = activate_chain(g, m, neuromod=nm.level, viz=want_viz, learn=learn)
+        if learn and learned:
+            ans += f"  [обучение: импульс извлёк и добавил {learned} новых фактов из твоих слов]"
     elif "нейроэлектричеств" in q or "электричеств" in q or ("импульс" in q):
         sample = "Внимание влияет на память. Память укрепляет понимание. Если вход сильный, то сигнал идёт."
         g = kg or KnowledgeGraph()

@@ -53,6 +53,29 @@ class KnowledgeGraph:
             self._adj[s].append((pred, d, weight))
             self._adj[d].append((pred, s, weight))
 
+    def hebbian_learn(self, node_a, node_b, amount=0.2):
+        """Синаптическая пластичность: если два узла активировались вместе —
+        связь между ними усиливается (Хебб: neurons that fire together wire together).
+        Один return: int — число укреплённых связей."""
+        a, b = self._norm(node_a), self._norm(node_b)
+        strengthened = 0
+        for (s, p, d), w in self.edges.items():
+            if (s == a and d == b) or (s == b and d == a):
+                self.edges[(s, p, d)] = min(2.0, w + amount)
+                strengthened += 1
+        return strengthened
+
+    def synapse_decay(self, amount=0.01, floor=0.2):
+        """Все связи медленно слабеют (редко используемые «атрофируются»),
+        как забывание. Один return: int — число изменённых связей."""
+        changed = 0
+        for key, w in list(self.edges.items()):
+            nw = max(floor, w - amount)
+            if nw != w:
+                self.edges[key] = nw
+                changed += 1
+        return changed
+
     @staticmethod
     def _norm(name):
         return _re.sub(r"\s+", " ", name or "").strip().lower().rstrip(".!?;")

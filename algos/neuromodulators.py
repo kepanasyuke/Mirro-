@@ -21,6 +21,12 @@ import random
 BASE = {"dop": 0.5, "ser": 0.5, "nor": 0.3, "ach": 0.4}
 CLAMP = (0.0, 1.0)
 
+# разные скорости возврата к базе (биология: норадреналин быстрее, серотонин медленнее)
+DECAY_RATE = {"dop": 0.08, "ser": 0.02, "nor": 0.15, "ach": 0.06}
+# порог «спайка» (всплеска) и во сколько раз подскочит уровень
+SPIKE_THRESHOLD = 0.18
+SPIKE_AMPLITUDE = 0.35
+
 
 def _clamp(v):
     """Ограничивает уровень диапазоном [0,1]. Один return: float."""
@@ -30,17 +36,62 @@ def _clamp(v):
 class Neuromodulators:
     def __init__(self, base=None):
         self.level = dict(base or BASE)
+        self._charge = {k: 0.0 for k in BASE}          # накопленный заряд (до спайка)
+        self._pending = {}                             # отложенное высвобождение: k -> (amount, ticks)
+        self._ticks = 0
+        self.spike_log = []                            # последние спайки: (медиатор, tick)
 
     def shift(self, dop=0.0, ser=0.0, nor=0.0, ach=0.0):
-        """Сдвигает уровни медиаторов (затухая к базе). Один return: dict."""
+        """Сдвигает уровни медиаторов. Один return: dict."""
+        inc = {"dop": dop, "ser": ser, "nor": nor, "ach": ach}
         for k, v in self.level.items():
-            self.level[k] = _clamp(v + {"dop": dop, "ser": ser, "nor": nor, "ach": ach}[k])
+            self.level[k] = _clamp(v + inc[k])
+        self._charge = {k: _clamp(self._charge[k] + abs(inc[k])) for k in BASE}
         return dict(self.level)
 
-    def decay(self, amount=0.02):
-        """Медиаторы медленно возвращаются к базе (гомеостаз). Один return: dict."""
+    def spike_check(self):
+        """Пороговая активация: накопленный заряд выдаёт «спайк» (всплеск
+        возбудимости), потом сбрасывается. Медиаторы, перешагнувшие порог,
+        получают скачок уровня и откладывают возврат (отложенное высвобождение).
+        Один return: list спайкнувших медиаторов."""
+        fired = []
+        for k in BASE:
+            if self._charge[k] >= SPIKE_THRESHOLD:
+                self.level[k] = _clamp(self.level[k] + SPIKE_AMPLITUDE)
+                self._charge[k] = 0.0
+                # отложенное высвобождение: на 3 тика уровень не затухает
+                self._pending[k] = (self.level[k], 3)
+                fired.append(k)
+                self.spike_log.append((k, self._ticks))
+        return fired
+
+    def delayed(self, delay=2, dop=0.0, ser=0.0, nor=0.0, ach=0.0):
+        """Отложенное высвобождение (дофамин-предвкушение): сдвиг произойдёт
+        через `delay` тиков, а не сразу. Один return: None."""
+        for k, amt in {"dop": dop, "ser": ser, "nor": nor, "ach": ach}.items():
+            if amt:
+                # складываем в ожидаемое с задержкой
+                self._pending[k] = (self.level.get(k, BASE[k]) + amt, delay)
+        return None
+
+    def decay(self, amount=None):
+        """Медиаторы медленно возвращаются к базе (гомеостаз), у каждого своя
+        скорость. Отложенные (`_pending`) не затухают до окончания задержки.
+        Один return: dict."""
+        self._ticks += 1
+        fired = self.spike_check()
+        release = {}
+        for k in list(self._pending):
+            val, ticks = self._pending[k]
+            if self._ticks >= ticks:
+                self.level[k] = _clamp(val)
+                release[k] = self.level[k]
+                del self._pending[k]
         for k, v in self.level.items():
-            self.level[k] = _clamp(v + (BASE[k] - v) * amount)
+            if k in self._pending:
+                continue  # отложенный — держим уровень
+            rate = DECAY_RATE[k] if amount is None else amount
+            self.level[k] = _clamp(v + (BASE[k] - v) * rate)
         return dict(self.level)
 
     def dominant(self):
