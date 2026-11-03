@@ -65,11 +65,34 @@ def fire(graph, start, neuromod=None, voltage=1.0, max_hops=4, decay=0.5):
     return activated
 
 
-def activate_chain(graph, start, neuromod=None):
+def _avg_dimension(graph, nodes):
+    """Средняя размерность затронутых узлов (по zero_dimensional). Один return: float."""
+    try:
+        from zero_dimensional import dimension_of
+    except Exception:
+        return 0.0
+    dims = [dimension_of(graph, n)[0] for n in nodes if n in graph.nodes]
+    return round(sum(dims) / len(dims), 2) if dims else 0.0
+
+
+def visualize_chain(chain):
+    """ASCII-карта силы импульса по цепочке (затухание). Один return: str."""
+    if not chain:
+        return ""
+    rows = []
+    for n, hop, v in chain:
+        amp = int(v * 10)
+        bar = "▮" * amp + "▯" * (10 - amp)
+        rows.append(f"{n:<16} {bar} {v:.2f} (шаг {hop})")
+    return "\n".join(rows)
+
+
+def activate_chain(graph, start, neuromod=None, report_growth=True, viz=False):
     """Осмысленная цепочка активированных понятий. Один return: str.
 
     Нуль-точка: если start изолирован (нет связей) — это «точка нигде»,
-    сигнал не может пойти; честно говорим об этом.
+    сигнал не может пойти; честно говорим об этом. Если report_growth —
+    добавляет метрику «средняя размерность» активированного пути.
     """
     if start.strip().lower() not in graph.nodes:
         return f"Понятие «{start}» ещё не в графе — импульс не от чего оттолкнуться."
@@ -79,7 +102,14 @@ def activate_chain(graph, start, neuromod=None):
     if not chain:
         return f"Импульс от «{start}» затух — порог медиаторов слишком высок."
     parts = [f"{n}@{hop}:{v}" for n, hop, v in chain]
-    return " → ".join(parts)
+    result = " → ".join(parts)
+    if viz:
+        result += "\n" + visualize_chain(chain)
+    if report_growth and len(chain) > 1:
+        nodes = [n for n, _h, _v in chain]
+        dim = _avg_dimension(graph, nodes)
+        result += f"  [рост понимания: средняя размерность пути {dim}/3]"
+    return result
 
 
 def try_neural_electric(query, kg=None):
@@ -110,7 +140,8 @@ def try_neural_electric(query, kg=None):
         anchor = _find_node(g, m)
         if anchor is not None:
             m = anchor
-        ans = activate_chain(g, m, neuromod=nm.level)
+        want_viz = any(w in q for w in ["покажи", "визуализ", "схема", "карта", "нарисуй"])
+        ans = activate_chain(g, m, neuromod=nm.level, viz=want_viz)
     elif "нейроэлектричеств" in q or "электричеств" in q or ("импульс" in q):
         sample = "Внимание влияет на память. Память укрепляет понимание. Если вход сильный, то сигнал идёт."
         g = kg or KnowledgeGraph()
