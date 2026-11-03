@@ -548,6 +548,13 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_neural_elec(q):
+        try:
+            from algos.neural_electric import try_neural_electric as _f
+            from algos.knowledge_graph import kg as _kg
+            return _f(q, kg=_kg)
+        except Exception:
+            return None
     handlers = [
         ("greeting", try_greetings),
         ("learn", try_learn),
@@ -564,6 +571,7 @@ def _try_direct_handlers(prompt):
         ("zero_dim", try_zero_dim),
         ("growth", try_growth),
         ("neuromod", try_neuromod),
+        ("neural_elec", try_neural_elec),
     ]
     result = None
     for strategy, fn in handlers:
