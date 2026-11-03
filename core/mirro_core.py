@@ -982,17 +982,19 @@ def _seed_knowledge_graph():
                 for f in d.glob("*.jsonl"):
                     if f.stat().st_size <= 1_000_000:
                         srcs.append(f)
-        # 3) Реальный источник знаний: семплируем диалоги ru.jsonl (тексты мало
-        #     подходят для ТТЛ в JSON-форме, поэтому берём ограниченную выборку
-        #     полей instruction/output как «сырой текст» для извлечения связей).
+        # 3) Реальный источник знаний: семплируем все значимые кластеры диалогов
+        #     (ru, math, code, general, design) и извлекаем триплеты в граф.
+        #     Берём ограниченные выборки — ТТЛ в JSON-форме даёт связи из текстов.
         total = 0
-        try:
-            src_ru = DATA / "processed" / "ru.jsonl"
-            sample_bytes = _read_small_head(src_ru, 3_000_000)
-            if sample_bytes:
-                total += kg.from_triples(extract(_jsonl_to_text(sample_bytes)))
-        except Exception:
-            pass
+        for db in ("ru.jsonl", "math.jsonl", "code.jsonl", "general.jsonl", "design.jsonl"):
+            src = DATA / "processed" / db
+            try:
+                limit = 20_000_000 if db == "ru.jsonl" else 250_000
+                sample = _read_small_head(src, limit)
+                if sample:
+                    total += kg.from_triples(extract(_jsonl_to_text(sample)))
+            except Exception:
+                continue
         for f in srcs[:40]:
             try:
                 head = _read_small_head(f, 8000)

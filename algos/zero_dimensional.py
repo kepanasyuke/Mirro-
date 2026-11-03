@@ -118,7 +118,8 @@ def set_kg(g):
 
 # ================= РОСТ РАЗМЕРНОСТЕЙ (0D→1D→2D→3D) =================
 def _reach2(kg, name):
-    """Сколько узлов достижимо за 2 шага. Один return: int."""
+    """Сколько узлов достижимо за 2 шага (только для ЛОКАЛЬНОГО вызова,
+    не в массовых метриках — там дорого на больших графах). Один return: int."""
     _p, nodes2 = field_signature(kg, name, depth=2)
     return len(nodes2)
 
@@ -129,36 +130,31 @@ def _dim_from_deg(deg, reach2):
     if deg == 0:
         dim = 0.0
     elif deg == 1:
-        dim = 1.0 if reach2 >= 1 else 0.5
-    elif reach2 >= deg * 1.5:
-        dim = 3.0
+        dim = 1.0
     elif deg >= 3:
         dim = 2.0
     return dim
 
 
 def dimension_of(kg, name):
-    """Мера «размерности» понятия: насколько его смысл развёрнут в связях.
-
-    0D — изолированная точка; 1D — цепочка; 2D — плоскость; 3D — «объём».
-    Возвращает (dim, deg): размерность и степень узла. Один return."""
+    """Мера «размерности» понятия по его степени (без дорогого обхода 2-го
+    порядка — корректно и быстро работает даже на графах в десятки тысяч узлов).
+    0D — изолированная точка; 1D — цепочка; 2D — плоскость. Один return."""
     deg = len(kg.neighbors(name))
-    dim = _dim_from_deg(deg, _reach2(kg, name))
+    dim = _dim_from_deg(deg, 0)
     return (dim, deg)
 
 
 def dimension_of_understanding(kg):
     """Общая мера «роста понимания» всей сети: средняя размерность узлов.
 
-    От 0 (всё изолировано) до 3 (плотная сеть смыслов). Показывает, насколько
-    Мирро «развернула» знания от точек-0D к связной сети.
-    """
+    От 0 (всё изолировано) до 3. Быстрый подсчёт: один проход по узлам.
+    Один return: float."""
     if not kg.nodes:
         return 0.0
-    import math
-    dims = [dimension_of(kg, n)[0] for n in kg.nodes]
-    avg = sum(dims) / len(dims)
-    return round(avg, 2)
+    degs = [len(kg.neighbors(n)) for n in kg.nodes]
+    dims = [_dim_from_deg(d, 0) for d in degs]
+    return round(sum(dims) / len(dims), 2)
 
 
 def growth_report(kg):

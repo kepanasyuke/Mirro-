@@ -27,6 +27,7 @@ class KnowledgeGraph:
     def __init__(self):
         self.nodes = {}      # name -> Node
         self.edges = {}      # (src, p, dst) -> weight  (p = предикат/связь)
+        self._adj = {}       # name -> [(pred, other, weight)]  (индекс соседей)
 
     # ---------- построение ----------
     def add_node(self, name, tag="понятие", facts=None, weight=1.0):
@@ -35,6 +36,7 @@ class KnowledgeGraph:
             return
         if name not in self.nodes:
             self.nodes[name] = Node(name, tag, facts, weight)
+            self._adj[name] = []
         elif facts:
             self.nodes[name].facts = list(dict.fromkeys(self.nodes[name].facts + facts))
 
@@ -45,7 +47,11 @@ class KnowledgeGraph:
         self.add_node(s)
         self.add_node(d)
         key = (s, self._norm(pred), d)
+        was = key in self.edges
         self.edges[key] = max(self.edges.get(key, 0.0), weight)
+        if not was:
+            self._adj[s].append((pred, d, weight))
+            self._adj[d].append((pred, s, weight))
 
     @staticmethod
     def _norm(name):
@@ -61,15 +67,18 @@ class KnowledgeGraph:
         return out
 
     def neighbors(self, name):
-        """Все прямые связи узла: list[(pred, other, weight)]."""
+        """Все прямые связи узла: list[(pred, other, weight)] (по индексу, быстро)."""
         name = self._norm(name)
-        out = []
-        for (s, p, d), w in self.edges.items():
-            if s == name:
-                out.append((p, d, w))
-            elif d == name:
-                out.append((p, s, w))
-        return out
+        if not self._adj:
+            # старый граф без индекса (напр. из кэша) — считаем на лету, медленно
+            out = []
+            for (s, p, d), w in self.edges.items():
+                if s == name:
+                    out.append((p, d, w))
+                elif d == name:
+                    out.append((p, s, w))
+            return out
+        return [row for row in self._adj.get(name, [])]
 
     def _step(self, frontier, b, visited):
         """Один шаг BFS: из текущего фронта к b. Один return: (found, next_frontier)."""
@@ -140,15 +149,26 @@ class KnowledgeGraph:
         """Загружает граф с диска; если файла нет — пусто. Один return: int (рёбер)."""
         self.nodes = {}
         self.edges = {}
+        self._adj = {}
         try:
             import pickle
             with open(str(path), "rb") as f:
                 data = pickle.load(f)
             self.nodes = data.get("nodes", {})
             self.edges = data.get("edges", {})
+            # восстанавливаем индекс соседей
+            self._rebuild_adj()
         except Exception:
             pass
         return len(self.edges)
+
+    def _rebuild_adj(self):
+        """Пересобирает индекс соседей из рёбер. Один return: None."""
+        self._adj = {n: [] for n in self.nodes}
+        for (s, p, d), w in self.edges.items():
+            self._adj[s].append((p, d, w))
+            self._adj[d].append((p, s, w))
+        return None
 
     # ---------- состояние ----------
     def summary(self):
