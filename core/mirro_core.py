@@ -988,7 +988,7 @@ def _seed_knowledge_graph():
         total = 0
         try:
             src_ru = DATA / "processed" / "ru.jsonl"
-            sample_bytes = _read_small_head(src_ru, 400_000)
+            sample_bytes = _read_small_head(src_ru, 3_000_000)
             if sample_bytes:
                 total += kg.from_triples(extract(_jsonl_to_text(sample_bytes)))
         except Exception:
