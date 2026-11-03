@@ -941,6 +941,9 @@ def _seed_knowledge_graph():
             _sys.path.insert(0, str(MIRRO_HOME))
         from algos.knowledge_graph import kg
         from algos.ttl_extract import extract
+        # 0) Загружаем сохранённый граф (то, что уже выучили), чтобы не терять при перезапуске
+        gpath = MODELS / "knowledge_graph.pkl"
+        prev_edges = kg.load(gpath)
         # 1) Базовые понятия (вручную, всегда известные)
         kg.from_triples([
             ("Нейрон", "принадлежит", "мозг"),
@@ -979,7 +982,17 @@ def _seed_knowledge_graph():
                 for f in d.glob("*.jsonl"):
                     if f.stat().st_size <= 1_000_000:
                         srcs.append(f)
+        # 3) Реальный источник знаний: семплируем диалоги ru.jsonl (тексты мало
+        #     подходят для ТТЛ в JSON-форме, поэтому берём ограниченную выборку
+        #     полей instruction/output как «сырой текст» для извлечения связей).
         total = 0
+        try:
+            src_ru = DATA / "processed" / "ru.jsonl"
+            sample_bytes = _read_small_head(src_ru, 400_000)
+            if sample_bytes:
+                total += kg.from_triples(extract(_jsonl_to_text(sample_bytes)))
+        except Exception:
+            pass
         for f in srcs[:40]:
             try:
                 head = _read_small_head(f, 8000)
@@ -987,7 +1000,12 @@ def _seed_knowledge_graph():
                     total += kg.from_triples(extract(head))
             except Exception:
                 continue
-        print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total})")
+        print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total}, из кэша: {prev_edges})")
+        # Сохраняем граф на диск, чтобы знания не терялись при перезапуске
+        try:
+            kg.save(gpath)
+        except Exception:
+            pass
         # Связываем нульмерный граф со знаниевым — и печатаем метрику роста понимания
         try:
             from algos.zero_dimensional import set_kg as _zd_set, growth_report
@@ -1007,6 +1025,23 @@ def _read_small_head(path, limit):
             return fh.read(limit)
     except Exception:
         return ""
+
+
+def _jsonl_to_text(chunk):
+    """Превращает кусок JSONL (строки вида {\"instruction\":...}) в чистый текст.
+    Из каждого example берём instruction и output, чтобы ТТЛ-извлечение могло
+    вытащить триплеты. Один return: str."""
+    import json as _json
+    parts = []
+    for line in chunk.splitlines():
+        try:
+            ex = _json.loads(line)
+            merged = (ex.get("instruction", "") + ". " + ex.get("output", "")).strip()
+            if merged:
+                parts.append(merged)
+        except Exception:
+            continue
+    return "\n".join(parts)
 
 
 def main():

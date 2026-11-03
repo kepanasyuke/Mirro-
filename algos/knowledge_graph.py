@@ -124,6 +124,32 @@ class KnowledgeGraph:
             self.add_edge(s, p, o)
         return len(triples)
 
+    def save(self, path):
+        """Сохраняет граф на диск (pickle). Один return: bool."""
+        try:
+            import pickle, os
+            tmp = str(path) + ".tmp"
+            with open(tmp, "wb") as f:
+                pickle.dump({"nodes": self.nodes, "edges": self.edges}, f, protocol=4)
+            os.replace(tmp, str(path))
+            return True
+        except Exception:
+            return False
+
+    def load(self, path):
+        """Загружает граф с диска; если файла нет — пусто. Один return: int (рёбер)."""
+        self.nodes = {}
+        self.edges = {}
+        try:
+            import pickle
+            with open(str(path), "rb") as f:
+                data = pickle.load(f)
+            self.nodes = data.get("nodes", {})
+            self.edges = data.get("edges", {})
+        except Exception:
+            pass
+        return len(self.edges)
+
     # ---------- состояние ----------
     def summary(self):
         return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей"
