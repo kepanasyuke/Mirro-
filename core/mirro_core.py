@@ -163,6 +163,9 @@ def try_greetings(query):
 
 def try_learn(query):
     q = query.lower().strip()
+    # если речь про импульс/электричество по графу — это задача neural_electric, не try_learn
+    if any(t in q for t in ["импульс", "электричеств", "аи вовсе не обучение"]):
+        return None
     if any(t in q for t in ["научи","обучи","запомн","запиши","сохрани это","добавь в базу","выучи","запомни что"]):
         return "Я учусь! Чтобы научить меня:\n1. Напиши вопрос и правильный ответ\n2. Отметь ответ\n\nИли просто задай вопрос — я найду ответ в базе или в интернете."
     return None
@@ -552,7 +555,14 @@ def _try_direct_handlers(prompt):
         try:
             from algos.neural_electric import try_neural_electric as _f
             from algos.knowledge_graph import kg as _kg
-            return _f(q, kg=_kg)
+            ans = _f(q, kg=_kg)
+            # если был запрос на обучение — сразу сохраняем изменённые веса графа
+            if ans and any(w in q.lower() for w in ["обуч", "выучи", "запомн", "укрепи"]):
+                try:
+                    _kg.save(MODELS / "knowledge_graph.pkl")
+                except Exception:
+                    pass
+            return ans
         except Exception:
             return None
     handlers = [
@@ -771,6 +781,21 @@ class MirroAPI(BaseHTTPRequestHandler):
             status = core.status()
             try: status["algorithms"] = _grab_algo().status()
             except: status["algorithms"] = {}
+            # нейро: медиаторы + граф знаний для дашборда
+            try:
+                from algos.neuromodulators import nm as _nm
+                from algos.knowledge_graph import kg as _kg
+                from algos.zero_dimensional import dimension_of_understanding as _dimen
+                st = status.get("algorithms", {})
+                st["neuromodulators"] = dict(_nm.level)
+                st["neuromodulators"]["rhythm"] = _nm.rhythm_state()
+                st["knowledge_graph"] = {
+                    "nodes": len(_kg.nodes), "edges": len(_kg.edges),
+                    "avg_dimension": _dimen(_kg),
+                }
+                status["algorithms"] = st
+            except Exception:
+                pass
             self._json(status); return
         elif route == "/v1/models":
             t = int(time.time())

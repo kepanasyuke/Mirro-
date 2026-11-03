@@ -135,10 +135,10 @@ def try_neural_electric(query, kg=None):
     if m:
         from neuromodulators import nm
         g = kg
-        if g is None or len(g.nodes) < 3:
+        if g is None or not g.nodes:
             try:
                 from knowledge_graph import kg as _globkg
-                g = _globkg if len(_globkg.nodes) > 2 else KnowledgeGraph()
+                g = _globkg if _globkg.nodes else KnowledgeGraph()
             except Exception:
                 g = KnowledgeGraph()
         # в реальном графе узел может быть без окончания — ищем по вхождению

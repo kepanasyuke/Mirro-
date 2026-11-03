@@ -17,12 +17,16 @@
 """
 import random
 
+import math
+
 # базовые уровни медиаторов (0..1)
 BASE = {"dop": 0.5, "ser": 0.5, "nor": 0.3, "ach": 0.4}
 CLAMP = (0.0, 1.0)
 
 # разные скорости возврата к базе (биология: норадреналин быстрее, серотонин медленнее)
 DECAY_RATE = {"dop": 0.08, "ser": 0.02, "nor": 0.15, "ach": 0.06}
+# фазовый сдвиг волны для каждого медиатора (чтобы они не качались синхронно)
+_PHASE = {"dop": 0.0, "ser": 1.7, "nor": 3.1, "ach": 4.4}
 # порог «спайка» (всплеска) и во сколько раз подскочит уровень
 SPIKE_THRESHOLD = 0.18
 SPIKE_AMPLITUDE = 0.35
@@ -74,9 +78,9 @@ class Neuromodulators:
                 self._pending[k] = (self.level.get(k, BASE[k]) + amt, delay)
         return None
 
-    def decay(self, amount=None):
+    def decay(self, amount=None, oscillation=0.02):
         """Медиаторы медленно возвращаются к базе (гомеостаз), у каждого своя
-        скорость. Отложенные (`_pending`) не затухают до окончания задержки.
+        скорость. Накладывается лёгкая волна (alpha-ритм) — уровни осциллируют.
         Один return: dict."""
         self._ticks += 1
         fired = self.spike_check()
@@ -87,12 +91,25 @@ class Neuromodulators:
                 self.level[k] = _clamp(val)
                 release[k] = self.level[k]
                 del self._pending[k]
+        phase = self._ticks * 0.6
         for k, v in self.level.items():
             if k in self._pending:
                 continue  # отложенный — держим уровень
             rate = DECAY_RATE[k] if amount is None else amount
-            self.level[k] = _clamp(v + (BASE[k] - v) * rate)
+            toward_base = v + (BASE[k] - v) * rate
+            wave = oscillation * math.sin(phase + _PHASE[k])
+            self.level[k] = _clamp(toward_base + wave)
         return dict(self.level)
+
+    def rhythm_state(self):
+        """Текущий «ритм» по уровню возбуждения (alpha спокойный / beta / gamma).
+        Один return: str."""
+        arousal = self.level["nor"] + self.level["dop"]
+        if arousal > 1.1:
+            return "gamma-ритм: высокая активность, плотная активация"
+        if arousal > 0.85:
+            return "beta-ритм: рабочий фокус"
+        return "alpha-ритм: спокойный, рассеянный фон"
 
     def dominant(self):
         """Доминирующий медиатор. Один return: str (ключ)."""
