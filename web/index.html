@@ -720,6 +720,8 @@ function resetReaction() {
 
 <script>
 const API = 'http://127.0.0.1:3443';
+const TOKEN = 'test-secret-123';
+const AUTH_HDR = { 'Authorization': 'Bearer ' + TOKEN };
 let history = JSON.parse(localStorage.getItem('mirro_history') || '[]');
 let lastQuery = '';
 
@@ -738,7 +740,7 @@ document.querySelectorAll('.nav-item').forEach(b => {
 /* ===== Статус ===== */
 async function updateStatus() {
   try {
-    const r = await fetch(API + '/health', {signal: AbortSignal.timeout(4000)});
+    const r = await fetch(API + '/health', {signal: AbortSignal.timeout(4000), headers: AUTH_HDR});
     const d = await r.json();
     const pill = document.getElementById('pill');
     pill.className = 'status-pill on';
@@ -875,7 +877,7 @@ async function sendChat() {
 
   try {
     const r = await fetch(API + '/v1/chat/completions', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
+      method: 'POST', headers: {'Content-Type': 'application/json', ...AUTH_HDR},
       body: JSON.stringify({messages: [{role:'user', content:text}]})
     });
     const d = await r.json();
@@ -895,7 +897,7 @@ async function sendChat() {
 async function rate(btn, val, liked) {
   try {
     await fetch(API + '/v1/feedback', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
+      method: 'POST', headers: {'Content-Type':'application/json', ...AUTH_HDR},
       body: JSON.stringify({query: lastQuery, response: btn.closest('.body').querySelector('.bubble').textContent, liked})
     });
     btn.closest('.acts').querySelectorAll('button').forEach(b => { b.classList.add('done'); b.disabled = true; });
@@ -920,7 +922,7 @@ async function runLearn() {
   }, 700);
   try {
     const r = await fetch(API + '/v1/self-learn', {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}'
+      method: 'POST', headers: {'Content-Type':'application/json', ...AUTH_HDR}, body: '{}'
     });
     const d = await r.json();
     clearInterval(iv);
@@ -973,7 +975,7 @@ function toast(msg, type) {
 async function loadStats() {
   const grid = document.getElementById('statGrid');
   try {
-    const r = await fetch(API + '/health');
+    const r = await fetch(API + '/health', {headers: AUTH_HDR});
     const d = await r.json();
     const a = d.algorithms || {};
     const cl = d.clusters || {};
@@ -1010,7 +1012,7 @@ async function loadTopQuestions() {
   const el = document.getElementById('topQuestions');
   if (!el) return;
   try {
-    const r = await fetch(API + '/v1/top-questions');
+    const r = await fetch(API + '/v1/top-questions', {headers: AUTH_HDR});
     const d = await r.json();
     const qs = d.questions || [];
     if (!qs.length) {
@@ -1032,7 +1034,7 @@ async function loadTopQuestions() {
 
 async function exportKnowledge() {
   try {
-    const r = await fetch(API + '/health');
+    const r = await fetch(API + '/health', {headers: AUTH_HDR});
     const d = await r.json();
     const cl = d.clusters || {};
     const now = new Date().toISOString().slice(0, 10);
@@ -1065,7 +1067,7 @@ async function exportKnowledge() {
 /* ===== Кластеры ===== */
 async function loadClusters() {
   try {
-    const r = await fetch(API + '/health');
+    const r = await fetch(API + '/health', {headers: AUTH_HDR});
     const d = await r.json();
     const cl = d.clusters || {};
     let max = 1;
@@ -1076,7 +1078,7 @@ async function loadClusters() {
       '<div class="bwrap"><i style="width:' + Math.max(3,(v.examples/max)*100) + '%"></i></div>' +
       '<div class="ct">' + v.examples.toLocaleString() + '</div></div>').join('');
 
-    const r2 = await fetch(API + '/catalog.json');
+    const r2 = await fetch(API + '/catalog.json', {headers: AUTH_HDR});
     const cat = await r2.json();
     document.getElementById('catalogBody').innerHTML =
       cat.map(e => '<tr><td>' + e.cat + '</td><td>' + e.ds + '</td><td>' + esc(e.desc||'') + '</td></tr>').join('');
