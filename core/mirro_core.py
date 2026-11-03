@@ -530,6 +530,18 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_zero_dim(q):
+        try:
+            from algos.zero_dimensional import try_zero_dim as _f
+            return _f(q)
+        except Exception:
+            return None
+    def try_growth(q):
+        try:
+            from algos.zero_dimensional import try_growth as _f
+            return _f(q)
+        except Exception:
+            return None
     handlers = [
         ("greeting", try_greetings),
         ("learn", try_learn),
@@ -543,6 +555,8 @@ def _try_direct_handlers(prompt):
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
         ("dialogue_memory", try_dialogue_memory),
+        ("zero_dim", try_zero_dim),
+        ("growth", try_growth),
     ]
     result = None
     for strategy, fn in handlers:
@@ -974,6 +988,13 @@ def _seed_knowledge_graph():
             except Exception:
                 continue
         print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total})")
+        # Связываем нульмерный граф со знаниевым — и печатаем метрику роста понимания
+        try:
+            from algos.zero_dimensional import set_kg as _zd_set, growth_report
+            _zd_set(kg)
+            print("  " + growth_report(kg))
+        except Exception:
+            pass
     except Exception as e:
         print(f"  (граф знаний пропущен: {e})")
     return None
