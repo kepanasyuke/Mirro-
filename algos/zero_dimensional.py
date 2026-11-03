@@ -81,17 +81,31 @@ def zero_dim_mind(kg):
             f"смысл распределён в самих связях, а не в месте.")
 
 
+_ZD_TRIGGERS = ["00", "0d", "ноль мерности", "нульмерност", "нуль-мерност",
+                "нольмерност", "точка нигде", "без координат"]
+_ZD_EXPLAIN = ("Нульмерность: точка без размера и места. Понятие задано не координатой, "
+               "а связями. Я мыслю: смысл узла = его отношения к другим узлам графа (0D-точка).")
+
+
+def _is_zd_question(q):
+    """Есть ли в запросе триггер темы нульмерности. Один return: bool."""
+    return any(w in q for w in _ZD_TRIGGERS)
+
+
+def _is_zd_explain(q):
+    """Просят ли объяснить нульмерность. Один return: bool."""
+    return ("что такое 0d" in q) or ("что такое нульмерност" in q)
+
+
 def try_zero_dim(query):
-    """Точка входа для try_*: отвечает на «что такое 0D/нульмерность», «сравни X и Y»,
-    «опиши через связи». Возвращает строку или None."""
+    """Точка входа для try_*: отвечает на «что такое 0D/нульмерность»."""
     q = (query or "").strip().lower()
-    if any(w in q for w in ["00", "0d", "ноль мерности", "нульмерност", "нуль-мерност",
-                            "нольмерност", "точка нигде", "без координат"]):
-        return ("Нульмерность: точка без размера и места. Понятие задано не координатой, "
-                "а связями. Я мыслю: смысл узла = его отношения к другим узлам графа (0D-точка).")
-    if "что такое 0d" in q or "что такое нульмерност" in q:
-        return zero_dim_mind(kg)
-    return None
+    ans = None
+    if _is_zd_question(q):
+        ans = _ZD_EXPLAIN
+    elif _is_zd_explain(q):
+        ans = zero_dim_mind(kg)
+    return ans
 
 
 kg = None  # заполняется через set_kg из ядра
@@ -103,31 +117,33 @@ def set_kg(g):
 
 
 # ================= РОСТ РАЗМЕРНОСТЕЙ (0D→1D→2D→3D) =================
-def dimension_of(kg, name):
-    """Мера «размерности» понятия: насколько его смысл развёрнут в связях.
-
-    0D — изолированная точка (нет связей);
-    1D — одна цепочка (линия: понятие связано с немногими в ряд);
-    2D — плоскость (много связей, есть ветвление);
-    3D — «объём» (связи выходят за прямых соседей, образуя плотную сеть).
-    Возвращает (dim, deg): размерность и степень узла.
-    """
-    deg = len(kg.neighbors(name))
-    if deg == 0:
-        return (0.0, 0)
-    # учитываем связи «второго порядка» — насколько уходит вглубь
-    _p, nodes1 = field_signature(kg, name, depth=1)
+def _reach2(kg, name):
+    """Сколько узлов достижимо за 2 шага. Один return: int."""
     _p, nodes2 = field_signature(kg, name, depth=2)
-    reach2 = len(nodes2)           # сколько узлов достижимо за 2 шага
-    # эвристика: от 0D к 3D
-    if deg == 1:
+    return len(nodes2)
+
+
+def _dim_from_deg(deg, reach2):
+    """Размерность по (степени, охвату 2-го порядка). Один return: float."""
+    dim = 1.5
+    if deg == 0:
+        dim = 0.0
+    elif deg == 1:
         dim = 1.0 if reach2 >= 1 else 0.5
     elif reach2 >= deg * 1.5:
         dim = 3.0
     elif deg >= 3:
         dim = 2.0
-    else:
-        dim = 1.5
+    return dim
+
+
+def dimension_of(kg, name):
+    """Мера «размерности» понятия: насколько его смысл развёрнут в связях.
+
+    0D — изолированная точка; 1D — цепочка; 2D — плоскость; 3D — «объём».
+    Возвращает (dim, deg): размерность и степень узла. Один return."""
+    deg = len(kg.neighbors(name))
+    dim = _dim_from_deg(deg, _reach2(kg, name))
     return (dim, deg)
 
 
@@ -157,20 +173,33 @@ def growth_report(kg):
             f"Узлы: " + ", ".join(f"{k}={v}" for k, v in buckets.items()) + ".")
 
 
+_GROWTH_TRIGGERS = ["рост понимания", "размерност", "сколько у тебя размерно",
+                    "уровень понимания", "как глубоко ты понимаешь"]
+
+
+def _is_growth_question(q):
+    """Есть ли запрос на рост понимания. Один return: bool."""
+    return any(w in q for w in _GROWTH_TRIGGERS)
+
+
+def _node_dim_answer(q):
+    """Ответ про размерность конкретного понятия. Один return: str или None."""
+    name = q.replace("какая размерность у", "").strip().rstrip("?")
+    if name and kg is not None:
+        d, deg = dimension_of(kg, name)
+        return f"«{name}»: размерность {d} из 3, связей {deg}."
+    return None
+
+
 def try_growth(query):
     """Точка входа для try_*: отвечает на вопрос про рост понимания/размерность."""
     q = (query or "").strip().lower()
-    if any(w in q for w in ["рост понимания", "размерност", "сколько у тебя размерно",
-                            "уровень понимания", "как глубоко ты понимаешь"]):
-        if kg is not None:
-            return growth_report(kg)
-        return "Граф ещё не наполнен — не могу измерить рост понимания."
-    if "какая размерность у" in q:
-        name = q.replace("какая размерность у", "").strip().rstrip("?")
-        if name and kg is not None:
-            d, deg = dimension_of(kg, name)
-            return f"«{name}»: размерность {d} из 3, связей {deg}."
-    return None
+    ans = None
+    if _is_growth_question(q):
+        ans = growth_report(kg) if kg is not None else "Граф ещё не наполнен — не могу измерить рост понимания."
+    elif "какая размерность у" in q:
+        ans = _node_dim_answer(q)
+    return ans
 
 
 if __name__ == "__main__":

@@ -52,6 +52,14 @@ class KnowledgeGraph:
         return _re.sub(r"\s+", " ", name or "").strip().lower().rstrip(".!?;")
 
     # ---------- вопросы ----------
+    def _forward_links(self, name):
+        """Исходящие связи узла (p, other, w). Один return: list."""
+        out = []
+        for (s, p, d), w in self.edges.items():
+            if s == name:
+                out.append((p, d, w))
+        return out
+
     def neighbors(self, name):
         """Все прямые связи узла: list[(pred, other, weight)]."""
         name = self._norm(name)
@@ -63,26 +71,30 @@ class KnowledgeGraph:
                 out.append((p, s, w))
         return out
 
+    def _step(self, frontier, b, visited):
+        """Один шаг BFS: из текущего фронта к b. Один return: (found, next_frontier)."""
+        nxt = []
+        for cur, trail in frontier:
+            for p, other, w in self.neighbors(cur):
+                if other == b:
+                    found = trail + [(cur, p, b, w)]
+                    return (found, [])
+                if other not in visited:
+                    visited.add(other)
+                    nxt.append((other, trail + [(cur, p, other, w)]))
+        return (None, nxt)
+
     def path(self, a, b, max_depth=3):
         """Цепочка связей от a к b (если есть) — «рассуждение через граф»."""
         a, b = self._norm(a), self._norm(b)
-        if a not in self.nodes or b not in self.nodes:
-            return None
-        if a == b:
-            return [(a, "=", b, 1.0)]
         frontier = [(a, [(a, None, None, 1.0)])]
         visited = {a}
+        result = None
         for _ in range(max_depth):
-            nxt = []
-            for cur, trail in frontier:
-                for p, other, w in self.neighbors(cur):
-                    if other == b:
-                        return trail + [(cur, p, b, w)]
-                    if other not in visited:
-                        visited.add(other)
-                        nxt.append((other, trail + [(cur, p, other, w)]))
-            frontier = nxt
-        return None
+            if result is not None or not frontier:
+                break
+            result, frontier = self._step(frontier, b, visited)
+        return result
 
     def relation(self, a, b):
         """Прямые отношения между a и b."""
@@ -121,36 +133,76 @@ class KnowledgeGraph:
 kg = KnowledgeGraph()
 
 
-# ---------- быстрый интерфейс для try_* ----------
-def try_knowledge_graph(query):
-    """Возвращает ответ строкой, если запрос про связи понятий, иначе None."""
-    q = ok = _re.sub(r"\s+", " ", (query or "").strip().lower())
+# ---------- быстрый интерфейс для try_* (все функции — один return) ----------
+def _clean_q(query):
+    """Нормализует запрос для разбора. Один return: str."""
+    q = _re.sub(r"\s+", " ", (query or "").strip().lower())
     q = q.rstrip("!?.;,")
     q = q.replace("что связывает ", "").replace("что общего у ", "").replace("как связан", "связан")
     q = q.replace("связано ли ", "").replace("есть ли связь между", "связь между")
-    # прямое: «X и Y» / «X — Y»
-    if kg.edges and (" связывает " in (" " + query.lower()) or " что общего у " in " " + query.lower()):
-        m = _re.search(r"\b([^\s]+?)\s+(?:и|и с|с)\s+([^\s]+?)[\s?]*$", q)
-        if m:
-            a, b = m.group(1), m.group(2)
-            rels = kg.relation(a, b)
-            if rels:
-                return ", ".join(f"«{a}» {p} «{b}»" for p, _w in rels) + "."
-            path = kg.path(a, b)
-            if path:
-                nodes = [line[0] for line in path if line[0]]
-                last = path[-1][2]
-                if last:
-                    nodes.append(last)
-                chain = " → ".join(dict.fromkeys(nodes))
-                return f"Прямой связи нет, но выводится: {chain}."
-    if "объясн" in q:
-        for name in kg.nodes:
-            if name in q and len(name) > 3:
-                ex = kg.explain(name)
-                if ex:
-                    return ex
+    return q
+
+
+def _want_relation(query, q):
+    """Есть ли в запросе явный запрос на связь. Один return: bool."""
+    return bool(kg.edges and (" связывает " in (" " + query.lower()) or " что общего у " in " " + query.lower()))
+
+
+def _pair_from(q):
+    """Вытаскивает пару понятий из запроса. Один return: (a, b) или (None, None)."""
+    m = _re.search(r"\b([^\s]+?)\s+(?:и|и с|с)\s+([^\s]+?)[\s?]*$", q)
+    if m:
+        return (m.group(1), m.group(2))
+    return (None, None)
+
+
+def _answer_relation(a, b):
+    """Прямая связь между a и b. Один return: str или None."""
+    if not a or not b:
+        return None
+    rels = kg.relation(a, b)
+    if rels:
+        return ", ".join(f"«{a}» {p} «{b}»" for p, _w in rels) + "."
     return None
+
+
+def _chain_text(path):
+    """Красивая цепочка узлов из пути. Один return: str."""
+    nodes = [line[0] for line in path if line[0]]
+    last = path[-1][2]
+    if last:
+        nodes.append(last)
+    return " → ".join(dict.fromkeys(nodes))
+
+
+def _answer_path(a, b):
+    """Вывод через цепочку связей. Один return: str или None."""
+    path = kg.path(a, b)
+    if path:
+        return f"Прямой связи нет, но выводится: {_chain_text(path)}."
+    return None
+
+
+def _answer_explain(q):
+    """Объяснение понятия из запроса. Один return: str или None."""
+    for name in kg.nodes:
+        if "объясн" in q and name in q and len(name) > 3:
+            ex = kg.explain(name)
+            if ex:
+                return ex
+    return None
+
+
+def try_knowledge_graph(query):
+    """Возвращает ответ строкой, если запрос про связи понятий, иначе None."""
+    q = _clean_q(query)
+    ans = None
+    if _want_relation(query, q):
+        a, b = _pair_from(q)
+        ans = _answer_relation(a, b) or _answer_path(a, b)
+    else:
+        ans = _answer_explain(q)
+    return ans
 
 
 if __name__ == "__main__":

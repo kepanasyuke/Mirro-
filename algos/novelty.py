@@ -33,25 +33,29 @@ class Novelty:
         self.recent.append((kw, known))
         return kw
 
-    def is_novel(self, user_text, known_kw=None):
-        """True, если вопрос выглядит новым (нет общих ключевых слов ни с чем."""
-        kw = self._kw(user_text)
-        if not kw:
-            return False
-        # пересечение с накопленным
+    def _known_via(self, kw, known_kw):
+        """Совпадает ли запрос с известными темами. Один return: bool."""
         if kw & self.seen:
-            return False
-        # известна ли тема через переданный набор (например, из графа/базы)
-        if known_kw is not None and kw & set(known_kw):
-            return False
-        return True
+            return True
+        return known_kw is not None and bool(kw & set(known_kw))
+
+    def is_novel(self, user_text, known_kw=None):
+        """True, если вопрос выглядит новым. Один return: bool."""
+        kw = self._kw(user_text)
+        novel = True
+        if not kw:
+            novel = False
+        elif self._known_via(kw, known_kw):
+            novel = False
+        return novel
 
     def unknown_topic(self, user_text):
-        """Возвращает «якорное» слово новизны или None."""
+        """Возвращает «якорное» слово новизны или None. Один return: str|None."""
         kw = self._kw(user_text)
-        if not kw:
-            return None
-        return kw.pop()
+        topic = None
+        if kw:
+            topic = kw.pop()
+        return topic
 
 
 _STOP = set(("и","или","что","как","это","то","для","про","мне","меня","ты","я","не","на","в","по","с","из"))
@@ -61,16 +65,21 @@ _STOP = set(("и","или","что","как","это","то","для","про","
 novelty = Novelty()
 
 
+def _novelty_msg(topic):
+    """Строка ответа про новизну. Один return: str."""
+    return (f"Это новое для меня — такого я ещё не изучала/{(topic or 'этой темы')}."
+            f" Я запомню и постараюсь освоить. Сейчас могу ответить на то, что уже в моих знаниях.")
+
+
 def try_novelty(query, known_kw=None):
-    """Отвечает, только если вопрос действительно новый и нет готового ответа."""
+    """Отвечает, только если вопрос действительно новый. Один return: str|None."""
+    ans = None
     try:
         if novelty.is_novel(query, known_kw):
-            topic = novelty.unknown_topic(query)
-            return (f"Это новое для меня — такого я ещё не изучала/{(topic or 'этой темы')}."
-                    f" Я запомню и постараюсь освоить. Сейчас могу ответить на то, что уже в моих знаниях.")
+            ans = _novelty_msg(novelty.unknown_topic(query))
     except Exception:
-        pass
-    return None
+        ans = None
+    return ans
 
 
 if __name__ == "__main__":

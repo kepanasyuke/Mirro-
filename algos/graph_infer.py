@@ -70,31 +70,45 @@ def format_path(path):
     return s
 
 
-def try_graph_infer(query):
-    """Точка входа для try_* : если граф непуст и вопрос похож на связи — отвечает."""
-    from knowledge_graph import kg
-    if not kg.edges or len(kg.nodes) < 3:
-        return None
-    q = (query or "").lower()
-    # срабатываем только если вопрос похож на «объясни/как/почему/что» И в графе есть слово от запроса
-    if not any(w in q for w in ("как", "почему", "объясни", "что такое", "выведи", "связано")):
-        return None
-    chains = infer_from_graph(kg, q, max_depth=2)
-    if not chains:
-        return None
-    # соберём человеческий ответ
+def _chain_to_str(kg, chain):
+    """Цепочка узлов -> строка вида «a —p→ b». Один return: str."""
+    parts = []
+    for i in range(len(chain) - 1):
+        rels = kg.relation(chain[i], chain[i + 1])
+        pred = rels[0][0] if rels else "связан"
+        parts.append(f"{chain[i]} —{pred}→ {chain[i+1]}")
+    return " ; ".join(parts)
+
+
+def _join_chains(kg, chains):
+    """Собирает человекочитаемый ответ из первых цепочек. Один return: str."""
     lines = []
     for ch in chains[:4]:
-        # формат через соседей
-        parts = []
-        for i in range(len(ch) - 1):
-            rel = kg.relation(ch[i], ch[i + 1])
-            parts.append(f"{ch[i]} —{rel[0][0] if rel else 'связан'}→ {ch[i+1]}")
-        if parts:
-            lines.append(" ; ".join(parts))
-    if lines:
-        return "Из своих связей вывожу: " + " | ".join(lines) + "."
-    return None
+        part = _chain_to_str(kg, ch)
+        if part:
+            lines.append(part)
+    return "Из своих связей вывожу: " + " | ".join(lines) + "."
+
+
+_INFER_WORDS = ("как", "почему", "объясни", "что такое", "выведи", "связано")
+
+
+def _looks_like_reasoning(q):
+    """Похож ли запрос на вопрос-вывод. Один return: bool."""
+    return any(w in q for w in _INFER_WORDS)
+
+
+def try_graph_infer(query):
+    """Точка входа для try_*: отвечает, если граф непуст и вопрос про связи.
+    Один return: str или None."""
+    from knowledge_graph import kg
+    answer = None
+    q = (query or "").lower()
+    if kg.edges and len(kg.nodes) >= 3 and _looks_like_reasoning(q):
+        chains = infer_from_graph(kg, q, max_depth=2)
+        if chains:
+            answer = _join_chains(kg, chains)
+    return answer
 
 
 if __name__ == "__main__":

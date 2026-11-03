@@ -36,29 +36,35 @@ def _clean(w):
     return w
 
 
+def _sentences(text):
+    """Разбивка на предложения. Один return: list отфильтрованных коротких."""
+    return [s.strip() for s in _re.split(r"(?<=[.!?])\s+", text) if len(s.strip()) >= 10]
+
+
+def _match_triple(s):
+    """Достаёт (subj,pred,obj) из предложения. Один return: tuple или None."""
+    m = _re.search(rf"^(.+?)\s+({_VERBS_RE})\s+(.+)$", s, flags=_re.I)
+    if not m:
+        return None
+    return (_clean(m.group(1)), _clean(m.group(2)), _clean(m.group(3)))
+
+
+def _valid(triple, min_subj, min_obj):
+    """Содержательные ли субъект и объект. Один return: bool."""
+    subj, _pred, obj = triple
+    subj_ok = len([w for w in subj.split() if w not in _STOP]) >= min_subj
+    obj_ok = len([w for w in obj.split() if w not in _STOP]) >= min_obj
+    return subj_ok and obj_ok
+
+
 def extract(text, min_subj=1, min_obj=1):
-    """Из текста строит список триплетов (subj, pred, obj)."""
+    """Из текста строит список триплетов (subj, pred, obj). Один return: list."""
     triples = []
-    if not text or len(text) < 8:
-        return triples
-    # разбивка на предложения
-    sentences = _re.split(r"(?<=[.!?])\s+", text)
-    for s in sentences:
-        s = s.strip()
-        if len(s) < 10:
-            continue
-        # шаблон: СУБЪЕКТ ПРЕДИКАТ ОБЪЕКТ
-        m = _re.search(rf"^(.+?)\s+({_VERBS_RE})\s+(.+)$", s, flags=_re.I)
-        if not m:
-            continue
-        subj = _clean(m.group(1))
-        pred = _clean(m.group(2))
-        obj = _clean(m.group(3))
-        # отбрасываем, если субъект/объект состоят из стоп-слов
-        subj_words = [w for w in subj.split() if w not in _STOP]
-        obj_words = [w for w in obj.split() if w not in _STOP]
-        if len(subj_words) >= min_subj and len(obj_words) >= min_obj:
-            triples.append((subj, pred, obj))
+    if text and len(text) >= 8:
+        for s in _sentences(text):
+            triple = _match_triple(s)
+            if triple and _valid(triple, min_subj, min_obj):
+                triples.append(triple)
     return triples
 
 

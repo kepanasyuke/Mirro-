@@ -48,29 +48,32 @@ class DialogueMemory:
 
     # ----- интерфейс для try_* -----
     def last_topic(self):
-        """Свежая тема последней реплики."""
+        """Свежая тема последней реплики. Один return: str или None."""
+        result = None
         for t in reversed(self.topics):
             if t:
-                return " ".join(t)
-        return None
+                result = " ".join(t)
+                break
+        return result
 
     def topic_context(self, user_text):
-        """Есть ли похожая тема в истории? Возвращает найденную тему или None."""
+        """Есть ли похожая тема в истории? Один return: str или None."""
         kw = set(_keywords(user_text))
-        if not kw:
-            return None
+        result = None
         for t in reversed(self.topics):
             if set(t) & kw:
-                return " ".join(t)
-        return None
+                result = " ".join(t)
+                break
+        return result
 
     def mood(self, word_ru="да"):
-        """Разговорная фраза о текущем настроении диалога."""
+        """Разговорная фраза о текущем настроении диалога. Один return: str."""
+        phrase = "Нейтральный тон, слушаю внимательно."
         if self.emotion > 0.3:
-            return "Разговор тёплый, иду навстречу."
-        if self.emotion < -0.3:
-            return "Разговор напряжённый — отвечу аккуратнее."
-        return "Нейтральный тон, слушаю внимательно."
+            phrase = "Разговор тёплый, иду навстречу."
+        elif self.emotion < -0.3:
+            phrase = "Разговор напряжённый — отвечу аккуратнее."
+        return phrase
 
     def summarize(self):
         return f"тем: {len(self.topics)}, реплик в памяти: {len(self.context)}, тон: {self.emotion:+.2f}"
@@ -80,19 +83,38 @@ class DialogueMemory:
 dm = DialogueMemory()
 
 
+_SAY_TOPIC_TRIGGERS = ["помнишь что я говорил", "помнишь про", "что мы обсуждали",
+                        "о чём мы говорили", "что я просил", "что я просила",
+                        "в прошлый раз", "недавно говорил", "недавно говорила"]
+_MOOD_TRIGGERS = ["как у нас разговор", "наше настроение", "как протекает", "какой тон"]
+_MEM_TRIGGERS = ["сколько ты помнишь", "что ты помнишь", "твоя память"]
+
+
+def _answer_topic(q):
+    """Ответ про вспоминание темы. Один return: str."""
+    topic = dm.topic_context(q) or dm.last_topic()
+    msg = "Мы ещё не обсуждали это — давай начнём."
+    if topic:
+        msg = "Помню: мы говорили про «" + topic + "»."
+    return msg
+
+
+def _has_trigger(q, triggers):
+    """Есть ли в запросе любой из триггеров. Один return: bool."""
+    return any(w in q for w in triggers)
+
+
 def try_dialogue_memory(query):
     """Возвращает ответ строкой, если вопрос про память/историю, иначе None."""
     q = (query or "").strip().lower()
-    if any(w in q for w in ["помнишь что я говорил", "помнишь про", "что мы обсуждали",
-                            "о чём мы говорили", "что я просил", "что я просила",
-                            "в прошлый раз", "недавно говорил", "недавно говорила"]):
-        topic = dm.topic_context(query) or dm.last_topic()
-        return "Помню: мы говорили про «" + topic + "»." if topic else "Мы ещё не обсуждали это — давай начнём."
-    if any(w in q for w in ["как у нас разговор", "наше настроение", "как протекает", "какой тон"]):
-        return dm.mood()
-    if any(w in q for w in ["сколько ты помнишь", "что ты помнишь", "твоя память"]):
-        return "В краткосрочной памяти держу последние темы и тон диалога. " + dm.summarize() + "."
-    return None
+    ans = None
+    if _has_trigger(q, _SAY_TOPIC_TRIGGERS):
+        ans = _answer_topic(q)
+    elif _has_trigger(q, _MOOD_TRIGGERS):
+        ans = dm.mood()
+    elif _has_trigger(q, _MEM_TRIGGERS):
+        ans = "В краткосрочной памяти держу последние темы и тон диалога. " + dm.summarize() + "."
+    return ans
 
 
 if __name__ == "__main__":
