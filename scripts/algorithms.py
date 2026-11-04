@@ -301,20 +301,19 @@ class MirroAlgorithms:
         words = _re.findall(r"[а-яёa-z0-9]+", text.lower())
         stemmed = []
         for w in words:
-            if w in self.stop_words or len(w) < 3:
-                continue
-            # Кэш стемминга
-            if w in self._stem_cache:
-                stemmed.append(self._stem_cache[w])
-                continue
-            original_w = w
-            if w in self.stem_exceptions_ru:
-                w = self.stem_exceptions_ru[w]
-            else:
-                for suffix, replacement in self.stem_rules_ru.items():
-                    if w.endswith(suffix) and len(w) > len(suffix) + 2:
-                        w = w[:-len(suffix)] + replacement
-                        break
+            if w not in self.stop_words and len(w) >= 3:
+                # Кэш стемминга
+                if w in self._stem_cache:
+                    stemmed.append(self._stem_cache[w])
+                    continue
+                original_w = w
+                if w in self.stem_exceptions_ru:
+                    w = self.stem_exceptions_ru[w]
+                else:
+                    for suffix, replacement in self.stem_rules_ru.items():
+                        if w.endswith(suffix) and len(w) > len(suffix) + 2:
+                            w = w[:-len(suffix)] + replacement
+                            break
             self._stem_cache[original_w] = w
             stemmed.append(w)
         return stemmed
@@ -395,17 +394,16 @@ class MirroAlgorithms:
         for line in fh:
             if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
                 break
-            if not line.strip():
-                continue
-            try:
-                ex = json.loads(line)
-                inst = ex.get("instruction", ex.get("user", ""))
-                out = ex.get("output", ex.get("assistant", ""))
-                if inst and out and len(out) > 5:
-                    self._ingest_example(inst, out, cluster)
-                    added += 1
-            except Exception:
-                pass
+            if line.strip():
+                try:
+                    ex = json.loads(line)
+                    inst = ex.get("instruction", ex.get("user", ""))
+                    out = ex.get("output", ex.get("assistant", ""))
+                    if inst and out and len(out) > 5:
+                        self._ingest_example(inst, out, cluster)
+                        added += 1
+                except Exception:
+                    pass
         return added
 
     def _rebuild_after_extend(self, added):
