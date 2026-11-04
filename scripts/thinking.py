@@ -100,36 +100,34 @@ class MirroThinking:
         - 'base+web'— база + подстраховка интернетом
         """
         q = query.lower().strip()
+        strategy = "web"
+        stat_key = "web_answers"
+        if self._wants_learn(q):
+            strategy, stat_key = "learn", "learn_requests"
+        elif self._wants_direct(q):
+            strategy, stat_key = "direct", "direct_answers"
+        elif self._wants_web(q):
+            strategy, stat_key = "web", "web_answers"
+        elif self._base_confident(has_base_result, base_confidence, 0.55):
+            strategy, stat_key = "base", "base_answers"
+        elif self._base_confident(has_base_result, base_confidence, 0.3):
+            strategy, stat_key = "base+web", "web_answers"
+        self.stats[stat_key] = self.stats.get(stat_key, 0) + 1
+        return strategy
 
-        # 1. Обучение
-        if any(t in q for t in self.LEARN_TRIGGERS):
-            self.stats["learn_requests"] += 1
-            return "learn"
+    # ---- покомпонентные проверки (один выход, чтобы верхний decide был один return) ----
+    def _wants_learn(self, q):
+        return any(t in q for t in self.LEARN_TRIGGERS)
 
-        # 2. Прямые ответы
-        if any(t in q for t in self.DIRECT_TRIGGERS) and len(q) < 40:
-            self.stats["direct_answers"] += 1
-            return "direct"
+    def _wants_direct(self, q):
+        return any(t in q for t in self.DIRECT_TRIGGERS) and len(q) < 40
 
-        # 3. Свежесть/актуальность → web
-        web_hits = sum(1 for t in self.WEB_TRIGGERS if t in q)
-        if web_hits > 0:
-            self.stats["web_answers"] += 1
-            return "web"
+    def _wants_web(self, q):
+        return any(t in q for t in self.WEB_TRIGGERS)
 
-        # 4. База достаточно уверена?
-        if has_base_result and base_confidence >= 0.55:
-            self.stats["base_answers"] += 1
-            return "base"
-
-        # 5. Есть результат, но слабый → base+web
-        if has_base_result and base_confidence >= 0.3:
-            self.stats["web_answers"] += 1
-            return "base+web"
-
-        # 6. Нет результата → web
-        self.stats["web_answers"] += 1
-        return "web"
+    @staticmethod
+    def _base_confident(has_result, confidence, threshold):
+        return has_result and confidence >= threshold
 
     # ========================
     #  ОЦЕНКА УВЕРЕННОСТИ БАЗЫ

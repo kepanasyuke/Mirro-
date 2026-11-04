@@ -70,15 +70,14 @@ def extend(extra_lines, seed):
             entry = gen_math(rng)
         else:
             entry = gen_from_base(base, rng) if base else gen_math(rng)
-        if entry is None:
-            continue
-        buf.append(entry)
-        written += 1
-        if written % PER_FILE == 0 or written == extra_lines:
-            flush()
-            seg_idx += 1
-            speed = written / max(time.time() - t0, 0.001)
-            print(f"  ...{written/1e6:.2f}M добавлено, {speed:.0f}/с, файлы до corpus-{seg_idx-1:06d}.jsonl")
+        if entry is not None:
+            buf.append(entry)
+            written += 1
+            if written % PER_FILE == 0 or written == extra_lines:
+                flush()
+                seg_idx += 1
+                speed = written / max(time.time() - t0, 0.001)
+                print(f"  ...{written/1e6:.2f}M добавлено, {speed:.0f}/с, файлы до corpus-{seg_idx-1:06d}.jsonl")
 
     print(f"\n[готово] добавлено {written} примеров за {(time.time()-t0)/60:.1f} мин")
     print(f"[итого в корпусе] {current_count()} примеров")

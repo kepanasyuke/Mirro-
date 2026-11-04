@@ -82,27 +82,27 @@ class SelfLearner:
     def _save_meta(self):
         LEARN_META.write_text(json.dumps(self.meta, ensure_ascii=False, indent=2), "utf-8")
 
-    def _fetch_json(self, url, timeout=20):
-        """Fetch JSON from a URL."""
+    def _fetch(self, url, timeout=20, as_json=False, errors="replace"):
+        """Скачивает URL: как JSON (as_json=True) или как текст. Один return."""
+        data = None
         try:
             req = urllib.request.Request(url, headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MirroSelfLearner/1.0"
             })
             with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return json.loads(resp.read().decode("utf-8"))
+                text = resp.read().decode("utf-8", errors=errors)
+            data = json.loads(text) if as_json else text
         except Exception:
-            return None
+            data = None
+        return data
+
+    def _fetch_json(self, url, timeout=20):
+        """Fetch JSON from a URL. Один return: dict|None."""
+        return self._fetch(url, timeout=timeout, as_json=True)
 
     def _fetch_text(self, url, timeout=20):
-        """Fetch text from a URL."""
-        try:
-            req = urllib.request.Request(url, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MirroSelfLearner/1.0"
-            })
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.read().decode("utf-8", errors="replace")
-        except Exception:
-            return None
+        """Fetch text from a URL. Один return: str|None."""
+        return self._fetch(url, timeout=timeout, as_json=False)
 
     # ---- HuggingFace trends ----
     def learn_from_hf_trending(self):

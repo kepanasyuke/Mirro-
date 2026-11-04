@@ -85,17 +85,16 @@ def load_base_examples(limit_each=6000):
                 if len(base) >= limit_each * 6:
                     break
                 line = line.strip()
-                if not line:
-                    continue
-                try:
-                    ex = json.loads(line)
-                    if ex.get("instruction") and ex.get("output"):
-                        base.append(ex)
-                        n += 1
-                        if n >= limit_each:
-                            break
-                except Exception:
-                    pass
+                if line:
+                    try:
+                        ex = json.loads(line)
+                        if ex.get("instruction") and ex.get("output"):
+                            base.append(ex)
+                            n += 1
+                            if n >= limit_each:
+                                break
+                    except Exception:
+                        pass
     print(f"  база для шаблонов: {len(base)} пар")
     return base
 

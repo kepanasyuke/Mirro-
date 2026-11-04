@@ -113,18 +113,19 @@ def deepseek(prompt, system=None, timeout=DEFAULT_TIMEOUT):
 
 
 def fallback(prompt, system=None, timeout=DEFAULT_TIMEOUT):
-    """Финальный фоллбэк: пробуем по очереди провайдеров."""
+    """Финальный фоллбэк: пробуем по очереди провайдеров. Один return: str|None."""
+    result = None
     for provider in ("deepseek", "openai"):
-        if not _resolve_key(provider):
-            continue
-        messages = [
-            {"role": "system", "content": system or SYS_PROMPT},
-            {"role": "user", "content": prompt},
-        ]
-        out = _call_provider(provider, messages, timeout)
-        if out and not out.startswith("[провайдер"):
-            return out
-    return None
+        if _resolve_key(provider):
+            messages = [
+                {"role": "system", "content": system or SYS_PROMPT},
+                {"role": "user", "content": prompt},
+            ]
+            out = _call_provider(provider, messages, timeout)
+            if out and not out.startswith("[провайдер"):
+                result = out
+                break
+    return result
 
 
 def status():

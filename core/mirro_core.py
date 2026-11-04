@@ -865,11 +865,10 @@ class MirroAPI(BaseHTTPRequestHandler):
         for m in messages:
             role = (m.get("role") or "").lower()
             content = (m.get("content") or "").strip()
-            if not content:
-                continue
-            conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
-            if role in ("user", "human"):
-                last_user = content
+            if content:
+                conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
+                if role in ("user", "human"):
+                    last_user = content
         prompt = last_user or " ".join(m.get("content", "") for m in messages)
         context = "\n".join(conversation)
         cluster = core.classify_task(prompt or context)
@@ -1034,14 +1033,14 @@ def _seed_knowledge_graph():
                 if sample:
                     total += kg.from_triples(extract(_jsonl_to_text(sample)))
             except Exception:
-                continue
+                pass
         for f in srcs[:40]:
             try:
                 head = _read_small_head(f, 8000)
                 if head:
                     total += kg.from_triples(extract(head))
             except Exception:
-                continue
+                pass
         print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total}, из кэша: {prev_edges})")
         # Сохраняем граф на диск, чтобы знания не терялись при перезапуске
         try:
@@ -1082,7 +1081,7 @@ def _jsonl_to_text(chunk):
             if merged:
                 parts.append(merged)
         except Exception:
-            continue
+            pass
     return "\n".join(parts)
 
 

@@ -1,0 +1,24 @@
+# Ruff configuration for Mirro.
+# Правила соответствуют LINTER.md (структурное программирование, один return).
+# Запуск: ruff check algos/ core/ scripts/ tools/ tests/
+
+line-length = 110
+target-version = "py38"
+
+[lint]
+# B — builtins; W — warnings; E — errors; F — pyflakes
+select = ["E", "F", "W", "B", "UP"]
+ignore = [
+    "E501",          # line length уже контролируем через line-length выше
+    "E731",          # lambda-присваивания допустимы в редких местах
+    "UP037",         # не трогаем импорт типов
+    "B008",          # function call в default args (приемлемо в конфиге)
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["E501", "UP"]
+"scripts/gen_corpus.py" = ["B023"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

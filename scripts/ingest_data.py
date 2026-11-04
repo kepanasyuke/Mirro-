@@ -110,11 +110,12 @@ def scan_raw_data():
     total_conv = 0
 
     for dataset_dir in RAW.rglob("*"):
-        if not dataset_dir.is_file():
-            continue
-        if dataset_dir.suffix not in (".json", ".jsonl", ".parquet", ".gz"):
-            continue
-        if dataset_dir.stat().st_size == 0:
+        is_usable_file = (
+            dataset_dir.is_file()
+            and dataset_dir.suffix in (".json", ".jsonl", ".parquet", ".gz")
+            and dataset_dir.stat().st_size > 0
+        )
+        if not is_usable_file:
             continue
 
         rel_path = dataset_dir.relative_to(RAW)

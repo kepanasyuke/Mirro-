@@ -19,20 +19,19 @@ def _load_defs(root):
     """Собирает {имя_функции: [файлы]}. Один return: dict."""
     index = defaultdict(set)
     for dirpath, _dirs, files in os.walk(root):
-        if "__pycache__" in dirpath or ".git" in dirpath:
-            continue
-        for fname in files:
-            if not fname.endswith(".py"):
-                continue
-            path = os.path.join(dirpath, fname)
-            try:
-                with open(path, "r", encoding="utf-8", errors="ignore") as fh:
-                    for line in fh:
-                        m = _DEF.match(line)
-                        if m:
-                            index[m.group(1)].add(path)
-            except OSError:
-                continue
+        skip_dir = "__pycache__" in dirpath or ".git" in dirpath
+        if not skip_dir:
+            for fname in files:
+                if fname.endswith(".py"):
+                    path = os.path.join(dirpath, fname)
+                    try:
+                        with open(path, "r", encoding="utf-8", errors="ignore") as fh:
+                            for line in fh:
+                                m = _DEF.match(line)
+                                if m:
+                                    index[m.group(1)].add(path)
+                    except OSError:
+                        pass
     return index
 
 def _duplicates(index):

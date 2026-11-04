@@ -20,6 +20,8 @@ SEG_SIZE = 200_000   # примеров в сегменте
 
 
 def tokenize(text):
+    if not text:
+        return []
     return [w for w in _re.findall(r"[а-яёa-z0-9]+", text.lower()) if len(w) > 2]
 
 
@@ -105,6 +107,12 @@ class MirroRAG:
             return pickle.load(f)
 
     # ------------- поиск -------------
+    @staticmethod
+    def _local_idf(local, ndocs, w):
+        """IDF слова внутри локального корпуса сегмента. Один return: float."""
+        df = len(local.get(w, {}))
+        return math.log(ndocs / (1 + df))
+
     def search(self, query, top_segments=4, top_k=3):
         """
         Двухуровневый поиск.
@@ -141,17 +149,13 @@ class MirroRAG:
             for w in q_words:
                 if w in local:
                     candidate_docs.update(local[w].keys())
-            # idf для локального корпуса
-            def local_idf(w):
-                df = len(local.get(w, {}))
-                return math.log(ndocs / (1 + df))
 
             for doc_id in candidate_docs:
                 score = 0.0
                 for w, qt in q_words.items():
                     tf = local.get(w, {}).get(doc_id, 0)
                     if tf:
-                        score += qt * local_idf(w) * (tf * 1.5) / (tf + 1.5)
+                        score += qt * self._local_idf(local, ndocs, w) * (tf * 1.5) / (tf + 1.5)
                 if score > 0:
                     # достаём текст документа
                     text = self._read_doc(s, doc_id)

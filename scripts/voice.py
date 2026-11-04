@@ -116,14 +116,16 @@ def _rephrase(text):
 
 
 def _clip(text, max_len=1800):
-    """Обрезаем текст по предложению."""
-    if len(text) <= max_len:
-        return text
-    cut = text[:max_len]
-    last = cut.rfind(". ")
-    if last > max_len * 0.6:
-        return cut[:last + 1]
-    return cut + "..."
+    """Обрезаем текст по предложению. Один return: str."""
+    clipped = text
+    if len(text) > max_len:
+        cut = text[:max_len]
+        last = cut.rfind(". ")
+        if last > max_len * 0.6:
+            clipped = cut[:last + 1]
+        else:
+            clipped = cut + "..."
+    return clipped
 
 
 def speak(raw_answer, query, strategy="base"):

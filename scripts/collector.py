@@ -56,26 +56,23 @@ class ReferenceCollector:
     def _save_catalog(self):
         CATALOG_FILE.write_text(json.dumps(self.catalog, ensure_ascii=False, indent=2), "utf-8")
 
-    def _fetch(self, url, timeout=15):
-        """Fetch URL with proper headers."""
+    def _fetch(self, url, timeout=15, as_bytes=False):
+        """Fetch URL with proper headers. Один return: str|bytes|None."""
+        data = None
         try:
             req = urllib.request.Request(url, headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MirroCollector/1.0"
             })
             with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.read().decode("utf-8", errors="replace")
+                raw = resp.read()
+            data = raw if as_bytes else raw.decode("utf-8", errors="replace")
         except Exception:
-            return None
+            data = None
+        return data
 
     def _fetch_bytes(self, url, timeout=30):
-        try:
-            req = urllib.request.Request(url, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MirroCollector/1.0"
-            })
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.read()
-        except Exception:
-            return None
+        """Fetch raw bytes. Один return: bytes|None."""
+        return self._fetch(url, timeout=timeout, as_bytes=True)
 
     # ---- 1. Wikimedia Commons ----
     def collect_wikimedia(self, query: str, max_results: int = 20):

@@ -109,22 +109,32 @@ def choose_best(query, candidates, preferred=None):
         return None, 0.0, "нет кандидатов"
     cands = [c for c in candidates if c[0][2] != "generated"] or candidates
 
+    b_out = None
+    b_sc = 0.0
+    b_r = ""
     if preferred:
         same = [(inst, out, cl, sc) for (inst, out, cl), sc in cands if cl == preferred]
         if same:
             best = max(same, key=lambda x: score_candidate(query, x[0], x[1], x[2], x[3], preferred)[0])
             sc, _ = score_candidate(query, best[0], best[1], best[2], best[3], preferred)
             if sc >= 4.0:
-                return best[1], sc, f"кластер {best[2]}"
-            return None, 0.0, f"слабый результат в кластере {preferred}"
-        return None, 0.0, f"нет в кластере {preferred}"
-    b_out, b_sc, b_r = None, -999, ""
-    for (inst, out, cl), tfidf_score in cands[:5]:
-        sc, rs = score_candidate(query, inst, out, cl, tfidf_score, preferred)
-        if sc > b_sc:
-            b_sc, b_out, b_r = sc, out, "; ".join(rs) if rs else "базовый"
-    if b_sc < 4.0:
-        return None, 0.0, f"слабый результат ({b_sc:.1f})"
+                b_out, b_sc, b_r = best[1], sc, f"кластер {best[2]}"
+            else:
+                b_r = f"слабый результат в кластере {preferred}"
+        else:
+            b_r = f"нет в кластере {preferred}"
+    else:
+        best_out = None
+        best_score = -999
+        best_reason = ""
+        for (inst, out, cl), tfidf_score in cands[:5]:
+            sc, rs = score_candidate(query, inst, out, cl, tfidf_score, preferred)
+            if sc > best_score:
+                best_score, best_out, best_reason = sc, out, "; ".join(rs) if rs else "базовый"
+        if best_score >= 4.0:
+            b_out, b_sc, b_r = best_out, best_score, best_reason
+        else:
+            b_r = f"слабый результат ({best_score:.1f})"
     return b_out, b_sc, b_r
 
 

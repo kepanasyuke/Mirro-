@@ -58,12 +58,11 @@ def main():
     with open(KNOW, "a", encoding="utf-8") as f:
         for inst, out in ENTRIES:
             inst = inst.strip()
-            if inst in seen:
-                continue
-            f.write(json.dumps({"instruction": inst, "input": "", "output": out},
-                               ensure_ascii=False) + "\n")
-            seen.add(inst)
-            added += 1
+            if inst not in seen:
+                f.write(json.dumps({"instruction": inst, "input": "", "output": out},
+                                   ensure_ascii=False) + "\n")
+                seen.add(inst)
+                added += 1
     print(f"knowledge: добавлено {added} новых записей (было {len(seen)-added}), всего {len(seen)}")
 
 if __name__ == "__main__":
