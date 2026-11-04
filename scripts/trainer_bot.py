@@ -152,17 +152,15 @@ def run(cycles, clusters_filter, save, threshold, quiet):
 
         for inst, out, cl in sample:
             ans = _answer_for(algo, inst)
-            if not _is_learnable(inst, ans):
-                continue
-            cov = _coverage(algo, inst, ans, out)
-            if cov is None:
-                continue
-            label = _label_for(cov, threshold)
-            _train_one(algo, inst, ans, label)
-            _record_cluster(by_cluster, cl, label, good_events)
-            good = len(good_events)
-            trained += 1
-            _maybe_progress(quiet, trained, len(sample), good)
+            if _is_learnable(inst, ans):
+                cov = _coverage(algo, inst, ans, out)
+                if cov is not None:
+                    label = _label_for(cov, threshold)
+                    _train_one(algo, inst, ans, label)
+                    _record_cluster(by_cluster, cl, label, good_events)
+                    good = len(good_events)
+                    trained += 1
+                    _maybe_progress(quiet, trained, len(sample), good)
 
         elapsed = time.time() - t0
         acc = _print_summary(trained, good, elapsed, threshold, by_cluster)
