@@ -291,16 +291,15 @@ class MirroThinking:
                 return {}
             pages = extract_data.get("query", {}).get("pages", {})
             for pid, page in pages.items():
-                if pid == "-1":
-                    continue
-                summary = page.get("extract", "")
-                if summary:
-                    return {
-                        "title": best_title,
-                        "summary": summary[:3000],
-                        "url": f"https://{lang}.wikipedia.org/wiki/{urllib.parse.quote(best_title.replace(' ', '_'))}",
-                        "source": f"wikipedia-{lang}",
-                    }
+                if pid != "-1":
+                    summary = page.get("extract", "")
+                    if summary:
+                        return {
+                            "title": best_title,
+                            "summary": summary[:3000],
+                            "url": f"https://{lang}.wikipedia.org/wiki/{urllib.parse.quote(best_title.replace(' ', '_'))}",
+                            "source": f"wikipedia-{lang}",
+                        }
         except Exception:
             pass
         return {}

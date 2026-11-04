@@ -56,12 +56,11 @@ def parse_numbers(text):
     out = []
     for tok in text.split():
         tok = tok.strip()
-        if not tok or tok.startswith("#"):
-            continue
-        try:
-            out.append(int(tok))
-        except ValueError:
-            raise ValueError(f"Не число: {tok!r}")
+        if tok and not tok.startswith("#"):
+            try:
+                out.append(int(tok))
+            except ValueError:
+                raise ValueError(f"Не число: {tok!r}")
     return out
 
 
