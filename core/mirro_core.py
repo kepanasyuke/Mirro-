@@ -559,6 +559,24 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_enrich(q):
+        try:
+            from algos.knowledge_graph import try_enrich as _f
+            return _f(q)
+        except Exception:
+            return None
+    def try_what_links(q):
+        try:
+            from algos.knowledge_graph import try_what_links as _f
+            return _f(q)
+        except Exception:
+            return None
+    def try_similar(q):
+        try:
+            from algos.knowledge_graph import try_similar as _f
+            return _f(q)
+        except Exception:
+            return None
     def try_neural_elec(q):
         try:
             from algos.neural_electric import try_neural_electric as _f
@@ -585,6 +603,9 @@ def _try_direct_handlers(prompt):
         ("ai_history", try_ai_history),
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
+        ("enrich", try_enrich),
+        ("what_links", try_what_links),
+        ("similar", try_similar),
         ("dialogue_memory", try_dialogue_memory),
         ("zero_dim", try_zero_dim),
         ("growth", try_growth),
@@ -817,6 +838,27 @@ class MirroAPI(BaseHTTPRequestHandler):
             self._json({"questions": [{"q": q, "count": c} for q, c in ranked]}); return
         elif route == "/v1/learn-report":
             self._json(self._learn_report()); return
+        elif route == "/v1/knowledge":
+            # Умные запросы знаниевого графа: enrich / what_links / similarity
+            from urllib.parse import parse_qs, urlsplit
+            try:
+                query = parse_qs(urlsplit(self.path).query).get("q", [""])[0]
+                kind = parse_qs(urlsplit(self.path).query).get("kind", ["enrich"])[0]
+                from algos.knowledge_graph import kg as _kg
+                payload = {"nodes": len(_kg.nodes), "edges": len(_kg.edges)}
+                if kind == "enrich":
+                    payload["answer"] = _kg.enrich(query, max_hop=2)[:4]
+                elif kind == "links":
+                    payload["answer"] = _kg.what_links(query)[:6]
+                elif kind == "similar":
+                    from algos.knowledge_graph import _pair_from
+                    a, b = _pair_from(query) if query else (None, None)
+                    payload["similarity"] = _kg.similarity(a, b) if (a and b) else None
+                else:
+                    payload["answer"] = []
+                self._json(payload); return
+            except Exception as e:
+                self._json({"error": str(e)}, 500); return
         self._json({"error": "not found"}, 404)
 
     def _learn_report(self):
@@ -917,7 +959,23 @@ class MirroAPI(BaseHTTPRequestHandler):
             try:
                 body = self._read(); algo = _grab_algo()
                 algo.train_from_feedback(body.get("query",""), body.get("response",""), body.get("liked",True))
-                self._json({"status": "ok"})
+                # Обучение знаниевого графа из отклика: усиливаем/ослабляем связи понятий
+                kg_note = ""
+                try:
+                    from algos.knowledge_graph import kg as _kg, _clean_q, _pair_from
+                    q = _clean_q(body.get("query",""))
+                    a, b = _pair_from(q)
+                    if a and b:
+                        if body.get("liked", True):
+                            n = _kg.reward(a, b, 0.25)
+                        else:
+                            n = _kg.punish(a, b, 0.25)
+                        if n:
+                            _kg.save(MODELS / "knowledge_graph.pkl")
+                            kg_note = f", graph_grown={n}"
+                except Exception:
+                    kg_note = ""
+                self._json({"status": "ok" + kg_note})
             except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
             return
         elif route == "/v1/self-learn":
@@ -1021,6 +1079,84 @@ def _seed_knowledge_graph():
             ("Эмоции", "влияют на", "память"),
             ("Сон", "укрепляет", "память"),
             ("Повторение", "укрепляет", "память"),
+            # --- наука и техника ---
+            ("Свет", "движется со скоростью", "300000 км/с"),
+            ("Звук", "является", "волна"),
+            ("Волна", "переносит", "энергия"),
+            ("Энергия", "не возникает из", "ничего"),
+        ])
+        # Дополним постоянными знаниями (наука, техника, математика, природа)
+        kg.from_triples([
+            ("Гравитация", "притягивает", "массы"),
+            ("Планета", "движется по", "орбита"),
+            ("Орбита", "определяется", "гравитация"),
+            ("Телескоп", "наблюдает", "звёзды"),
+            ("Атом", "состоит из", "ядро"),
+            ("Ядро", "содержит", "протоны"),
+            ("Протон", "имеет", "положительный заряд"),
+            ("Электрон", "имеет", "отрицательный заряд"),
+            ("Молекула", "состоит из", "атомы"),
+            ("Химическая реакция", "изменяет", "вещество"),
+            ("Ток", "течёт по", "проводник"),
+            ("Проводник", "пропускает", "электричество"),
+            ("Напряжение", "движет", "ток"),
+            ("Сопротивление", "ограничивает", "ток"),
+            ("Компьютер", "выполняет", "программы"),
+            ("Программа", "состоит из", "алгоритмы"),
+            ("Данные", "обрабатываются", "алгоритм"),
+            ("Файл", "хранится в", "память компьютера"),
+            ("Сеть", "связывает", "компьютеры"),
+            ("Интернет", "объединяет", "сети"),
+            ("Браузер", "открывает", "веб-страницы"),
+            ("Веб-страница", "написана на", "HTML"),
+            ("Хранилище", "сохраняет", "данные"),
+            ("База данных", "организует", "информация"),
+            ("Шифрование", "защищает", "данные"),
+            ("Ключ", "расшифровывает", "шифр"),
+            # --- математика ---
+            ("Число", "делится на", "множитель"),
+            ("Простые числа", "делятся только на", "1 и себя"),
+            ("Дробь", "состоит из", "числитель и знаменатель"),
+            ("Квадрат", "имеет", "равные стороны"),
+            ("Треугольник", "имеет", "три стороны"),
+            ("Окружность", "определяется", "радиус"),
+            ("Пи", "равно", "3.14159"),
+            ("Логарифм", "обратен", "степень"),
+            ("Интеграл", "вычисляет", "площадь"),
+            ("Производная", "измеряет", "скорость изменения"),
+            # --- природа и человек ---
+            ("Человек", "обладает", "разум"),
+            ("Разум", "пользуется", "логика"),
+            ("Логика", "строит", "рассуждения"),
+            ("Рассуждения", "ведут к", "вывод"),
+            ("Вывод", "рождает", "знание"),
+            ("Язык", "выражает", "мысли"),
+            ("Слово", "несёт", "значение"),
+            ("Значение", "опирается на", "контекст"),
+            ("Интуиция", "дополняет", "логика"),
+            ("Творчество", "создаёт", "новое"),
+            ("Новое", "обогащает", "знание"),
+            ("Сердце", "качает", "кровь"),
+            ("Лёгкие", "усваивают", "кислород"),
+            ("Пища", "даёт", "энергия организму"),
+            ("Вода", "необходима для", "жизнь"),
+            ("Жизнь", "требует", "энергия"),
+            ("Растение", "фотосинтезирует с", "солнечный свет"),
+            ("Хлорофилл", "придаёт", "зелёный цвет"),
+            # --- экономика и общество ---
+            ("Деньги", "являются", "средство обмена"),
+            ("Рынок", "определяет", "цена"),
+            ("Цена", "зависит от", "спрос и предложение"),
+            ("Налог", "пополняет", "бюджет"),
+            ("Банк", "хранит", "вклады"),
+            ("Кредит", "выдаётся под", "процент"),
+            ("Инфляция", "обесценивает", "деньги"),
+            ("Труд", "создаёт", "товар"),
+            ("Товар", "обменивается на", "деньги"),
+            ("Общество", "состоит из", "люди"),
+            ("Правила", "регулируют", "общество"),
+            ("Закон", "защищает", "права"),
+            ("Культура", "передаётся через", "традиции"),
         ])
         # 2) Извлечение триплетов из малых текстовых корпусов (не из .py — код) 
         srcs = []

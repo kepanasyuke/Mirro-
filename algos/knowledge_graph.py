@@ -232,6 +232,86 @@ class KnowledgeGraph:
             self._adj[d].append((p, s, w))
         return None
 
+    # ---------- обогащение ответа связями ----------
+    def enrich(self, name, max_hop=2):
+        """Находит родственные понятия и их факты для обогащения ответа.
+        Возвращает список строк «related —связь→ other: факты». Один return: list."""
+        name = self._norm(name)
+        if name not in self.nodes:
+            return []
+        # соберём соседей до max_hop только по самым сильным связям
+        seen_nodes = {name}
+        candidates = {}  # Понятие -> (предикат, вес) от исходного узла
+        frontier = [name]
+        for _ in range(max_hop):
+            nxt = []
+            for cur in frontier:
+                for p, other, w in self._adj.get(cur, []):
+                    if other not in seen_nodes and other not in candidates:
+                        seen_nodes.add(other)
+                        candidates[other] = (p, w)
+                        nxt.append(other)
+            frontier = nxt
+        # ранжируем по весу, отдаём самое связанное
+        ordered = sorted(candidates.items(), key=lambda kv: -kv[1][1])[:10]
+        out = []
+        for other, (p, w) in ordered:
+            node = self.nodes.get(other)
+            if node and node.facts:
+                joined = "; ".join(node.facts[:3])
+                out.append(f"{name} {p} {other}: {joined}")
+            elif other:
+                out.append(f"{name} {p} {other}")
+        return out
+
+    # ---------- умные запросы связей ----------
+    def what_links(self, name, max_hop=1):
+        """Все прямые и ближайшие связи понятия (уже есть neighbors, но с фактами).
+        Один return: list строк."""
+        name = self._norm(name)
+        lines = []
+        if name in self.nodes:
+            node = self.nodes[name]
+            if node.facts:
+                lines.append(f"«{name}»: " + "; ".join(node.facts[:5]))
+            for p, other, w in sorted(self.neighbors(name), key=lambda r: -r[2])[:8]:
+                lines.append(f"{name} {p} {other} (вес {w:.2f})")
+        return lines
+
+    def similarity(self, a, b):
+        """Насколько понятия связаны: число общих соседей / общий путь.
+        Один return: float 0..1."""
+        a, b = self._norm(a), self._norm(b)
+        if a not in self.nodes or b not in self.nodes:
+            return 0.0
+        na = {row[1] for row in self._adj.get(a, [])}
+        nb = {row[1] for row in self._adj.get(b, [])}
+        inter = na & nb
+        union = na | nb
+        if not union:
+            # нет соседей ни у одного — проверяем прямую связь
+            return 1.0 if self.relation(a, b) else 0.0
+        return len(inter) / len(union)
+
+    # ---------- обучение из отклика ----------
+    def reward(self, a, b, amount=0.3):
+        """Положительный отклик: усилить связь между a и b (Хебб).
+        Один return: int — сколько связей усилено."""
+        return self.hebbian_learn(a, b, amount)
+
+    def punish(self, a, b, amount=0.3, floor=0.15):
+        """Отрицательный отклик: ослабить связь (анти-Хебб). Один return: int."""
+        a, b = self._norm(a), self._norm(b)
+        punished = 0
+        for (s, p, d), w in list(self.edges.items()):
+            if (s == a and d == b) or (s == b and d == a):
+                nw = max(floor, w - amount)
+                self.edges[(s, p, d)] = nw
+                self._set_adj_weight(s, p, d, nw)
+                self._set_adj_weight(d, p, s, nw)
+                punished += 1
+        return punished
+
     # ---------- состояние ----------
     def summary(self):
         return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей"
@@ -257,11 +337,16 @@ def _want_relation(query, q):
 
 
 def _pair_from(q):
-    """Вытаскивает пару понятий из запроса. Один return: (a, b)."""
-    m = _re.search(r"\b([^\s]+?)\s+(?:и|и с|с)\s+([^\s]+?)[\s?]*$", q)
+    """Вытаскивает пару понятий из запроса: два самых длинных узла графа,
+    встречающихся в запросе. Один return: (a, b)."""
+    q = _clean_q(q)
+    found = [n for n in kg.nodes if n and len(n) > 2 and n in (" " + q + " ")]
+    found.sort(key=len, reverse=True)
     pair = (None, None)
-    if m:
-        pair = (m.group(1), m.group(2))
+    if len(found) >= 2:
+        pair = (found[0], found[1])
+    elif len(found) == 1:
+        pair = (found[0], None)
     return pair
 
 
@@ -317,6 +402,89 @@ def try_knowledge_graph(query):
     return ans
 
 
+# ---------- интерфейс обогащения ответа (для ядра: try_enrich) ----------
+def _extract_topic(query):
+    """Пытается вытащить главное понятие из запроса (последнее существительное-узел).
+    Один return: str или None."""
+    q = _clean_q(query)
+    topic = None
+    # если есть узел графа, встречающийся в запросе — берём самый длинный
+    candidates = [n for n in kg.nodes if n and len(n) > 3 and n in (" " + q + " ")]
+    if candidates:
+        topic = max(candidates, key=len)
+    return topic
+
+
+def try_enrich(query):
+    """Возвращает строку-обогащение родственными понятиями, либо None.
+    Один return: str или None."""
+    topic = _extract_topic(query)
+    ans = None
+    if topic:
+        links = kg.enrich(topic, max_hop=2)
+        if links:
+            ans = "Знаю связанное: " + " | ".join(links[:4]) + "."
+    return ans
+
+
+def try_what_links(query):
+    """Отвечает про связи понятия («что связано с X?»). Один return: str или None."""
+    q = _clean_q(query)
+    name = _extract_topic(q)
+    ans = None
+    if name:
+        lines = kg.what_links(name)
+        if lines:
+            ans = "\n".join(lines[:6])
+    return ans
+
+
+def try_similar(query):
+    """Ищет в запросе два понятия и отвечает про их подобие. Один return: str или None."""
+    a, b = _pair_from(_clean_q(query))
+    ans = None
+    if a and b:
+        sim = kg.similarity(a, b)
+        direct = kg.relation(a, b)
+        if direct:
+            ans = f"«{a}» и «{b}» напрямую связаны: " + ", ".join(f"{p}" for p, _ in direct[:3]) + f" (подобие {sim:.2f})."
+        elif sim > 0:
+            ans = f"«{a}» и «{b}» имеют общие понятия, подобие ≈ {sim:.2f}."
+    return ans
+
+
+# ---------- интерфейс обучения из отклика (для ядра: try_feedback) ----------
+def try_feedback(a, b, positive=True):
+    """Усиливает/ослабляет связь между a и b по отклику пользователя.
+    Возвращает строку-отчёт. Один return: str."""
+    if positive:
+        n = kg.reward(a, b)
+        act = "усилил"
+    else:
+        n = kg.punish(a, b)
+        act = "ослабил"
+    if n:
+        return f"Граф: {act} связь «{a}»↔«{b}» ({n} связей)."
+    return f"Граф: связи «{a}»↔«{b}» нет, учить нечего."
+
+
+def _pair_from_text(q):
+    """Вытаскивает пару понятий из свободного текста «a связан с b». Один return: (a,b)."""
+    m = _re.search(r"\b([^\s]+?)\s+(?:связан\s+с|связан|и|с)\s+([^\s]+?)[\s?.,]*$", q.lower())
+    pair = (None, None)
+    if m:
+        pair = (m.group(1), m.group(2))
+    return pair
+
+
+def try_feedback_text(query, positive=True):
+    """parse отклик из текста («нейрон связан с мыслью» + лайк). Один return: str."""
+    a, b = _pair_from_text(query)
+    if a and b:
+        return try_feedback(a, b, positive)
+    return "Граф: не нашёл пару понятий для обучения."
+
+
 if __name__ == "__main__":
     kg.from_triples([
         ("Нейрон", "принадлежит", "мозг"),
@@ -328,3 +496,9 @@ if __name__ == "__main__":
     print("связывает нейрон и мысль?", kg.relation("нейрон", "мысль"))
     print("путь нейрон->понимание:", kg.path("нейрон", "понимание"))
     print(kg.explain("нейрон"))
+    print("--- обогащение ---")
+    print(try_enrich("расскажи про нейрон"))
+    print("--- связи ---")
+    print(try_what_links("что связано с память?"))
+    print("--- подобие ---")
+    print(try_similar("что общего у нейрона и сигнала?"))
