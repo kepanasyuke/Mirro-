@@ -81,17 +81,17 @@ class MirroRAG:
         local_words = defaultdict(dict)  # слово -> {doc_id: tf}
         with open(seg, encoding="utf-8", errors="replace") as f:
             for doc_id, line in enumerate(f):
-                if not line.strip():
-                    continue
-                try:
-                    ex = json.loads(line)
-                    inst = ex.get("instruction", "")
-                    out = ex.get("output", "")
-                except Exception:
-                    continue
-                words = Counter(tokenize(inst + " " + out[:100]))
-                for w, tf in words.items():
-                    local_words[w][doc_id] = tf
+                if line.strip():
+                    try:
+                        ex = json.loads(line)
+                        inst = ex.get("instruction", "")
+                        out = ex.get("output", "")
+                    except Exception:
+                        pass
+                    else:
+                        words = Counter(tokenize(inst + " " + out[:100]))
+                        for w, tf in words.items():
+                            local_words[w][doc_id] = tf
         with open(pfile, "wb") as f:
             pickle.dump({"words": dict(local_words), "n_docs": doc_id + 1}, f, protocol=4)
         # освобождаем память
