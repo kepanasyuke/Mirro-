@@ -19,18 +19,22 @@ def lcm(a, b):
 
 
 def is_prime(n):
-    if n < 2:
-        return False
-    if n < 4:
-        return True
-    if n % 2 == 0 or n % 3 == 0:
-        return False
-    i = 5
-    while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
-            return False
-        i += 6
-    return True
+    """Простое ли число. Один return: bool."""
+    prime = False
+    if n >= 2:
+        prime = True
+        if n < 4:
+            prime = True
+        elif n % 2 == 0 or n % 3 == 0:
+            prime = False
+        else:
+            i = 5
+            while i * i <= n:
+                if n % i == 0 or n % (i + 2) == 0:
+                    prime = False
+                    break
+                i += 6
+    return prime
 
 
 def sieve(n):

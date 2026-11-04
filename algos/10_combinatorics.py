@@ -18,22 +18,24 @@ def factorial(n):
 
 
 def binomial(n, k):
-    """Биномиальный коэффициент C(n, k) без факториалов."""
-    if k < 0 or k > n:
-        return 0
-    k = min(k, n - k)
-    r = 1
-    for i in range(1, k + 1):
-        r = r * (n - k + i) // i
-    return r
+    """Биномиальный коэффициент C(n, k) без факториалов. Один return: int."""
+    result = 0
+    if 0 <= k <= n:
+        k = min(k, n - k)
+        r = 1
+        for i in range(1, k + 1):
+            r = r * (n - k + i) // i
+        result = r
+    return result
 
 
 def permutations_count(n, k=None):
-    """Число перестановок из n по k (P(n,k), по умолчанию n!)."""
+    """Число перестановок из n по k (P(n,k), по умолчанию n!). Один return: int."""
     k = n if k is None else k
-    if k < 0 or k > n:
-        return 0
-    return factorial(n) // factorial(n - k)
+    result = 0
+    if 0 <= k <= n:
+        result = factorial(n) // factorial(n - k)
+    return result
 
 
 def combinations_count(n, k):
@@ -62,18 +64,20 @@ def catalan(n):
 
 
 def stirling_second(n, k):
-    """Числа Стирлинга 2-го рода: S(n,k) — разбиения на k непустых подмножеств."""
+    """Числа Стирлинга 2-го рода: S(n,k) — разбиения на k непустых подмножеств.
+    Один return: int."""
+    result = 0
     if n == k == 0:
-        return 1
-    if n == 0 or k == 0 or k > n:
-        return 0
-    # S(n,k) = k*S(n-1,k) + S(n-1,k-1)
-    dp = [[0] * (k + 1) for _ in range(n + 1)]
-    dp[0][0] = 1
-    for i in range(1, n + 1):
-        for j in range(1, min(i, k) + 1):
-            dp[i][j] = j * dp[i - 1][j] + dp[i - 1][j - 1]
-    return dp[n][k]
+        result = 1
+    elif not (n == 0 or k == 0 or k > n):
+        # S(n,k) = k*S(n-1,k) + S(n-1,k-1)
+        dp = [[0] * (k + 1) for _ in range(n + 1)]
+        dp[0][0] = 1
+        for i in range(1, n + 1):
+            for j in range(1, min(i, k) + 1):
+                dp[i][j] = j * dp[i - 1][j] + dp[i - 1][j - 1]
+        result = dp[n][k]
+    return result
 
 
 def bell(n):
@@ -82,13 +86,16 @@ def bell(n):
 
 
 def derangements(n):
-    """Число беспорядков (!n)."""
+    """Число беспорядков (!n). Один return: int."""
+    result = 0
     if n == 0:
-        return 1
-    a, b = 0, 1
-    for i in range(2, n + 1):
-        a, b = b, (i - 1) * (a + b)
-    return b
+        result = 1
+    else:
+        a, b = 0, 1
+        for i in range(2, n + 1):
+            a, b = b, (i - 1) * (a + b)
+        result = b
+    return result
 
 
 def permutations_list(items):
@@ -142,25 +149,25 @@ def compositions(n, parts=None):
 
 
 def nck_mod(n, k, mod):
-    """C(n,k) по модулю (через факториалы и обратные)."""
-    if k < 0 or k > n:
-        return 0
+    """C(n,k) по модулю (через факториалы и обратные). Один return: int."""
+    result = 0
+    if 0 <= k <= n:
+        def powmod(a, b):
+            r = 1
+            while b:
+                if b & 1:
+                    r = r * a % mod
+                a = a * a % mod
+                b >>= 1
+            return r
 
-    def powmod(a, b):
-        r = 1
-        while b:
-            if b & 1:
-                r = r * a % mod
-            a = a * a % mod
-            b >>= 1
-        return r
-
-    fact = [1] * (n + 1)
-    for i in range(1, n + 1):
-        fact[i] = fact[i - 1] * i % mod
-    inv_fact_nk = powmod(fact[n - k], mod - 2) if n - k >= 0 else 1
-    inv_fact_k = powmod(fact[k], mod - 2) if k >= 0 else 1
-    return fact[n] * inv_fact_nk % mod * inv_fact_k % mod
+        fact = [1] * (n + 1)
+        for i in range(1, n + 1):
+            fact[i] = fact[i - 1] * i % mod
+        inv_fact_nk = powmod(fact[n - k], mod - 2) if n - k >= 0 else 1
+        inv_fact_k = powmod(fact[k], mod - 2) if k >= 0 else 1
+        result = fact[n] * inv_fact_nk % mod * inv_fact_k % mod
+    return result
 
 
 if __name__ == "__main__":

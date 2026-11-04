@@ -5,14 +5,16 @@ Mirro Algorithms — 09 · Динамическое программирован
 
 
 def fib_dp(n):
-    "Число Фибоначчи через ДП (табуляция)."
+    "Число Фибоначчи через ДП (табуляция). Один return: int."
     if n < 2:
-        return n
-    dp = [0] * (n + 1)
-    dp[1] = 1
-    for i in range(2, n + 1):
-        dp[i] = dp[i - 1] + dp[i - 2]
-    return dp[n]
+        result = n
+    else:
+        dp = [0] * (n + 1)
+        dp[1] = 1
+        for i in range(2, n + 1):
+            dp[i] = dp[i - 1] + dp[i - 2]
+        result = dp[n]
+    return result
 
 
 def knapsack(weights, values, capacity):
@@ -78,7 +80,7 @@ def lcs_string(a, b):
 
 
 def coin_change(coins, amount):
-    """Минимум монет для суммы (или -1)."""
+    """Минимум монет для суммы (или -1). Один return: int."""
     INF = float("inf")
     dp = [INF] * (amount + 1)
     dp[0] = 0
@@ -86,7 +88,10 @@ def coin_change(coins, amount):
         for c in coins:
             if c <= i:
                 dp[i] = min(dp[i], dp[i - c] + 1)
-    return int(dp[amount]) if dp[amount] != INF else -1
+    result = -1
+    if dp[amount] != INF:
+        result = int(dp[amount])
+    return result
 
 
 def climb_stairs(n):

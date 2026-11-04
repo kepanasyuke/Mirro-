@@ -83,13 +83,12 @@ def dijkstra(graph, start):
     pq = [(0, start)]
     while pq:
         d, n = heapq.heappop(pq)
-        if d > dist[n]:
-            continue
-        for nei, w in graph.get(n, []):
-            nd = d + w
-            if nd < dist[nei]:
-                dist[nei] = nd
-                heapq.heappush(pq, (nd, nei))
+        if d <= dist[n]:
+            for nei, w in graph.get(n, []):
+                nd = d + w
+                if nd < dist[nei]:
+                    dist[nei] = nd
+                    heapq.heappush(pq, (nd, nei))
     return dist
 
 
@@ -131,11 +130,10 @@ def connected_components(graph):
     """Компоненты связности."""
     seen, comps = set(), []
     for start in graph:
-        if start in seen:
-            continue
-        comp = bfs(graph, start)
-        seen.update(comp)
-        comps.append(comp)
+        if start not in seen:
+            comp = bfs(graph, start)
+            seen.update(comp)
+            comps.append(comp)
     return comps
 
 
