@@ -163,25 +163,23 @@ def main():
             # шаблонные определения
             entry = gen_from_base(base, rng) if base else gen_math(rng)
 
-        if entry is None:
-            continue
+        key = ""
+        if entry is not None:
+            # дедуп по началу вопроса (не храним все - только кэш последних)
+            key = entry["instruction"][:50].lower()
+        if entry is not None and key not in SEEN:
+            if len(SEEN) > 2_000_000:
+                SEEN.clear()
+            SEEN.add(key)
 
-        # дедуп по началу вопроса (не храним все - только кэш последних)
-        key = entry["instruction"][:50].lower()
-        if key in SEEN:
-            continue
-        if len(SEEN) > 2_000_000:
-            SEEN.clear()
-        SEEN.add(key)
+            buf.append(entry)
+            written += 1
 
-        buf.append(entry)
-        written += 1
-
-        if written % batch_size == 0:
-            flush()
-            speed = written / (time.time() - t0)
-            print(f"  {written/1e6:.1f}M примеров, {speed:.0f}/с, "
-                  f"диск {total_bytes/1e9:.1f} GB")
+            if written % batch_size == 0:
+                flush()
+                speed = written / (time.time() - t0)
+                print(f"  {written/1e6:.1f}M примеров, {speed:.0f}/с, "
+                      f"диск {total_bytes/1e9:.1f} GB")
 
     flush()
     elapsed = time.time() - t0

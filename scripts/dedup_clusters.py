@@ -27,23 +27,22 @@ def dedup_file(path, apply, max_rows=None):
     out_rows = []
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
-            if not line.strip():
-                continue
             if max_rows is not None and kept >= max_rows:
                 break
-            try:
-                item = json.loads(line)
-            except Exception:
-                continue
-            inst = (item.get("instruction") or item.get("question") or "").strip()
-            out = (item.get("output") or item.get("answer") or "").strip()
-            k = norm_key(inst, out)
-            if k in seen:
-                dup += 1
-                continue
-            seen.add(k)
-            kept += 1
-            out_rows.append(item)
+            if line.strip():
+                try:
+                    item = json.loads(line)
+                    inst = (item.get("instruction") or item.get("question") or "").strip()
+                    out = (item.get("output") or item.get("answer") or "").strip()
+                    k = norm_key(inst, out)
+                    if k in seen:
+                        dup += 1
+                    else:
+                        seen.add(k)
+                        kept += 1
+                        out_rows.append(item)
+                except Exception:
+                    pass
     if apply:
         with open(path, "w", encoding="utf-8") as f:
             for item in out_rows:
@@ -62,12 +61,11 @@ def main():
     total_dup = 0
     for f in sorted(PROC.glob("*.jsonl")):
         # Генер. корпус огромный — пропускаем по умолчанию (это не processed-кластер)
-        if f.stem in ("generated", "corpus"):
-            continue
-        kept, dup = dedup_file(f, args.apply, args.limit or None)
-        print(f"  {f.name:16} до={kept+dup:>8} после={kept:>8} дублей={dup}")
-        total_kept += kept
-        total_dup += dup
+        if f.stem not in ("generated", "corpus"):
+            kept, dup = dedup_file(f, args.apply, args.limit or None)
+            print(f"  {f.name:16} до={kept+dup:>8} после={kept:>8} дублей={dup}")
+            total_kept += kept
+            total_dup += dup
     print(f"ИТОГО: {total_kept} строк останется, {total_dup} дублей убрано")
 
 
