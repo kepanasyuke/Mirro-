@@ -123,42 +123,38 @@ class SelfLearner:
             new_entries = []
             for ds in data:
                 ds_id = ds.get("id", "")
-                if ds_id in existing or not ds_id:
-                    continue
-                # Skip very small ones
                 downloads = ds.get("downloads", 0)
-                if downloads < 100:
-                    continue
-                tags = " ".join(ds.get("tags", []))
-                # Classify by tags
-                cat = "general"
-                if any(t in tags for t in ["russian", "ru", "русский"]):
-                    cat = "ru"
-                elif any(t in tags for t in ["code", "programming", "python", "js"]):
-                    cat = "code"
-                elif any(t in tags for t in ["design", "svg", "html", "css", "ui", "graphic"]):
-                    cat = "design"
-                elif any(t in tags for t in ["math", "mathematics"]):
-                    cat = "math"
-                elif any(t in tags for t in ["wikipedia", "wiki", "knowledge", "science"]):
-                    cat = "knowledge"
+                if ds_id and ds_id not in existing and downloads >= 100:
+                    tags = " ".join(ds.get("tags", []))
+                    # Classify by tags
+                    cat = "general"
+                    if any(t in tags for t in ["russian", "ru", "русский"]):
+                        cat = "ru"
+                    elif any(t in tags for t in ["code", "programming", "python", "js"]):
+                        cat = "code"
+                    elif any(t in tags for t in ["design", "svg", "html", "css", "ui", "graphic"]):
+                        cat = "design"
+                    elif any(t in tags for t in ["math", "mathematics"]):
+                        cat = "math"
+                    elif any(t in tags for t in ["wikipedia", "wiki", "knowledge", "science"]):
+                        cat = "knowledge"
 
-                # Get a file to download
-                files = []
-                for s in ds.get("siblings", []):
-                    fn = s.get("rfilename", "")
-                    if any(fn.endswith(ext) for ext in [".jsonl", ".json", ".parquet"]):
-                        files.append(fn)
-                    if len(files) >= 3:
-                        break
+                    # Get a file to download
+                    files = []
+                    for s in ds.get("siblings", []):
+                        fn = s.get("rfilename", "")
+                        if any(fn.endswith(ext) for ext in [".jsonl", ".json", ".parquet"]):
+                            files.append(fn)
+                        if len(files) >= 3:
+                            break
 
-                if files:
-                    new_entries.append({
-                        "cat": cat, "ds": ds_id, "files": [files[0]],
-                        "desc": ds.get("description", "")[:80],
-                        "est": f"{downloads}dl", "priority": 5
-                    })
-                    new_count += 1
+                    if files:
+                        new_entries.append({
+                            "cat": cat, "ds": ds_id, "files": [files[0]],
+                            "desc": ds.get("description", "")[:80],
+                            "est": f"{downloads}dl", "priority": 5
+                        })
+                        new_count += 1
 
             if new_entries:
                 # Add to catalog
@@ -222,28 +218,27 @@ class SelfLearner:
             examples = []
             for page in data["query"].get("random", []):
                 title = page.get("title", "")
-                if not title:
-                    continue
-                # Get the article content
-                content_url = (
-                    "https://ru.wikipedia.org/w/api.php"
-                    f"?action=query&titles={urllib.parse.quote(title)}"
-                    "&prop=extracts&exintro&explaintext&format=json"
-                )
-                content_data = self._fetch_json(content_url)
-                if not content_data:
-                    continue
-                pages = content_data.get("query", {}).get("pages", {})
-                for pid, info in pages.items():
-                    if pid == "-1":
-                        continue
-                    text = info.get("extract", "")
-                    if text and len(text) > 200:
-                        examples.append({
-                            "instruction": f"Расскажи про: {title}",
-                            "input": "",
-                            "output": text[:4000],
-                        })
+                content_data = None
+                if title:
+                    # Get the article content
+                    content_url = (
+                        "https://ru.wikipedia.org/w/api.php"
+                        f"?action=query&titles={urllib.parse.quote(title)}"
+                        "&prop=extracts&exintro&explaintext&format=json"
+                    )
+                    content_data = self._fetch_json(content_url)
+                if content_data:
+                    pages = content_data.get("query", {}).get("pages", {})
+                    for pid, info in pages.items():
+                        if pid == "-1":
+                            continue
+                        text = info.get("extract", "")
+                        if text and len(text) > 200:
+                            examples.append({
+                                "instruction": f"Расскажи про: {title}",
+                                "input": "",
+                                "output": text[:4000],
+                            })
 
             if examples:
                 out_path = LEARN_DIR / "wikipedia_ru.jsonl"
