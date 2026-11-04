@@ -47,21 +47,32 @@ class KnowledgeGraph:
         self.add_node(s)
         self.add_node(d)
         key = (s, self._norm(pred), d)
-        was = key in self.edges
         self.edges[key] = max(self.edges.get(key, 0.0), weight)
-        if not was:
-            self._adj[s].append((pred, d, weight))
-            self._adj[d].append((pred, s, weight))
+        # синхронизируем вес в индексе соседей (двусторонне)
+        self._set_adj_weight(s, pred, d, self.edges[key])
+        self._set_adj_weight(d, pred, s, self.edges[key])
+
+    def _set_adj_weight(self, from_node, pred, to_node, weight):
+        """Обновляет вес связи в _adj для направления from_node->to_node. Один return: None."""
+        for i, row in enumerate(self._adj.get(from_node, [])):
+            if row[0] == pred and row[1] == to_node:
+                self._adj[from_node][i] = (pred, to_node, weight)
+                return
+        # нет в индексе — добавляем
+        self._adj.setdefault(from_node, []).append((pred, to_node, weight))
+        return None
 
     def hebbian_learn(self, node_a, node_b, amount=0.2):
         """Синаптическая пластичность: если два узла активировались вместе —
-        связь между ними усиливается (Хебб: neurons that fire together wire together).
-        Один return: int — число укреплённых связей."""
+        связь между ними усиливается (Хебб). Один return: int — число укреплённых."""
         a, b = self._norm(node_a), self._norm(node_b)
         strengthened = 0
-        for (s, p, d), w in self.edges.items():
+        for (s, p, d), w in list(self.edges.items()):
             if (s == a and d == b) or (s == b and d == a):
-                self.edges[(s, p, d)] = min(2.0, w + amount)
+                nw = min(2.0, w + amount)
+                self.edges[(s, p, d)] = nw
+                self._set_adj_weight(s, p, d, nw)
+                self._set_adj_weight(d, p, s, nw)
                 strengthened += 1
         return strengthened
 
@@ -98,29 +109,35 @@ class KnowledgeGraph:
     # ---------- вопросы ----------
     def _forward_links(self, name):
         """Исходящие связи узла (p, other, w). Один return: list."""
-        out = []
-        for (s, p, d), w in self.edges.items():
-            if s == name:
-                out.append((p, d, w))
-        return out
-
-    def neighbors(self, name):
-        """Все прямые связи узла: list[(pred, other, weight)] (по индексу, быстро)."""
         name = self._norm(name)
-        if not self._adj:
-            # старый граф без индекса (напр. из кэша) — считаем на лету, медленно
-            out = []
-            for (s, p, d), w in self.edges.items():
-                if s == name:
-                    out.append((p, d, w))
-                elif d == name:
-                    out.append((p, s, w))
-            return out
         return [row for row in self._adj.get(name, [])]
 
-    def _step(self, frontier, b, visited):
-        """Один шаг BFS: из текущего фронта к b. Один return: (found, next_frontier)."""
+    def neighbors(self, name):
+        """Все прямые связи узла по индексу. Один return: list."""
+        name = self._norm(name)
+        return [row for row in self._adj.get(name, [])]
+
+    def relation(self, a, b):
+        """Прямые отношения между a и b (по индексу, без дублей). Один return: list."""
+        a, b = self._norm(a), self._norm(b)
+        seen = set()
+        rels = []
+        for p, other, w in self._adj.get(a, []):
+            if other == b and (p, w) not in seen:
+                seen.add((p, w))
+                rels.append((p, w))
+        for p, other, w in self._adj.get(b, []):
+            if other == a and (p, w) not in seen:
+                seen.add((p, w))
+                rels.append((p, w))
+        return rels
+
+    def _step(self, frontier, b, visited, max_fanout=40):
+        """Один шаг BFS: из текущего фронта к b, ограничен размахом.
+        Один return: (found, next_frontier)."""
         nxt = []
+        if frontier:
+            frontier = frontier[:max_fanout]  # не раздувать фронт без конца
         for cur, trail in frontier:
             for p, other, w in self.neighbors(cur):
                 if other == b:
@@ -131,26 +148,20 @@ class KnowledgeGraph:
                     nxt.append((other, trail + [(cur, p, other, w)]))
         return (None, nxt)
 
-    def path(self, a, b, max_depth=3):
-        """Цепочка связей от a к b (если есть) — «рассуждение через граф»."""
+    def path(self, a, b, max_depth=3, max_fanout=40):
+        """Цепочка связей от a к b (если есть) — «рассуждение через граф».
+        Один return: list-путь или None."""
         a, b = self._norm(a), self._norm(b)
+        if a not in self.nodes or b not in self.nodes:
+            return None
         frontier = [(a, [(a, None, None, 1.0)])]
         visited = {a}
         result = None
         for _ in range(max_depth):
             if result is not None or not frontier:
                 break
-            result, frontier = self._step(frontier, b, visited)
+            result, frontier = self._step(frontier, b, visited, max_fanout)
         return result
-
-    def relation(self, a, b):
-        """Прямые отношения между a и b."""
-        a, b = self._norm(a), self._norm(b)
-        rels = []
-        for (s, p, d), w in self.edges.items():
-            if (s == a and d == b) or (s == b and d == a):
-                rels.append((p, w))
-        return rels
 
     def explain(self, name, depth=1):
         """Связное объяснение понятия: сами факты + соседи."""
@@ -161,8 +172,10 @@ class KnowledgeGraph:
         lines = [f"«{name}» — {n.tag}"]
         if n.facts:
             lines.append("Факты: " + "; ".join(n.facts[:5]))
-        for p, other, w in self.neighbors(name)[:6]:
-            lines.append(f"связано {p} с «{other}»")
+        # соседи по силе связи (вес) — сначала самые «проводимые»
+        ranked = sorted(self.neighbors(name), key=lambda r: -r[2])
+        for p, other, w in ranked[:6]:
+            lines.append(f"связано {p} с «{other}» (вес {w:.2f})")
         return "\n".join(lines)
 
     def from_triples(self, triples):
