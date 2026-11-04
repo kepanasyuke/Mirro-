@@ -29,22 +29,32 @@ def word_freq(tokens):
     return Counter(tokens)
 
 
-def russian_stem(word):
-    """Лёгкий стеммер русского (Porter-lite)."""
-    if len(word) < 5:
-        return word
-    rules = [
-        ("ами", "а"), ("ями", "я"), ("ого", ""), ("его", ""), ("ому", ""),
-        ("ему", ""), ("ых", ""), ("их", ""), ("ый", ""), ("ий", ""),
-        ("ая", "а"), ("яя", "я"), ("ое", "о"), ("ее", "е"), ("ые", "ы"),
-        ("ие", "и"), ("а", ""), ("я", ""), ("о", ""), ("е", ""), ("ы", ""),
-        ("и", ""), ("у", ""), ("ю", ""), ("ет", "ть"), ("ит", "ть"),
-        ("ут", "ть"), ("ют", "ть"), ("ал", "ть"), ("ил", "ть"),
-    ]
-    for suf, rep in rules:
+_STEM_RULES = [
+    ("ами", "а"), ("ями", "я"), ("ого", ""), ("его", ""), ("ому", ""),
+    ("ему", ""), ("ых", ""), ("их", ""), ("ый", ""), ("ий", ""),
+    ("ая", "а"), ("яя", "я"), ("ое", "о"), ("ее", "е"), ("ые", "ы"),
+    ("ие", "и"), ("а", ""), ("я", ""), ("о", ""), ("е", ""), ("ы", ""),
+    ("и", ""), ("у", ""), ("ю", ""), ("ет", "ть"), ("ит", "ть"),
+    ("ут", "ть"), ("ют", "ть"), ("ал", "ть"), ("ил", "ть"),
+]
+
+
+def _apply_stem_rule(word):
+    """Подбирает первое подходящее правило стемминга. Один return: str."""
+    result = word
+    for suf, rep in _STEM_RULES:
         if word.endswith(suf) and len(word) - len(suf) >= 3:
-            return word[: -len(suf)] + rep
-    return word
+            result = word[: -len(suf)] + rep
+            break
+    return result
+
+
+def russian_stem(word):
+    """Лёгкий стеммер русского (Porter-lite). Один return: str."""
+    base = word
+    if len(word) >= 5:
+        base = _apply_stem_rule(word)
+    return base
 
 
 def stem_document(text):
@@ -90,9 +100,10 @@ class MiniLemmatizer:
     }
 
     def lemma(self, word):
-        if word in self.EXC:
-            return self.EXC[word]
-        return russian_stem(word)
+        """Лемма слова: словарь-исключение, иначе стемминг. Один return: str."""
+        exc = self.EXC.get(word)
+        result = exc if exc is not None else russian_stem(word)
+        return result
 
     def lemmatize(self, text):
         return [self.lemma(w) for w in tokenize(text)]
@@ -110,21 +121,23 @@ def sentiment(text):
 
 
 def keyword_extract(text, top_n=5):
-    """Ключевые слова через TF внутри документа (без корпуса)."""
+    """Ключевые слова через TF внутри документа. Один return: list."""
     toks = tokenize(text)
-    if not toks:
-        return []
-    n = len(toks)
-    top = Counter(toks).most_common(top_n)
-    return [(w, c / n) for w, c in top]
+    result = []
+    if toks:
+        n = len(toks)
+        top = Counter(toks).most_common(top_n)
+        result = [(w, c / n) for w, c in top]
+    return result
 
 
 def similarity_jaccard(a, b):
-    """Сходство Жаккара двух текстов."""
+    """Сходство Жаккара двух текстов. Один return: float."""
     A, B = set(tokenize(a)), set(tokenize(b))
-    if not A or not B:
-        return 0.0
-    return len(A & B) / len(A | B)
+    score = 0.0
+    if A and B:
+        score = len(A & B) / len(A | B)
+    return score
 
 
 if __name__ == "__main__":

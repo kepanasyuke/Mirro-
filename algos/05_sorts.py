@@ -97,24 +97,48 @@ def counting_sort(arr, max_val=1000):
 
 
 def bucket_sort(arr, n_buckets=10):
-    if not arr:
-        return arr
-    mn, mx = min(arr), max(arr)
-    rng = (mx - mn) / n_buckets or 1
-    buckets = [[] for _ in range(n_buckets)]
-    for x in arr:
-        idx = min(int((x - mn) / rng), n_buckets - 1)
-        buckets[idx].append(x)
-    out = []
-    for b in buckets:
-        out.extend(sorted(b))
-    return out
+    result = arr
+    if arr:
+        mn, mx = min(arr), max(arr)
+        rng = (mx - mn) / n_buckets or 1
+        buckets = [[] for _ in range(n_buckets)]
+        for x in arr:
+            idx = min(int((x - mn) / rng), n_buckets - 1)
+            buckets[idx].append(x)
+        out = []
+        for b in buckets:
+            out.extend(sorted(b))
+        result = out
+    return result
 
 
 def radix_sort(arr):
-    if not arr:
-        return arr
-    a = arr[:]
+    result = arr
+    if arr:
+        a = arr[:]
+        result = _radix_pass(a)
+    return result
+
+
+def _radix_pass(a):
+    """Разрядная сортировка внутренних проходов. Один return: list."""
+    mx = max(a)
+    exp = 1
+    cur = a[:]
+    while mx // exp > 0:
+        out = [0] * len(cur)
+        counts = [0] * 10
+        for x in cur:
+            counts[(x // exp) % 10] += 1
+        for i in range(1, 10):
+            counts[i] += counts[i - 1]
+        for x in reversed(cur):
+            idx = (x // exp) % 10
+            counts[idx] -= 1
+            out[counts[idx]] = x
+        cur = out
+        exp *= 10
+    return cur
     mx = max(a)
     exp = 1
     while mx // exp > 0:

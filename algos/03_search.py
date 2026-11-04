@@ -9,25 +9,29 @@ from collections import Counter, defaultdict
 
 
 def linear_search(arr, x):
-    """Линейный поиск: индекс элемента или -1."""
+    """Линейный поиск: индекс элемента или -1. Один return: int."""
+    result = -1
     for i, v in enumerate(arr):
         if v == x:
-            return i
-    return -1
+            result = i
+            break
+    return result
 
 
 def binary_search(arr, x):
-    """Бинарный поиск в отсортированном массиве."""
+    """Бинарный поиск в отсортированном массиве. Один return: int."""
     lo, hi = 0, len(arr) - 1
+    result = -1
     while lo <= hi:
         mid = (lo + hi) // 2
         if arr[mid] == x:
-            return mid
+            result = mid
+            break
         if arr[mid] < x:
             lo = mid + 1
         else:
             hi = mid - 1
-    return -1
+    return result
 
 
 def bm25(query, docs, k1=1.5, b=0.75):
@@ -56,16 +60,16 @@ def bm25(query, docs, k1=1.5, b=0.75):
 
 
 def cosine_similarity(vec_a, vec_b):
-    """Косинусное сходство векторов {слово: вес}."""
+    """Косинусное сходство векторов {слово: вес}. Один return: float."""
     common = set(vec_a) & set(vec_b)
-    if not common:
-        return 0.0
-    dot = sum(vec_a[w] * vec_b[w] for w in common)
-    na = math.sqrt(sum(v * v for v in vec_a.values()))
-    nb = math.sqrt(sum(v * v for v in vec_b.values()))
-    if na == 0 or nb == 0:
-        return 0.0
-    return dot / (na * nb)
+    score = 0.0
+    if common:
+        dot = sum(vec_a[w] * vec_b[w] for w in common)
+        na = math.sqrt(sum(v * v for v in vec_a.values()))
+        nb = math.sqrt(sum(v * v for v in vec_b.values()))
+        if na and nb:
+            score = dot / (na * nb)
+    return score
 
 
 def edit_distance(a, b):
@@ -88,19 +92,22 @@ def hamming(a, b):
 
 
 def interpolation_search(sorted_arr, x):
-    """Интерполяционный поиск по отсортированному массиву."""
+    """Интерполяционный поиск по отсортированному массиву. Один return: int."""
     lo, hi = 0, len(sorted_arr) - 1
+    result = -1
     while lo <= hi and sorted_arr[lo] <= x <= sorted_arr[hi]:
         if sorted_arr[lo] == sorted_arr[hi]:
-            return lo if sorted_arr[lo] == x else -1
+            result = lo if sorted_arr[lo] == x else -1
+            break
         pos = lo + int((hi - lo) * (x - sorted_arr[lo]) / (sorted_arr[hi] - sorted_arr[lo]))
         if sorted_arr[pos] == x:
-            return pos
+            result = pos
+            break
         if sorted_arr[pos] < x:
             lo = pos + 1
         else:
             hi = pos - 1
-    return -1
+    return result
 
 
 def fuzzy_match(query, candidates, max_dist=2):

@@ -17,14 +17,13 @@ def is_palindrome(s):
 
 
 def longest_common_prefix(strs):
-    if not strs:
-        return ""
-    prefix = strs[0]
-    for s in strs[1:]:
-        while not s.startswith(prefix):
-            prefix = prefix[:-1]
-            if not prefix:
-                return ""
+    """Общий префикс строк. Один return: str."""
+    prefix = ""
+    if strs:
+        prefix = strs[0]
+        for s in strs[1:]:
+            while not s.startswith(prefix) and prefix:
+                prefix = prefix[:-1]
     return prefix
 
 
@@ -83,10 +82,25 @@ def caesar(s, shift=3):
 
 
 def substring_kmp(text, pattern):
-    """Поиск подстроки алгоритмом Кнута-Морриса-Пратта."""
-    if not pattern:
-        return 0
-    # префикс-функция
+    """Поиск подстроки алгоритмом Кнута-Морриса-Пратта. Один return: int."""
+    found_at = 0
+    if pattern:
+        pi = _prefix_function(pattern)
+        j = 0
+        found_at = -1
+        for i, ch in enumerate(text):
+            while j > 0 and ch != pattern[j]:
+                j = pi[j - 1]
+            if ch == pattern[j]:
+                j += 1
+            if j == len(pattern):
+                found_at = i - j + 1
+                break
+    return found_at
+
+
+def _prefix_function(pattern):
+    """Префикс-функция для KMP. Один return: list."""
     pi = [0] * len(pattern)
     for i in range(1, len(pattern)):
         j = pi[i - 1]
@@ -95,16 +109,7 @@ def substring_kmp(text, pattern):
         if pattern[i] == pattern[j]:
             j += 1
         pi[i] = j
-    # поиск
-    j = 0
-    for i, ch in enumerate(text):
-        while j > 0 and ch != pattern[j]:
-            j = pi[j - 1]
-        if ch == pattern[j]:
-            j += 1
-        if j == len(pattern):
-            return i - j + 1
-    return -1
+    return pi
 
 
 def word_count(text):
