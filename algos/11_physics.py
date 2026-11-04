@@ -48,11 +48,14 @@ def pendulum_period(L, g=9.81):
 def rydberg_wavelength(n1, n2, Z=1):
     """
     Длина волны перехода по формуле Ридберга (спектр атома водорода).
-    n1 < n2. Возвращает длину волны в метрах.
+    n1 < n2. Возвращает длину волны в метрах или None. Один return.
     """
     R = 1.097373e7  # постоянная Ридберга (м^-1)
     inv = R * (Z ** 2) * (1 / (n1 * n1) - 1 / (n2 * n2))
-    return 1 / inv if inv > 0 else None
+    result = None
+    if inv > 0:
+        result = 1 / inv
+    return result
 
 
 def balmer_series(n_max, n1=2):
@@ -89,23 +92,21 @@ def de_broglie_wavelength(m, v):
 
 
 def dv_dt(states):
-    """Производная ускорений для N тел (задача многих тел)."""
+    """Производная ускорений для N тел (задача многих тел). Один return: list."""
     n = len(states)
     deriv = []
     for i in range(n):
         ax = ay = az = 0.0
         for j in range(n):
-            if i == j:
-                continue
-            dx = states[j]["x"] - states[i]["x"]
-            dy = states[j]["y"] - states[i]["y"]
-            dz = states[j]["z"] - states[i]["z"]
-            r3 = (dx * dx + dy * dy + dz * dz) ** 1.5
-            if r3 < 1e-9:
-                continue
-            ax += G * states[j]["m"] * dx / r3
-            ay += G * states[j]["m"] * dy / r3
-            az += G * states[j]["m"] * dz / r3
+            if i != j:
+                dx = states[j]["x"] - states[i]["x"]
+                dy = states[j]["y"] - states[i]["y"]
+                dz = states[j]["z"] - states[i]["z"]
+                r3 = (dx * dx + dy * dy + dz * dz) ** 1.5
+                if r3 >= 1e-9:
+                    ax += G * states[j]["m"] * dx / r3
+                    ay += G * states[j]["m"] * dy / r3
+                    az += G * states[j]["m"] * dz / r3
         deriv.append({"ax": ax, "ay": ay, "az": az})
     return deriv
 

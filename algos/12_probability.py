@@ -13,10 +13,11 @@ from collections import Counter
 # ===================== ЧАСТЬ 1 · ПРОСТЫЕ =====================
 
 def classical_probability(favorable, total):
-    """Классическая вероятность: P = благоприятные / все."""
-    if total <= 0:
-        return 0.0
-    return favorable / total
+    """Классическая вероятность: P = благоприятные / все. Один return: float."""
+    prob = 0.0
+    if total > 0:
+        prob = favorable / total
+    return prob
 
 
 def prob_not(p):
@@ -35,19 +36,22 @@ def prob_intersect_independent(p_a, p_b):
 
 
 def prob_conditional(p_a_and_b, p_b):
-    """Условная вероятность P(A|B)."""
-    if p_b == 0:
-        return 0.0
-    return p_a_and_b / p_b
+    """Условная вероятность P(A|B). Один return: float."""
+    prob = 0.0
+    if p_b != 0:
+        prob = p_a_and_b / p_b
+    return prob
 
 
 def bayes(p_a, p_b_given_a, p_b_given_not_a):
-    """Теорема Байеса: P(A|B) = P(A)P(B|A) / (P(A)P(B|A) + P(¬A)P(B|¬A))."""
+    """Теорема Байеса: P(A|B) = P(A)P(B|A) / (P(A)P(B|A) + P(¬A)P(B|¬A)).
+    Один return: float."""
     p_not_a = 1 - p_a
     denom = p_a * p_b_given_a + p_not_a * p_b_given_not_a
-    if denom == 0:
-        return 0.0
-    return p_a * p_b_given_a / denom
+    prob = 0.0
+    if denom != 0:
+        prob = p_a * p_b_given_a / denom
+    return prob
 
 
 def prob_at_least_one(p_each, n):
@@ -56,10 +60,13 @@ def prob_at_least_one(p_each, n):
 
 
 def expected_value(values, probs=None):
-    """Математическое ожидание."""
+    """Математическое ожидание. Один return: float."""
+    result = 0.0
     if probs is None:
-        return sum(values) / len(values)
-    return sum(v * p for v, p in zip(values, probs))
+        result = sum(values) / len(values) if values else 0.0
+    else:
+        result = sum(v * p for v, p in zip(values, probs))
+    return result
 
 
 def bernoulli_trial(p):
@@ -130,9 +137,9 @@ def markov_predict(transitions, start, steps):
         for s, p in dist.items():
             if s not in transitions:
                 new[s] = new.get(s, 0) + p
-                continue
-            for ns, np_ in transitions[s].items():
-                new[ns] = new.get(ns, 0) + p * np_
+            else:
+                for ns, np_ in transitions[s].items():
+                    new[ns] = new.get(ns, 0) + p * np_
         dist = new
     return dist
 
@@ -157,11 +164,14 @@ def monte_carlo_integrate(f, a, b, samples=10000):
 
 
 def variance_prob(values, probs=None):
-    """Дисперсия распределения."""
+    """Дисперсия распределения. Один return: float."""
     mu = expected_value(values, probs)
+    result = 0.0
     if probs is None:
-        return sum((v - mu) ** 2 for v in values) / len(values)
-    return sum(p * (v - mu) ** 2 for v, p in zip(values, probs))
+        result = sum((v - mu) ** 2 for v in values) / len(values) if values else 0.0
+    else:
+        result = sum(p * (v - mu) ** 2 for v, p in zip(values, probs))
+    return result
 
 
 def law_of_large_numbers(p, trials=10000):
