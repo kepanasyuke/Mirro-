@@ -94,33 +94,32 @@ class ReferenceCollector:
             if count >= max_results:
                 break
             title = result.get("title", "")
-            if not title:
-                continue
 
             # Get image URL
-            img_url = ("https://commons.wikimedia.org/w/api.php"
-                       "?action=query&titles=" + urllib.parse.quote(title) +
-                       "&prop=imageinfo&iiprop=url&format=json")
+            img_url = ""
+            if title:
+                img_url = ("https://commons.wikimedia.org/w/api.php"
+                           "?action=query&titles=" + urllib.parse.quote(title) +
+                           "&prop=imageinfo&iiprop=url&format=json")
             img_data = self._fetch(img_url)
-            if not img_data:
-                continue
-            try:
-                pages = json.loads(img_data).get("query", {}).get("pages", {})
-                for page_id, info in pages.items():
-                    if page_id == "-1":
-                        continue
-                    img_info = info.get("imageinfo", [])
-                    if img_info and "url" in img_info[0]:
-                        file_url = img_info[0]["url"]
-                        self.catalog.append({
-                            "source": "wikimedia", "query": query,
-                            "title": title.replace("File:", ""),
-                            "url": file_url,
-                            "collected": datetime.utcnow().isoformat(),
-                        })
-                        count += 1
-            except Exception:
-                continue
+            if img_data:
+                try:
+                    pages = json.loads(img_data).get("query", {}).get("pages", {})
+                    for page_id, info in pages.items():
+                        if page_id == "-1":
+                            continue
+                        img_info = info.get("imageinfo", [])
+                        if img_info and "url" in img_info[0]:
+                            file_url = img_info[0]["url"]
+                            self.catalog.append({
+                                "source": "wikimedia", "query": query,
+                                "title": title.replace("File:", ""),
+                                "url": file_url,
+                                "collected": datetime.utcnow().isoformat(),
+                            })
+                            count += 1
+                except Exception:
+                    continue
         return count
 
     # ---- 2. Openverse (free CC images) ----
