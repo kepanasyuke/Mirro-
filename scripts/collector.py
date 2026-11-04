@@ -233,22 +233,21 @@ class ReferenceCollector:
             try:
                 obj_url = f"https://collectionapi.metmuseum.org/public/collection/v1/objects/{oid}"
                 obj_data = self._fetch(obj_url)
-                if not obj_data:
-                    continue
-                obj = json.loads(obj_data)
-                img_url = obj.get("primaryImage", "")
-                if img_url:
-                    self.catalog.append({
-                        "source": "metmuseum", "query": query,
-                        "title": obj.get("title", ""),
-                        "url": img_url,
-                        "artist": obj.get("artistDisplayName", ""),
-                        "year": obj.get("objectDate", ""),
-                        "collected": datetime.utcnow().isoformat(),
-                    })
-                    count += 1
+                if obj_data:
+                    obj = json.loads(obj_data)
+                    img_url = obj.get("primaryImage", "")
+                    if img_url:
+                        self.catalog.append({
+                            "source": "metmuseum", "query": query,
+                            "title": obj.get("title", ""),
+                            "url": img_url,
+                            "artist": obj.get("artistDisplayName", ""),
+                            "year": obj.get("objectDate", ""),
+                            "collected": datetime.utcnow().isoformat(),
+                        })
+                        count += 1
             except Exception:
-                continue
+                pass
         return count
 
     # ---- Bulk collect ----
