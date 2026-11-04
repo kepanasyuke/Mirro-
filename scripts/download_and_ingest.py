@@ -127,13 +127,12 @@ def main():
         items = []
         if path.suffix == ".zst":
             text = try_extract_zst(path)
-            if text is None:
+            if text is not None:
+                items = [json.loads(line) for line in text.strip().split("\n") if line.strip()]
+            else:
                 print(f"    ⚠ zstandard not available, skip")
-                continue
-            items = [json.loads(line) for line in text.strip().split("\n") if line.strip()]
         elif path.suffix == ".parquet":
             print(f"    ⚠ parquet format requires pandas, skip")
-            continue
         elif path.suffix == ".jsonl" or (path.suffix == ".json" and path.stem.endswith("jsonl")):
             items = load_jsonl(path)
         elif path.suffix == ".json":
@@ -143,16 +142,14 @@ def main():
             if text:
                 items = [json.loads(line) for line in text.strip().split("\n") if line.strip()]
 
-        if not items:
-            continue
-
-        converted = [convert_item(i) for i in items if convert_item(i)]
-        if converted:
-            out_path = PROC / f"{cat}.jsonl"
-            with open(out_path, "a", encoding="utf-8") as f:
-                for item in converted:
-                    f.write(json.dumps(item, ensure_ascii=False) + "\n")
-            print(f"    ✅ {len(converted)} → {cat} cluster")
+        if items:
+            converted = [convert_item(i) for i in items if convert_item(i)]
+            if converted:
+                out_path = PROC / f"{cat}.jsonl"
+                with open(out_path, "a", encoding="utf-8") as f:
+                    for item in converted:
+                        f.write(json.dumps(item, ensure_ascii=False) + "\n")
+                print(f"    ✅ {len(converted)} → {cat} cluster")
 
     # Summary
     print("\n" + "=" * 60)
