@@ -577,6 +577,12 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_function_knowledge(q):
+        try:
+            from algos.module_knowledge import try_function_knowledge as _f
+            return _f(q)
+        except Exception:
+            return None
     def try_neural_elec(q):
         try:
             from algos.neural_electric import try_neural_electric as _f
@@ -606,6 +612,7 @@ def _try_direct_handlers(prompt):
         ("enrich", try_enrich),
         ("what_links", try_what_links),
         ("similar", try_similar),
+        ("func_kb", try_function_knowledge),
         ("dialogue_memory", try_dialogue_memory),
         ("zero_dim", try_zero_dim),
         ("growth", try_growth),
@@ -854,6 +861,9 @@ class MirroAPI(BaseHTTPRequestHandler):
                     from algos.knowledge_graph import _pair_from
                     a, b = _pair_from(query) if query else (None, None)
                     payload["similarity"] = _kg.similarity(a, b) if (a and b) else None
+                elif kind == "function":
+                    from algos.module_knowledge import try_function_knowledge as _fk
+                    payload["answer"] = _fk(query) if query else f"база знаний по функциям: готова"
                 else:
                     payload["answer"] = []
                 self._json(payload); return
