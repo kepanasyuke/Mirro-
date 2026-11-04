@@ -104,20 +104,17 @@ class MirroAI:
         scored = []
         for idx, (inst, output, cluster) in enumerate(self.examples):
             inst_words = self._tokenize(inst)
-            if not inst_words:
-                continue
             # Term overlap with TF-IDF weighting
             common = set(query_words) & set(inst_words)
-            if not common:
-                continue
-            score = sum(query_tfidf.get(w, 0) for w in common)
-            # Normalize by doc length
-            score /= math.sqrt(len(inst_words))
-            # Boost from previous success (стабильный ключ, не hash() — он рандомизирован)
-            boost = self.boost_map.get(self._boost_key(inst), 0)
-            score += boost
-            if score > 0:
-                scored.append((score, output, inst, cluster))
+            if inst_words and common:
+                score = sum(query_tfidf.get(w, 0) for w in common)
+                # Normalize by doc length
+                score /= math.sqrt(len(inst_words))
+                # Boost from previous success (стабильный ключ, не hash() — он рандомизирован)
+                boost = self.boost_map.get(self._boost_key(inst), 0)
+                score += boost
+                if score > 0:
+                    scored.append((score, output, inst, cluster))
 
         scored.sort(key=lambda x: -x[0])
         return scored[:top_n]
@@ -129,10 +126,9 @@ class MirroAI:
         seen = set()
         parts = []
         for score, output, inst, cluster in results:
-            if output[:80] in seen:
-                continue
-            seen.add(output[:80])
-            parts.append(output[:1200].strip())
+            if output[:80] not in seen:
+                seen.add(output[:80])
+                parts.append(output[:1200].strip())
         if parts:
             combined = "\n\n".join(parts)[:max_len]
             return combined
@@ -146,10 +142,10 @@ class MirroAI:
         for _ in range(count):
             # Pick a random example
             inst, output, cluster = random.choice(self.examples[:10000])
-            if len(inst) < 10:
-                continue
-            # Search for best answer
-            results = self.search(inst, top_n=3)
+            results = []
+            if len(inst) >= 10:
+                # Search for best answer
+                results = self.search(inst, top_n=3)
             if results and results[0][0] > 0.01:
                 # Evaluate: how much of the original answer does our response cover?
                 answer = self.compose_answer(results)
