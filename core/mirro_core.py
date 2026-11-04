@@ -169,11 +169,15 @@ def try_greetings(query):
 def try_learn(query):
     q = query.lower().strip()
     # если речь про импульс/электричество по графу — это задача neural_electric, не try_learn
-    if any(t in q for t in ["импульс", "электричеств", "аи вовсе не обучение"]):
-        return None
-    if any(t in q for t in ["научи","обучи","запомн","запиши","сохрани это","добавь в базу","выучи","запомни что"]):
-        return "Я учусь! Чтобы научить меня:\n1. Напиши вопрос и правильный ответ\n2. Отметь ответ\n\nИли просто задай вопрос — я найду ответ в базе или в интернете."
-    return None
+    is_graph_question = any(t in q for t in ["импульс", "электричеств"])
+    answer = None
+    if not is_graph_question:
+        wants_learn = any(t in q for t in ["научи", "обучи", "запомн", "запиши", "сохрани это",
+                                           "добавь в базу", "выучи", "запомни что"])
+        if wants_learn:
+            answer = ("Я учусь! Чтобы научить меня:\n1. Напиши вопрос и правильный ответ\n2. Отметь ответ\n\n"
+                      "Или просто задай вопрос — я найду ответ в базе или в интернете.")
+    return answer
 
 def try_algos_think(query):
     try:
