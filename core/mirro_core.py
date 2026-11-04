@@ -70,11 +70,16 @@ class MirroCore:
             c = prompt_lower.count(keyword)
             if c: scores[cluster] += c * KNOWLEDGE_CLUSTERS.get(cluster, {}).get("priority", 1)
         for cl in scores: scores[cl] += self.stats["clusters_used"].get(cl, 0) * 0.01
-        if scores: return max(scores, key=scores.get)
-        ru_chars = sum(1 for c in prompt if '\u0400' <= c <= '\u04FF')
-        if ru_chars > 3: return "ru"
-        if any(c in prompt for c in "{}[]();=<>"): return "code"
-        return "general"
+        cluster = "general"
+        if scores:
+            cluster = max(scores, key=scores.get)
+        else:
+            ru_chars = sum(1 for c in prompt if '\u0400' <= c <= '\u04FF')
+            if ru_chars > 3:
+                cluster = "ru"
+            elif any(c in prompt for c in "{}[]();=<>"):
+                cluster = "code"
+        return cluster
     def log_call(self, prompt, cluster, provider, latency_ms, success, tokens=0):
         self.stats["calls"] += 1
         self.stats["clusters_used"][cluster] = self.stats["clusters_used"].get(cluster, 0) + 1
