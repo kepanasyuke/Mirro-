@@ -60,14 +60,13 @@ class MirroRAG:
                 for j, line in enumerate(f):
                     if j > 100_000:
                         break
-                    if not line.strip():
-                        continue
-                    try:
-                        inst = json.loads(line).get("instruction", "")
-                    except Exception:
-                        continue
-                    for w in set(tokenize(inst)):
-                        gidx[w].add(i)
+                    if line.strip():
+                        try:
+                            inst = json.loads(line).get("instruction", "")
+                            for w in set(tokenize(inst)):
+                                gidx[w].add(i)
+                        except Exception:
+                            pass
         self.global_index = dict(gidx)
         with open(INDEX_DIR / "global_index.pkl", "wb") as f:
             pickle.dump({"global": self.global_index, "seg_built": []}, f, protocol=4)
