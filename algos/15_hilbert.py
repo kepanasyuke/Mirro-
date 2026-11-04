@@ -42,9 +42,8 @@ def planck_temperature():
 
 
 def planck_charge():
-    """Планковский заряд: q_P = sqrt(ħc·4πε₀) — как sqrt(ħc)."""
-    import math
-    return math.sqrt(H_BAR * C * 4 * math.pi * 8.854187817e-12) if False else math.sqrt(H_BAR * C)
+    """Планковский заряд: q_P ≈ sqrt(ħc). Один return: float."""
+    return math.sqrt(H_BAR * C)
 
 
 def reduced_compton_wavelength(m):
@@ -142,13 +141,17 @@ def hermitian_conjugate(M):
 
 
 def is_hermitian(M):
-    """Проверка эрмитовости матрицы (вещественная симметрия)."""
+    """Проверка эрмитовости матрицы (вещественная симметрия). Один return: bool."""
     n = len(M)
+    hermitian = True
     for i in range(n):
         for j in range(n):
             if abs(M[i][j] - M[j][i]) > 1e-9:
-                return False
-    return True
+                hermitian = False
+                break
+        if not hermitian:
+            break
+    return hermitian
 
 
 def commutator(A, B):
@@ -160,16 +163,20 @@ def commutator(A, B):
 
 
 def unitary_check(M):
-    """Проверка унитарности: M†M = I."""
+    """Проверка унитарности: M†M = I. Один return: bool."""
     n = len(M)
     Mt = [[M[j][i] for j in range(n)] for i in range(n)]  # вещественное сопряжение = транспонирование
     prod = [[sum(Mt[i][k] * M[k][j] for k in range(n)) for j in range(n)] for i in range(n)]
+    unitary = True
     for i in range(n):
         for j in range(n):
             want = 1.0 if i == j else 0.0
             if abs(prod[i][j] - want) > 1e-9:
-                return False
-    return True
+                unitary = False
+                break
+        if not unitary:
+            break
+    return unitary
 
 
 if __name__ == "__main__":

@@ -11,19 +11,36 @@ import math
 
 # ============ МАТЕМАТИКА · АЛГЕБРА ============
 
+def _linear_root(b, c):
+    """Корень линейного bx+c=0 (b != 0). Один return: list."""
+    return [-c / b]
+
+
+def _quadratic_roots(a, b, c):
+    """Корни квадратного (a != 0). Один return: list."""
+    D = b * b - 4 * a * c
+    roots = []
+    if D < 0:
+        roots = []  # нет вещественных корней
+    elif D == 0:
+        roots = [-b / (2 * a)]
+    else:
+        sq = math.sqrt(D)
+        roots = [(-b - sq) / (2 * a), (-b + sq) / (2 * a)]
+    return roots
+
+
 def solve_quadratic(a, b, c):
-    """Вступительные/ЕГЭ: квадратное уравнение ax²+bx+c=0. Возвращает корни."""
+    """Вступительные/ЕГЭ: квадратное уравнение ax²+bx+c=0. Один return: list|str."""
+    result = []
     if a == 0:
         if b == 0:
-            return [] if c else "все числа"
-        return [-c / b]
-    D = b * b - 4 * a * c
-    if D < 0:
-        return []  # нет вещественных корней
-    if D == 0:
-        return [-b / (2 * a)]
-    sq = math.sqrt(D)
-    return [(-b - sq) / (2 * a), (-b + sq) / (2 * a)]
+            result = "все числа" if not c else []
+        else:
+            result = _linear_root(b, c)
+    else:
+        result = _quadratic_roots(a, b, c)
+    return result
 
 
 def solve_linear(a, b):

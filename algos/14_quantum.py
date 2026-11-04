@@ -98,20 +98,23 @@ def three_valued_implication(a, b):
 
 
 def three_valued_kleene_and(a, b):
-    """Сильная конъюнкция Клини: учитывает неизвестность."""
+    """Сильная конъюнкция Клини: учитывает неизвестность. Один return: float."""
+    result = 0.5  # неизвестно
     if a == 0 or b == 0:
-        return 0
-    if a == 1 and b == 1:
-        return 1
-    return 0.5  # неизвестно
+        result = 0
+    elif a == 1 and b == 1:
+        result = 1
+    return result
 
 
 def three_valued_kleene_or(a, b):
+    """Сильная дизъюнкция Клини. Один return: float."""
+    result = 0.5  # неизвестно
     if a == 1 or b == 1:
-        return 1
-    if a == 0 and b == 0:
-        return 0
-    return 0.5
+        result = 1
+    elif a == 0 and b == 0:
+        result = 0
+    return result
 
 
 def three_valued_table():

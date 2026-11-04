@@ -83,12 +83,15 @@ def simplify_boolean(expr_str):
 
 
 def boolean_identity_check(expr_fn):
-    """Проверка тавтологии: функция от (a,b) истинна при всех комбинациях."""
+    """Проверка тавтологии: функция от (a,b) истинна при всех комбинациях.
+    Один return: bool."""
+    is_tautology = True
     for mask in range(4):
         a, b = (mask >> 1) & 1, mask & 1
         if not expr_fn(a, b):
-            return False
-    return True
+            is_tautology = False
+            break
+    return is_tautology
 
 
 def bitcount(n):
