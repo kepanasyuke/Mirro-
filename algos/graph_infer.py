@@ -51,11 +51,10 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
         return
     for pred, other, _w in kg.neighbors(node):
         key = (node, pred, other)
-        if key in seen_prefix:
-            continue
-        seen_prefix.add(key)
-        _recurse(kg, other, trail + [node], max_depth, results, seen_prefix)
-        seen_prefix.discard(key)
+        if key not in seen_prefix:
+            seen_prefix.add(key)
+            _recurse(kg, other, trail + [node], max_depth, results, seen_prefix)
+            seen_prefix.discard(key)
 
 
 def format_path(path):

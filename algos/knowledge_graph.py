@@ -54,12 +54,16 @@ class KnowledgeGraph:
 
     def _set_adj_weight(self, from_node, pred, to_node, weight):
         """Обновляет вес связи в _adj для направления from_node->to_node. Один return: None."""
-        for i, row in enumerate(self._adj.get(from_node, [])):
+        rows = self._adj.get(from_node, [])
+        found = False
+        for i, row in enumerate(rows):
             if row[0] == pred and row[1] == to_node:
                 self._adj[from_node][i] = (pred, to_node, weight)
-                return
-        # нет в индексе — добавляем
-        self._adj.setdefault(from_node, []).append((pred, to_node, weight))
+                found = True
+                break
+        if not found:
+            # нет в индексе — добавляем
+            self._adj.setdefault(from_node, []).append((pred, to_node, weight))
         return None
 
     def hebbian_learn(self, node_a, node_b, amount=0.2):
@@ -134,49 +138,54 @@ class KnowledgeGraph:
 
     def _step(self, frontier, b, visited, max_fanout=40):
         """Один шаг BFS: из текущего фронта к b, ограничен размахом.
-        Один return: (found, next_frontier)."""
+        Один return: (found_path_or_None, next_frontier)."""
         nxt = []
+        found = None
         if frontier:
             frontier = frontier[:max_fanout]  # не раздувать фронт без конца
         for cur, trail in frontier:
             for p, other, w in self.neighbors(cur):
                 if other == b:
                     found = trail + [(cur, p, b, w)]
-                    return (found, [])
+                    break
                 if other not in visited:
                     visited.add(other)
                     nxt.append((other, trail + [(cur, p, other, w)]))
+            if found is not None:
+                break
+        if found is not None:
+            return (found, [])
         return (None, nxt)
 
     def path(self, a, b, max_depth=3, max_fanout=40):
         """Цепочка связей от a к b (если есть) — «рассуждение через граф».
         Один return: list-путь или None."""
         a, b = self._norm(a), self._norm(b)
-        if a not in self.nodes or b not in self.nodes:
-            return None
-        frontier = [(a, [(a, None, None, 1.0)])]
-        visited = {a}
         result = None
-        for _ in range(max_depth):
-            if result is not None or not frontier:
-                break
-            result, frontier = self._step(frontier, b, visited, max_fanout)
+        if a in self.nodes and b in self.nodes:
+            frontier = [(a, [(a, None, None, 1.0)])]
+            visited = {a}
+            for _ in range(max_depth):
+                if result is not None or not frontier:
+                    break
+                result, frontier = self._step(frontier, b, visited, max_fanout)
         return result
 
     def explain(self, name, depth=1):
         """Связное объяснение понятия: сами факты + соседи."""
         name = self._norm(name)
         n = self.nodes.get(name)
-        if not n:
-            return None
-        lines = [f"«{name}» — {n.tag}"]
-        if n.facts:
-            lines.append("Факты: " + "; ".join(n.facts[:5]))
-        # соседи по силе связи (вес) — сначала самые «проводимые»
-        ranked = sorted(self.neighbors(name), key=lambda r: -r[2])
-        for p, other, w in ranked[:6]:
-            lines.append(f"связано {p} с «{other}» (вес {w:.2f})")
-        return "\n".join(lines)
+        text = None
+        if n:
+            lines = [f"«{name}» — {n.tag}"]
+            if n.facts:
+                lines.append("Факты: " + "; ".join(n.facts[:5]))
+            # соседи по силе связи (вес) — сначала самые «проводимые»
+            ranked = sorted(self.neighbors(name), key=lambda r: -r[2])
+            for p, other, w in ranked[:6]:
+                lines.append(f"связано {p} с «{other}» (вес {w:.2f})")
+            text = "\n".join(lines)
+        return text
 
     def from_triples(self, triples):
         """Наполнить из списка (субъект, предикат, объект)."""
@@ -186,15 +195,17 @@ class KnowledgeGraph:
 
     def save(self, path):
         """Сохраняет граф на диск (pickle). Один return: bool."""
+        ok = False
         try:
             import pickle, os
             tmp = str(path) + ".tmp"
             with open(tmp, "wb") as f:
                 pickle.dump({"nodes": self.nodes, "edges": self.edges}, f, protocol=4)
             os.replace(tmp, str(path))
-            return True
+            ok = True
         except Exception:
-            return False
+            ok = False
+        return ok
 
     def load(self, path):
         """Загружает граф с диска; если файла нет — пусто. Один return: int (рёбер)."""
@@ -246,21 +257,22 @@ def _want_relation(query, q):
 
 
 def _pair_from(q):
-    """Вытаскивает пару понятий из запроса. Один return: (a, b) или (None, None)."""
+    """Вытаскивает пару понятий из запроса. Один return: (a, b)."""
     m = _re.search(r"\b([^\s]+?)\s+(?:и|и с|с)\s+([^\s]+?)[\s?]*$", q)
+    pair = (None, None)
     if m:
-        return (m.group(1), m.group(2))
-    return (None, None)
+        pair = (m.group(1), m.group(2))
+    return pair
 
 
 def _answer_relation(a, b):
     """Прямая связь между a и b. Один return: str или None."""
-    if not a or not b:
-        return None
-    rels = kg.relation(a, b)
-    if rels:
-        return ", ".join(f"«{a}» {p} «{b}»" for p, _w in rels) + "."
-    return None
+    ans = None
+    if a and b:
+        rels = kg.relation(a, b)
+        if rels:
+            ans = ", ".join(f"«{a}» {p} «{b}»" for p, _w in rels) + "."
+    return ans
 
 
 def _chain_text(path):
@@ -275,19 +287,22 @@ def _chain_text(path):
 def _answer_path(a, b):
     """Вывод через цепочку связей. Один return: str или None."""
     path = kg.path(a, b)
+    ans = None
     if path:
-        return f"Прямой связи нет, но выводится: {_chain_text(path)}."
-    return None
+        ans = f"Прямой связи нет, но выводится: {_chain_text(path)}."
+    return ans
 
 
 def _answer_explain(q):
     """Объяснение понятия из запроса. Один return: str или None."""
+    ans = None
     for name in kg.nodes:
         if "объясн" in q and name in q and len(name) > 3:
             ex = kg.explain(name)
             if ex:
-                return ex
-    return None
+                ans = ex
+                break
+    return ans
 
 
 def try_knowledge_graph(query):

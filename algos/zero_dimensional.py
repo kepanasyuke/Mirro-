@@ -55,10 +55,13 @@ def zero_dim_similarity(kg, a, b, depth=1):
 def zero_dim_description(kg, name):
     """Описать понятие «нульмерно»: только через его связи, без «самого себя»."""
     nb = kg.neighbors(name)
+    text = ""
     if not nb:
-        return f"«{name}» — изолированная точка (нет связей, смысл ещё не развёрнут)."
-    parts = [f"{p} → {o}" for p, o, _w in nb[:8]]
-    return f"«{name}» определяют связи: {', '.join(parts)}."
+        text = f"«{name}» — изолированная точка (нет связей, смысл ещё не развёрнут)."
+    else:
+        parts = [f"{p} → {o}" for p, o, _w in nb[:8]]
+        text = f"«{name}» определяют связи: {', '.join(parts)}."
+    return text
 
 
 def zero_dim_mind(kg):
@@ -150,11 +153,12 @@ def dimension_of_understanding(kg):
 
     От 0 (всё изолировано) до 3. Быстрый подсчёт: один проход по узлам.
     Один return: float."""
-    if not kg.nodes:
-        return 0.0
-    degs = [len(kg.neighbors(n)) for n in kg.nodes]
-    dims = [_dim_from_deg(d, 0) for d in degs]
-    return round(sum(dims) / len(dims), 2)
+    avg = 0.0
+    if kg.nodes:
+        degs = [len(kg.neighbors(n)) for n in kg.nodes]
+        dims = [_dim_from_deg(d, 0) for d in degs]
+        avg = round(sum(dims) / len(dims), 2)
+    return avg
 
 
 def growth_report(kg):
@@ -181,10 +185,11 @@ def _is_growth_question(q):
 def _node_dim_answer(q):
     """Ответ про размерность конкретного понятия. Один return: str или None."""
     name = q.replace("какая размерность у", "").strip().rstrip("?")
+    ans = None
     if name and kg is not None:
         d, deg = dimension_of(kg, name)
-        return f"«{name}»: размерность {d} из 3, связей {deg}."
-    return None
+        ans = f"«{name}»: размерность {d} из 3, связей {deg}."
+    return ans
 
 
 def try_growth(query):

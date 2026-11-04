@@ -21,20 +21,20 @@ _cache = {}
 
 
 def load_module(name):
-    """Загружает модуль алгоса по имени файла (с кэшем)."""
-    if name in _cache:
-        return _cache[name]
-    path = ALGO_DIR / f"{name}.py"
-    if not path.exists():
-        return None
-    try:
-        spec = importlib.util.spec_from_file_location(name, path)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        _cache[name] = mod
-        return mod
-    except Exception:
-        return None
+    """Загружает модуль алгоса по имени файла (с кэшем). Один return: module|None."""
+    mod = _cache.get(name)
+    if mod is None:
+        path = ALGO_DIR / f"{name}.py"
+        if path.exists():
+            try:
+                spec = importlib.util.spec_from_file_location(name, path)
+                candidate = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(candidate)
+                _cache[name] = candidate
+                mod = candidate
+            except Exception:
+                mod = None
+    return mod
 
 
 def all_loaded():
@@ -241,34 +241,46 @@ def _lcm(a, b):
 
 
 def _isprime(n):
+    """Простое ли число. Один return: bool."""
+    prime = True
     if n < 2:
-        return False
-    if n < 4:
-        return True
-    if n % 2 == 0 or n % 3 == 0:
-        return False
-    i = 5
-    while i * i <= n:
-        if n % i == 0 or n % (i + 2) == 0:
-            return False
-        i += 6
-    return True
+        prime = False
+    elif n < 4:
+        prime = True
+    elif n % 2 == 0 or n % 3 == 0:
+        prime = False
+    else:
+        i = 5
+        while i * i <= n:
+            if n % i == 0 or n % (i + 2) == 0:
+                prime = False
+                break
+            i += 6
+    return prime
+
+
+def _solve_linear_root(a, b):
+    """Корень линейного ax+b=0 (a!=0). Один return: float."""
+    return (0 - b) / a
 
 
 def _solve_quadratic(a, b, c):
-    """Находит корни квадратного уравнения. Возвращает список корней."""
+    """Находит корни квадратного уравнения. Один return: list корней."""
     import math as _m
+    roots = []
     if a == 0:
-        if b == 0:
-            return []
-        return [-c / b]
-    D = b * b - 4 * a * c
-    if D < 0:
-        return []
-    if D == 0:
-        return [-b / (2 * a)]
-    sq = _m.sqrt(D)
-    return [(-b - sq) / (2 * a), (-b + sq) / (2 * a)]
+        if b != 0:
+            roots = [_solve_linear_root(b, c)]
+    else:
+        D = b * b - 4 * a * c
+        if D < 0:
+            roots = []
+        elif D == 0:
+            roots = [-b / (2 * a)]
+        else:
+            sq = _m.sqrt(D)
+            roots = [(-b - sq) / (2 * a), (-b + sq) / (2 * a)]
+    return roots
 
 
 def _percent_of(pct, base):
@@ -276,10 +288,11 @@ def _percent_of(pct, base):
 
 
 def _solve_linear(a, b):
-    """ax + b = 0."""
-    if a == 0:
-        return []
-    return [(0 - b) / a]
+    """ax + b = 0. Один return: list."""
+    roots = []
+    if a != 0:
+        roots = [_solve_linear_root(a, b)]
+    return roots
 
 
 # ================== ЯДРО «ПОДУМАТЬ» ==================
@@ -292,37 +305,36 @@ def think(query):
     t0 = time.time()
     result = classify(query)
 
-    if not result:
-        return {
-            "answer": None,
-            "explanation": "Не распознан тип задачи. Сформулируй иначе (например: "
-                           "«сколько будет 2+2», «реши x²-5x+6=0», «НОД 12 и 18»).",
-            "category": "unknown",
-            "confidence": 0.0,
-            "latency_ms": int((time.time() - t0) * 1000),
-        }
-
-    category, module, func_name, args, explanation = result
-
-    # загружаем модуль и вызываем функцию
-    mod = load_module(module)
+    category = None
+    module = None
+    func_name = None
+    args = None
+    explanation = None
     answer = None
-    if mod and hasattr(mod, func_name):
-        fn = getattr(mod, func_name)
-        try:
-            if args is not None:
-                answer = fn(*args)
-            elif func_name in ("sum_of", "product_of", "diff_of", "div_of"):
-                # эти функции-заглушки мы уже вычислили в classify
-                answer = explanation
-            else:
-                answer = fn(query)
-        except Exception as e:
-            answer = f"ошибка вычисления: {e}"
-
-    # для чистых числовых задач покажем объяснение
-    if explanation and answer is None:
-        answer = explanation
+    confidence = 0.0
+    if result:
+        category, module, func_name, args, explanation = result
+        # загружаем модуль и вызываем функцию
+        mod = load_module(module)
+        if mod and hasattr(mod, func_name):
+            fn = getattr(mod, func_name)
+            try:
+                if args is not None:
+                    answer = fn(*args)
+                elif func_name in ("sum_of", "product_of", "diff_of", "div_of"):
+                    # эти функции-заглушки мы уже вычислили в classify
+                    answer = explanation
+                else:
+                    answer = fn(query)
+            except Exception as e:
+                answer = f"ошибка вычисления: {e}"
+        # для чистых числовых задач покажем объяснение
+        if explanation and answer is None:
+            answer = explanation
+        confidence = 0.85
+    else:
+        explanation = ("Не распознан тип задачи. Сформулируй иначе (например: "
+                       "«сколько будет 2+2», «реши x²-5x+6=0», «НОД 12 и 18»).")
 
     return {
         "answer": answer,
@@ -330,7 +342,7 @@ def think(query):
         "module": module,
         "function": func_name,
         "category": category,
-        "confidence": 0.85,
+        "confidence": confidence,
         "latency_ms": int((time.time() - t0) * 1000),
     }
 
@@ -338,18 +350,21 @@ def think(query):
 # ================== ИНТЕРФЕЙС ДЛЯ ЯДРА ==================
 
 def answer_question(query):
-    """Обёртка: строка-ответ для чата."""
+    """Обёртка: строка-ответ для чата. Один return: str."""
     r = think(query)
-    if r["answer"] is None:
-        return r["explanation"]
-    # красивое оформление
     head = f"[{r['category']}] "
-    if isinstance(r["answer"], (int, float)) and r["explanation"]:
-        return head + r["explanation"]
-    item = r["answer"]
-    if r["explanation"] and not isinstance(r["answer"], str):
-        return head + f"{r['explanation']} → {item}"
-    return head + str(item)
+    answer_value = r["answer"]
+    explanation = r["explanation"]
+    text = ""
+    if answer_value is None:
+        text = explanation
+    elif isinstance(answer_value, (int, float)) and explanation:
+        text = head + explanation
+    elif explanation and not isinstance(answer_value, str):
+        text = head + f"{explanation} → {answer_value}"
+    else:
+        text = head + str(answer_value)
+    return text
 
 
 def catalog():

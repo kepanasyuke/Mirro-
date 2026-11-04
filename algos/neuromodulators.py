@@ -93,12 +93,12 @@ class Neuromodulators:
                 del self._pending[k]
         phase = self._ticks * 0.6
         for k, v in self.level.items():
-            if k in self._pending:
-                continue  # отложенный — держим уровень
-            rate = DECAY_RATE[k] if amount is None else amount
-            toward_base = v + (BASE[k] - v) * rate
-            wave = oscillation * math.sin(phase + _PHASE[k])
-            self.level[k] = _clamp(toward_base + wave)
+            is_pending = k in self._pending  # отложенный — держим уровень
+            if not is_pending:
+                rate = DECAY_RATE[k] if amount is None else amount
+                toward_base = v + (BASE[k] - v) * rate
+                wave = oscillation * math.sin(phase + _PHASE[k])
+                self.level[k] = _clamp(toward_base + wave)
         return dict(self.level)
 
     def rhythm_state(self):

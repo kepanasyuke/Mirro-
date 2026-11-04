@@ -50,21 +50,19 @@ def fire(graph, start, neuromod=None, voltage=1.0, max_hops=4, decay=0.5, learn=
         if not frontier:
             break
         node, hop, v = frontier.pop(0)
-        if v < threshold:
-            continue
-        activated.append((node, hop, round(v, 3)))
-        for pred, other, w in graph.neighbors(node):
-            # вес связи (из ТТЛ) усиливает остаточное напряжение по-босовски:
-            # ЕСЛИ есть связь ТО передать, вес = проводимость
-            if other in seen:
-                continue
-            seen.add(other)
-            nv = v * decay * (0.5 + w) if w else v * decay * 0.6
-            if nv >= threshold:
-                frontier.append((other, hop + 1, nv))
-                # Хебб: импульс, прошедший по связи, её укрепляет
-                if learn and hasattr(graph, "hebbian_learn"):
-                    graph.hebbian_learn(node, other, amount=0.03)
+        if v >= threshold:
+            activated.append((node, hop, round(v, 3)))
+            for pred, other, w in graph.neighbors(node):
+                # вес связи (из ТТЛ) усиливает остаточное напряжение по-босовски:
+                # ЕСЛИ есть связь ТО передать, вес = проводимость
+                if other not in seen:
+                    seen.add(other)
+                    nv = v * decay * (0.5 + w) if w else v * decay * 0.6
+                    if nv >= threshold:
+                        frontier.append((other, hop + 1, nv))
+                        # Хебб: импульс, прошедший по связи, её укрепляет
+                        if learn and hasattr(graph, "hebbian_learn"):
+                            graph.hebbian_learn(node, other, amount=0.03)
     return activated
 
 

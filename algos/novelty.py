@@ -35,9 +35,9 @@ class Novelty:
 
     def _known_via(self, kw, known_kw):
         """Совпадает ли запрос с известными темами. Один return: bool."""
-        if kw & self.seen:
-            return True
-        return known_kw is not None and bool(kw & set(known_kw))
+        known_in_seen = bool(kw & self.seen)
+        known_in_passed = bool(known_kw is not None and (kw & set(known_kw)))
+        return known_in_seen or known_in_passed
 
     def is_novel(self, user_text, known_kw=None):
         """True, если вопрос выглядит новым. Один return: bool."""
