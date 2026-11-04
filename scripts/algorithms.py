@@ -305,17 +305,17 @@ class MirroAlgorithms:
                 # Кэш стемминга
                 if w in self._stem_cache:
                     stemmed.append(self._stem_cache[w])
-                    continue
-                original_w = w
-                if w in self.stem_exceptions_ru:
-                    w = self.stem_exceptions_ru[w]
                 else:
-                    for suffix, replacement in self.stem_rules_ru.items():
-                        if w.endswith(suffix) and len(w) > len(suffix) + 2:
-                            w = w[:-len(suffix)] + replacement
-                            break
-            self._stem_cache[original_w] = w
-            stemmed.append(w)
+                    original_w = w
+                    if w in self.stem_exceptions_ru:
+                        w = self.stem_exceptions_ru[w]
+                    else:
+                        for suffix, replacement in self.stem_rules_ru.items():
+                            if w.endswith(suffix) and len(w) > len(suffix) + 2:
+                                w = w[:-len(suffix)] + replacement
+                                break
+                    self._stem_cache[original_w] = w
+                    stemmed.append(w)
         return stemmed
 
     # ========================
@@ -496,23 +496,22 @@ class MirroAlgorithms:
         scores = {}
         MAX_DOCS = 15000
         for idf, w, qt in scored_words:
-            if idf < 0.5:
-                continue
-            doc_ids = self.term_docs.get(w, set())
-            for ex_id in doc_ids:
-                if ex_id in scores:
-                    scores[ex_id] += qt * idf * 0.5
-                else:
-                    if self.doc_tf is not None:
-                        tf = self.doc_tf[ex_id].get(w, 0)
+            if idf >= 0.5:
+                doc_ids = self.term_docs.get(w, set())
+                for ex_id in doc_ids:
+                    if ex_id in scores:
+                        scores[ex_id] += qt * idf * 0.5
                     else:
-                        tf = self._tf_lazy(ex_id, w)
-                    bm25 = idf * (tf * 1.5) / (tf + 1.5)
-                    scores[ex_id] = bm25 * qt
+                        if self.doc_tf is not None:
+                            tf = self.doc_tf[ex_id].get(w, 0)
+                        else:
+                            tf = self._tf_lazy(ex_id, w)
+                        bm25 = idf * (tf * 1.5) / (tf + 1.5)
+                        scores[ex_id] = bm25 * qt
+                    if len(scores) > MAX_DOCS:
+                        break
                 if len(scores) > MAX_DOCS:
                     break
-            if len(scores) > MAX_DOCS:
-                break
         return scores
 
     def search_tfidf(self, query, top_n=5):
@@ -547,12 +546,11 @@ class MirroAlgorithms:
 
         for i in range(n):
             for j in range(i + 1, n):
-                if not sent_words[i] or not sent_words[j]:
-                    continue
-                overlap = len(sent_words[i] & sent_words[j])
-                sim = overlap / math.sqrt(len(sent_words[i]) * len(sent_words[j]))
-                sim_matrix[i][j] = sim
-                sim_matrix[j][i] = sim
+                if sent_words[i] and sent_words[j]:
+                    overlap = len(sent_words[i] & sent_words[j])
+                    sim = overlap / math.sqrt(len(sent_words[i]) * len(sent_words[j]))
+                    sim_matrix[i][j] = sim
+                    sim_matrix[j][i] = sim
 
         # Power iteration (PageRank on graph)
         scores = [1.0 / n] * n
@@ -586,11 +584,10 @@ class MirroAlgorithms:
         for _, text, _ in self.examples[:20000]:
             words = self.tokenize(text)[:100]
             for i, w in enumerate(words):
-                if w not in self.word2idx:
-                    continue
-                for j in range(max(0, i - window), min(len(words), i + window + 1)):
-                    if i != j and words[j] in self.word2idx:
-                        cooc[w][words[j]] += 1
+                if w in self.word2idx:
+                    for j in range(max(0, i - window), min(len(words), i + window + 1)):
+                        if i != j and words[j] in self.word2idx:
+                            cooc[w][words[j]] += 1
 
         # Convert to vectors (first embedding_size dimensions = top co-occurring words)
         top_words = [w for w, _ in self.doc_freq.most_common(self.embedding_size)]
@@ -612,13 +609,11 @@ class MirroAlgorithms:
         """Генератор (target, ctx) из выборки. Один return: (через yield)."""
         for _, text, _ in self.examples[:max_examples]:
             words = self.tokenize(text)
-            if len(words) < 2:
-                continue
-            for i, target in enumerate(words):
-                if target not in word2idx:
-                    continue
-                ctx = [words[j] for j in range(max(0, i - window), min(len(words), i + window + 1)) if j != i]
-                yield target, ctx
+            if len(words) >= 2:
+                for i, target in enumerate(words):
+                    if target in word2idx:
+                        ctx = [words[j] for j in range(max(0, i - window), min(len(words), i + window + 1)) if j != i]
+                        yield target, ctx
 
     def _train_cbow_step(self, target, ctx, in_vec, out_vec, dim, lr):
         """Один шаг обучения CBOW. Один return: None."""
@@ -1087,14 +1082,13 @@ class MirroAlgorithms:
         scored = []
         seen = set()
         for (inst, out, cl), tfidf_score in results:
-            if not out or out[:50] in seen:
-                continue
-            seen.add(out[:50])
-            nn_score = self.perceptron_predict(query, out)
-            qa = self.qa_score(query, out)
-            boost = self._decay_boost(self._boost_key(out))
-            combined = 0.3 * tfidf_score + 0.3 * nn_score + 0.4 * qa + boost
-            scored.append((combined, out, cl))
+            if out and out[:50] not in seen:
+                seen.add(out[:50])
+                nn_score = self.perceptron_predict(query, out)
+                qa = self.qa_score(query, out)
+                boost = self._decay_boost(self._boost_key(out))
+                combined = 0.3 * tfidf_score + 0.3 * nn_score + 0.4 * qa + boost
+                scored.append((combined, out, cl))
         return scored
 
     def _pick_3_parts(self, scored):
@@ -1105,10 +1099,9 @@ class MirroAlgorithms:
         for sc, out, cl in scored:
             if len(parts) >= 3:
                 break
-            if cl in used_cl:
-                continue
-            parts.append(out[:1200].strip())
-            used_cl.add(cl)
+            if cl not in used_cl:
+                parts.append(out[:1200].strip())
+                used_cl.add(cl)
         return parts
 
     def _summarize_parts(self, parts, max_len):
@@ -1161,22 +1154,19 @@ class MirroAlgorithms:
             sample = _rnd.sample(self.examples, 5000)
 
         for inst, out, cl in sample[:cycles]:
-            if len(inst) < 8:
-                continue
-            # Generate answer with current model
-            ans = self.compose_answer(inst, top_n=4)
-            if not ans:
-                continue
-            # Evaluate: compare with the reference answer
-            ref_words = set(self.tokenize(out))
-            ans_words = set(self.tokenize(ans))
-            if not ref_words:
-                continue
-            coverage = len(ans_words & ref_words) / len(ref_words)
+            if len(inst) >= 8:
+                # Generate answer with current model
+                ans = self.compose_answer(inst, top_n=4)
+                if ans:
+                    # Evaluate: compare with the reference answer
+                    ref_words = set(self.tokenize(out))
+                    ans_words = set(self.tokenize(ans))
+                    if ref_words:
+                        coverage = len(ans_words & ref_words) / len(ref_words)
 
-            # Learn = train perceptron on this QA pair
-            label = 1 if coverage > 0.3 else -1
-            self.perceptron_train(inst, ans, label)
+                        # Learn = train perceptron on this QA pair
+                        label = 1 if coverage > 0.3 else -1
+                        self.perceptron_train(inst, ans, label)
             self.perceptron_trained = True
             learned += 1
 
@@ -1234,22 +1224,21 @@ class MirroAlgorithms:
         shared = 0
         for w in top_terms:
             ids = self.term_docs.get(w)
-            if not ids:
-                continue
-            cls = set()
-            seen = 0
-            for ex_id in ids:
-                if ex_id < len(self.examples):
-                    cls.add(self.examples[ex_id][2])
-                    seen += 1
-                if seen >= 200:
-                    break
-            checked += 1
-            if len(cls) >= 2:
-                shared += 1
-                cl_list = sorted(cls)[:4]
-                key = f"{cl_list[0]}↔{cl_list[1]}" + (f"+{len(cl_list)-2}" if len(cl_list) > 2 else "")
-                pairs[key] = pairs.get(key, 0) + 1
+            if ids:
+                cls = set()
+                seen = 0
+                for ex_id in ids:
+                    if ex_id < len(self.examples):
+                        cls.add(self.examples[ex_id][2])
+                        seen += 1
+                    if seen >= 200:
+                        break
+                checked += 1
+                if len(cls) >= 2:
+                    shared += 1
+                    cl_list = sorted(cls)[:4]
+                    key = f"{cl_list[0]}↔{cl_list[1]}" + (f"+{len(cl_list)-2}" if len(cl_list) > 2 else "")
+                    pairs[key] = pairs.get(key, 0) + 1
         phi = (shared / checked) if checked else 0.0
         return {
             "phi": round(phi, 4),
@@ -1302,12 +1291,11 @@ class MirroAlgorithms:
         corrections = {}
         vocab = set(self.vocab[:20000])  # ограничим для скорости
         for w in words:
-            if w in vocab or len(w) < 4 or w in self.stop_words:
-                continue
-            # Поиск по edit-distance через префиксы
-            best = self._closest_word(w, vocab)
-            if best:
-                corrections[w] = best
+            if w not in vocab and len(w) >= 4 and w not in self.stop_words:
+                # Поиск по edit-distance через префиксы
+                best = self._closest_word(w, vocab)
+                if best:
+                    corrections[w] = best
         result = text
         for wrong, right in corrections.items():
             result = _re.sub(rf"\b{wrong}\b", right, result, flags=_re.IGNORECASE)
@@ -1319,12 +1307,11 @@ class MirroAlgorithms:
         best = None
         best_dist = 3
         for candidate in vocab:
-            if abs(len(candidate) - len(word)) > 2:
-                continue
-            d = self._edit_distance(word, candidate)
-            if d < best_dist:
-                best_dist = d
-                best = candidate
+            if abs(len(candidate) - len(word)) <= 2:
+                d = self._edit_distance(word, candidate)
+                if d < best_dist:
+                    best_dist = d
+                    best = candidate
         return best if best_dist <= 2 and best != word else None
 
     @staticmethod
@@ -1347,11 +1334,10 @@ class MirroAlgorithms:
         q_words = set(self.tokenize(query))
         expansions = {}
         for w in q_words:
-            if w not in self.cooc_matrix:
-                continue
-            for assoc, cnt in self.cooc_matrix[w].most_common(3):
-                if assoc not in q_words and cnt > 2:
-                    expansions[assoc] = expansions.get(assoc, 0) + cnt
+            if w in self.cooc_matrix:
+                for assoc, cnt in self.cooc_matrix[w].most_common(3):
+                    if assoc not in q_words and cnt > 2:
+                        expansions[assoc] = expansions.get(assoc, 0) + cnt
         # Отсортировать по силе связи
         top = sorted(expansions.items(), key=lambda x: -x[1])[:top_terms]
         return [w for w, _ in top]
@@ -1392,14 +1378,13 @@ class MirroAlgorithms:
         scored = []
         seen = set()
         for (inst, out, cl), tfidf_score in results:
-            if not out or out[:50] in seen:
-                continue
-            seen.add(out[:50])
-            nn = self.perceptron_predict(query, out)
-            ja = self.jaccard_similarity(clean_query, out)
-            qa = self.qa_score(clean_query, out)
-            combined = 0.25 * tfidf_score + 0.25 * nn + 0.25 * ja + 0.25 * qa
-            scored.append((combined, out, cl))
+            if out and out[:50] not in seen:
+                seen.add(out[:50])
+                nn = self.perceptron_predict(query, out)
+                ja = self.jaccard_similarity(clean_query, out)
+                qa = self.qa_score(clean_query, out)
+                combined = 0.25 * tfidf_score + 0.25 * nn + 0.25 * ja + 0.25 * qa
+                scored.append((combined, out, cl))
         return scored
 
     def _pick_parts(self, clean_query, scored, max_len):
@@ -1410,11 +1395,10 @@ class MirroAlgorithms:
         for sc, out, cl in scored:
             if len(parts) >= 3:
                 break
-            if cl in used_cl:
-                continue
-            top_sents = self.sentence_rank(clean_query, out, top_k=2)
-            parts.append(" ".join(top_sents)[:1100])
-            used_cl.add(cl)
+            if cl not in used_cl:
+                top_sents = self.sentence_rank(clean_query, out, top_k=2)
+                parts.append(" ".join(top_sents)[:1100])
+                used_cl.add(cl)
         return "\n\n".join(parts)[:max_len]
 
     def compose_answer_v2(self, query, top_n=8, max_len=4000):
