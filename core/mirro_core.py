@@ -343,13 +343,11 @@ _DIALOG_REPLIES = {
 def _is_news_query(q):
     # «что нового?», «новости», «какие новости», «что произошло» и т.п. —
     # это разговорный вопрос, а НЕ технический запрос по «новостям» в софте.
-    if any(w in q for w in ["что нового", "что новенького", "какие новости",
-                            "что происходит", "что произошло", "расскажи новости",
-                            "новости на сегодня", "есть что новое", "есть новое"]):
-        return True
-    if q.strip() in ("новости", "новость", "новостей", "что новое?", "что нового"):
-        return True
-    return False
+    phrase_hit = any(w in q for w in ["что нового", "что новенького", "какие новости",
+                                      "что происходит", "что произошло", "расскажи новости",
+                                      "новости на сегодня", "есть что новое", "есть новое"])
+    exact_hit = q.strip() in ("новости", "новость", "новостей", "что новое?", "что нового")
+    return phrase_hit or exact_hit
 
 def try_dialog(query):
     """Разговорные реплики, которые НЕ должны идти в TF-IDF поиск.
@@ -443,29 +441,30 @@ def try_provider(query, context=""):
 
 
 def answer_looks_bad(query, answer):
-    """Проверка качества ответа: реально ли он отвечает на вопрос?
-
-    Возвращает True, если ответ мусорный — его нельзя отдавать пользователю.
-    """
+    """True, если ответ мусорный — его нельзя отдавать пользователю.
+    Один return: bool."""
+    bad = False
     if not answer or len(answer) < 10:
-        return True
-    # Ответ похож на код (PHP/JS/C++/SQL) — а вопрос фактологический
-    code_markers = ["<?php", "function ", "std::", "#include", "import ", "class ", "=>", "console.", "npm ", "git ", "def "]
-    code_hits = sum(1 for m in code_markers if m in answer)
-    if code_hits >= 2:
-        return True
-    # Вопрос вида «что такое X / кто такой X» — ответ должен содержать ключевые слова
-    q = query.lower().strip()
-    is_factual = any(p in q for p in ["что такое", "кто такой", "кто такая", "что значит", "расскажи про", "что такое ндс"])
-    if is_factual:
-        q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
-        a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
-        # Ключевые слова вопроса: убираем стоп-слова
-        stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или"}
-        key = q_words - stop
-        if key and not key & a_words:
-            return True  # ответ вообще не про это
-    return False
+        bad = True
+    else:
+        # Ответ похож на код (PHP/JS/C++/SQL) — а вопрос фактологический
+        code_markers = ["<?php", "function ", "std::", "#include", "import ", "class ", "=>", "console.", "npm ", "git ", "def "]
+        code_hits = sum(1 for m in code_markers if m in answer)
+        if code_hits >= 2:
+            bad = True
+        else:
+            # Вопрос вида «что такое X / кто такой X» — ответ должен содержать ключевые слова
+            q = query.lower().strip()
+            is_factual = any(p in q for p in ["что такое", "кто такой", "кто такая", "что значит", "расскажи про", "что такое ндс"])
+            if is_factual:
+                q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
+                a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
+                # Ключевые слова вопроса: убираем стоп-слова
+                stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или"}
+                key = q_words - stop
+                if key and not key & a_words:
+                    bad = True  # ответ вообще не про это
+    return bad
 
 
 def _provider_help_hint():
