@@ -656,6 +656,19 @@ function resetReaction() {
     <div class="grid" id="statGrid">
       <div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--muted)">Загрузка...</div>
     </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="card" style="grid-column:1/-1">
+        <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Квантовое состояние концептов (ψ)</div>
+        <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center">
+          <canvas id="cvQuantum" width="260" height="260" style="background:#0c1220;border:1px solid var(--border);border-radius:10px"></canvas>
+          <div style="flex:1;min-width:220px">
+            <div style="color:var(--muted);font-size:var(--fs-tiny);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Выбери понятие из выпадающего списка:</div>
+            <select id="qSel" onchange="drawQuantumWaveState()" style="width:100%;padding:8px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px"></select>
+            <div id="qInfo" style="margin-top:10px;font-size:var(--fs-small);color:var(--muted);min-height:30px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="list-pad">
       <div class="k" style="padding:2px 2px 8px; font-size:var(--fs-small); color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Частые вопросы</div>
       <div id="topQuestions" style="display:flex; flex-direction:column; gap:6px"></div>
@@ -1091,8 +1104,62 @@ function filterCatalog(v) {
     r.style.display = r.textContent.toLowerCase().includes(v.toLowerCase()) ? '' : 'none');
 }
 
+/* ===== Квантовое состояние концептов (виджет) ===== */
+const _qCache = {nodes: []};
+async function loadQuantumSelector() {
+  try {
+    const r = await fetch(API + '/health', {headers: AUTH_HDR});
+    const d = await r.json();
+    const a = d.algorithms || {};
+    // узлы графа берём из knowledge_graph в /health
+    const kg = a.knowledge_graph || {};
+    // нет списка имён в health — строим по выбранным метрикам; иначе используем топ-понятия
+    const sel = document.getElementById('qSel');
+    const f = (a.quantum && a.quantum.P_active_sample) ? a.quantum.P_active_sample : [];
+    _qCache.nodes = [];
+    if (sel && f.length) {
+      sel.innerHTML = '';
+      f.forEach((p, i) => {
+        const nm = 'концепт#' + (i + 1);
+        _qCache.nodes.push({name: nm, alpha: Math.sqrt(p), beta: Math.sqrt(Math.max(0,1-p))});
+        const o = document.createElement('option'); o.value = i; o.textContent = nm;
+        sel.appendChild(o);
+      });
+      if (drawQuantumWaveState) drawQuantumWaveState();
+    }
+  } catch {}
+}
+function drawQuantumWaveState() {
+  const cv = document.getElementById('cvQuantum');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, cx = W/2, cy = H/2, R = Math.min(W,H)*0.4;
+  ctx.clearRect(0, 0, W, H);
+  // сетка комплексной плоскости
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.283); ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx-R-12, cy); ctx.lineTo(cx+R+12, cy);
+  ctx.moveTo(cx, cy-R-12); ctx.lineTo(cx, cy+R+12);
+  ctx.strokeStyle = 'rgba(0,255,204,.25)'; ctx.stroke();
+  // данные выбранного концепта (или демо)
+  const sel = document.getElementById('qSel');
+  const idx = sel ? parseInt(sel.value || '0', 10) : 0;
+  const node = (_qCache.nodes && _qCache.nodes[idx]) || {name:'концепт', alpha:0.71, beta:0.71};
+  const tx = cx + node.alpha * R;
+  const ty = cy - node.beta * R;
+  ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(tx, ty);
+  ctx.strokeStyle = '#ff00ff'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.beginPath(); ctx.arc(tx, ty, 5, 0, 6.283); ctx.fillStyle = '#00ffcc'; ctx.fill();
+  const P = (node.alpha * node.alpha * 100).toFixed(1);
+  ctx.fillStyle = '#ffffff'; ctx.font = '12px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('ψ = ' + node.alpha.toFixed(2) + ' + ' + node.beta.toFixed(2) + 'i', 10, 20);
+  ctx.fillText('Вероятность исхода (P): ' + P + '%', 10, 35);
+  const info = document.getElementById('qInfo');
+  if (info) info.textContent = '«' + node.name + '» — амплитуды α=' + node.alpha.toFixed(3) + ', β=' + node.beta.toFixed(3);
+}
+
 /* Инициализация */
-loadStats(); loadClusters();
+loadStats(); loadClusters(); loadQuantumSelector();
 </script>
 </body>
 </html>

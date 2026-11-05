@@ -29,7 +29,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `07_graphs.py` | Графы | bfs, dfs, dijkstra, kruskal_mst, topological_sort |
 | `08_math.py` | Математика | gcd, lcm, is_prime, fib, pow_mod, phi |
 | `09_dp.py` | Динамика | knapsack, lcs, coin_change, LIS |
-| `10_combinatorics.py` | Комбинаторика | factorial, binomial, catalan, derangements |
+| `10_combinatorics.py` | Комбинаторика | factorial, binomial, catalan, derangements, combinations_list, generate_combinations, evaluate_best_logical_tree |
 | `11_physics.py` | Физика | гравитация, орбиты, три тела, квант |
 | `12_probability.py` | Вероятность | bayes, normal_pdf, monte_carlo, entropy, markov |
 | `13_boolean.py` | Булева логика | and/or/xor, half_adder, де Морган |
