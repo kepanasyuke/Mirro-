@@ -294,10 +294,30 @@ class KnowledgeGraph:
         return len(inter) / len(union)
 
     # ---------- обучение из отклика ----------
+    def edge_weight(self, a, b):
+        """Текущий активный вес связи (проводимость) между a и b. Один return: float.
+        Идёт по индексу соседей; берём максимальную связь между узлами."""
+        a, b = self._norm(a), self._norm(b)
+        best = 0.0
+        for p, other, w in self._adj.get(a, []):
+            if other == b and w > best:
+                best = w
+        return best
+
     def reward(self, a, b, amount=0.3):
         """Положительный отклик: усилить связь между a и b (Хебб).
         Один return: int — сколько связей усилено."""
         return self.hebbian_learn(a, b, amount)
+
+    def reward_sign(self, a, b, feedback_sign=1.0, amount=0.05):
+        """Хебб-обновление связи по знаку отклика через обычный reward/punish.
+        Один return: int — число изменённых связей."""
+        changed = 0
+        if feedback_sign >= 0:
+            changed = self.hebbian_learn(a, b, amount)
+        else:
+            changed = self.punish(a, b, amount)
+        return changed
 
     def punish(self, a, b, amount=0.3, floor=0.15):
         """Отрицательный отклик: ослабить связь (анти-Хебб). Один return: int."""

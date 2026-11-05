@@ -1167,6 +1167,26 @@ class MirroAlgorithms:
                         # Learn = train perceptron on this QA pair
                         label = 1 if coverage > 0.3 else -1
                         self.perceptron_train(inst, ans, label)
+                        # Хебб-закрепление опыта: успех/каша → укрепление/ослабление
+                        # рёбер графа, через которые прошёл ответ (автономный цикл).
+                        try:
+                            from algos.knowledge_graph import kg as _kg
+                            from algos.neural_electric import hebbian_update_path, fire
+                            start = self.tokenize(inst)
+                            anchor = None
+                            for w in start:
+                                if w in _kg.nodes:
+                                    anchor = w
+                                    break
+                            if anchor:
+                                chain = fire(_kg, anchor, max_hops=2)
+                                path = [n for n, _h, _v in chain]
+                                if len(path) >= 2:
+                                    hebbian_update_path(_kg, path,
+                                                        feedback_sign=1.0 if label > 0 else -1.0,
+                                                        learning_rate=0.005)
+                        except Exception:
+                            pass
             self.perceptron_trained = True
             learned += 1
 

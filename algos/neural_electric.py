@@ -76,6 +76,67 @@ def _avg_dimension(graph, nodes):
     return round(sum(dims) / len(dims), 2) if dims else 0.0
 
 
+def _edges_on_path(graph, path_nodes):
+    """Рёбра графа, реально соединяющие подряд идущие узлы пути.
+    Возвращает список (src, pred, dst, weight). Один return: list."""
+    found = []
+    for i in range(len(path_nodes) - 1):
+        a, b = path_nodes[i], path_nodes[i + 1]
+        a, b = a.lower(), b.lower()
+        for p, other, w in graph._adj.get(a, []):
+            if other == b:
+                found.append((a, p, b, w))
+                break
+        else:
+            # обратное направление
+            for p, other, w in graph._adj.get(b, []):
+                if other == a:
+                    found.append((b, p, a, w))
+                    break
+    return found
+
+
+def hebbian_update_path(graph, path_nodes, feedback_sign, learning_rate=0.01,
+                        floor=0.15, ceil=2.0):
+    """Хебб-обучение роу-ссылок (рёбер) по знаку обратной связи.
+
+    Если связь участвовала в активированном пути И фидбек успешен (+1) — ребро
+    крепнет (проводимость растёт). При дизлайке/каше (-1) — слабеет. Это «мета»-
+    уровень над обычным графом: учится не понятие, а то, КАКИМИ СВЯЗЯМИ ходить.
+
+    Все функции имеют один return (структурный стиль LINTER).
+    Возвращает: dict {updated, strengthened, weakened, avg_delta}.
+    """
+    result = {"updated": 0, "strengthened": 0, "weakened": 0, "avg_delta": 0.0}
+    if not path_nodes or len(path_nodes) < 2 or graph is None:
+        return result
+    edges = _edges_on_path(graph, [n.lower() for n in path_nodes])
+    if not edges:
+        return result
+    total = 0.0
+    for src, pred, dst, weight in edges:
+        delta = learning_rate * weight * feedback_sign
+        new_w = weight + delta
+        new_w = max(floor, min(ceil, new_w))
+        graph.edges[(src, pred, dst)] = new_w
+        if hasattr(graph, "_set_adj_weight"):
+            graph._set_adj_weight(src, pred, dst, new_w)
+            graph._set_adj_weight(dst, pred, src, new_w)
+        total += abs(delta)
+        result["updated"] += 1
+        if delta > 0:
+            result["strengthened"] += 1
+        elif delta < 0:
+            result["weakened"] += 1
+    result["avg_delta"] = round(total / len(edges), 4) if edges else 0.0
+    return result
+
+
+def all_weights_on_path(graph, path_nodes):
+    """Текущие активные веса рёбер пути (для отчёта). Один return: list."""
+    return [(src, pred, dst, round(w, 3)) for src, pred, dst, w in _edges_on_path(graph, path_nodes)]
+
+
 def visualize_chain(chain):
     """ASCII-карта силы импульса по цепочке (затухание). Один return: str."""
     if not chain:

@@ -1004,20 +1004,27 @@ class MirroAPI(BaseHTTPRequestHandler):
             try:
                 body = self._read(); algo = _grab_algo()
                 algo.train_from_feedback(body.get("query",""), body.get("response",""), body.get("liked",True))
-                # Обучение знаниевого графа из отклика: усиливаем/ослабляем связи понятий
+                # Хебб-обучение роу-ссылок графа из отклика: sign фидбека → укрепление/ослабление
                 kg_note = ""
                 try:
                     from algos.knowledge_graph import kg as _kg, _clean_q, _pair_from
+                    from algos.neural_electric import hebbian_update_path
+                    liked = body.get("liked", True)
+                    fb = 1.0 if liked else -1.0
                     q = _clean_q(body.get("query",""))
                     a, b = _pair_from(q)
+                    # если известна пара понятий — Хебб-обновляем прямую связь
                     if a and b:
-                        if body.get("liked", True):
-                            n = _kg.reward(a, b, 0.25)
-                        else:
-                            n = _kg.punish(a, b, 0.25)
-                        if n:
-                            _kg.save(MODELS / "knowledge_graph.pkl")
-                            kg_note = f", graph_grown={n}"
+                        _kg.reward_sign(a, b, fb, 0.05)
+                    # если ответ дал цепочку активации — закрепляем рёбра пути
+                    path = algo.hebbian_path if hasattr(algo, "hebbian_path") and algo.hebbian_path else None
+                    if path and len(path) >= 2:
+                        r = hebbian_update_path(_kg, path, fb, learning_rate=0.02)
+                        if r["updated"]:
+                            kg_note = f", routes={r['updated']}(+{r['strengthened']}/-{r['weakened']})"
+                    _kg.save(MODELS / "knowledge_graph.pkl")
+                    if a and b and not kg_note:
+                        kg_note = f", pair_hebb={fb}"
                 except Exception:
                     kg_note = ""
                 self._json({"status": "ok" + kg_note})
