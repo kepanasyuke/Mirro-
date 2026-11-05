@@ -92,6 +92,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `scripts/evolution.py` | `_evaluate_fitness` | PINN-loss на выборке рёбер (быстро для CLI) |
 | `scripts/evolve_weights.py` | `run` / `evolve_iteration` | Эволюция собственно весов рёбер графа по fitness |
 | `scripts/clean_corpus.py` | `clean_jsonl` / `clean_directory` | Токенизация, дедуп, фильтр мусора в маленьких JSONL-корпусах |
+| `scripts/rag.py` | `MirroRAG.run_quantum_guided_rag` / `_guided_segments` | Направленный дисковый RAG: детерминированный (не hash()) контекст из комбинаторной пары расширяет запрос перед двухуровневым search |
 
 ## Фронтенд: рендер мета-графа (web/meysto-neiroset.html)
 

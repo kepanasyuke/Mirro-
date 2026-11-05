@@ -179,6 +179,34 @@ class MirroRAG:
                     break
         return None
 
+    def run_quantum_guided_rag(self, user_query, meta_pair=None, top_k=3):
+        """Направленный RAG-поиск с дееериминированным мета-контекстом.
+
+        Комбинаторное ядро выбирает пару концептов (meta_pair). Из неё строится
+        СТАБИЛЬНЫЙ (не рандомизированный hash()) добавочный контекст, который
+        расширяет запрос перед двухуровневым search. Это направляет поиск в
+        тематические сегменты диска и гасит «кашу».
+
+        Возвращает [(score, instruction, output)] — как обычный search.
+        Один return: list.
+        """
+        pair = meta_pair or ("general", "general")
+        # стабильный хэш пары (Python hash() рандомизирован между сессиями —
+        # для навигации по сегментам нужен детерминированный код)
+        seed = 0
+        for tok in (pair[0] + "::" + pair[1]):
+            seed = (seed * 31 + ord(tok)) % 2147483647
+        hint = " ".join(pair)  # тематические слова-подсказки из комбинаторной пары
+        expanded = (user_query or "").strip() + " " + hint
+        results = self.search(expanded, top_segments=self._guided_segments(seed), top_k=top_k)
+        return results
+
+    @staticmethod
+    def _guided_segments(seed):
+        """Число сегментов для направленного поиска (1..4 по стабильному коду).
+        Один return: int."""
+        return 1 + (seed % 4)
+
     def rebuild_all(self):
         """Полная сборка обоих уровней."""
         print("  [RAG] сборка двухуровневого индекса...")
