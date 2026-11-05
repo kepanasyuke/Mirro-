@@ -139,12 +139,55 @@ def _dim_from_deg(deg, reach2):
     return dim
 
 
+def _node_meta_dependencies(kg, name):
+    """Количество роу-ссылок (мета-связей), влияющих на рёбра узла.
+    Роу-ссылки живут в graph.meta_routes (см. neural_electric.add_meta_route).
+    Один return: int."""
+    deps = 0
+    meta = getattr(kg, "meta_routes", None)
+    if not meta:
+        return 0
+    node = _norm_zd(kg, name)
+    # рёбра, затронутые узлом (в обе стороны): исходящие из node и входящие в node
+    node_edges = set()
+    for s, p, d in kg.edges:
+        if s == node or d == node:
+            node_edges.add((s, p, d))
+            node_edges.add((d, p, s))  # обратный ключ для поиска
+    for (fkey, tkey), _mod in meta.items():
+        if fkey in node_edges or tkey in node_edges:
+            deps += 1
+    return deps
+
+
+def _norm_zd(kg, name):
+    """Нормализует имя узла под ключи графа. Один return: str."""
+    n = (name or "").strip().lower()
+    if n in kg.nodes:
+        return n
+    for node in kg.nodes:
+        if node == n or n in node or node.startswith(n[:4]):
+            return node
+    return n
+
+
 def dimension_of(kg, name):
-    """Мера «размерности» понятия по его степени (без дорогого обхода 2-го
-    порядка — корректно и быстро работает даже на графах в десятки тысяч узлов).
-    0D — изолированная точка; 1D — цепочка; 2D — плоскость. Один return."""
+    """Мера «размерности» понятия: изолированная точка (0D) → линейная цепочка (1D)
+    → плоскость (2D, узла много) → объёмный мета-граф (3D, есть роу-связи).
+
+    Размерность повышается, если узел входит в роу-ссылки мета-графа — это
+    признак того, что вокруг него выстроена «руководимая» структура (меньше каши).
+    Быстро (без обхода 2-го порядка). Один return: (dim, deg)."""
     deg = len(kg.neighbors(name))
     dim = _dim_from_deg(deg, 0)
+    meta_deps = _node_meta_dependencies(kg, name)
+    # обладая роу-связями, «плоскость» из 2D переходит в «объём» 3D
+    if meta_deps >= 3 and deg >= 2:
+        dim = 3.0
+    elif meta_deps >= 1 and deg >= 2:
+        dim = max(dim, 2.0)
+    elif meta_deps >= 1 and deg == 1:
+        dim = max(dim, 1.0)
     return (dim, deg)
 
 
