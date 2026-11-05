@@ -10,8 +10,9 @@
 ```
 try_greetings → try_learn → try_algos_think → try_humor → try_creative
 → try_jarvis → try_dialog → try_bosova_engine → try_ai_history
-→ try_knowledge_graph → try_graph_infer → try_dialogue_memory
-→ try_zero_dim → try_growth
+→ try_knowledge_graph → try_graph_infer → try_enrich → try_what_links
+→ try_similar → try_func_kb → try_dialogue_memory → try_zero_dim
+→ try_growth → try_neuromod → try_neural_elec → try_evo
 → (fallback) try_tfidf → try_rag → try_web → try_provider
 ```
 Каждая `try_*` возвращает либо строку-ответ (остановка), либо None (переход дальше).
@@ -39,15 +40,41 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `20_reasoning.py` | **Дубль** → `reasoning.py` | (удалён) |
 | `humor.py` | Юмор (канонический) | shutka, sarkazm, o_udache_i_uspehe |
 | `reasoning.py` | Рассуждения (канонический) | think_about_thinking, citata_bosovy, get_scheme |
-| `knowledge_graph.py` | Знаниевый граф | Node, KnowledgeGraph, add_edge, path, relation, try_knowledge_graph |
-| `graph_infer.py` | Вывод через граф | infer_from_graph, try_graph_infer |
+| `knowledge_graph.py` | Знаниевый граф | Node, KnowledgeGraph, add_edge, path, relation, edge_weight, reward_sign, try_knowledge_graph, try_enrich, try_what_links, try_similar, try_feedback |
+| `graph_infer.py` | Вывод через граф + опыт | infer_from_graph, try_graph_infer, try_get_memory_experience, generate_dynamic_inference, remember_pattern |
 | `dialogue_memory.py` | Память диалога | DialogueMemory, try_dialogue_memory |
 | `novelty.py` | Детектор новизны | Novelty, try_novelty |
 | `ttl_extract.py` | Извлечение триплетов | extract, ingest_into |
-| `zero_dimensional.py` | Нульмерный граф + рост размерности | field_signature, dimension_of, growth_report, try_zero_dim, try_growth |
+| `zero_dimensional.py` | Нульмерный граф + рост размерности | field_signature, dimension_of, dimension_of_understanding, _node_meta_dependencies, growth_report, try_zero_dim, try_growth |
 | `knowledge_ai_history.py` | История ИИ | применить, _lookup, run_self_check |
 | `bosova_engine.py` | Схемы Босовой | применить, схема_мышления, тройственность |
 | `think.py` | Мыслительный движок | classify, think, answer_question |
+| `evolve.py` | Нейроэволюция (популяция графов) | Genome, MirroEvolver, mutate, crossover, evolve_step, try_evolve |
+| `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
+
+### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)
+
+Файлы: `algos/neural_electric.py`, `algos/knowledge_graph.py`, `algos/zero_dimensional.py`, `algos/graph_infer.py`, `algos/ttl_extract.py`.
+
+| Модуль | Функция | Назначение |
+|---|---|---|
+| `neural_electric.py` | `compute_modulated_edges` | Проводимость рёбер как функция нейромедиаторов (ach·ser + dop) |
+| `neural_electric.py` | `add_meta_route` | Регистрация роу-ссылки «ребро→ребро» с коэффициентом модуляции (mod<0 = подавление «каши») |
+| `neural_electric.py` | `propagate_meta_impulses` | Направленный прогон токов по роу-ссылкам (аксо-аксональные синапсы) |
+| `neural_electric.py` | `calculate_physics_loss` | PINN-цензор: отклонение квадратичной энергии от константы среды |
+| `neural_electric.py` | `hebbian_update_path` | Мета-Хебб: укрепление/ослабление рёбер пути по знаку фидбека |
+| `neural_electric.py` | `try_route_pipeline` | Сквозной контур: биометрия → рёбра → роу-импульсы → PINN → ответ |
+| `neural_electric.py` | `try_extract_biometric_context` | Виртуальная биометрия (пульс/GSR/энергия) из текста запроса |
+| `knowledge_graph.py` | `edge_weight` | Текущий активный вес связи (проводимость) |
+| `knowledge_graph.py` | `reward_sign` | Хебб-обновление связи по знаку отклика (+1 усиление, −1 ослабление) |
+| `knowledge_graph.py` | `try_enrich` | Обогащение ответа родственными понятиями через связи |
+| `knowledge_graph.py` | `try_what_links` / `try_similar` | Умные запросы связей (что связано / что общего) |
+| `zero_dimensional.py` | `dimension_of` | Мерность узла (0D изолированная → 3D мета-граф); учитывает роу-ссылки |
+| `zero_dimensional.py` | `dimension_of_understanding` | Средняя мерность сети — метрика роста понимания (для /health) |
+| `graph_infer.py` | `try_get_memory_experience` | Косинусное извлечение схожего прошлого опыта из памяти графа |
+| `graph_infer.py` | `generate_dynamic_inference` | Смешение текущего паттерна с опытом + декодер в итоговый сигнал |
+| `graph_infer.py` | `remember_pattern` | Запись успешного латентного паттерна в Базу Опыта |
+| `ttl_extract.py` | `extract` / `ingest_into` | Извлечение триплетов (S→P→O) из текста и кормление графа |
 
 ## Выявленные повторы (на 04.11.2026)
 
