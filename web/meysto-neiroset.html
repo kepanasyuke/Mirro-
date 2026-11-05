@@ -383,6 +383,10 @@ canvas{display:block; width:100%; height:100%; border-radius:10px;}
         <h2>Обзор нейросети</h2>
         <canvas id="cvNet"></canvas>
       </div>
+      <div class="card net-card">
+        <h2>Мета-граф роу-связей</h2>
+        <canvas id="cvMeta"></canvas>
+      </div>
       <div class="card chart-card">
         <h2>График ума</h2>
         <canvas id="cvChart"></canvas>
@@ -1251,13 +1255,14 @@ const Rng = mulberry32(20260921);
 
 /* ================= 9. КАНВАСЫ И КОНТЕКСТЫ ================= */
 const CV = {
-  plot: $('cvPlot'), net: $('cvNet'),
+  plot: $('cvPlot'), net: $('cvNet'), meta: $('cvMeta'),
   chart: $('cvChart'), confetti: $('cvConfetti'),
   scratch: $('cvScratch'), draw: $('cvDraw')
 };
 const Ctx = {
   plot:  CV.plot.getContext('2d'),
   net:   CV.net.getContext('2d'),
+  meta:  CV.meta.getContext('2d'),
   chart: CV.chart.getContext('2d'),
   scratch: CV.scratch.getContext('2d'),
   draw: CV.draw.getContext('2d')
@@ -1343,6 +1348,79 @@ function drawNetLabels(ctx, xs, ys) {
   }
   const last = ys.length - 1;
   ctx.fillText('ответ', xs[last], ys[last][0].y - ys[last][0].r - 5);
+}
+
+/* ================= 10b. МЕТА-ГРАФ РОУ-СВЯЗЕЙ =================
+   Рисует знаниевый граф + роу-ссылки «ребро→ребро» изогнутыми линиями,
+   соединяющими ЦЕНТРЫ синапсов (объёмный 3D-эффект на плоском canvas).
+   Демо-граф; при наличии живого graphData рисует и его. */
+const _metaDemoNodes = {
+  'внимание': {x:110,y:200}, 'память': {x:290,y:120}, 'понимание': {x:290,y:300},
+  'знание': {x:470,y:210},   'хаос':   {x:220,y:330},
+};
+const _metaDemoEdges = {
+  e01:{from:'внимание', to:'память',    weight:1.2},
+  e12:{from:'память',   to:'понимание', weight:1.0},
+  e23:{from:'понимание',to:'знание',    weight:1.1},
+  e03:{from:'внимание', to:'знание',    weight:0.6},
+  e1c:{from:'память',   to:'хаос',      weight:0.8},
+};
+// роу-ссылки: точный контекст «память→понимание» гасит «память→хаос» (mod<0)
+const _metaDemoRoutes = {
+  m1:{from_edge:'e12', to_edge:'e1c', mod:-0.9, label:'гасит кашу'},
+  m2:{from_edge:'e01', to_edge:'e12', mod:0.7,  label:'усиливает'},
+};
+function drawMirroMetaGraph(ctx, w, h, graphData) {
+  const nodes = (graphData && graphData.nodes) || _metaDemoNodes;
+  const edges = (graphData && graphData.edges) || _metaDemoEdges;
+  const routes = (graphData && graphData.meta_routes) || _metaDemoRoutes;
+  ctx.clearRect(0, 0, w, h);
+
+  // 1. узлы
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const id in nodes) {
+    const n = nodes[id];
+    ctx.beginPath(); ctx.arc(n.x, n.y, 13, 0, 6.283);
+    ctx.fillStyle = '#0f1b3d'; ctx.fill();
+    ctx.strokeStyle = '#26f2d2'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#cff7f0'; ctx.font = 'bold 10px Verdana';
+    ctx.fillText(id, n.x, n.y);
+  }
+
+  // 2. рёбра (синапсы) — запоминаем центры
+  const edgeCoords = {};
+  for (const eid in edges) {
+    const e = edges[eid], s = nodes[e.from], t = nodes[e.to];
+    if (!s || !t) continue;
+    const wgt = Math.abs(e.active_weight != null ? e.active_weight : e.weight) || 0.4;
+    ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(t.x, t.y);
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.12 + Math.min(0.5, wgt) * 0.3) + ')';
+    ctx.lineWidth = Math.max(1, wgt * 2); ctx.stroke();
+    edgeCoords[eid] = { midX: (s.x + t.x) / 2, midY: (s.y + t.y) / 2 };
+  }
+
+  // 3. роу-ссылки мета-графа (изогнутые пунктирные линии между центрами рёбер)
+  for (const mid in routes) {
+    const m = routes[mid];
+    const se = edgeCoords[m.from_edge], te = edgeCoords[m.to_edge];
+    if (!se || !te) continue;
+    const ctrlX = (se.midX + te.midX) / 2 + 30;
+    const ctrlY = (se.midY + te.midY) / 2 - 30;
+    ctx.beginPath(); ctx.moveTo(se.midX, se.midY);
+    ctx.quadraticCurveTo(ctrlX, ctrlY, te.midX, te.midY);
+    ctx.strokeStyle = (m.mod < 0) ? '#ff6b8a' : '#4d9bff';   // красный гасит, синий усиливает
+    ctx.setLineDash([4, 4]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+    if (m.label) {
+      ctx.fillStyle = (m.mod < 0) ? '#ff9db2' : '#9cc3ff';
+      ctx.font = '9px Verdana';
+      ctx.fillText(m.label, ctrlX, ctrlY - 6);
+    }
+  }
+}
+function redrawMetaGraph() {
+  if (!Ctx.meta || !CV.meta) return;
+  const { w, h } = CanvasUtil.size(CV.meta);
+  drawMirroMetaGraph(Ctx.meta, w, h, null);
 }
 
 /* ================= 11. ОТРИСОВКА ПОЛЯ ================= */
@@ -2101,6 +2179,7 @@ function frame(now) {
   }
 
   redrawNet(dt);
+  redrawMetaGraph();
   if (dirtyPlot)  { redrawPlot();  dirtyPlot  = false; }
   if (dirtyChart) { redrawChart(); dirtyChart = false; }
 

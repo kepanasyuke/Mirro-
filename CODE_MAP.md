@@ -76,6 +76,23 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `graph_infer.py` | `remember_pattern` | Запись успешного латентного паттерна в Базу Опыта |
 | `ttl_extract.py` | `extract` / `ingest_into` | Извлечение триплетов (S→P→O) из текста и кормление графа |
 
+## Скрипты нейроэволюции (scripts/)
+
+| Файл | Функция | Назначение |
+|---|---|---|
+| `scripts/evolution.py` | `create_initial_population` | Стартовая популяция хромосом (нейрохимия ach/ser/dop + W_decoder) |
+| `scripts/evolution.py` | `mutate_chromosome` | Мутация химии и весов декодера |
+| `scripts/evolution.py` | `run_evolution_epoch` | Оценка через PINN Loss, селекция топ-50%, замена худших |
+| `scripts/evolution.py` | `_evaluate_fitness` | PINN-loss на выборке рёбер (быстро для CLI) |
+| `scripts/evolve_weights.py` | `run` / `evolve_iteration` | Эволюция собственно весов рёбер графа по fitness |
+
+## Фронтенд: рендер мета-графа (web/meysto-neiroset.html)
+
+| Функция | Назначение |
+|---|---|
+| `drawMirroMetaGraph(ctx, w, h, graphData)` | Рисует знаниевый граф + роу-ссылки изогнутыми линиями между центрами синапсов; mod<0 — красный («гасит кашу»), mod>0 — синий («усиливает») |
+| `redrawMetaGraph()` | Отрисовка demo-мета-графа на `canvas#cvMeta` (вызывается в анимационном кадре) |
+
 ## Выявленные повторы (на 04.11.2026)
 
 | Группа | Что | Статус |
