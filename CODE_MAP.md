@@ -50,6 +50,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `bosova_engine.py` | Схемы Босовой | применить, схема_мышления, тройственность |
 | `think.py` | Мыслительный движок | classify, think, answer_question |
 | `evolve.py` | Нейроэволюция (популяция графов) | Genome, MirroEvolver, mutate, crossover, evolve_step, try_evolve |
+| `quantum_graph.py` | Квантовая суперпозиция концептов | init_quantum_states, apply_quantum_entanglement, collapse_wave_function, quantum_superposition_report, try_quantum |
 | `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
 
 ### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)
@@ -85,6 +86,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `scripts/evolution.py` | `run_evolution_epoch` | Оценка через PINN Loss, селекция топ-50%, замена худших |
 | `scripts/evolution.py` | `_evaluate_fitness` | PINN-loss на выборке рёбер (быстро для CLI) |
 | `scripts/evolve_weights.py` | `run` / `evolve_iteration` | Эволюция собственно весов рёбер графа по fitness |
+| `scripts/clean_corpus.py` | `clean_jsonl` / `clean_directory` | Токенизация, дедуп, фильтр мусора в маленьких JSONL-корпусах |
 
 ## Фронтенд: рендер мета-графа (web/meysto-neiroset.html)
 

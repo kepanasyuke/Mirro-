@@ -589,6 +589,12 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_quantum_graph(q):
+        try:
+            from algos.quantum_graph import try_quantum as _f
+            return _f(q)
+        except Exception:
+            return None
     def try_neural_elec(q):
         try:
             from algos.neural_electric import try_neural_electric as _f
@@ -620,6 +626,7 @@ def _try_direct_handlers(prompt):
         ("similar", try_similar),
         ("func_kb", try_function_knowledge),
         ("evolve", try_evo),
+        ("quantum", try_quantum_graph),
         ("dialogue_memory", try_dialogue_memory),
         ("zero_dim", try_zero_dim),
         ("growth", try_growth),
@@ -838,6 +845,18 @@ class MirroAPI(BaseHTTPRequestHandler):
                     "nodes": len(_kg.nodes), "edges": len(_kg.edges),
                     "avg_dimension": _dimen(_kg),
                 }
+                # квантовая суперпозиция концептов (для дашборда)
+                try:
+                    from algos.quantum_graph import init_quantum_states
+                    qst = init_quantum_states(_kg)
+                    n_sup = len(qst.states)
+                    p_active = []
+                    for _n, (a, _b) in list(qst.states.items())[:8]:
+                        p_active.append(round(a * a, 3))
+                    st["quantum"] = {"superposed_nodes": n_sup,
+                                     "P_active_sample": p_active}
+                except Exception:
+                    st["quantum"] = {"superposed_nodes": 0, "P_active_sample": []}
                 status["algorithms"] = st
             except Exception:
                 pass
