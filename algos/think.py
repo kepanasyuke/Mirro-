@@ -335,6 +335,9 @@ def think(query):
     else:
         explanation = ("Не распознан тип задачи. Сформулируй иначе (например: "
                        "«сколько будет 2+2», «реши x²-5x+6=0», «НОД 12 и 18»).")
+        category = "unknown"
+        module = None
+        func_name = None
 
     return {
         "answer": answer,

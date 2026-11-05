@@ -283,17 +283,46 @@ def _edge_overlap_targets(edge_key, edges):
     return targets
 
 
+def add_meta_route(graph, from_edge, to_edge, mod=1.0):
+    """Регистрирует роу-ссылку «ребро→ребро» с коэффициентом модуляции.
+    Отрицательный mod = подавление (каша гасится), положительный = усиление.
+    Один return: int — число зарегистрированных роу-ссылок."""
+    if not hasattr(graph, "meta_routes"):
+        graph.meta_routes = {}
+    graph.meta_routes[(from_edge, to_edge)] = float(mod)
+    return len(graph.meta_routes)
+
+
+def _meta_route_mod(graph, from_edge, to_edge):
+    """Коэффициент роу-ссылки from_edge→to_edge, или топологический.
+    Один return: float (может быть отрицательным для подавления)."""
+    if hasattr(graph, "meta_routes"):
+        return graph.meta_routes.get((from_edge, to_edge), 0.0)
+    return 0.0
+
+
 def propagate_meta_impulses(graph, active_weights):
-    """Роу-импульсы «ребро→ребро»: активированное ребро усиливает исходящие
-    из своей цели (аксо-аксональный синапс). Возвращает новую dict проводимостей.
+    """Роу-импульсы «ребро→ребро»: активированное ребро модулирует исходящие
+    из своей цели. Роу-ссылка из graph.meta_routes запрещает/усиливает ребро
+    (mod<0 гасит «кашу», mod>0 усиливает). Возвращает новую dict проводимостей.
     Один return: dict edge_key -> active_weight."""
     out = dict(active_weights)
-    for key, act in list(active_weights.items()):
-        if act <= 0:
+    if not hasattr(graph, "meta_routes") or not graph.meta_routes:
+        # без явных роу-ссылок — топологическое усиление (обратная совместимость)
+        for key, act in list(active_weights.items()):
+            if act <= 0:
+                continue
+            for tgt in _edge_overlap_targets(key, graph.edges):
+                if tgt in out:
+                    out[tgt] = out[tgt] + act * key_meta_mod(key, out)
+        return out
+    # с явными роу-ссылками: применяем модуляцию (усиление/подавление)
+    for (fkey, tkey), mod in list(graph.meta_routes.items()):
+        f_act = active_weights.get(fkey, 0.0)
+        if f_act <= 0:
             continue
-        for tgt in _edge_overlap_targets(key, graph.edges):
-            if tgt in out:
-                out[tgt] = out[tgt] + act * key_meta_mod(key, out)
+        if tkey in out:
+            out[tkey] = out[tkey] + f_act * mod
     return out
 
 

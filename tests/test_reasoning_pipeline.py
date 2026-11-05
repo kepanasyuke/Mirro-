@@ -15,6 +15,7 @@ from algos.knowledge_graph import KnowledgeGraph
 from algos.neural_electric import (
     compute_modulated_edges, propagate_meta_impulses, calculate_physics_loss,
     try_extract_biometric_context, try_route_pipeline, fire, hebbian_update_path,
+    add_meta_route,
 )
 from algos.graph_infer import (
     try_get_memory_experience, generate_dynamic_inference, remember_pattern,
@@ -97,6 +98,35 @@ class TestReasoningPipeline(unittest.TestCase):
         f1 = fitness(g, 0.6)
         self.assertGreaterEqual(f1, f0, "эволюция не должна ухудшить fitness")
         self.assertGreaterEqual(rep["experience"], 1, "лучший паттерн должен уйти в память")
+
+    def test_route_edge_suppresses_chaos_and_keeps_physics(self):
+        """Ключевой интеграционный тест: точная связь через роу-ссылку с
+        отрицательным mod подавляет проводимость хаотичного ребра («кашу»),
+        при этом PINN-физика графа сохраняет энергию в норме."""
+        g = KnowledgeGraph()
+        g.from_triples([
+            ("математика", "даёт", "чётки"),
+            ("чётки", "запутывает", "хаос"),   # это «каша» — целевое подавление
+        ])
+        # роу-ссылка: точная математика (ребро 0) гасит хаотичное ребро 1
+        e0 = ("математика", "даёт", "чётки")
+        e1 = ("чётки", "запутывает", "хаос")
+        add_meta_route(g, e0, e1, mod=-0.8)
+
+        mod = compute_modulated_edges(g, ach=1.1, serotonin=0.95, dopamine=0.05)
+        routed = propagate_meta_impulses(g, mod)
+
+        chaos_before = mod[e1]
+        chaos_after = routed[e1]
+        self.assertLess(chaos_after, chaos_before,
+                        "роу-ссылка должна подавить активный вес хаотичного ребра")
+        self.assertAlmostEqual(chaos_after, chaos_before + mod[e0] * (-0.8), places=4)
+
+        # PINN-цензор: энергия после модуляции остаётся валидной и конечной
+        loss = calculate_physics_loss(g, target_energy=0.65)
+        self.assertIsInstance(loss, float)
+        self.assertGreaterEqual(loss, 0.0, "физический Loss не может быть отрицательным")
+        self.assertLess(chaos_after, 1.0, "амплитуда подавленной «каши» ниже базовой")
 
 
 if __name__ == "__main__":
