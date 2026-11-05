@@ -124,6 +124,22 @@ def _grab_algo():
     return algo
 
 
+def _combinatoric_pair():
+    """Самая стабильная комбинаторная пара концептов из живого графа.
+    Один return: tuple (pair|None, chaos|999.0)."""
+    pair = None
+    chaos = 999.0
+    try:
+        from algos.knowledge_graph import kg as _kg
+        from algos.combinatorics import evaluate_best_logical_tree
+        if _kg.nodes:
+            avail = sorted(_kg.nodes)[:40]
+            pair, chaos = evaluate_best_logical_tree(_kg, avail, chaos_target=0.5)
+    except Exception:
+        pair, chaos = None, 999.0
+    return pair, chaos
+
+
 def _quantum_context_note():
     """Квантово-комбинаторная сноска для reasoning_content ответа.
 
@@ -137,14 +153,12 @@ def _quantum_context_note():
         from algos.zero_dimensional import dimension_of_understanding as _dimen
         from algos.quantum_graph import init_quantum_states
         from algos.neural_electric import calculate_physics_loss
-        from algos.combinatorics import evaluate_best_logical_tree
         if not _kg.nodes:
             return note
         pinn = calculate_physics_loss(_kg, 0.55)
         dim = _dimen(_kg)
         sup = len(init_quantum_states(_kg).states)
-        avail = sorted(_kg.nodes)[:40]
-        pair, chaos = evaluate_best_logical_tree(_kg, avail, chaos_target=0.5)
+        pair, chaos = _combinatoric_pair()
         pair_txt = (pair[0] + "↔" + pair[1]) if pair else "нет устойчивой пары"
         note = (f"PINN Loss: {pinn:.4f}; суперпозиция: {sup} концептов; "
                 f"размерность понимания: {dim}/3; комбинаторный путь: {pair_txt} "
@@ -451,7 +465,13 @@ def try_rag(query, cluster):
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.rag import rag
-        rr = rag.search(query, top_segments=3, top_k=3)
+        # сквозной квантово-комбинаторный контур влияет на выбор дисковых сегментов:
+        # если комбинаторное ядро нашло стабильную пару концептов — направляем поиск.
+        pair, _chaos = _combinatoric_pair()
+        if pair:
+            rr = rag.run_quantum_guided_rag(query, pair, top_k=3)
+        else:
+            rr = rag.search(query, top_segments=3, top_k=3)
         if rr: return [(("", rr[i][2], "rag"), rr[i][0]) for i in range(min(3, len(rr)))]
     except: pass
     return []
