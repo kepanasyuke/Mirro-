@@ -583,6 +583,12 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_evo(q):
+        try:
+            from algos.evolve import try_evolve as _f
+            return _f(q)
+        except Exception:
+            return None
     def try_neural_elec(q):
         try:
             from algos.neural_electric import try_neural_electric as _f
@@ -613,6 +619,7 @@ def _try_direct_handlers(prompt):
         ("what_links", try_what_links),
         ("similar", try_similar),
         ("func_kb", try_function_knowledge),
+        ("evolve", try_evo),
         ("dialogue_memory", try_dialogue_memory),
         ("zero_dim", try_zero_dim),
         ("growth", try_growth),
@@ -811,6 +818,8 @@ class MirroAPI(BaseHTTPRequestHandler):
             if self._serve_file(MIRRO_HOME / "web" / "index.html", "text/html; charset=utf-8"): return
         elif route == "/meysto-neiroset.html":
             if self._serve_file(MIRRO_HOME / "web" / "meysto-neiroset.html", "text/html; charset=utf-8"): return
+        elif route == "/mirro-evolve.html":
+            if self._serve_file(MIRRO_HOME / "web" / "mirro-evolve.html", "text/html; charset=utf-8"): return
         elif route == "/catalog.json":
             if self._serve_file(DATA / "catalog_phase1.json", "application/json; charset=utf-8"): return
         elif route == "/health":
@@ -843,6 +852,32 @@ class MirroAPI(BaseHTTPRequestHandler):
             top = core.stats.get("top_questions", {})
             ranked = sorted(top.items(), key=lambda x: -x[1])[:15]
             self._json({"questions": [{"q": q, "count": c} for q, c in ranked]}); return
+        elif route == "/v1/evolve":
+            # Эволюционный отбор: шаг нейроэволюции популяции графов
+            try:
+                from algos.evolve import get_evolver, _default_A, _default_X, report
+                ev = get_evolver()
+                from urllib.parse import parse_qs, urlsplit
+                pq = parse_qs(urlsplit(self.path).query)
+                steps = int(pq.get("steps", ["1"])[0])
+                rr = None
+                for _ in range(min(max(steps, 0), 20)):
+                    ev.evolve_step(_default_A(ev.num_nodes), _default_X(ev.num_nodes, ev.input_dim))
+                best = ev.best_genome()
+                chem = {}
+                if best:
+                    chem = {"dopamine": round(best.dopamine, 3),
+                            "serotonin": round(best.serotonin, 3),
+                            "acetylcholine": round(best.acetylcholine, 3),
+                            "gsr": round(best.gsr, 3)}
+                payload = {"generation": ev.generation,
+                           "population": len(ev.population),
+                           "experience": len(ev.experience_base),
+                           "best_chemistry": chem,
+                           "report": report()}
+                self._json(payload); return
+            except Exception as e:
+                self._json({"error": str(e)}, 500); return
         elif route == "/v1/learn-report":
             self._json(self._learn_report()); return
         elif route == "/v1/knowledge":

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mirro · Нейроэволюция графа</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --line:#30363d; --acc:#58a6ff;
+    --ok:#3fb950; --warn:#d29922; --txt:#c9d1d9; --dim:#8b949e;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--txt); font:14px/1.5 "Segoe UI",system-ui,sans-serif;
+       min-height:100vh; padding:20px;}
+  header{display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h1{font-size:20px; font-weight:600;}
+  h1 span{color:var(--acc);}
+  header .badge{background:var(--panel); border:1px solid var(--line); border-radius:20px;
+       padding:3px 12px; font-size:12px; color:var(--dim);}
+  .layout{display:grid; grid-template-columns:380px 1fr; gap:16px;}
+  @media (max-width:880px){ .layout{grid-template-columns:1fr;} }
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px;}
+  .card h2{font-size:14px; color:var(--dim); font-weight:600; text-transform:uppercase;
+       letter-spacing:.5px; margin-bottom:10px;}
+  canvas{display:block; width:100%; border:1px solid var(--line); border-radius:8px; background:#0a0d13;}
+  .stats{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0;}
+  .stat{background:#0d1117; border:1px solid var(--line); border-radius:8px; padding:8px 10px;}
+  .stat .k{font-size:11px; color:var(--dim);}
+  .stat .v{font-size:18px; font-weight:600; margin-top:2px;}
+  .stat .v.up{color:var(--ok);} .stat .v.down{color:var(--warn);}
+  .row{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:6px 0;}
+  button{background:#21262d; color:var(--txt); border:1px solid var(--line); border-radius:8px;
+         padding:7px 14px; cursor:pointer; font-size:13px; transition:.15s;}
+  button:hover{border-color:var(--acc); color:#fff;}
+  button.primary{background:var(--acc); border-color:var(--acc); color:#0d1117; font-weight:600;}
+  select,input[type=range]{background:#0d1117; color:var(--txt); border:1px solid var(--line);
+         border-radius:8px; padding:6px 8px; font-size:13px;}
+  label{font-size:12px; color:var(--dim);}
+  .chem{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+  .chem .bar{flex:1; min-width:120px; background:#0d1117; border:1px solid var(--line);
+       border-radius:8px; padding:8px; position:relative; overflow:hidden;}
+  .chem .nm{font-size:11px; color:var(--dim);}
+  .chem .val{font-size:15px; font-weight:600;}
+  .chem .track{height:6px; background:#21262d; border-radius:3px; margin-top:6px; overflow:hidden;}
+  .chem .fill{height:100%; background:var(--acc); border-radius:3px; transition:width .3s;}
+  .log{margin-top:12px; max-height:200px; overflow:auto; font-family:Consolas,monospace;
+       font-size:12px; color:var(--dim); white-space:pre-wrap;}
+  .log .ok{color:var(--ok);} .log .gen{color:var(--acc);}
+  ::-webkit-scrollbar{width:8px;height:8px;} ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Mirro · <span>Нейроэволюция</span> графа знаний</h1>
+  <div class="badge">популяция · мутация · скрещивание · отбор по физике</div>
+</header>
+
+<div class="layout">
+  <!-- Панель управления -->
+  <div>
+    <div class="card">
+      <h2>Настройки популяции</h2>
+      <div class="row">
+        <label>Узлов: <b id="lbNodes">3</b></label>
+        <input id="inNodes" type="range" min="2" max="8" value="3">
+      </div>
+      <div class="row">
+        <label>Популяция: <b id="lbPop">12</b></label>
+        <input id="inPop" type="range" min="4" max="40" value="12">
+      </div>
+      <div class="row">
+        <label>Мутация:</label>
+        <input id="inMut" type="range" min="0" max="6" value="3">
+        <span id="lbMut" style="font-size:12px;color:var(--dim)">0.30</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Управление</h2>
+      <div class="row">
+        <button id="btnStep" class="primary">▶ Шаг эволюции</button>
+        <button id="btnAuto">⏵ 20 поколений</button>
+        <button id="btnReset">↺ Сброс</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Поколение</div><div class="v" id="sGen">0</div></div>
+        <div class="stat"><div class="k">Фитнес (лучш.)</div><div class="v" id="sFit">—</div></div>
+        <div class="stat"><div class="k">Средний фитнес</div><div class="v" id="sAvg">—</div></div>
+        <div class="stat"><div class="k">Опыт (паттернов)</div><div class="v" id="sExp">0</div></div>
+      </div>
+      <div class="chem">
+        <div class="bar"><div class="nm">Дофамин</div><div class="val" id="cDop">—</div>
+          <div class="track"><div class="fill" id="fDop"></div></div></div>
+        <div class="bar"><div class="nm">Серотонин</div><div class="val" id="cSer">—</div>
+          <div class="track"><div class="fill" id="fSer"></div></div></div>
+        <div class="bar"><div class="nm">Ацетилхолин</div><div class="val" id="cAch">—</div>
+          <div class="track"><div class="fill" id="fAch"></div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Журнал</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <!-- Сцена -->
+  <div class="card">
+    <h2>Лучший граф поколения (узлы-перцептроны, связи = проводимость)</h2>
+    <canvas id="cv" width="820" height="560"></canvas>
+    <div style="font-size:12px;color:var(--dim);margin-top:8px;">
+      Толщина ребра = сила связи (синапс) · цвет узла = уровень дофамина · размер = метаб. энергия
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============ Mirro Neuroevolution (JS) — соответствует algos/evolve.py ============ */
+const cfg = { nodes:3, pop:12, mut:0.3, targetEnergy:0.6 };
+const el = id => document.getElementById(id);
+const rnd = mulberry32(42);
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const sig = x => 1/(1+Math.exp(-x));
+
+/* --- Перцептрон-узел --- */
+class PerceptronNode{
+  constructor(dim,h){ this.h=h; this.w=Array.from({length:dim},()=>Array.from({length:h},()=>rnd()*0.6-0.3)); this.b=Array(h).fill(0); }
+  forward(x){ const out=[]; for(let j=0;j<this.h;j++){ let s=this.b[j]; for(let i=0;i<x.length;i++) s+=x[i]*this.w[i][j]; out.push(Math.max(0,s)); } return out; }
+}
+/* --- Геном (индивид) --- */
+class Genome{
+  constructor(n,idim,h){
+    this.n=n; this.h=h; this.nodes=Array.from({length:n},()=>new PerceptronNode(idim,h));
+    this.wg=Array.from({length:n},()=>Array.from({length:n},()=>rnd()*0.5-0.25));
+    this.dop=rnd()*1.0; this.ser=0.5+rnd()*0.5; this.ach=0.5+rnd()*0.5; this.gsr=0.2+rnd()*0.7;
+    this.dec=Array.from({length:h},()=>rnd()*0.5-0.25);
+  }
+  clone(){ const c=new Genome(this.n,this.nodes[0].w.length,this.h);
+    this.nodes.forEach((nd,i)=>nd.w.forEach((row,r)=>c.nodes[i].w[r]=row.slice()));
+    c.wg=this.wg.map(r=>r.slice()); c.dop=this.dop;c.ser=this.ser;c.ach=this.ach;c.gsr=this.gsr;c.dec=this.dec.slice(); return c; }
+  mutate(rate){ const mut=()=>rnd()<rate;
+    this.nodes.forEach(nd=>nd.w.forEach((row,i)=>row.forEach((_,j)=>{ if(mut()) nd.w[i][j]+=(rnd()-0.5); if(rnd()<0.02) nd.w[i][j]=rnd()*0.6-0.3; })));
+    this.wg.forEach((row,i)=>row.forEach((_,j)=>{ if(mut()) this.wg[i][j]+=(rnd()-0.5); }));
+    const lv=v=>Math.max(0,Math.min(2,v+rnd()*0.2-0.1));
+    this.dop=lv(this.dop); this.ser=lv(this.ser); this.ach=lv(this.ach); this.gsr=lv(this.gsr);
+    this.dec.forEach((_,i)=>{ if(mut()) this.dec[i]+=(rnd()-0.5); });
+    return this;
+  }
+  crossover(other){ const c=this.clone(); const take=()=> rnd()<0.5?this:other;
+    this.nodes.forEach((nd,i)=>{ const s=take().nodes[i]; c.nodes[i].w=nd.w.map((row,r)=>s.w[r].slice()); });
+    c.wg=this.wg.map((row,i)=>take().wg[i].slice());
+    c.dop=take().dop; c.ser=take().ser; c.ach=take().ach; c.gsr=take().gsr;
+    c.dec=this.dec.map((_,i)=>take().dec[i]);
+    return c;
+  }
+  forward(A,X){
+    const n=this.n,h=this.h;
+    const lat=this.nodes.map((nd,i)=>nd.forward(X[i]));
+    // message passing: акетилхолин масштабирует внимание, GSR повышает проводимость
+    const flow=Array.from({length:n},()=>Array(h).fill(0));
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++){ const w=A[i][j]*this.ach*(1+this.gsr);
+      if(w>0) for(let k=0;k<h;k++) flow[i][k]+=w*lat[j][k]; }
+    const state=Array.from({length:n},()=>Array(h).fill(0));
+    for(let i=0;i<n;i++) for(let k=0;k<h;k++){ let s=flow[i][k];
+      for(let j=0;j<n;j++) s+=this.wg[j][i]*lat[j][k];
+      s=s*this.ser+this.dop*0.5; state[i][k]=s*sig(s); }
+    const agg=Array(h).fill(0); for(let k=0;k<h;k++){ for(let i=0;i<n;i++) agg[k]+=state[i][k]; agg[k]/=n; }
+    let response=0; for(let k=0;k<h;k++) response+=agg[k]*this.dec[k];
+    let energy=0; for(let i=0;i<n;i++) for(let k=0;k<h;k++) energy+=state[i][k]**2;
+    return { state, agg, response, energy };
+  }
+  fitness(A,X){ const o=this.forward(A,X); const phys=Math.abs(o.energy-cfg.targetEnergy);
+    return Math.abs(o.response)-phys*0.8-o.energy*0.2; }
+}
+
+/* --- Эволюционер --- */
+class Evolver{
+  constructor(n,pop){ this.n=n; this.idim=3; this.h=4; this.pop0=pop; this.expBase=[]; this.reset(); }
+  reset(){ this.pop=Array.from({length:this.pop0},()=>new Genome(this.n,this.idim,this.h)); this.gen=0; this.best=null; this.bestFit=-Infinity; }
+  A(){ const a=Array.from({length:this.n},(_,i)=>Array.from({length:this.n},(_,j)=> i===j?1:0.4)); return a; }
+  X(){ return Array.from({length:this.n},(_,i)=>[0.7+0.1*i,0.4+0.1*i,0.8+0.05*i]); }
+  step(){
+    const A=this.A(),X=this.X();
+    const sc=this.pop.map(g=>({f:g.fitness(A,X), g})).sort((a,b)=>b.f-a.f);
+    if(sc[0].f>this.bestFit){ this.bestFit=sc[0].f; this.best=sc[0].g; }
+    const elite=Math.max(1,Math.floor(sc.length/10));
+    for(let i=0;i<elite;i++) if(sc[i].f>0) this.expBase.push(sc[i].g.forward(A,X).agg.slice());
+    if(this.expBase.length>50) this.expBase.splice(0,this.expBase.length-50);
+    const np=sc.slice(0,elite).map(s=>s.g);
+    while(np.length<this.pop0){ const p1=sc[Math.floor(rnd()*(elite+1))].g, p2=sc[Math.floor(rnd()*(elite+1))].g;
+      np.push(p1.crossover(p2).mutate(cfg.mut)); }
+    this.pop=np; this.gen++;
+    const avg=sc.reduce((s,x)=>s+x.f,0)/sc.length;
+    return { best:sc[0].f, avg, exp:this.expBase.length };
+  }
+}
+let ev=new Evolver(cfg.nodes,cfg.pop);
+
+/* ============ отрисовка ============ */
+const cv=el('cv'), ctx=cv.getContext('2d');
+function layout(n,W,H){ const pts=[]; const cx=W/2, cy=H/2, R=Math.min(W,H)/2-70;
+  for(let i=0;i<n;i++){ const a=-Math.PI/2+ i*2*Math.PI/n; pts.push([cx+R*Math.cos(a), cy+R*Math.sin(a)]); } return pts; }
+function draw(){
+  const W=cv.width, H=cv.height; ctx.clearRect(0,0,W,H);
+  if(!ev.best) return;
+  const g=ev.best, A=ev.A(), X=ev.X(), out=g.forward(A,X), pts=layout(g.n,W,H);
+  // рёбра
+  for(let i=0;i<g.n;i++) for(let j=0;j<g.n;j++){ if(i===j) continue;
+    const w=Math.abs(A[i][j])*g.ach*(1+g.gsr);
+    ctx.strokeStyle='rgba(88,166,255,'+Math.min(0.9,0.15+w*0.5)+')';
+    ctx.lineWidth=Math.max(0.5,w*3);
+    ctx.beginPath(); ctx.moveTo(pts[i][0],pts[i][1]); ctx.lineTo(pts[j][0],pts[j][1]); ctx.stroke();
+  }
+  // узлы
+  for(let i=0;i<g.n;i++){ const [x,y]=pts[i]; const en=out.state[i].reduce((a,b)=>a+b*b,0);
+    const r=14+Math.min(16,en*6); const dopCol=g.dop/Math.max(0.001,g.dop+g.ser);
+    const hue=210-dopCol*120;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle='hsl('+hue+',70%,30%)'; ctx.fill();
+    ctx.strokeStyle=Math.abs(en)>0? 'rgba(63,185,80,.9)':'#30363d'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('P'+i,x,y);
+  }
+  // ответ
+  ctx.fillStyle='#c9d1d9'; ctx.font='12px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('сигнал = '+out.response.toFixed(4), 14, 20);
+  ctx.fillText('энергия = '+out.energy.toFixed(3), 14, 38);
+}
+function render(){
+  el('sGen').textContent=ev.gen; el('sExp').textContent=ev.expBase.length;
+  if(ev.best){ el('sFit').textContent=ev.bestFit.toFixed(3); el('cDop').textContent=ev.best.dop.toFixed(2);
+    el('cSer').textContent=ev.best.ser.toFixed(2); el('cAch').textContent=ev.best.ach.toFixed(2);
+    el('fDop').style.width=(Math.min(2,ev.best.dop)/2*100)+'%';
+    el('fSer').style.width=(Math.min(2,ev.best.ser)/2*100)+'%';
+    el('fAch').style.width=(Math.min(2,ev.best.ach)/2*100)+'%';
+  }
+  draw();
+}
+function log(msg,cls){ const l=el('log'); const d=document.createElement('div');
+  d.className=cls||''; d.textContent=msg; l.appendChild(d); l.scrollTop=l.scrollHeight; }
+
+/* ============ управление ============ */
+el('btnStep').onclick=()=>{ const s=ev.step(); render(); log('поколение '+ev.gen+': best='+s.best.toFixed(3)+' avg='+s.avg.toFixed(3)+' опыт='+s.exp+'','gen'); };
+el('btnReset').onclick=()=>{ ev.reset(); el('log').innerHTML=''; render(); log('Эволюция сброшена'); };
+let auto=null;
+el('btnAuto').onclick=()=>{ if(auto){ clearInterval(auto); auto=null; el('btnAuto').textContent='⏵ 20 поколений'; return; }
+  el('btnAuto').textContent='■ Стоп'; let left=20;
+  auto=setInterval(()=>{ if(left<=0){ clearInterval(auto); auto=null; el('btnAuto').textContent='⏵ 20 поколений'; return; }
+    const s=ev.step(); render(); log('поколение '+ev.gen+': best='+s.best.toFixed(3),'gen'); left--; }, 60);
+  };
+el('inNodes').oninput=e=>{ cfg.nodes=+e.target.value; el('lbNodes').textContent=cfg.nodes;
+  ev=new Evolver(cfg.nodes,cfg.pop); ev.reset(); render(); };
+el('inPop').oninput=e=>{ cfg.pop=+e.target.value; el('lbPop').textContent=cfg.pop; ev=new Evolver(cfg.nodes,cfg.pop); ev.reset(); render(); };
+el('inMut').oninput=e=>{ cfg.mut=+e.target.value/20; el('lbMut').textContent=cfg.mut.toFixed(2); };
+
+/* запуск: несколько поколений сразу, чтобы сцена жила */
+for(let i=0;i<5;i++) ev.step();
+render();
+log('Mirro эволюция готова · '+ev.pop.length+' геномов, поколение '+ev.gen+'. Нажмите «Шаг» или «20 поколений».','ok');
+</script>
+</body>
+</html>
