@@ -6,6 +6,11 @@
 
 Файл: `core/mirro_core.py` — HTTP-сервер + маршрутизация ответов.
 
+Ключевые функции ответа и квантово-комбинаторной интеграции:
+- `_chat_payload` — OpenAI-совместимый JSON (модель `mirro-evolutionary-v4`, поле `reasoning_content`)
+- `_quantum_context_note` — reasoning-сноска: PINN-loss, суперпозиция, размерность, комбинаторная пара
+- `MirroAPI._handle_chat` — обработка POST /v1/chat/completions (SSE и JSON)
+
 Цепочка ответа (`build_response` → `_try_direct_handlers`):
 ```
 try_greetings → try_learn → try_algos_think → try_humor → try_creative

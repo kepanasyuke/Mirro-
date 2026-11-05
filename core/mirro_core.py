@@ -123,6 +123,36 @@ def _grab_algo():
     from scripts.algorithms import algo
     return algo
 
+
+def _quantum_context_note():
+    """Квантово-комбинаторная сноска для reasoning_content ответа.
+
+    Собирает из реальных модулей: физический PINN-loss графа, число узлов в
+    квантовой суперпозиции, среднюю размерность понимания и самую стабильную
+    комбинаторную пару концептов. Тихий — на ошибке возвращает пустую строку.
+    Единственный return: str."""
+    note = ""
+    try:
+        from algos.knowledge_graph import kg as _kg
+        from algos.zero_dimensional import dimension_of_understanding as _dimen
+        from algos.quantum_graph import init_quantum_states
+        from algos.neural_electric import calculate_physics_loss
+        from algos.combinatorics import evaluate_best_logical_tree
+        if not _kg.nodes:
+            return note
+        pinn = calculate_physics_loss(_kg, 0.55)
+        dim = _dimen(_kg)
+        sup = len(init_quantum_states(_kg).states)
+        avail = sorted(_kg.nodes)[:40]
+        pair, chaos = evaluate_best_logical_tree(_kg, avail, chaos_target=0.5)
+        pair_txt = (pair[0] + "↔" + pair[1]) if pair else "нет устойчивой пары"
+        note = (f"PINN Loss: {pinn:.4f}; суперпозиция: {sup} концептов; "
+                f"размерность понимания: {dim}/3; комбинаторный путь: {pair_txt} "
+                f"(хаос {chaos:.4f}).")
+    except Exception:
+        note = ""
+    return note
+
 def autonomous_learning_loop(interval_sec=3600):
     import threading
     def _loop():
@@ -960,9 +990,18 @@ class MirroAPI(BaseHTTPRequestHandler):
     def _chat_payload(self, messages, model, response, prompt):
         """Формирует итоговый JSON-ответ (не-SSE). Единственный return: dict."""
         content = response.get("content", "") if response else "Ошибка"
-        return {"id": f"mirro-{int(time.time())}", "object": "chat.completion", "model": model,
+        # квантово-комбинаторная сноска: PINN-loss + суперпозиция + стабильная пара
+        reasoning = ""
+        try:
+            reasoning = _quantum_context_note()
+        except Exception:
+            reasoning = ""
+        return {"id": f"mirro-{int(time.time())}", "object": "chat.completion",
+                "model": "mirro-evolutionary-v4",
                 "usage": {"prompt_tokens": len(prompt)//4, "completion_tokens": len(content)//4},
-                "choices": [{"index": 0, "message": {"role": "assistant", "content": content}}]}
+                "choices": [{"index": 0, "message": {"role": "assistant",
+                             "content": content,
+                             "reasoning_content": reasoning}}]}
 
     def _handle_chat(self, body):
         """Обрабатывает POST /v1/chat/completions. Единственный return: None.

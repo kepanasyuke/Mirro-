@@ -274,7 +274,18 @@ class MirroLauncher:
         self._set_progress(1.0)
         if health:
             ex = health.get("total_examples", 0)
-            self.lbl_sub.config(text=f"{ex:,} примеров в базе · {URL}")
+            line = f"{ex:,} примеров в базе · {URL}"
+            # новые квантово-графовые метрики (если вернул /health)
+            alg = health.get("algorithms") or None
+            if alg:
+                kg = alg.get("knowledge_graph") or {}
+                q = alg.get("quantum") or {}
+                dim = kg.get("avg_dimension")
+                sup = q.get("superposed_nodes")
+                dim_txt = f"{dim}/3D" if dim is not None else "—"
+                sup_txt = str(sup) if sup is not None else "—"
+                line += f"  ·  размерность {dim_txt}  ·  суперпозиция {sup_txt}"
+            self.lbl_sub.config(text=line)
         if self.auto_open.get():
             self._log("[i] Открываю сайт...")
             webbrowser.open(URL)
