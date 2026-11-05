@@ -16,7 +16,7 @@
 к узлу, пока хватает «напряжения», а нейромедиаторы снижают или повышают порог.
 Результат — цепочка активированных понятий (ассоциативная активация).
 """
-import sys, os
+import sys, os, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from knowledge_graph import KnowledgeGraph
 
@@ -254,6 +254,122 @@ def _sample_triples():
         ("Понимание", "рождает", "знание"),
         ("Сон", "укрепляет", "память"),
     ]
+
+
+# ============================================================
+#  Сквозной мыслительный пайплайн (Reasoning Pipeline), работающий
+#  на РЕАЛЬНОМ KnowledgeGraph: edges[(src, pred, dst)] -> weight.
+#  Биометрия → модулированные рёбра → роу-импульсы → физика → опыт.
+# ============================================================
+def compute_modulated_edges(graph, ach=1.0, serotonin=1.0, dopamine=0.0):
+    """Проводимость рёбер как функция нейромедиаторов. Возвращает dict
+    edge_key -> active_weight (не мутирует граф — чистая функция).
+    Один return: dict {(src,pred,dst): float}."""
+    out = {}
+    for key, w in list(graph.edges.items()):
+        active = (w * ach * serotonin) + dopamine
+        out[key] = active
+    return out
+
+
+def _edge_overlap_targets(edge_key, edges):
+    """Куда от ребра (src,pred,dst) идут роу-связи: на рёбра, исходящие из dst.
+    Возвращает список рёбер-целей. Один return: list keys."""
+    src, _p, dst = edge_key
+    targets = []
+    for (s2, p2, d2), w in edges.items():
+        if s2 == dst and d2 != src:
+            targets.append((s2, p2, d2))
+    return targets
+
+
+def propagate_meta_impulses(graph, active_weights):
+    """Роу-импульсы «ребро→ребро»: активированное ребро усиливает исходящие
+    из своей цели (аксо-аксональный синапс). Возвращает новую dict проводимостей.
+    Один return: dict edge_key -> active_weight."""
+    out = dict(active_weights)
+    for key, act in list(active_weights.items()):
+        if act <= 0:
+            continue
+        for tgt in _edge_overlap_targets(key, graph.edges):
+            if tgt in out:
+                out[tgt] = out[tgt] + act * key_meta_mod(key, out)
+    return out
+
+
+def key_meta_mod(edge_key, active_weights):
+    """Коэффициент «маршрута» от ребра: чем сильнее проводимость, тем влиятельнее.
+    Один return: float (нормализованный 0..1)."""
+    return 0.5  # фиксированный мета-множитель; можно обучать отдельно
+
+
+def calculate_physics_loss(graph, target_energy=0.6):
+    """PINN-фильтр: отклонение средней квадратичной энергии рёбер от константы.
+    Один return: float (0 = физично)."""
+    vals = list(graph.edges.values())
+    if not vals:
+        return 0.0
+    mean_energy = sum(w * w for w in vals) / len(vals)
+    return abs(mean_energy - target_energy)
+
+
+def path_active_energies(graph, path_nodes):
+    """Энергии рёбер вдоль пути (для физического контроля). Один return: list float."""
+    energies = []
+    for src, _p, _d, w in _edges_on_path(graph, path_nodes):
+        energies.append(w)
+    return energies
+
+
+def try_extract_biometric_context(user_query, session_pulse=0.75):
+    """Определяет стартовую «биометрию» эпохи из текста запроса (виртуальная):
+    пульс растёт при длинном/восклицательном вопросе, GSR — при вопросительном.
+    Один return: dict {pulse, gsr_stress, energy}."""
+    q = user_query or ""
+    pulse_modifier = 0.15 if ("!" in q or len(q) > 50) else 0.0
+    return {
+        "pulse": min(1.0, session_pulse + pulse_modifier),
+        "gsr_stress": 0.65 if "?" in q else 0.40,
+        "energy": 0.85,
+    }
+
+
+def try_route_pipeline(graph, user_query, chemistry=None, session_pulse=0.75,
+                       target_energy=0.6):
+    """Сквозной мыслительный контур на ЖИВОМ графе:
+    биометрия → модулированные рёбра → роу-импульсы → PINN-контроль → ответ.
+    Один return: dict {signal, physics_loss, active_edges, physics_ok, answer}."""
+    chem = chemistry or {"acetylcholine": 1.0, "serotonin": 1.0, "dopamine": 0.0}
+    bio = try_extract_biometric_context(user_query, session_pulse)
+    modulated = compute_modulated_edges(graph,
+                                        ach=chem.get("acetylcholine", 1.0),
+                                        serotonin=chem.get("serotonin", 1.0),
+                                        dopamine=chem.get("dopamine", 0.0))
+    # роу-импульсы: активированные рёбра усиливают следующие по цепочке
+    routed = propagate_meta_impulses(graph, modulated)
+    # физический цензор: отклонение средней энергии от целевой, нормализованное
+    # по масштабу реальных весов (иначе любой граф с весами>1 кажется «кашей»).
+    loss = calculate_physics_loss(graph, target_energy)
+    norm_scale = 1.0
+    if graph.edges:
+        mean_w = sum(w for w in graph.edges.values()) / len(graph.edges)
+        mean_energy = sum(w * w for w in graph.edges.values()) / len(graph.edges)
+        norm_scale = max(1.0, mean_energy, mean_w * mean_w)
+    rel_loss = loss / norm_scale
+    physics_ok = rel_loss <= 0.4
+    # ответ = средневзвешенный сигнал проводимостей маршрута
+    avg = 0.0
+    if routed:
+        avg = sum(w for w in routed.values()) / len(routed)
+    signal = math.tanh(avg) * (0.5 + bio["pulse"] * 0.5)
+    return {
+        "signal": round(signal, 4),
+        "physics_loss": round(loss, 4),
+        "active_edges": len(routed),
+        "physics_ok": physics_ok,
+        "biometrics": bio,
+        "answer": round(signal, 4) if physics_ok else None,
+    }
 
 
 if __name__ == "__main__":

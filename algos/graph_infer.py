@@ -110,6 +110,56 @@ def try_graph_infer(query):
     return answer
 
 
+# ============================================================
+#  Интеграция опыта и динамический вывод (на реальном KnowledgeGraph:
+#  edges[(src,pred,dst)] -> weight). Опыт — список латентных паттернов
+#  (векторов активных весов), накопленных успешными эпохами.
+# ============================================================
+def _edge_pattern(graph):
+    """Латентный паттерн графа: вектор активных весов рёбер. Один return: list."""
+    return [float(w) for w in graph.edges.values()]
+
+
+def try_get_memory_experience(graph, active_pattern, experience=None):
+    """Ищет наиболее схожий прошлый опыт косинусным сходством. Один return: list.
+    Если опыта нет — возвращает нулевой паттерн той же длины."""
+    if experience is None:
+        experience = getattr(graph, "experience", [])
+    if not experience:
+        return [0.0] * len(active_pattern)
+    best_match = experience[0]
+    best_score = -1.0
+    for exp in experience:
+        dot = sum(a * e for a, e in zip(active_pattern, exp))
+        norm_a = (sum(a * a for a in active_pattern) ** 0.5) or 1.0
+        norm_e = (sum(e * e for e in exp) ** 0.5) or 1.0
+        score = dot / (norm_a * norm_e)
+        if score > best_score:
+            best_score = score
+            best_match = exp
+    return best_match
+
+
+def generate_dynamic_inference(graph, W_decoder, blend=0.25):
+    """Смешивает текущий паттерн активных весов с прошлым опытом (памятью)
+    и пропускает через перцептрон-декодер. Один return: (signal, integrated)."""
+    current = _edge_pattern(graph)
+    past = try_get_memory_experience(graph, current)
+    integrated = [0.75 * c + 0.25 * p for c, p in zip(current, past)]
+    signal = sum(i * w for i, w in zip(integrated, W_decoder))
+    return signal, integrated
+
+
+def remember_pattern(graph, pattern, max_experience=50):
+    """Записывает успешный латентный паттерн в память графа. Один return: int."""
+    if not hasattr(graph, "experience"):
+        graph.experience = []
+    if len(graph.experience) >= max_experience:
+        graph.experience.pop(0)
+    graph.experience.append(list(pattern))
+    return len(graph.experience)
+
+
 if __name__ == "__main__":
     from knowledge_graph import KnowledgeGraph
     g = KnowledgeGraph()
