@@ -701,6 +701,12 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_definition(q):
+        try:
+            from algos.module_knowledge import try_definition as _f
+            return _f(q)
+        except Exception:
+            return None
     def try_what_links(q):
         try:
             from algos.knowledge_graph import try_what_links as _f
@@ -757,6 +763,7 @@ def _try_direct_handlers(prompt):
         ("ai_history", try_ai_history),
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
+        ("definition", try_definition),
         ("enrich", try_enrich),
         ("what_links", try_what_links),
         ("similar", try_similar),

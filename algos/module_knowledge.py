@@ -277,6 +277,26 @@ _KNOWLEDGE = {
                    "what": "λ: A·v=λ·v — как матрица растягивает векторы", "ex": "важны в PCA, физике"},
     "linear_equations": {"module": "16_university", "topic": "системы линейных уравнений",
                          "what": "решение Ax=b методом Гаусса", "ex": "прямой и обратный ход"},
+    # ---- общие понятия (связные определения своими словами) ----
+    "_нейросеть": {"topic": "нейросеть",
+                    "what": "математическая модель, обучаемая на данных: находит закономерности и применяет их для ответов", "ex": "похожа на сеть связанных нейронов"},
+    "_ии": {"topic": "искусственный интеллект",
+            "what": "система, решающая задачи, которые обычно требуют человеческого ума: распознавание, понимание, обучение", "ex": "чат-боты, распознавание речи, умные подсказки"},
+    "_питон": {"topic": "язык программирования Python",
+               "what": "популярный язык программирования: простой синтаксис, огромное сообщество, широкие библиотеки", "ex": "на нём написана сама Mirro",
+               "tags": ["питон", "python"]},
+    "_граф": {"topic": "граф",
+              "what": "структура из вершин (точек) и рёбер (связей между ними)", "ex": "граф знаний Mirro — понятия и их связи"},
+    "_алгоритм": {"topic": "алгоритм",
+                  "what": "чёткая последовательность шагов для решения задачи", "ex": "рецепт: по шагам приходим к результату"},
+    "_память": {"topic": "память",
+                "what": "способность сохранять и воспроизводить информацию, опыт, знания", "ex": "у Mirro есть база опыта — память о успешных ответах"},
+    "_связь": {"topic": "связь",
+               "what": "отношение между понятиями, которое говорит, как они связаны", "ex": "«нейрон — принадлежит — мозг»"},
+    "_интерфейс": {"topic": "интерфейс",
+                   "what": "способ взаимодействия человека с программой: экран, окна, кнопки, чат", "ex": "веб-чат Mirro — это интерфейс"},
+    "_данные": {"topic": "данные",
+                "what": "сведения в форме, пригодной для обработки: числа, текст, изображения", "ex": "Mirro обучается на 2.8 млн примеров данных"},
 }
 
 
@@ -289,7 +309,9 @@ class FunctionKnowledge:
         self._by_module = {}
         for key, info in self.data.items():
             self._by_name[key] = info
-            self._by_module.setdefault(info["module"], []).append(key)
+            mod = info.get("module")
+            if mod:
+                self._by_module.setdefault(mod, []).append(key)
 
     def topic_of(self, name):
         """Возвращает словарь-знание по имени функции. Один return: dict/None."""
@@ -410,6 +432,43 @@ def try_function_knowledge(query):
         by_topic = _match_by_topic(q)
         if by_topic:
             ans = fk.knowledge_for(by_topic)
+    return ans
+
+
+def try_definition(query):
+    """Отвечает связным определением для ОБЩИХ ПОНЯТИЙ (нейросеть, ИИ, питон,
+    граф, алгоритм и т.п.) своими словами — раньше сырого графа.
+    Ищет понятие (ключ с префиксом «_») по совпадению термина в запросе.
+    Один return: str|None."""
+    ans = None
+    q = (query or "").lower()
+    # понятия — это ключи в _KNOWLEDGE, начинающиеся с «_»
+    best = []
+    for key in fk._by_name:
+        if key.startswith("_"):
+            info = fk._by_name[key]
+            # матчим по первому слову topic, полному topic и явным tags
+            terms = [info.get("topic", "").split()[0].lower()]
+            full = info.get("topic", "").lower()
+            tags = [t.lower() for t in info.get("tags", [])]
+            hit = None
+            for t in terms:
+                if t and t in q:
+                    hit = len(t)
+                    break
+            if hit is None and full in q:
+                hit = len(full)
+            if hit is None:
+                for t in tags:
+                    if t and t in q:
+                        hit = len(t)
+                        break
+            if hit:
+                best.append((hit, info["topic"], info["what"], info["ex"]))
+    if best:
+        best.sort(key=lambda x: -x[0])
+        topic, what, ex = best[0][1], best[0][2], best[0][3]
+        ans = f"{topic[0].upper() + topic[1:]} — это {what}. Например: {ex}."
     return ans
 
 
