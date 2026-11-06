@@ -661,6 +661,7 @@ function resetReaction() {
         <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Квантовое состояние концептов (ψ)</div>
         <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:center">
           <canvas id="cvQuantum" width="260" height="260" style="background:#0c1220;border:1px solid var(--border);border-radius:10px"></canvas>
+          <canvas id="cvImmune" width="260" height="180" style="background:#0c1220;border:1px solid var(--border);border-radius:10px"></canvas>
           <div style="flex:1;min-width:220px">
             <div style="color:var(--muted);font-size:var(--fs-tiny);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Выбери понятие из выпадающего списка:</div>
             <select id="qSel" onchange="drawQuantumWaveState()" style="width:100%;padding:8px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px"></select>
@@ -1127,6 +1128,17 @@ async function loadQuantumSelector() {
       });
       if (drawQuantumWaveState) drawQuantumWaveState();
     }
+    // иммунный виджет: когерентность, карантин, энергия синапсов
+    if (typeof drawImmuneAndPhaseStatus === 'function') {
+      const imm = a.immunity || {};
+      const kgA = a.knowledge_graph || {};
+      drawImmuneAndPhaseStatus('cvImmune', {
+        pinn_loss: (a.pinn_loss || (kgA.avg_dimension != null ? Math.abs(kgA.avg_dimension/3 - 0.64) : 0)),
+        immune_quarantine_count: imm.quarantined || 0,
+        synaptic_energy: (imm.synaptic_energy || (kgA.avg_dimension != null ? Math.abs(kgA.avg_dimension/3) : 0)),
+        fatigued_edges: imm.fatigued_edges || 0
+      });
+    }
   } catch {}
 }
 function drawQuantumWaveState() {
@@ -1158,8 +1170,31 @@ function drawQuantumWaveState() {
   if (info) info.textContent = '«' + node.name + '» — амплитуды α=' + node.alpha.toFixed(3) + ', β=' + node.beta.toFixed(3);
 }
 
-/* Инициализация */
-loadStats(); loadClusters(); loadQuantumSelector();
+/* ===== Иммунная защита и когерентность (виджет) ===== */
+function drawImmuneAndPhaseStatus(canvasId, metricsData) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+  // шкала когерентности (стабильность фазы) — по обратному PINN-loss
+  ctx.fillStyle = '#ffffff'; ctx.font = '11px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('КВАНТОВАЯ КОГЕРЕНТНОСТЬ (ψ СТАБИЛЬНОСТЬ)', 10, 20);
+  ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(10, 30, w - 20, 15);
+  const clamped = Math.max(0, Math.min(1, 1.0 - (metricsData.pinn_loss || 0)));
+  ctx.fillStyle = '#ff00ff'; ctx.fillRect(10, 30, Math.max(10, (w - 20) * clamped), 15);
+  // иммунные антитела: заблокированные аномалии
+  ctx.fillText('ИММУННЫЙ СТРАЖ (БЛОКИРОВАНО АНОМАЛИЙ)', 10, 70);
+  const qCount = metricsData.immune_quarantine_count || 0;
+  for (let i = 0; i < 5; i++) {
+    ctx.beginPath(); ctx.arc(20 + i * 25, 95, 8, 0, 6.283);
+    ctx.fillStyle = i < qCount ? '#ff3366' : 'rgba(0,255,204,0.2)';
+    ctx.fill(); ctx.strokeStyle = '#00ffcc'; ctx.stroke();
+  }
+  ctx.fillStyle = '#00ffcc';
+  ctx.fillText('Энергия синапсов: ' + (metricsData.synaptic_energy || 0) + ' J', 10, 130);
+  ctx.fillText('Утомлённых рёбер: ' + (metricsData.fatigued_edges || 0), 10, 150);
+}
 </script>
 </body>
 </html>

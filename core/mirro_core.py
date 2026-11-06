@@ -952,6 +952,20 @@ class MirroAPI(BaseHTTPRequestHandler):
                                      "P_active_sample": p_active}
                 except Exception:
                     st["quantum"] = {"superposed_nodes": 0, "P_active_sample": []}
+                # иммунная защита + синаптическое утомление (реальные метрики)
+                try:
+                    from algos.immune_sentinel import run_graph_immune_scan
+                    from algos.refractory import init_refractory_counters
+                    _g, quarantined = run_graph_immune_scan(_kg, max_allowed_weight=5.0)
+                    refr = init_refractory_counters(_kg)
+                    n_fatigued = sum(1 for v in refr.edge_exhaustion.values() if v > 0.0)
+                    st["immunity"] = {
+                        "quarantined": len(quarantined),
+                        "n_routes": len(getattr(_kg, "meta_routes", {})),
+                        "fatigued_edges": n_fatigued,
+                    }
+                except Exception:
+                    st["immunity"] = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
                 status["algorithms"] = st
             except Exception:
                 pass
