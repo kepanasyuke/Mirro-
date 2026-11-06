@@ -427,52 +427,87 @@ def try_knowledge_graph(query):
 
 # ---------- интерфейс обогащения ответа (для ядра: try_enrich) ----------
 def _extract_topic(query):
-    """Пытается вытащить главное понятие из запроса (последнее существительное-узел).
+    """Пытается вытащить главное понятие из запроса (узел графа, кроме служебных).
     Один return: str или None."""
     q = _clean_q(query)
+    stop = {"такое", "это", "связанное", "что", "как", "про", "расскажи",
+            "объясни", "знаешь"}
     topic = None
-    # если есть узел графа, встречающийся в запросе — берём самый длинный
-    candidates = [n for n in kg.nodes if n and len(n) > 3 and n in (" " + q + " ")]
+    # узлы графа, встреченные в запросе, исключая служебные слова
+    candidates = [n for n in kg.nodes if n and len(n) > 3 and n not in stop
+                  and n in (" " + q + " ")]
     if candidates:
         topic = max(candidates, key=len)
     return topic
 
 
+def _wants_links(q):
+    """Явно ли запрос про связи/родственные понятия? Один return: bool."""
+    return any(w in q for w in ("что связано", "связ", "родствен", "знаешь про",
+                                "расскажи про", "что такое", "объясни", "связан",
+                                "соедин", "ассоциац"))
+
+
+def _clean_link_text(link):
+    """Чистит одну связь «topic p other» от мусорных фрагментов.
+    Возвращает None, если связь бессмысленна. Один return: str|None."""
+    text = (link or "").strip(" |")
+    if len(text) < 6:
+        return None
+    # мусорные объекты/хвосты: личные обращения, «насколько обида», «такое это смотри»
+    lowered = text.lower()
+    bad_markers = ("я хотел", "насколько", "обида", "такое это", "это такое",
+                   "смотри намека", "хочешь поиграть", "могу дать тебе")
+    if any(m in lowered for m in bad_markers):
+        return None
+    return text
+
+
 def try_enrich(query):
-    """Возвращает строку-обогащение родственными понятиями, либо None.
-    Один return: str или None."""
-    topic = _extract_topic(query)
+    """Возвращает СВЯЗНЫЙ ответ родственными понятиями, либо None.
+    Фильтрует мусорные связи и формулирует предложение вместо сырого «a|b|c».
+    Отвечает только на явный запрос о связях. Один return: str или None."""
     ans = None
-    if topic:
-        links = kg.enrich(topic, max_hop=2)
-        if links:
-            ans = "Знаю связанное: " + " | ".join(links[:4]) + "."
+    if _wants_links((query or "").lower()):
+        topic = _extract_topic(query)
+        if topic:
+            links = kg.enrich(topic, max_hop=2)
+            good = [_clean_link_text(l) for l in links]
+            good = [g for g in good if g]
+            if good:
+                # формулируем связно, не клеем «|»
+                body = "; ".join(dict.fromkeys(good[:5]))
+                ans = f"{topic[0].upper() + topic[1:]} — вот что я нахожу в связях: {body}."
     return ans
 
 
 def try_what_links(query):
     """Отвечает про связи понятия («что связано с X?»). Один return: str или None."""
-    q = _clean_q(query)
-    name = _extract_topic(q)
     ans = None
-    if name:
-        lines = kg.what_links(name)
-        if lines:
-            ans = "\n".join(lines[:6])
+    q_raw = (query or "").lower()
+    if _wants_links(q_raw):
+        q = _clean_q(query)
+        name = _extract_topic(q)
+        if name:
+            lines = kg.what_links(name)
+            if lines:
+                ans = "\n".join(lines[:6])
     return ans
 
 
 def try_similar(query):
     """Ищет в запросе два понятия и отвечает про их подобие. Один return: str или None."""
-    a, b = _pair_from(_clean_q(query))
     ans = None
-    if a and b:
-        sim = kg.similarity(a, b)
-        direct = kg.relation(a, b)
-        if direct:
-            ans = f"«{a}» и «{b}» напрямую связаны: " + ", ".join(f"{p}" for p, _ in direct[:3]) + f" (подобие {sim:.2f})."
-        elif sim > 0:
-            ans = f"«{a}» и «{b}» имеют общие понятия, подобие ≈ {sim:.2f}."
+    q_raw = (query or "").lower()
+    if any(w in q_raw for w in ("общего", "похож", "подоб", "сходств", "чем отлича", "в чём разниц")):
+        a, b = _pair_from(_clean_q(query))
+        if a and b:
+            sim = kg.similarity(a, b)
+            direct = kg.relation(a, b)
+            if direct:
+                ans = f"«{a}» и «{b}» напрямую связаны: " + ", ".join(f"{p}" for p, _ in direct[:3]) + f" (подобие {sim:.2f})."
+            elif sim > 0:
+                ans = f"«{a}» и «{b}» имеют общие понятия, подобие ≈ {sim:.2f}."
     return ans
 
 
