@@ -98,17 +98,18 @@ class KnowledgeGraph:
     def prune_stopwords(self, stopwords):
         """Удаляет узлы-связки (мусорные слова типа «однако», «затем») из графа
         и связанные с ними рёбра. Один return: int — число удалённых узлов."""
-        if not stopwords:
-            return 0
-        dead = {n for n in self.nodes if n in stopwords or n.strip() in stopwords}
-        for d in dead:
-            del self.nodes[d]
-            if d in self._adj:
-                del self._adj[d]
-        self.edges = {k: w for k, w in self.edges.items() if k[0] not in dead and k[2] not in dead}
-        # пересобрать индекс соседей
-        self._rebuild_adj()
-        return len(dead)
+        removed = 0
+        if stopwords:
+            dead = {n for n in self.nodes if n in stopwords or n.strip() in stopwords}
+            for d in dead:
+                del self.nodes[d]
+                if d in self._adj:
+                    del self._adj[d]
+            self.edges = {k: w for k, w in self.edges.items() if k[0] not in dead and k[2] not in dead}
+            # пересобрать индекс соседей
+            self._rebuild_adj()
+            removed = len(dead)
+        return removed
 
     # ---------- вопросы ----------
     def _forward_links(self, name):
@@ -153,9 +154,10 @@ class KnowledgeGraph:
                     nxt.append((other, trail + [(cur, p, other, w)]))
             if found is not None:
                 break
+        next_frontier = nxt
         if found is not None:
-            return (found, [])
-        return (None, nxt)
+            next_frontier = []
+        return (found, next_frontier)
 
     def path(self, a, b, max_depth=3, max_fanout=40):
         """Цепочка связей от a к b (если есть) — «рассуждение через граф».
@@ -237,31 +239,30 @@ class KnowledgeGraph:
         """Находит родственные понятия и их факты для обогащения ответа.
         Возвращает список строк «related —связь→ other: факты». Один return: list."""
         name = self._norm(name)
-        if name not in self.nodes:
-            return []
-        # соберём соседей до max_hop только по самым сильным связям
-        seen_nodes = {name}
-        candidates = {}  # Понятие -> (предикат, вес) от исходного узла
-        frontier = [name]
-        for _ in range(max_hop):
-            nxt = []
-            for cur in frontier:
-                for p, other, w in self._adj.get(cur, []):
-                    if other not in seen_nodes and other not in candidates:
-                        seen_nodes.add(other)
-                        candidates[other] = (p, w)
-                        nxt.append(other)
-            frontier = nxt
-        # ранжируем по весу, отдаём самое связанное
-        ordered = sorted(candidates.items(), key=lambda kv: -kv[1][1])[:10]
         out = []
-        for other, (p, w) in ordered:
-            node = self.nodes.get(other)
-            if node and node.facts:
-                joined = "; ".join(node.facts[:3])
-                out.append(f"{name} {p} {other}: {joined}")
-            elif other:
-                out.append(f"{name} {p} {other}")
+        if name in self.nodes:
+            # соберём соседей до max_hop только по самым сильным связям
+            seen_nodes = {name}
+            candidates = {}  # Понятие -> (предикат, вес) от исходного узла
+            frontier = [name]
+            for _ in range(max_hop):
+                nxt = []
+                for cur in frontier:
+                    for p, other, w in self._adj.get(cur, []):
+                        if other not in seen_nodes and other not in candidates:
+                            seen_nodes.add(other)
+                            candidates[other] = (p, w)
+                            nxt.append(other)
+                frontier = nxt
+            # ранжируем по весу, отдаём самое связанное
+            ordered = sorted(candidates.items(), key=lambda kv: -kv[1][1])[:10]
+            for other, (p, w) in ordered:
+                node = self.nodes.get(other)
+                if node and node.facts:
+                    joined = "; ".join(node.facts[:3])
+                    out.append(f"{name} {p} {other}: {joined}")
+                elif other:
+                    out.append(f"{name} {p} {other}")
         return out
 
     # ---------- умные запросы связей ----------
@@ -282,16 +283,18 @@ class KnowledgeGraph:
         """Насколько понятия связаны: число общих соседей / общий путь.
         Один return: float 0..1."""
         a, b = self._norm(a), self._norm(b)
-        if a not in self.nodes or b not in self.nodes:
-            return 0.0
-        na = {row[1] for row in self._adj.get(a, [])}
-        nb = {row[1] for row in self._adj.get(b, [])}
-        inter = na & nb
-        union = na | nb
-        if not union:
-            # нет соседей ни у одного — проверяем прямую связь
-            return 1.0 if self.relation(a, b) else 0.0
-        return len(inter) / len(union)
+        result = 0.0
+        if a in self.nodes and b in self.nodes:
+            na = {row[1] for row in self._adj.get(a, [])}
+            nb = {row[1] for row in self._adj.get(b, [])}
+            inter = na & nb
+            union = na | nb
+            if not union:
+                # нет соседей ни у одного — проверяем прямую связь
+                result = 1.0 if self.relation(a, b) else 0.0
+            else:
+                result = len(inter) / len(union)
+        return result
 
     # ---------- обучение из отклика ----------
     def edge_weight(self, a, b):
@@ -477,15 +480,18 @@ def try_similar(query):
 def try_feedback(a, b, positive=True):
     """Усиливает/ослабляет связь между a и b по отклику пользователя.
     Возвращает строку-отчёт. Один return: str."""
+    n = 0
+    act = "усилил"
     if positive:
         n = kg.reward(a, b)
         act = "усилил"
     else:
         n = kg.punish(a, b)
         act = "ослабил"
+    msg = f"Граф: связи «{a}»↔«{b}» нет, учить нечего."
     if n:
-        return f"Граф: {act} связь «{a}»↔«{b}» ({n} связей)."
-    return f"Граф: связи «{a}»↔«{b}» нет, учить нечего."
+        msg = f"Граф: {act} связь «{a}»↔«{b}» ({n} связей)."
+    return msg
 
 
 def _pair_from_text(q):
@@ -500,9 +506,10 @@ def _pair_from_text(q):
 def try_feedback_text(query, positive=True):
     """parse отклик из текста («нейрон связан с мыслью» + лайк). Один return: str."""
     a, b = _pair_from_text(query)
+    msg = "Граф: не нашёл пару понятий для обучения."
     if a and b:
-        return try_feedback(a, b, positive)
-    return "Граф: не нашёл пару понятий для обучения."
+        msg = try_feedback(a, b, positive)
+    return msg
 
 
 if __name__ == "__main__":

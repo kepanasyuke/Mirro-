@@ -37,44 +37,46 @@ def fire(graph, start, neuromod=None, voltage=1.0, max_hops=4, decay=0.5, learn=
 
     Возвращает список (узел, hop, остаточное_напряжение). Один return: list.
     """
-    if not graph.nodes:
-        return []
-    start = start.strip().lower()
-    if start not in graph.nodes:
-        return []
-    med = neuromod or {}
-    threshold = _threshold_for(0, dip=med.get("dop", 0), ser=med.get("ser", 0), nor=med.get("nor", 0))
     activated = []
-    frontier = [(start, 0, voltage)]
-    seen = {start}
-    for _ in range(max_hops * 3):
-        if not frontier:
-            break
-        node, hop, v = frontier.pop(0)
-        if v >= threshold:
-            activated.append((node, hop, round(v, 3)))
-            for pred, other, w in graph.neighbors(node):
-                # вес связи (из ТТЛ) усиливает остаточное напряжение по-босовски:
-                # ЕСЛИ есть связь ТО передать, вес = проводимость
-                if other not in seen:
-                    seen.add(other)
-                    nv = v * decay * (0.5 + w) if w else v * decay * 0.6
-                    if nv >= threshold:
-                        frontier.append((other, hop + 1, nv))
-                        # Хебб: импульс, прошедший по связи, её укрепляет
-                        if learn and hasattr(graph, "hebbian_learn"):
-                            graph.hebbian_learn(node, other, amount=0.03)
+    ok_nodes = bool(graph.nodes) and (start.strip().lower() in graph.nodes)
+    if ok_nodes:
+        start = start.strip().lower()
+        med = neuromod or {}
+        threshold = _threshold_for(0, dip=med.get("dop", 0), ser=med.get("ser", 0), nor=med.get("nor", 0))
+        frontier = [(start, 0, voltage)]
+        seen = {start}
+        for _ in range(max_hops * 3):
+            if not frontier:
+                break
+            node, hop, v = frontier.pop(0)
+            if v >= threshold:
+                activated.append((node, hop, round(v, 3)))
+                for pred, other, w in graph.neighbors(node):
+                    # вес связи (из ТТЛ) усиливает остаточное напряжение по-босовски:
+                    # ЕСЛИ есть связь ТО передать, вес = проводимость
+                    if other not in seen:
+                        seen.add(other)
+                        nv = v * decay * (0.5 + w) if w else v * decay * 0.6
+                        if nv >= threshold:
+                            frontier.append((other, hop + 1, nv))
+                            # Хебб: импульс, прошедший по связи, её укрепляет
+                            if learn and hasattr(graph, "hebbian_learn"):
+                                graph.hebbian_learn(node, other, amount=0.03)
     return activated
 
 
 def _avg_dimension(graph, nodes):
     """Средняя размерность затронутых узлов (по zero_dimensional). Один return: float."""
+    result = 0.0
     try:
         from zero_dimensional import dimension_of
     except Exception:
-        return 0.0
-    dims = [dimension_of(graph, n)[0] for n in nodes if n in graph.nodes]
-    return round(sum(dims) / len(dims), 2) if dims else 0.0
+        dimension_of = None
+    if dimension_of is not None:
+        dims = [dimension_of(graph, n)[0] for n in nodes if n in graph.nodes]
+        if dims:
+            result = round(sum(dims) / len(dims), 2)
+    return result
 
 
 def _edges_on_path(graph, path_nodes):
@@ -109,11 +111,9 @@ def hebbian_update_path(graph, path_nodes, feedback_sign, learning_rate=0.01,
     Возвращает: dict {updated, strengthened, weakened, avg_delta}.
     """
     result = {"updated": 0, "strengthened": 0, "weakened": 0, "avg_delta": 0.0}
-    if not path_nodes or len(path_nodes) < 2 or graph is None:
-        return result
-    edges = _edges_on_path(graph, [n.lower() for n in path_nodes])
-    if not edges:
-        return result
+    edges = []
+    if graph is not None and path_nodes and len(path_nodes) >= 2:
+        edges = _edges_on_path(graph, [n.lower() for n in path_nodes])
     total = 0.0
     for src, pred, dst, weight in edges:
         delta = learning_rate * weight * feedback_sign
@@ -140,8 +140,6 @@ def all_weights_on_path(graph, path_nodes):
 
 def visualize_chain(chain):
     """ASCII-карта силы импульса по цепочке (затухание). Один return: str."""
-    if not chain:
-        return ""
     rows = []
     for n, hop, v in chain:
         amp = int(v * 10)
@@ -157,21 +155,25 @@ def activate_chain(graph, start, neuromod=None, report_growth=True, viz=False, l
     сигнал не может пойти; честно говорим об этом. Если report_growth —
     добавляет метрику «средняя размерность» активированного пути.
     """
-    if start.strip().lower() not in graph.nodes:
-        return f"Понятие «{start}» ещё не в графе — импульс не от чего оттолкнуться."
-    if not graph.neighbors(start.strip().lower()):
-        return f"«{start}» — изолированная нуль-точка: нет связей, электричество не побежало."
-    chain = fire(graph, start, neuromod=neuromod, learn=learn)
-    if not chain:
-        return f"Импульс от «{start}» затух — порог медиаторов слишком высок."
-    parts = [f"{n}@{hop}:{v}" for n, hop, v in chain]
-    result = " → ".join(parts)
-    if viz:
-        result += "\n" + visualize_chain(chain)
-    if report_growth and len(chain) > 1:
-        nodes = [n for n, _h, _v in chain]
-        dim = _avg_dimension(graph, nodes)
-        result += f"  [рост понимания: средняя размерность пути {dim}/3]"
+    result = ""
+    s = start.strip().lower()
+    if s not in graph.nodes:
+        result = f"Понятие «{start}» ещё не в графе — импульс не от чего оттолкнуться."
+    elif not graph.neighbors(s):
+        result = f"«{start}» — изолированная нуль-точка: нет связей, электричество не побежало."
+    else:
+        chain = fire(graph, start, neuromod=neuromod, learn=learn)
+        if not chain:
+            result = f"Импульс от «{start}» затух — порог медиаторов слишком высок."
+        else:
+            parts = [f"{n}@{hop}:{v}" for n, hop, v in chain]
+            result = " → ".join(parts)
+            if viz:
+                result += "\n" + visualize_chain(chain)
+            if report_growth and len(chain) > 1:
+                nodes = [n for n, _h, _v in chain]
+                dim = _avg_dimension(graph, nodes)
+                result += f"  [рост понимания: средняя размерность пути {dim}/3]"
     return result
 
 
@@ -297,9 +299,10 @@ def add_meta_route(graph, from_edge, to_edge, mod=1.0):
 def _meta_route_mod(graph, from_edge, to_edge):
     """Коэффициент роу-ссылки from_edge→to_edge, или топологический.
     Один return: float (может быть отрицательным для подавления)."""
+    mod = 0.0
     if hasattr(graph, "meta_routes"):
-        return graph.meta_routes.get((from_edge, to_edge), 0.0)
-    return 0.0
+        mod = graph.meta_routes.get((from_edge, to_edge), 0.0)
+    return mod
 
 
 def propagate_meta_impulses(graph, active_weights):
@@ -308,22 +311,20 @@ def propagate_meta_impulses(graph, active_weights):
     (mod<0 гасит «кашу», mod>0 усиливает). Возвращает новую dict проводимостей.
     Один return: dict edge_key -> active_weight."""
     out = dict(active_weights)
-    if not hasattr(graph, "meta_routes") or not graph.meta_routes:
+    meta = getattr(graph, "meta_routes", None) or {}
+    if meta:
+        # с явными роу-ссылками: применяем модуляцию (усиление/подавление)
+        for (fkey, tkey), mod in list(meta.items()):
+            f_act = active_weights.get(fkey, 0.0)
+            if f_act > 0 and tkey in out:
+                out[tkey] = out[tkey] + f_act * mod
+    else:
         # без явных роу-ссылок — топологическое усиление (обратная совместимость)
         for key, act in list(active_weights.items()):
-            if act <= 0:
-                continue
-            for tgt in _edge_overlap_targets(key, graph.edges):
-                if tgt in out:
-                    out[tgt] = out[tgt] + act * key_meta_mod(key, out)
-        return out
-    # с явными роу-ссылками: применяем модуляцию (усиление/подавление)
-    for (fkey, tkey), mod in list(graph.meta_routes.items()):
-        f_act = active_weights.get(fkey, 0.0)
-        if f_act <= 0:
-            continue
-        if tkey in out:
-            out[tkey] = out[tkey] + f_act * mod
+            if act > 0:
+                for tgt in _edge_overlap_targets(key, graph.edges):
+                    if tgt in out:
+                        out[tgt] = out[tgt] + act * key_meta_mod(key, out)
     return out
 
 
@@ -336,11 +337,12 @@ def key_meta_mod(edge_key, active_weights):
 def calculate_physics_loss(graph, target_energy=0.6):
     """PINN-фильтр: отклонение средней квадратичной энергии рёбер от константы.
     Один return: float (0 = физично)."""
+    loss = 0.0
     vals = list(graph.edges.values())
-    if not vals:
-        return 0.0
-    mean_energy = sum(w * w for w in vals) / len(vals)
-    return abs(mean_energy - target_energy)
+    if vals:
+        mean_energy = sum(w * w for w in vals) / len(vals)
+        loss = abs(mean_energy - target_energy)
+    return loss
 
 
 def path_active_energies(graph, path_nodes):

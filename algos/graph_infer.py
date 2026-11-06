@@ -59,13 +59,12 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
 
 def format_path(path):
     """path = ['a','b','c'] -> "a —св.→ b —св.→ c" """
-    if not path:
-        return ""
-    s = path[0]
-    for i in range(1, len(path)):
-        rels = []
-        # подберём предикат между предыдущим и текущим узлом из edges
-        s += " → " + path[i]
+    s = ""
+    if path:
+        s = path[0]
+        for i in range(1, len(path)):
+            # подберём предикат между предыдущим и текущим узлом из edges
+            s += " → " + path[i]
     return s
 
 
@@ -125,18 +124,18 @@ def try_get_memory_experience(graph, active_pattern, experience=None):
     Если опыта нет — возвращает нулевой паттерн той же длины."""
     if experience is None:
         experience = getattr(graph, "experience", [])
-    if not experience:
-        return [0.0] * len(active_pattern)
-    best_match = experience[0]
-    best_score = -1.0
-    for exp in experience:
-        dot = sum(a * e for a, e in zip(active_pattern, exp))
-        norm_a = (sum(a * a for a in active_pattern) ** 0.5) or 1.0
-        norm_e = (sum(e * e for e in exp) ** 0.5) or 1.0
-        score = dot / (norm_a * norm_e)
-        if score > best_score:
-            best_score = score
-            best_match = exp
+    best_match = [0.0] * len(active_pattern)
+    if experience:
+        best_match = experience[0]
+        best_score = -1.0
+        for exp in experience:
+            dot = sum(a * e for a, e in zip(active_pattern, exp))
+            norm_a = (sum(a * a for a in active_pattern) ** 0.5) or 1.0
+            norm_e = (sum(e * e for e in exp) ** 0.5) or 1.0
+            score = dot / (norm_a * norm_e)
+            if score > best_score:
+                best_score = score
+                best_match = exp
     return best_match
 
 

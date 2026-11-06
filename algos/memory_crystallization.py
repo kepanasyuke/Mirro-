@@ -33,23 +33,22 @@ def try_crystallize_experience(graph, similarity_threshold=0.92):
     """Сворачивает избыточный опыт (graph.experience) в центроидные кристаллы.
     Возвращает число кристаллов ПОСЛЕ сжатия. Один return: int."""
     exp_list = getattr(graph, "experience", None) or []
-    if len(exp_list) < 2:
-        return 0
     merged = []
-    consumed = set()
-    for i in range(len(exp_list)):
-        if i in consumed:
-            continue
-        group = [exp_list[i]]
-        for j in range(i + 1, len(exp_list)):
-            if j in consumed:
+    if len(exp_list) >= 2:
+        consumed = set()
+        for i in range(len(exp_list)):
+            if i in consumed:
                 continue
-            if _cosine_similarity(exp_list[i], exp_list[j]) > similarity_threshold:
-                group.append(exp_list[j])
-                consumed.add(j)
-        merged.append(calculate_centroid_vector(group) if len(group) > 1 else list(exp_list[i]))
-        consumed.add(i)
-    graph.experience = merged
+            group = [exp_list[i]]
+            for j in range(i + 1, len(exp_list)):
+                if j in consumed:
+                    continue
+                if _cosine_similarity(exp_list[i], exp_list[j]) > similarity_threshold:
+                    group.append(exp_list[j])
+                    consumed.add(j)
+            merged.append(calculate_centroid_vector(group) if len(group) > 1 else list(exp_list[i]))
+            consumed.add(i)
+        graph.experience = merged
     return len(merged)
 
 
