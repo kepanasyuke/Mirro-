@@ -376,10 +376,23 @@ def try_route_pipeline(graph, user_query, chemistry=None, session_pulse=0.75,
         from algos.refractory import init_refractory_counters
         refr_state = init_refractory_counters(graph)
     bio = try_extract_biometric_context(user_query, session_pulse)
+    # зеркальное моделирование: примеряем состояние собеседника к графу вывода
+    mirror = {}
+    try:
+        from algos.mirror_cognition import init_mirror_profile, update_mirror_profile, apply_mirror_modulation_to_graph
+        tokens = user_query.split()
+        mprof = init_mirror_profile()
+        mprof = update_mirror_profile(mprof, tokens, bio.get("pulse", 0.75))
+        mirror = apply_mirror_modulation_to_graph(graph, mprof)
+    except Exception:
+        mirror = {}
     modulated = compute_modulated_edges(graph,
                                         ach=chem.get("acetylcholine", 1.0),
                                         serotonin=chem.get("serotonin", 1.0),
                                         dopamine=chem.get("dopamine", 0.0))
+    # зеркальная модуляция перекрывает проводимость системных рёбер (юмор/хаос)
+    if mirror:
+        modulated = {k: mirror.get(k, v) for k, v in modulated.items()}
     # роу-импульсы: активированные рёбра усиливают следующие по цепочке
     routed = propagate_meta_impulses(graph, modulated)
     # синаптическое утомление: уставшие рёбра временно теряют проводимость
