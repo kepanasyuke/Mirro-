@@ -257,6 +257,23 @@ def autonomous_learning_loop(interval_sec=3600):
             time.sleep(interval_sec)
     t = threading.Thread(target=_loop, daemon=True); t.start(); return t
 
+
+def mindstream_loop(interval_sec=1800):
+    """Фоновая «внутренняя речь»: Mirro сама, без вопроса, выбирает тему и
+    размышляет над ней (пишет поток мыслей в data/mindstream/thoughts.jsonl)."""
+    import threading
+    def _loop():
+        from algos.mindstream import mind
+        while True:
+            try:
+                r = mind.think()
+                if r.get("written"):
+                    print(f"  [медитация] тема: {r.get('topic')!r} → {r.get('thought')[:90]}")
+            except Exception as e:
+                print(f"  [медитация] ошибка: {e}")
+            time.sleep(interval_sec)
+    t = threading.Thread(target=_loop, daemon=True); t.start(); return t
+
 # ========== REASONING ENGINE ==========
 # Чистая логика вынесена в scripts/reasoning_engine.py (легко тестировать без
 # построения индекса в память). Здесь только аккуратный локальный импорт.
@@ -683,6 +700,12 @@ def _try_direct_handlers(prompt):
             return _f(q)
         except Exception:
             return None
+    def try_metacognition(q):
+        try:
+            from algos.mindstream import try_metacognition as _f
+            return _f(q)
+        except Exception:
+            return None
     def try_growth(q):
         try:
             from algos.zero_dimensional import try_growth as _f
@@ -767,6 +790,7 @@ def _try_direct_handlers(prompt):
         ("enrich", try_enrich),
         ("what_links", try_what_links),
         ("similar", try_similar),
+        ("metacognition", try_metacognition),
         ("func_kb", try_function_knowledge),
         ("evolve", try_evo),
         ("quantum", try_quantum_graph),
@@ -862,6 +886,15 @@ def build_response(prompt, cluster, context=""):
     Единственный return: dict-ответ."""
     result = {"content": f"[Mirro] Внутренняя ошибка: произошла ошибка", "strategy": "error"}
     try:
+        # видимая внутренняя речь: Mirro «прокручивает» шаги рассуждения
+        thinking = []
+        try:
+            from algos.mindstream import mind as _ms
+            topic = _ms.extract_topic(prompt)
+            _ms.observe(prompt)
+            thinking = _ms.reasoning_steps(topic)
+        except Exception:
+            thinking = []
         direct = _try_direct_handlers(prompt)
         if direct is not None:
             result = direct
@@ -894,6 +927,7 @@ def build_response(prompt, cluster, context=""):
                     result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
+    result["thinking"] = thinking
     return result
 
 def try_ai_history(prompt):
@@ -1117,10 +1151,12 @@ class MirroAPI(BaseHTTPRequestHandler):
     def _chat_payload(self, messages, model, response, prompt):
         """Формирует итоговый JSON-ответ (не-SSE). Единственный return: dict."""
         content = response.get("content", "") if response else "Ошибка"
-        # квантово-комбинаторная сноска: PINN-loss + суперпозиция + стабильная пара
+        # видимая внутренняя речь: шаги рассуждения из mindstream, затем квантовая сноска
+        thinking = response.get("thinking", []) or []
         reasoning = ""
         try:
-            reasoning = _quantum_context_note()
+            steps = "\n".join(f"• {s}" for s in thinking)
+            reasoning = (steps + "\n" if steps else "") + _quantum_context_note()
         except Exception:
             reasoning = ""
         return {"id": f"mirro-{int(time.time())}", "object": "chat.completion",
@@ -1160,6 +1196,17 @@ class MirroAPI(BaseHTTPRequestHandler):
                 if algo.should_auto_learn(prompt, response["content"]):
                     algo.autonomous_learn(cycles=15)
         except: pass
+        # самообучение на новых темах: новое/свежее в диалоге Mirro запоминает
+        # себе в корпус (вопрос → ответ) и фиксирует тему во внутренней речи.
+        try:
+            if response and response.get("content") and response.get("strategy") != "error":
+                from algos.mindstream import mind as _m2, MindStream as _MS2
+                topic = _MS2.extract_topic(prompt)
+                _m2.observe(prompt)
+                if topic and response.get("strategy") in ("definition", "base", "func_kb", "ai_history"):
+                    _m2.learn_new_pair(prompt, response.get("content", ""))
+        except Exception:
+            pass
         if response:
             core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
         content = response.get("content", "") if response else "Ошибка"
@@ -1495,6 +1542,13 @@ def main():
     print("  Движок мышления: подфункции single return, юмор, схемы Босовой, граф знаний")
     print("\n  Запуск автономного обучения (каждые 60 мин)...")
     autonomous_learning_loop(interval_sec=3600)
+    print("  Запуск внутренней речи (mindstream, каждые 30 мин)...")
+    try:
+        mindstream_loop(interval_sec=1800)
+        from algos.mindstream import mind as _mind
+        _mind.observe("Mirro запустилась и думает о себе")
+    except Exception as _mse:
+        print(f"  [медитация] не удалось стартовать: {_mse}")
     server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
     print(f"\n  → Слушаю на http://{HOST}:{PORT}")
     print("  → Доступ:\n" + _access_addresses())
