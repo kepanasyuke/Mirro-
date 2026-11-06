@@ -10,6 +10,7 @@
 - `_chat_payload` — OpenAI-совместимый JSON (модель `mirro-evolutionary-v4`, поле `reasoning_content`)
 - `_quantum_context_note` — reasoning-сноска: PINN-loss, суперпозиция, размерность, комбинаторная пара
 - `MirroAPI._handle_chat` — обработка POST /v1/chat/completions (SSE и JSON)
+- `core/mirro_pinn_bridge.py` — `try_balance_quantum_pinn_state` (резонанс → прунинг → энергия → стабильность с dopamine-порогом)
 
 Цепочка ответа (`build_response` → `_try_direct_handlers`):
 ```
@@ -56,6 +57,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `think.py` | Мыслительный движок | classify, think, answer_question |
 | `evolve.py` | Нейроэволюция (популяция графов) | Genome, MirroEvolver, mutate, crossover, evolve_step, try_evolve |
 | `quantum_graph.py` | Квантовая суперпозиция концептов | init_quantum_states, apply_quantum_entanglement, collapse_wave_function, quantum_superposition_report, try_quantum |
+| `resonance.py` | Волновой резонанс роу-связей | calculate_vector_distance, try_bridge_resonant_edges |
 | `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
 
 ### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)
@@ -96,6 +98,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `scripts/cipher.py` | `encode` / `decode` / `expand_key` / `parse_numbers` | Десятичный поточный шифр (ключ из документа); CLI encode/decode/test |
 | `scripts/cipher.py` | `try_generate_secure_key` / `try_load_secure_key` / `transform_bytes_to_cipher` | API шифра для авто-бэкапов (ключ-соль в keys/, поколение и загрузка, байт-обёртка) |
 | `scripts/restore.py` | `try_find_latest_backup` / `try_restore_graph_from_backup` | Восстановление графа из свежего `backup_<ts>.mirro.enc` → расшифровка → запись в models/knowledge_graph.pkl (полный dict {nodes,edges,experience}) |
+| `scripts/synaptic_plasticity.py` | `clean_weak_meta_edges` / `apply_ltp_consolidation` | LTD-прунинг слабых роу-ссылок + дофаминовое LTP-закрепление активных рёбер |
 
 ## Фронтенд: рендер мета-графа (web/meysto-neiroset.html)
 
