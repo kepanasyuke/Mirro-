@@ -595,6 +595,28 @@ def _voice(raw, query, strategy="base"):
         return raw
 
 
+def try_stylize_generated_output(raw_text, chemistry=None):
+    """Стилизует итоговый текст под текущий био-темперамент графа.
+    chemistry — уровни нейромедиаторов (по умолчанию из neuromodulators).
+    Возвращает (stylized_text, temperament). Один return: tuple."""
+    temper = "сбалансированный"
+    text = raw_text or ""
+    try:
+        from algos.voice_temperament import determine_voice_temperament, try_apply_temperament_filters
+        chem = chemistry
+        if chem is None:
+            from algos.neuromodulators import nm as _nm
+            chem = getattr(_nm, "level", {})
+        temper = determine_voice_temperament(chem)
+        filtered = try_apply_temperament_filters(text.split(" "), temper)
+        styled = " ".join(filtered)
+        if styled and len(styled) >= 20:
+            text = styled
+    except Exception:
+        text = raw_text or ""
+    return text, temper
+
+
 def try_bosova_engine(prompt):
     """Выполнимые алгоритмы по правилам Босовой: арифметика по конструкциям
     ЕСЛИ/ТО/ЦИКЛ ПОКА, схемы мышления, тройственное рассуждение «нейрон-нигде».
@@ -1115,6 +1137,18 @@ class MirroAPI(BaseHTTPRequestHandler):
         if response:
             core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
         content = response.get("content", "") if response else "Ошибка"
+        # темпераментный стилизатор: характер «мозга» формирует оформление ответа
+        try:
+            from algos.voice_temperament import determine_voice_temperament, try_apply_temperament_filters
+            from algos.neuromodulators import nm as _nm
+            tch = getattr(_nm, "level", {})
+            tmp = determine_voice_temperament(tch)
+            filtered = try_apply_temperament_filters(content.split(" "), tmp)
+            styled = " ".join(filtered)
+            if styled and len(styled) >= 20:
+                content = styled
+        except Exception:
+            pass
         if stream:
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
