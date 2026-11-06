@@ -179,7 +179,17 @@ def try_create_encrypted_backup(graph, backup_dir=None):
         from scripts.cipher import try_load_secure_key, transform_bytes_to_cipher
         from algos import knowledge_graph
         key = try_load_secure_key()
-        raw = _pkl.dumps(getattr(graph, "nodes", graph))
+        # сериализуем ПОЛНЫЙ граф как dict {nodes, edges, experience} — согласовано
+        # с KnowledgeGraph.save(), чтобы restore мог восстановить всё без потерь.
+        if hasattr(graph, "nodes") and hasattr(graph, "edges"):
+            snapshot = {
+                "nodes": graph.nodes,
+                "edges": graph.edges,
+                "experience": getattr(graph, "experience", []),
+            }
+        else:
+            snapshot = graph
+        raw = _pkl.dumps(snapshot)
         enc = transform_bytes_to_cipher(raw, key, decrypt=False)
         bdir = backup_dir or (MIRRO_HOME / "backups")
         if isinstance(bdir, str):
