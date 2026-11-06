@@ -58,6 +58,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `evolve.py` | Нейроэволюция (популяция графов) | Genome, MirroEvolver, mutate, crossover, evolve_step, try_evolve |
 | `quantum_graph.py` | Квантовая суперпозиция концептов | init_quantum_states, apply_quantum_entanglement, collapse_wave_function, quantum_superposition_report, try_quantum |
 | `resonance.py` | Волновой резонанс роу-связей | calculate_vector_distance, try_bridge_resonant_edges |
+| `refractory.py` | Синаптическое утомление и рефрактерность | init_refractory_counters, update_refractory_states, apply_fatigue_to_weights |
 | `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
 
 ### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)

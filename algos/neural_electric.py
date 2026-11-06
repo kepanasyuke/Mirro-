@@ -19,6 +19,7 @@
 import sys, os, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from knowledge_graph import KnowledgeGraph
+from refractory import init_refractory_counters, update_refractory_states, apply_fatigue_to_weights
 
 
 # по-босовски: ток идёт по «проводу-связи», если «напряжение» выше порога
@@ -364,11 +365,16 @@ def try_extract_biometric_context(user_query, session_pulse=0.75):
 
 
 def try_route_pipeline(graph, user_query, chemistry=None, session_pulse=0.75,
-                       target_energy=0.6):
+                       target_energy=0.6, refractory_state=None):
     """Сквозной мыслительный контур на ЖИВОМ графе:
-    биометрия → модулированные рёбра → роу-импульсы → PINN-контроль → ответ.
-    Один return: dict {signal, physics_loss, active_edges, physics_ok, answer}."""
+    биометрия → модулированные рёбра → роу-импульсы → синаптическое утомление
+    → PINN-контроль → ответ. Один return: dict {signal, physics_loss, active_edges,
+    physics_ok, answer}."""
     chem = chemistry or {"acetylcholine": 1.0, "serotonin": 1.0, "dopamine": 0.0}
+    refr_state = refractory_state
+    if refr_state is None:
+        from algos.refractory import init_refractory_counters
+        refr_state = init_refractory_counters(graph)
     bio = try_extract_biometric_context(user_query, session_pulse)
     modulated = compute_modulated_edges(graph,
                                         ach=chem.get("acetylcholine", 1.0),
@@ -376,6 +382,16 @@ def try_route_pipeline(graph, user_query, chemistry=None, session_pulse=0.75,
                                         dopamine=chem.get("dopamine", 0.0))
     # роу-импульсы: активированные рёбра усиливают следующие по цепочке
     routed = propagate_meta_impulses(graph, modulated)
+    # синаптическое утомление: уставшие рёбра временно теряют проводимость
+    fatigued = apply_fatigue_to_weights(graph, refr_state)
+    routed = {k: fatigued.get(k, v) for k, v in routed.items()}
+    # обновляем счётчики утомления на следующую эпоху (по активированным рёбрам)
+    activated_nodes = []
+    for (s, p, d) in routed:
+        if routed.get((s, p, d), 0.0) > 0.1:
+            activated_nodes.extend([s, d])
+    from algos.refractory import update_refractory_states
+    refr_state = update_refractory_states(graph, refr_state, activated_nodes)
     # физический цензор: отклонение средней энергии от целевой, нормализованное
     # по масштабу реальных весов (иначе любой граф с весами>1 кажется «кашей»).
     loss = calculate_physics_loss(graph, target_energy)
