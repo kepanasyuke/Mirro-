@@ -93,6 +93,8 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `scripts/evolve_weights.py` | `run` / `evolve_iteration` | Эволюция собственно весов рёбер графа по fitness |
 | `scripts/clean_corpus.py` | `clean_jsonl` / `clean_directory` | Токенизация, дедуп, фильтр мусора в маленьких JSONL-корпусах |
 | `scripts/rag.py` | `MirroRAG.run_quantum_guided_rag` / `_guided_segments` | Направленный дисковый RAG: детерминированный (не hash()) контекст из комбинаторной пары расширяет запрос перед двухуровневым search |
+| `scripts/cipher.py` | `encode` / `decode` / `expand_key` / `parse_numbers` | Десятичный поточный шифр (ключ из документа); CLI encode/decode/test |
+| `scripts/cipher.py` | `try_generate_secure_key` / `try_load_secure_key` / `transform_bytes_to_cipher` | API шифра для авто-бэкапов (ключ-соль в keys/, поколение и загрузка, байт-обёртка) |
 
 ## Фронтенд: рендер мета-графа (web/meysto-neiroset.html)
 

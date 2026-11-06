@@ -167,6 +167,33 @@ def _quantum_context_note():
         note = ""
     return note
 
+def try_create_encrypted_backup(graph, backup_dir=None):
+    """Сериализует граф, шифрует десятичным поточным шифром и сохраняет слепок.
+
+    backup_dir — путь к папке бэкапов (по умолчанию MIRRO_HOME/backups/).
+    Ключ берётся из keys/secret.key (генерируется, если нет). Файл: backup_<ts>.
+    Единственный return: dict {status, path}."""
+    status = {"status": "error", "path": ""}
+    try:
+        import pickle as _pkl, time as _time
+        from scripts.cipher import try_load_secure_key, transform_bytes_to_cipher
+        from algos import knowledge_graph
+        key = try_load_secure_key()
+        raw = _pkl.dumps(getattr(graph, "nodes", graph))
+        enc = transform_bytes_to_cipher(raw, key, decrypt=False)
+        bdir = backup_dir or (MIRRO_HOME / "backups")
+        if isinstance(bdir, str):
+            bdir = Path(bdir)
+        bdir.mkdir(parents=True, exist_ok=True)
+        ts = int(_time.time())
+        fpath = bdir / f"backup_{ts}.mirro.enc"
+        Path(fpath).write_bytes(enc)
+        status = {"status": "success", "path": str(fpath)}
+    except Exception as e:
+        status = {"status": "error", "message": str(e)}
+    return status
+
+
 def autonomous_learning_loop(interval_sec=3600):
     import threading
     def _loop():
@@ -174,6 +201,14 @@ def autonomous_learning_loop(interval_sec=3600):
             try:
                 algo = _grab_algo(); n = algo.autonomous_learn(cycles=30)
                 print(f"  [автообучение] усвоила {n} примеров")
+                # если база опыта обновилась — делаем зашифрованный слепок графа
+                if n and n > 0:
+                    try:
+                        bres = try_create_encrypted_backup(algo)
+                        if bres.get("status") == "success":
+                            print(f"  [автообучение] зашифрованный бэкап: {bres['path']}")
+                    except Exception:
+                        pass
                 try:
                     # Не затирать trainer-метрики (trainer_cycles/accuracy/clusters):
                     # читаем текущее состояние и обновляем только авто-поля.

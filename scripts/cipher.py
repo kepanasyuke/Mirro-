@@ -64,6 +64,55 @@ def parse_numbers(text):
     return out
 
 
+def try_generate_secure_key(key_filepath="keys/secret.key", key_length=32, seed=None):
+    """Генерирует криптографический ключ-соль (строку alnum) на чистом Python.
+
+    Совместимость с API поточного шифра черновика поверх существующего
+    расширяемого «документного» ключа. Один return: str.
+    """
+    import random as _rnd
+    rng = _rnd.Random(seed) if seed is not None else _rnd
+    chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    key_string = "".join(rng.choice(chars) for _ in range(max(1, key_length)))
+    try:
+        path = Path(key_filepath) if key_filepath else None
+        if path is not None:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(key_string, encoding="utf-8")
+    except (OSError, IOError):
+        pass
+    return key_string
+
+
+def try_load_secure_key(key_filepath="keys/secret.key"):
+    """Загружает ключ-соль; если файла нет — генерирует и сохраняет.
+    Один return: байты ключа (как load_key при документе)."""
+    try:
+        path = Path(key_filepath)
+        if path.exists():
+            text = path.read_text(encoding="utf-8").strip()
+            if text:
+                return text.encode("utf-8")
+    except (OSError, IOError):
+        pass
+    # нет ключа — генерируем на лету и возвращаем его же
+    return try_generate_secure_key(key_filepath).encode("utf-8")
+
+
+def transform_bytes_to_cipher(data_bytes, key_string, decrypt=False):
+    """Поточный шифр с динамическим десятичным сдвигом по символам ключа.
+
+    Обёртка над существующим encode/decode: ключ-строка байтуется и расширяется
+    expand_key по длине данных. Возвращает bytes (совместимо с черновиком).
+    Один return: bytes.
+    """
+    key = key_string.encode("utf-8") if isinstance(key_string, str) else bytes(key_string)
+    if decrypt:
+        return decode(data_bytes, key)
+    encoded = encode(data_bytes, key)          # list байтов (десятичный массив)
+    return bytes(encoded)
+
+
 def main():
     ap = argparse.ArgumentParser(description="Mirro Decimal Cipher (гибрид, ключ из документа)")
     ap.add_argument("mode", choices=["encode", "decode", "test"])
