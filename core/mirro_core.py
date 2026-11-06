@@ -204,6 +204,19 @@ def try_create_encrypted_backup(graph, backup_dir=None):
     return status
 
 
+def try_optimize_memory_buffer(graph):
+    """Свёртывающая кристаллизация опыта graph.experience (экономия RAM).
+    Возвращает строку-отчёт. Один return: str."""
+    before = len(getattr(graph, "experience", None) or [])
+    after = before
+    try:
+        from algos.memory_crystallization import try_crystallize_experience
+        after = try_crystallize_experience(graph, similarity_threshold=0.92)
+    except Exception:
+        after = before
+    return f"Память оптимизирована: {before} -> {after} паттернов (кристаллов)."
+
+
 def autonomous_learning_loop(interval_sec=3600):
     import threading
     def _loop():
@@ -211,8 +224,14 @@ def autonomous_learning_loop(interval_sec=3600):
             try:
                 algo = _grab_algo(); n = algo.autonomous_learn(cycles=30)
                 print(f"  [автообучение] усвоила {n} примеров")
-                # если база опыта обновилась — делаем зашифрованный слепок графа
+                # если база опыта обновилась — сначала кристаллизуем опыт (экономия RAM),
+                # затем делаем зашифрованный слепок графа
                 if n and n > 0:
+                    try:
+                        opt = try_optimize_memory_buffer(algo)
+                        print(f"  [автообучение] {opt}")
+                    except Exception:
+                        pass
                     try:
                         bres = try_create_encrypted_backup(algo)
                         if bres.get("status") == "success":

@@ -62,6 +62,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `quantum_coherence.py` | Квантовая когерентность и декогеренция | try_apply_decoherence_decay, check_phase_synchrony |
 | `immune_sentinel.py` | Иммунный страж графа | run_graph_immune_scan |
 | `voice_temperament.py` | Адаптивный характер ответов | determine_voice_temperament, try_apply_temperament_filters |
+| `memory_crystallization.py` | Свёртывающая кристаллизация памяти | calculate_centroid_vector, try_crystallize_experience |
 | `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
 
 ### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)
