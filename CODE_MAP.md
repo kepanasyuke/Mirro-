@@ -64,6 +64,7 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `voice_temperament.py` | Адаптивный характер ответов | determine_voice_temperament, try_apply_temperament_filters |
 | `memory_crystallization.py` | Свёртывающая кристаллизация памяти | calculate_centroid_vector, try_crystallize_experience |
 | `mirror_cognition.py` | Зеркальное моделирование сознания | init_mirror_profile, update_mirror_profile, apply_mirror_modulation_to_graph |
+| `wave_resonance.py` | Квантовый макро-резонанс фаз | calculate_complex_phase, try_align_quantum_phases |
 | `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
 
 ### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)

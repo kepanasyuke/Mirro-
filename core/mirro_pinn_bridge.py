@@ -47,6 +47,17 @@ def try_balance_quantum_pinn_state(graph, target_energy=0.64, dopamine_level=0.5
         from algos.quantum_coherence import try_apply_decoherence_decay
         qst = _build_qstate(graph)
         qst = try_apply_decoherence_decay(graph, qst, decoherence_rate=0.08)
+        # волновой макро-резонанс: выравниваем фазы узлов связанных роу-ссылок
+        # (конструктивная интерференция — защита от пустых/противофазных ответов)
+        try:
+            from algos.wave_resonance import try_align_quantum_phases
+            meta = getattr(graph, "meta_routes", None) or {}
+            for (se, te), mod in list(meta.items()):
+                if abs(mod) > 0.4:
+                    qst = try_align_quantum_phases(graph, qst, se, te, mod=mod,
+                                                   coupling_constant=0.12)
+        except Exception:
+            pass
     except Exception:
         qst = None
     # иммунный скан: подавляем аномальные веса и авто-петли роу-ссылок
