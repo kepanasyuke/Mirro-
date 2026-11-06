@@ -59,6 +59,8 @@ try_greetings → try_learn → try_algos_think → try_humor → try_creative
 | `quantum_graph.py` | Квантовая суперпозиция концептов | init_quantum_states, apply_quantum_entanglement, collapse_wave_function, quantum_superposition_report, try_quantum |
 | `resonance.py` | Волновой резонанс роу-связей | calculate_vector_distance, try_bridge_resonant_edges |
 | `refractory.py` | Синаптическое утомление и рефрактерность | init_refractory_counters, update_refractory_states, apply_fatigue_to_weights |
+| `quantum_coherence.py` | Квантовая когерентность и декогеренция | try_apply_decoherence_decay, check_phase_synchrony |
+| `immune_sentinel.py` | Иммунный страж графа | run_graph_immune_scan |
 | `module_knowledge.py` | База знаний по функциям | FunctionKnowledge, try_function_knowledge |
 
 ### Нейробиология, мета-граф и роу-маршрутизация (детальный реестр)
