@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Автогенерация большого набора QA-кейсов Mirro из реальной базы знаний.
 
 Кейсы строятся так, что железно проверяемы: для понятия/функции мы знаем
@@ -16,7 +15,9 @@
 
 Запуск:  python scripts/qa_generate.py [--limit 1000] [--out tests/qa_generated.py]
 """
-import argparse, re, sys
+import argparse
+import re
+import sys
 from pathlib import Path
 
 MIRRO_HOME = Path(__file__).resolve().parent.parent
@@ -35,18 +36,16 @@ def _collect_concepts():
     from algos.module_knowledge import fk
     cases = []
     for key, info in fk._by_name.items():
-        if not key.startswith("_"):
-            continue
-        topic = norm(info.get("topic", ""))
-        expect = topic.split()[0][:40]       # первое слово темы
-        full = topic
-        for q in (f"что такое {expect}", f"расскажи про {expect}",
-                  f"объясни что такое {expect}", f"что значит {expect}",
-                  f"расскажи про понятие {expect}", f"объясни понятие {expect}",
-                  f"что за {expect}", f"что такое понятие {expect}"):
-            cases.append({"question": q,
-                          "expect": expect[:20],
-                          "min_len": 15})
+        if key.startswith("_"):
+            topic = norm(info.get("topic", ""))
+            expect = topic.split()[0][:40]       # первое слово темы
+            for q in (f"что такое {expect}", f"расскажи про {expect}",
+                      f"объясни что такое {expect}", f"что значит {expect}",
+                      f"расскажи про понятие {expect}", f"объясни понятие {expect}",
+                      f"что за {expect}", f"что такое понятие {expect}"):
+                cases.append({"question": q,
+                              "expect": expect[:20],
+                              "min_len": 15})
     return cases
 
 
@@ -57,24 +56,23 @@ def _collect_functions():
     cases = []
     seen = set()
     for name, info in fk._by_name.items():
-        if name.startswith("_") or len(name) <= 2:
-            continue
-        topic = norm(info.get("topic", ""))
-        expect = (topic.split()[0] or name)[:20]
-        # точное имя функции содержит подчёркивание или короткое — знаем ответ
-        forms = set()
-        for q in (f"что такое {name}", f"расскажи про {name} ()",
-                  f"как работает {name}", f"что делает {name} что такое",
-                  f"расскажи про функцию {name}", f"объясни {name}",
-                  f"что означает {name}", f"какая функция {name}", 
-                  f"напиши функцию {name}"):
-            key = norm(q)
-            if key not in seen:
-                seen.add(key)
-                forms.add(q)
-        for q in sorted(forms):
-            cases.append({"question": q, "expect": expect, "min_len": 15,
-                          "forbid": _junk_for("") })
+        if not (name.startswith("_") or len(name) <= 2):
+            topic = norm(info.get("topic", ""))
+            expect = (topic.split()[0] or name)[:20]
+            # точное имя функции содержит подчёркивание или короткое — знаем ответ
+            forms = set()
+            for q in (f"что такое {name}", f"расскажи про {name} ()",
+                      f"как работает {name}", f"что делает {name} что такое",
+                      f"расскажи про функцию {name}", f"объясни {name}",
+                      f"что означает {name}", f"какая функция {name}",
+                      f"напиши функцию {name}"):
+                key = norm(q)
+                if key not in seen:
+                    seen.add(key)
+                    forms.add(q)
+            for q in sorted(forms):
+                cases.append({"question": q, "expect": expect, "min_len": 15,
+                              "forbid": _junk_for("") })
     return cases
 
 
@@ -82,6 +80,23 @@ def _junk_for(_):
     """Мусорные слова, которых не должно быть в ответе функции.
     Один return: str."""
     return "вот что я нахожу"
+
+
+def _history_entries(store):
+    """Нормализует справочник истории ИИ в список (термин, описание).
+    Один return: list."""
+    out = []
+    if isinstance(store, dict):
+        for k, v in store.items():
+            out.append((k, v))
+    elif isinstance(store, (list, tuple)):
+        for it in store:
+            if isinstance(it, dict):
+                out.append((it.get("term") or it.get("термин") or it.get("кто"),
+                            it.get("описание") or it.get("desc") or str(it)))
+            else:
+                out.append((str(it), ""))
+    return out
 
 
 def _collect_ai_history():
@@ -95,28 +110,11 @@ def _collect_ai_history():
         except Exception:
             DB = {}
     cases = []
-    if not DB:
-        return cases
-    # DB — dict или list записей {термин: (описание, автор,...)} — постараемся
-    def entries(d):
-        out = []
-        if isinstance(d, dict):
-            for k, v in d.items():
-                out.append((k, v))
-        elif isinstance(d, (list, tuple)):
-            for it in d:
-                if isinstance(it, dict):
-                    out.append((it.get("term") or it.get("термин") or it.get("кто"),
-                                it.get("описание") or it.get("desc") or str(it)))
-                else:
-                    out.append((str(it), ""))
-        return out
-    for term, _v in entries(DB):
+    for term, _v in _history_entries(DB):
         lw = norm(term)
-        if not lw or len(lw) < 3:
-            continue
-        cases.append({"question": f"кто создал {lw.split()[0]}",
-                      "expect": lw.split()[0][:20], "min_len": 15})
+        if lw and len(lw) >= 3:
+            cases.append({"question": f"кто создал {lw.split()[0]}",
+                          "expect": lw.split()[0][:20], "min_len": 15})
     return cases
 
 
@@ -167,15 +165,14 @@ def generate():
     out = []
     for c in all_cases:
         key = norm(c.get("question", ""))
-        if not key or key in seen:
-            continue
-        seen.add(key)
-        # уберём пустые expect/forbid из сериализации
-        clean = {}
-        for k in ("question", "expect", "forbid", "min_len"):
-            if c.get(k) is not None:
-                clean[k] = c[k]
-        out.append(clean)
+        if key and key not in seen:
+            seen.add(key)
+            # уберём пустые expect/forbid из сериализации
+            clean = {}
+            for k in ("question", "expect", "forbid", "min_len"):
+                if c.get(k) is not None:
+                    clean[k] = c[k]
+            out.append(clean)
     return out
 
 

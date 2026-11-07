@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Mirro MindStream — «внутреннее сознание» (самостоятельность Mirro).
 
 Четыре направления «думать самой» в одном лёгком модуле без внешних биб-
@@ -15,7 +14,10 @@
 
 Состояние и логика — атомарные функции, стандарт проекта: один return.
 """
-import json, os, random, re as _re, time
+import json
+import random
+import re as _re
+import time
 from pathlib import Path
 
 MIRRO_HOME = Path(__file__).resolve().parent.parent
@@ -67,16 +69,14 @@ class MindStream:
     # ---------- инициатива ----------
     def _remember_topic(self, topic):
         """Фиксирует тему с меткой времени (дедуп по недавней)."""
-        if not topic:
-            return
-        if any(t == topic for t, _ in self.topics[-8:]):
-            return
-        self.topics.append((topic, time.time()))
-        # держим только недавнее, чтобы не расти бесконечно
-        cutoff = time.time() - 12 * 3600
-        self.topics = [(t, ts) for t, ts in self.topics if ts >= cutoff]
-        if len(self.topics) > self.max_topic:
-            self.topics = self.topics[-self.max_topic:]
+        if topic and not any(t == topic for t, _ in self.topics[-8:]):
+            self.topics.append((topic, time.time()))
+            # держим только недавнее, чтобы не расти бесконечно
+            cutoff = time.time() - 12 * 3600
+            self.topics = [(t, ts) for t, ts in self.topics if ts >= cutoff]
+            if len(self.topics) > self.max_topic:
+                self.topics = self.topics[-self.max_topic:]
+        return None
 
     def observe(self, user_text):
         """Смотрит на вопрос пользователя и запоминает тему. Один return: str."""
@@ -87,11 +87,8 @@ class MindStream:
     def pick_topic(self):
         """Выбирает тему для самостоятельного размышления: свежую, новую, или
         тематический seed. Один return: str."""
-        chosen = ""
-        for t, _ in reversed(self.topics):
-            if t:
-                chosen = t
-                break
+        topics = [t for t, _ in reversed(self.topics) if t]
+        chosen = topics[0] if topics else ""
         if not chosen and _SEED_TOPICS:
             chosen = random.choice(_SEED_TOPICS)
         return chosen
@@ -102,10 +99,11 @@ class MindStream:
         hint = ""
         try:
             from algos.module_knowledge import fk as _fk
-            for key in _fk._by_name:
-                if key.startswith("_") and topic and topic in _fk._by_name[key].get("topic", ""):
-                    hint = _fk._by_name[key]["what"]
-                    break
+            hits = [key for key in _fk._by_name
+                    if key.startswith("_") and topic and topic in
+                    _fk._by_name[key].get("topic", "")]
+            if hits:
+                hint = _fk._by_name[hits[0]]["what"]
         except Exception:
             hint = ""
         return hint
@@ -113,11 +111,8 @@ class MindStream:
     def draft_thought(self, topic):
         """Самостоятельно «думает»: строит мысль о теме, с подтянутой связью.
         Один return: str."""
-        t2 = ""
-        for t, _ in reversed(self.topics):
-            if t and t != topic:
-                t2 = t
-                break
+        others = [t for t, _ in reversed(self.topics) if t and t != topic]
+        t2 = others[0] if others else ""
         if not t2 and len(_SEED_TOPICS) >= 2:
             t2 = random.choice([x for x in _SEED_TOPICS if x != topic])
         defn = self._definition_hint(topic) or "понятие в моём графе"
@@ -132,15 +127,17 @@ class MindStream:
     def think(self):
         """Полный ход внутренней речи. Один return: dict со str-полями."""
         ts = time.time()
-        if ts - self.last_think_ts < 30.0:
-            return {"thought": "", "topic": "", "written": False}
-        self.last_think_ts = ts
-        topic = self.pick_topic()
-        thought = self.draft_thought(topic)
-        written = self._persist(topic, thought)
-        self.thoughts.append((thought, time.time()))
-        if len(self.thoughts) > self.max_thought:
-            self.thoughts = self.thoughts[-self.max_thought:]
+        thought = ""
+        topic = ""
+        written = False
+        if ts - self.last_think_ts >= 30.0:
+            self.last_think_ts = ts
+            topic = self.pick_topic()
+            thought = self.draft_thought(topic)
+            written = self._persist(topic, thought)
+            self.thoughts.append((thought, time.time()))
+            if len(self.thoughts) > self.max_thought:
+                self.thoughts = self.thoughts[-self.max_thought:]
         return {"thought": thought, "topic": topic, "written": written}
 
     def _persist(self, topic, thought):
@@ -208,34 +205,35 @@ class MindStream:
         """Связывает ядро темы с парой самых частотных слов текста в графе.
         Побочный эффект: добавляет/укрепляет узлы графа. Один return: None."""
         import collections
+        kg_ref = None
         try:
             from algos.knowledge_graph import kg as _kg
+            kg_ref = _kg
         except Exception:
-            return
-        words = _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())
-        words = [w for w in words if w not in _STOP]
-        if not words:
-            return
-        anchor = ""
-        for w in words:
-            if w in _kg.nodes:
-                anchor = w
-                break
-        if not anchor:
-            anchor = words[0]
-        counts = collections.Counter(words)
-        try:
-            _kg.add_node(anchor, tag="понятие")
-        except Exception:
-            pass
-        for w, _c in counts.most_common(3):
-            if not anchor or w == anchor:
-                continue
-            try:
-                _kg.add_node(w, tag="факт")
-                _kg.add_edge(anchor, "связано_с", w, weight=0.5)
-            except Exception:
-                pass
+            kg_ref = None
+        if kg_ref is not None:
+            words = _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())
+            words = [w for w in words if w not in _STOP]
+            if words:
+                anchor = ""
+                anchors_in = [w for w in words if w in kg_ref.nodes]
+                if anchors_in:
+                    anchor = anchors_in[0]
+                if not anchor:
+                    anchor = words[0]
+                counts = collections.Counter(words)
+                try:
+                    kg_ref.add_node(anchor, tag="понятие")
+                except Exception:
+                    pass
+                for w, _c in counts.most_common(3):
+                    if w != anchor:
+                        try:
+                            kg_ref.add_node(w, tag="факт")
+                            kg_ref.add_edge(anchor, "связано_с", w, weight=0.5)
+                        except Exception:
+                            pass
+        return None
 
 
 mind = MindStream()

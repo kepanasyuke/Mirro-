@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Непрерывный прогон QA-проверок Mirro (вопрос → ответ).
 
 Гоняет набор пар из tests/qa_cases.py по живому API Mirro и выводит отчёт.
@@ -9,7 +8,11 @@
 
 Результаты дописываются в data/qa_report.jsonl (история прогонов).
 """
-import json, sys, time, urllib.request, urllib.error
+import json
+import sys
+import time
+import urllib.request
+import urllib.error
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -27,14 +30,16 @@ BASE = f"http://{HOST}:{PORT}"
 
 
 def _server_up():
+    up = False
     try:
         req = urllib.request.Request(
             BASE + "/health", method="GET",
             headers={"Authorization": "Bearer " + TOKEN})
         with urllib.request.urlopen(req, timeout=3) as resp:
-            return resp.status == 200
+            up = resp.status == 200
     except Exception:
-        return False
+        up = False
+    return up
 
 
 def ask(question):
@@ -69,24 +74,32 @@ def check_case(case):
     elif case.get("expect") and case["expect"].lower() not in answer:
         note = f"не найдено ожидаемое «{case['expect']}»"
     else:
-        for junk in _JUNK_FRAGMENTS:
-            if junk in answer:
-                note = f"мусорный паттерн «{junk}»"
-                break
+        note = _first_junk_note(answer)
     return {"question": q, "answer_len": len(answer),
             "pass": note == "ok", "note": note, "answer": answer[:200]}
 
 
+def _first_junk_note(answer):
+    """Первый мусорный паттерн в ответе (без break), строка-замечание.
+    Один return: str."""
+    found = [j for j in _JUNK_FRAGMENTS if j in answer]
+    note = "ok"
+    if found:
+        note = f"мусорный паттерн «{found[0]}»"
+    return note
+
+
 def run_once():
+    results = []
     if not _server_up():
         print(f"[QA] сервер Mirro недоступен на {BASE} — прогон пропущен")
-        return []
-    results = [check_case(c) for c in CASES]
-    passed = sum(1 for r in results if r["pass"])
-    print(f"[QA] {passed}/{len(results)} пройдено, {len(results)-passed} провалов")
-    for r in results:
-        mark = "OK " if r["pass"] else "FAIL"
-        print(f"  [{mark}] {r['question']} | len={r['answer_len']} | {r['note']}")
+    else:
+        results = [check_case(c) for c in CASES]
+        passed = sum(1 for r in results if r["pass"])
+        print(f"[QA] {passed}/{len(results)} пройдено, {len(results)-passed} провалов")
+        for r in results:
+            mark = "OK " if r["pass"] else "FAIL"
+            print(f"  [{mark}] {r['question']} | len={r['answer_len']} | {r['note']}")
     return results
 
 
@@ -112,14 +125,16 @@ def main():
     args = ap.parse_args()
 
     all_ok = True
-    while True:
+    go = True
+    while go:
         res = run_once()
         append_report(res)
         if res and not all(r["pass"] for r in res):
             all_ok = False
         if args.every <= 0:
-            break
-        time.sleep(args.every)
+            go = False
+        else:
+            time.sleep(args.every)
     return 0 if all_ok else 1
 
 

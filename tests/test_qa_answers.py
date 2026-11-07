@@ -12,7 +12,11 @@
 
 Запуск:  python -m unittest tests.test_qa_answers -v
 """
-import json, os, unittest, urllib.request, urllib.error
+import json
+import os
+import unittest
+import urllib.request
+import urllib.error
 
 from tests.qa_cases import CASES
 
@@ -23,14 +27,16 @@ TOKEN = os.environ.get("MIRRO_TOKEN", "test-secret-123")
 
 
 def _server_up():
+    ok = False
     try:
         req = urllib.request.Request(
             BASE + "/health", method="GET",
             headers={"Authorization": "Bearer " + TOKEN})
         with urllib.request.urlopen(req, timeout=3) as resp:
-            return resp.status == 200
+            ok = resp.status == 200
     except Exception:
-        return False
+        ok = False
+    return ok
 
 
 def ask(question):
@@ -51,15 +57,19 @@ def ask(question):
 def _check_case(case):
     q = case["question"]
     answer = ask(q)
-    self_text = f"question={q!r}, answer={answer[:120]!r}, len={len(answer)}"
     min_len = case.get("min_len", 8)
+    note = "ok"
+    passed = True
     if len(answer) < min_len:
-        return False, f"слишком короткий ответ (< {min_len}): {self_text}"
-    if case.get("forbid") and case["forbid"].lower() in answer:
-        return False, f"запрещённый мусор «{case['forbid']}» встречен: {self_text}"
-    if case.get("expect") and case["expect"].lower() not in answer:
-        return False, f"ожидалось «{case['expect']}», но не найдено: {self_text}"
-    return True, "ok"
+        passed = False
+        note = f"слишком короткий ответ (< {min_len})"
+    elif case.get("forbid") and case["forbid"].lower() in answer:
+        passed = False
+        note = f"запрещённый мусор «{case['forbid']}» встречен"
+    elif case.get("expect") and case["expect"].lower() not in answer:
+        passed = False
+        note = f"ожидалось «{case['expect']}», но не найдено"
+    return passed, note
 
 
 class TestQARegression(unittest.TestCase):
