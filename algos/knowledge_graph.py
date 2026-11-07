@@ -463,12 +463,40 @@ def _clean_link_text(link):
     return text
 
 
+def _we_contains_underscore(q):
+    """Есть ли в запросе имя функции с подчёркиванием (bubble_sort, dijkstra)?
+    Такие вопросы обрабатывает func_kb, а не граф связей. Один return: bool."""
+    return bool(_re.search(r"[a-z]_\w+", (q or "").lower()))
+
+
+def _we_is_algo_ask(q):
+    """Вопрос похож на запрос алгоритма/функции (а не понятия-связи): содержит
+    «алгоритм/сортировк/функция» + «расскажи/что делает/как работает/что такое».
+    Такие уходят в func_kb, а не в граф связей. Один return: bool."""
+    domain = ("сортировк", "алгоритм", "функци", "метод", "граф", "поиск", "стек")
+    ask = ("расскажи", "что делает", "как работает", "что такое", "объясни", "что значит")
+    hit = False
+    for d in domain:
+        if d in q:
+            for a in ask:
+                if a in q:
+                    hit = True
+                    break
+            if hit:
+                break
+    return hit
+
+
 def try_enrich(query):
     """Возвращает СВЯЗНЫЙ ответ родственными понятиями, либо None.
     Фильтрует мусорные связи и формулирует предложение вместо сырого «a|b|c».
     Отвечает только на явный запрос о связях. Один return: str или None."""
     ans = None
-    if _wants_links((query or "").lower()):
+    q = (query or "").lower()
+    # имя функции с подчёркиванием или явный вопрос об алгоритме обрабатывает func_kb
+    if _we_contains_underscore(q) or _we_is_algo_ask(q):
+        return ans
+    if _wants_links(q):
         topic = _extract_topic(query)
         if topic:
             links = kg.enrich(topic, max_hop=2)
@@ -484,7 +512,11 @@ def try_enrich(query):
 def try_what_links(query):
     """Отвечает про связи понятия («что связано с X?»). Один return: str или None."""
     ans = None
-    q_raw = (query or "").lower()
+    q = (query or "").lower()
+    # имя функции с подчёркиванием или алгоритм-вопрос — обрабатывает func_kb
+    if _re.search(r"[a-z]_\w+", q) or _we_is_algo_ask(q):
+        return ans
+    q_raw = q
     if _wants_links(q_raw):
         q = _clean_q(query)
         name = _extract_topic(q)
