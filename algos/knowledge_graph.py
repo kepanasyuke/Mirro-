@@ -344,6 +344,128 @@ class KnowledgeGraph:
 kg = KnowledgeGraph()
 
 
+def build_function_links():
+    """Связывает функции базы знаний (module_knowledge) с графом: для каждой
+    функции создаёт узел-пункт знания и рёбра «использует_понятие» к словам из
+    её описания и темы. Делает функции частью графа связей.
+    Один return: int (число добавленных/подкреплённых рёбер)."""
+    added = 0
+    try:
+        from algos.module_knowledge import fk
+        stop = {"и", "или", "для", "на", "в", "по", "с", "из", "это", "что",
+                "как", "сумм", "числ", "значен", "котор", "всех", "их", "один"}
+        for name, info in fk._by_name.items():
+            if name.startswith("_"):
+                continue
+            fn_node = f"функция {name}"
+            kg.add_node(fn_node, tag="функция")
+            text = f"{info.get('topic','')} {info.get('what','')} {info.get('ex','')}"
+            words = _re.findall(r"[а-яёa-z]{3,}", text.lower())
+            seen = set()
+            for w in words:
+                if w in stop or w in seen or len(w) < 4:
+                    seen.add(w)
+                    continue
+                seen.add(w)
+                kg.add_edge(fn_node, "использует_понятие", w, weight=0.4)
+                added += 1
+    except Exception:
+        added = 0
+    return added
+
+
+def build_concept_links(paths=None, max_pairs=2000, co_min=2):
+    """Достраивает рёбра «связано_с» между понятиями из QA-корпуса: слова,
+    часто встречающиеся вместе в (вопрос→ответ), связываются. Делает граф
+    плотнее на основе реального опыта.
+    Один return: int (число добавленных рёбер)."""
+    added = 0
+    stop = {"это", "что", "как", "для", "на", "в", "по", "с", "из", "и", "или",
+            "не", "я", "ты", "он", "она", "мы", "вы", "про", "котор", "такое",
+            "его", "её", "их", "быть", "есть"}
+    co_occur = {}
+    try:
+        import json as _json
+        from pathlib import Path
+        if paths is None:
+            base = Path(__file__).resolve().parent.parent / "data" / "self_learned"
+            paths = list(base.glob("*.jsonl"))
+        count = 0
+        for p in paths:
+            if count >= max_pairs:
+                break
+            try:
+                with open(p, encoding="utf-8", errors="ignore") as fh:
+                    for line in fh:
+                        if count >= max_pairs:
+                            break
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            ex = _json.loads(line)
+                        except Exception:
+                            continue
+                        text = str(ex.get("instruction", "")) + " " + str(ex.get("output", ""))
+                        words = _re.findall(r"[а-яёa-z]{4,}", text.lower())
+                        uniq = [w for w in dict.fromkeys(words) if w not in stop]
+                        for a in uniq:
+                            for b in uniq:
+                                if a != b:
+                                    pair = tuple(sorted((a, b)))
+                                    co_occur[pair] = co_occur.get(pair, 0) + 1
+                        count += 1
+            except Exception:
+                continue
+        # добавляем рёбра для частых совместных пар
+        for (a, b), n in co_occur.items():
+            if n >= co_min:
+                kg.add_edge(a, "связано_с", b, weight=min(1.0, n * 0.2))
+                added += 1
+    except Exception:
+        added = 0
+    return added
+
+
+def build_concept_bridges():
+    """Строит «мосты» между понятиями базы знаний: понятия (ключи с «_»)
+    связываются с темами функций-«родственников» и друг с другом через
+    общие слова-признаки из what/tags. Делает понятия связными в графе.
+    Один return: int (число добавленных рёбер)."""
+    added = 0
+    try:
+        from algos.module_knowledge import fk
+        bridge = {"нейросеть": ["обучение", "алгоритм", "данные"],
+                  "искусственный интеллект": ["обучение", "алгоритм", "нейросеть"],
+                  "память": ["обучение", "данные"],
+                  "обучение": ["алгоритм", "данные"],
+                  "данные": ["алгоритм"],
+                  "алгоритм": ["граф"],
+                  "граф": ["данные"],
+                  "интерфейс": ["данные"]}
+        # понятия -> рёбра к смежным
+        for key, info in fk._by_name.items():
+            if not key.startswith("_"):
+                continue
+            topic = info.get("topic", "").split("\n")[0]
+            name_core = topic.split()[0] if topic else key
+            for other in bridge.get(name_core, []):
+                kg.add_edge(name_core, "связано_с", other, weight=0.7)
+                added += 1
+            # связь с темой функции, если встречается в what
+            what = info.get("what", "").lower()
+            for fname, finfo in fk._by_name.items():
+                if fname.startswith("_"):
+                    continue
+                ftopic = finfo.get("topic", "")
+                if ftopic and any(wd in what and wd in ftopic for wd in name_core.split()):
+                    kg.add_edge(name_core, "использует_функцию", fname, weight=0.6)
+                    added += 1
+    except Exception:
+        added = 0
+    return added
+
+
 # ---------- быстрый интерфейс для try_* (все функции — один return) ----------
 def _clean_q(query):
     """Нормализует запрос для разбора. Один return: str."""
@@ -452,15 +574,15 @@ def _clean_link_text(link):
     """Чистит одну связь «topic p other» от мусорных фрагментов.
     Возвращает None, если связь бессмысленна. Один return: str|None."""
     text = (link or "").strip(" |")
-    if len(text) < 6:
-        return None
-    # мусорные объекты/хвосты: личные обращения, «насколько обида», «такое это смотри»
-    lowered = text.lower()
-    bad_markers = ("я хотел", "насколько", "обида", "такое это", "это такое",
-                   "смотри намека", "хочешь поиграть", "могу дать тебе")
-    if any(m in lowered for m in bad_markers):
-        return None
-    return text
+    out = None
+    if len(text) >= 6:
+        # мусорные объекты/хвосты: личные обращения, «насколько обида», «такое это смотри»
+        lowered = text.lower()
+        bad_markers = ("я хотел", "насколько", "обида", "такое это", "это такое",
+                       "смотри намека", "хочешь поиграть", "могу дать тебе")
+        if not any(m in lowered for m in bad_markers):
+            out = text
+    return out
 
 
 def _we_contains_underscore(q):
@@ -494,9 +616,7 @@ def try_enrich(query):
     ans = None
     q = (query or "").lower()
     # имя функции с подчёркиванием или явный вопрос об алгоритме обрабатывает func_kb
-    if _we_contains_underscore(q) or _we_is_algo_ask(q):
-        return ans
-    if _wants_links(q):
+    if not (_we_contains_underscore(q) or _we_is_algo_ask(q)) and _wants_links(q):
         topic = _extract_topic(query)
         if topic:
             links = kg.enrich(topic, max_hop=2)
@@ -514,10 +634,7 @@ def try_what_links(query):
     ans = None
     q = (query or "").lower()
     # имя функции с подчёркиванием или алгоритм-вопрос — обрабатывает func_kb
-    if _re.search(r"[a-z]_\w+", q) or _we_is_algo_ask(q):
-        return ans
-    q_raw = q
-    if _wants_links(q_raw):
+    if not (_re.search(r"[a-z]_\w+", q) or _we_is_algo_ask(q)) and _wants_links(q):
         q = _clean_q(query)
         name = _extract_topic(q)
         if name:

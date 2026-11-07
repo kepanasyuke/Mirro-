@@ -47,8 +47,12 @@ class MirroCore:
         self.knowledge_base = defaultdict(list)
         self._load_knowledge()
     def _load_json(self, path):
-        try: return json.loads(path.read_text("utf-8"))
-        except: return None
+        value = None
+        try:
+            value = json.loads(path.read_text("utf-8"))
+        except Exception:
+            value = None
+        return value
     def _save_json(self, path, data): path.write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
     def _load_knowledge(self):
         _lite = os.environ.get("MIRRO_LITE", "").strip().lower() in ("1", "true", "yes", "on")
@@ -153,16 +157,15 @@ def _quantum_context_note():
         from algos.zero_dimensional import dimension_of_understanding as _dimen
         from algos.quantum_graph import init_quantum_states
         from algos.neural_electric import calculate_physics_loss
-        if not _kg.nodes:
-            return note
-        pinn = calculate_physics_loss(_kg, 0.55)
-        dim = _dimen(_kg)
-        sup = len(init_quantum_states(_kg).states)
-        pair, chaos = _combinatoric_pair()
-        pair_txt = (pair[0] + "↔" + pair[1]) if pair else "нет устойчивой пары"
-        note = (f"PINN Loss: {pinn:.4f}; суперпозиция: {sup} концептов; "
-                f"размерность понимания: {dim}/3; комбинаторный путь: {pair_txt} "
-                f"(хаос {chaos:.4f}).")
+        if _kg.nodes:
+            pinn = calculate_physics_loss(_kg, 0.55)
+            dim = _dimen(_kg)
+            sup = len(init_quantum_states(_kg).states)
+            pair, chaos = _combinatoric_pair()
+            pair_txt = (pair[0] + "↔" + pair[1]) if pair else "нет устойчивой пары"
+            note = (f"PINN Loss: {pinn:.4f}; суперпозиция: {sup} концептов; "
+                    f"размерность понимания: {dim}/3; комбинаторный путь: {pair_txt} "
+                    f"(хаос {chaos:.4f}).")
     except Exception:
         note = ""
     return note
@@ -253,6 +256,15 @@ def autonomous_learning_loop(interval_sec=3600):
                     merged["updated"] = _datetime.utcnow().isoformat()
                     MODEL_STATE_FILE.write_text(json.dumps(merged, ensure_ascii=False), "utf-8")
                 except: pass
+                # периодический самоконтроль: прогон QA-пар (вопрос → ответ)
+                # ловит «рваные» ответы и регрессии, пишет историю в data/qa_report.jsonl
+                try:
+                    import subprocess as _sp, sys as _sys
+                    _sp.run([_sys.executable, str(MIRRO_HOME / "scripts" / "run_qa.py")],
+                            timeout=180, capture_output=True)
+                    print("  [автообучение] QA-самоконтроль выполнен")
+                except Exception as _qae:
+                    print(f"  [автообучение] QA-самоконтроль: {_qae}")
             except Exception as e: print(f"  [автообучение] ошибка: {e}")
             time.sleep(interval_sec)
     t = threading.Thread(target=_loop, daemon=True); t.start(); return t
@@ -284,12 +296,16 @@ def _reasoning():
 
 def try_greetings(query):
     q = query.lower().strip()
-    if len(q) > 40: return None
-    if any(g in q for g in ["привет","здравств","добрый"]): return "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете."
-    if any(g in q for g in ["как дела","как ты","как жизнь","как у тебя","как настроение","как твои"]): return "Привет! У меня всё хорошо, я постоянно учусь и становлюсь умнее. А у тебя как дела?"
-    if "спасибо" in q: return "Пожалуйста! Рада помочь."
-    if "2+2" in q.replace(" ","") or q == "2+2": return "4"
-    return None
+    ans = None
+    if len(q) <= 40 and "спасибо" in q:
+        ans = "Пожалуйста! Рада помочь."
+    elif len(q) <= 40 and any(g in q for g in ["привет","здравств","добрый"]):
+        ans = "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете."
+    elif len(q) <= 40 and any(g in q for g in ["как дела","как ты","как жизнь","как у тебя","как настроение","как твои"]):
+        ans = "Привет! У меня всё хорошо, я постоянно учусь и становлюсь умнее. А у тебя как дела?"
+    elif len(q) <= 40 and (q == "2+2"):
+        ans = "4"
+    return ans
 
 def try_learn(query):
     q = query.lower().strip()
@@ -305,30 +321,41 @@ def try_learn(query):
     return answer
 
 def try_algos_think(query):
+    ans = None
     try:
         from algos.think import think as mirro_think
         thought = mirro_think(query)
         if thought and thought.get("answer") is not None and thought.get("category") != "unknown":
-            return thought.get("explanation") or str(thought.get("answer"))
-    except: pass
-    return None
+            ans = thought.get("explanation") or str(thought.get("answer"))
+    except Exception:
+        ans = None
+    return ans
 
 def try_humor(query):
     q = query.lower().strip()
+    ans = None
     try:
         from algos.humor import shutka, sarkazm, ya_ne_znau_chto_khotet, o_udache_i_uspehe
         from algos.reasoning import think_about_thinking, citata_bosovy
-        if "шутк" in q or "смеш" in q or "анекдот" in q or "юмор" in q: return shutka(q)
-        if "сарказм" in q or "ирони" in q: return sarkazm()
-        if "ничего не делать" in q or "ничегонеделание" in q or "лень" in q: return "ЕСЛИ <лень> ТО <ничего не делать>. Алгоритм: НАЧАЛО → ничего не делать → КОНЕЦ."
-        if "хочу" in q and "не знаю" in q: return ya_ne_znau_chto_khotet()
-        if "удач" in q or "успех" in q or "успеха" in q or "веришь" in q or "веришь ли" in q: return o_udache_i_uspehe()
-        if "босов" in q or "блок-схем" in q or "схема мышления" in q:
-            _, steps = think_about_thinking(q); return "\n".join(steps[:6])
-        if "цитат" in q and ("босов" in q or "учебник" in q):
-            author, text = citata_bosovy(); return f"{author}: «{text}»"
-    except: pass
-    return None
+        if "шутк" in q or "смеш" in q or "анекдот" in q or "юмор" in q:
+            ans = shutka(q)
+        elif "сарказм" in q or "ирони" in q:
+            ans = sarkazm()
+        elif "ничего не делать" in q or "ничегонеделание" in q or "лень" in q:
+            ans = "ЕСЛИ <лень> ТО <ничего не делать>. Алгоритм: НАЧАЛО → ничего не делать → КОНЕЦ."
+        elif "хочу" in q and "не знаю" in q:
+            ans = ya_ne_znau_chto_khotet()
+        elif "удач" in q or "успех" in q or "успеха" in q or "веришь" in q or "веришь ли" in q:
+            ans = o_udache_i_uspehe()
+        elif "босов" in q or "блок-схем" in q or "схема мышления" in q:
+            _, steps = think_about_thinking(q)
+            ans = "\n".join(steps[:6])
+        elif "цитат" in q and ("босов" in q or "учебник" in q):
+            author, text = citata_bosovy()
+            ans = f"{author}: «{text}»"
+    except Exception:
+        ans = None
+    return ans
 
 def try_creative(query):
     """Креативные запросы (стихи, рассказы, загадки) — лёгкая генерация.
@@ -344,10 +371,12 @@ def try_creative(query):
         ("загадк", "загадай"): _gen_riddle,
         ("тост", "поздрав", "тостик"): _gen_toast,
     }
+    ans = None
     for keys, fn in topics.items():
         if any(k in q for k in keys):
-            return fn(q)
-    return None
+            ans = fn(q)
+            break
+    return ans
 
 def _gen_poem(query):
     topic = "зиму" if any(w in query.lower() for w in ["зим", "снег", "мороз"]) else \
@@ -409,12 +438,14 @@ def _gen_toast(query):
 
 def try_jarvis(query):
     """ДЖАРВИС-режим: короткий статусный ответ в его стиле."""
+    ans = None
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.voice import try_jarvis as _try_jarvis
-        return _try_jarvis(query)
+        ans = _try_jarvis(query)
     except Exception:
-        return None
+        ans = None
+    return ans
 
 _DIALOG_STOPWORDS = {
     "и", "в", "на", "с", "по", "за", "от", "до", "из", "у", "для", "о",
@@ -491,58 +522,61 @@ def try_dialog(query):
     алгоритмы). Перехватываем их здесь и отвечаем осмысленно.
     """
     q = query.lower().strip()
+    ans = None
     if any(w in q for w in ["кто ты", "что ты такое", "ты кто", "представься", "твоё имя"]):
-        return _DIALOG_REPLIES["who"]
-    if any(w in q for w in ["ты программа", "ты бот", "ты компьютерная программа",
-                            "ты живая", "ты настоящая", "ты робот", "ты искусственный интеллект",
-                            "ты нейросеть"]):
-        return _DIALOG_REPLIES["program"]
-    if q.strip() in ("программа", "программу", "что такое программа"):
-        return _DIALOG_REPLIES["program"]
-    if any(w in q for w in ["что ты умеешь", "что умеешь", "твои возможности", "на что способна"]):
-        return _DIALOG_REPLIES["can"]
-    if any(w in q for w in ["как ты учишься", "как учишься", "как обучаешься", "как запоминаешь"]):
-        return _DIALOG_REPLIES["learn"]
-    if any(w in q for w in ["как ты", "как твои дела", "как настроение", "ты в порядке"]):
-        return _DIALOG_REPLIES["howami"]
-    if any(w in q for w in ["статус", "всё ли в порядке", "ты работаешь"]):
-        return _DIALOG_REPLIES["status"]
-    if _is_news_query(q):
-        return _DIALOG_REPLIES["news"]
-    if any(w in q for w in ["ответишь на русском", "говори по-русски", "по русски",
-                            "на русском", "русский язык", "по-русски"]):
-        return _DIALOG_REPLIES["language"]
-    if any(w in q for w in ["меня не устраивает твой ответ", "ответ как человек",
-                            "как бы ответил человек", "ответь нормально", "ответь по-человечески",
-                            "ответь как человек", "не то", "не то ответил", "плохой ответ", "ерунда", "не понравился твой ответ"]):
-        return _DIALOG_REPLIES["quality"]
-    if any(w in q for w in ["не отвечаешь на вопрос", "не ответил", "не отвечаешь",
-                            "не отвечаешь про себя", "игнорируешь мой вопрос",
-                            "отвечай на вопрос", "не отвечаешь на мой вопрос"]):
-        return _DIALOG_REPLIES["not_answering"]
-    # Советы о карьере/выборе/работе — это разговор, а не технический запрос о
-    # фрилансе/конторе как теме из базы. Отвечаем осмысленно, а не фрагментом.
-    if any(w in q for w in ["стоит ли", "какой выбрать", "что выбрать", "подскажи как",
-                            "посоветуй", "совет по", "как начать", "с чего начать",
-                            "лучше для", "чем заниматься", "идти в разработку",
-                            "работать на себя", "фриланс или", "учиться на"]):
-        return _DIALOG_REPLIES["advice"]
-    if q.startswith("какой ") and "лучше" in q:
-        return _DIALOG_REPLIES["advice"]
-    if any(w in q for w in ["спасибо", "благодарю", "спс"]):
-        return _DIALOG_REPLIES["thanks"]
-    if any(w in q for w in ["пока", "до свидания", "до встречи", "прощай"]):
-        return _DIALOG_REPLIES["bye"]
-    return None
+        ans = _DIALOG_REPLIES["who"]
+    elif any(w in q for w in ["ты программа", "ты бот", "ты компьютерная программа",
+                              "ты живая", "ты настоящая", "ты робот", "ты искусственный интеллект",
+                              "ты нейросеть"]):
+        ans = _DIALOG_REPLIES["program"]
+    elif q.strip() in ("программа", "программу", "что такое программа"):
+        ans = _DIALOG_REPLIES["program"]
+    elif any(w in q for w in ["что ты умеешь", "что умеешь", "твои возможности", "на что способна"]):
+        ans = _DIALOG_REPLIES["can"]
+    elif any(w in q for w in ["как ты учишься", "как учишься", "как обучаешься", "как запоминаешь"]):
+        ans = _DIALOG_REPLIES["learn"]
+    elif any(w in q for w in ["как ты", "как твои дела", "как настроение", "ты в порядке"]):
+        ans = _DIALOG_REPLIES["howami"]
+    elif any(w in q for w in ["статус", "всё ли в порядке", "ты работаешь"]):
+        ans = _DIALOG_REPLIES["status"]
+    elif _is_news_query(q):
+        ans = _DIALOG_REPLIES["news"]
+    elif any(w in q for w in ["ответишь на русском", "говори по-русски", "по русски",
+                              "на русском", "русский язык", "по-русски"]):
+        ans = _DIALOG_REPLIES["language"]
+    elif any(w in q for w in ["меня не устраивает твой ответ", "ответ как человек",
+                              "как бы ответил человек", "ответь нормально", "ответь по-человечески",
+                              "ответь как человек", "не то", "не то ответил", "плохой ответ", "ерунда", "не понравился твой ответ"]):
+        ans = _DIALOG_REPLIES["quality"]
+    elif any(w in q for w in ["не отвечаешь на вопрос", "не ответил", "не отвечаешь",
+                              "не отвечаешь про себя", "игнорируешь мой вопрос",
+                              "отвечай на вопрос", "не отвечаешь на мой вопрос"]):
+        ans = _DIALOG_REPLIES["not_answering"]
+    elif any(w in q for w in ["стоит ли", "какой выбрать", "что выбрать", "подскажи как",
+                              "посоветуй", "совет по", "как начать", "с чего начать",
+                              "лучше для", "чем заниматься", "идти в разработку",
+                              "работать на себя", "фриланс или", "учиться на"]):
+        ans = _DIALOG_REPLIES["advice"]
+    elif q.startswith("какой ") and "лучше" in q:
+        ans = _DIALOG_REPLIES["advice"]
+    elif any(w in q for w in ["спасибо", "благодарю", "спс"]):
+        ans = _DIALOG_REPLIES["thanks"]
+    elif any(w in q for w in ["пока", "до свидания", "до встречи", "прощай"]):
+        ans = _DIALOG_REPLIES["bye"]
+    return ans
 
 def try_tfidf(query, cluster):
+    ans = []
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.algorithms import algo
-        return algo.search_tfidf(query, top_n=5)
-    except: return []
+        ans = algo.search_tfidf(query, top_n=5)
+    except Exception:
+        ans = []
+    return ans
 
 def try_rag(query, cluster):
+    ans = []
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.rag import rag
@@ -553,18 +587,23 @@ def try_rag(query, cluster):
             rr = rag.run_quantum_guided_rag(query, pair, top_k=3)
         else:
             rr = rag.search(query, top_segments=3, top_k=3)
-        if rr: return [(("", rr[i][2], "rag"), rr[i][0]) for i in range(min(3, len(rr)))]
-    except: pass
-    return []
+        if rr:
+            ans = [(("", rr[i][2], "rag"), rr[i][0]) for i in range(min(3, len(rr)))]
+    except Exception:
+        ans = []
+    return ans
 
 def try_web(query):
+    ans = None
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.thinking import thinking
         result = thinking.web_search(query)
-        if result.get("title") and result.get("summary"): return thinking.format_web_answer(query, result)
-    except: pass
-    return None
+        if result.get("title") and result.get("summary"):
+            ans = thinking.format_web_answer(query, result)
+    except Exception:
+        ans = None
+    return ans
 
 def try_provider(query, context=""):
     """Финальный фоллбэк: внешний ИИ-провайдер (DeepSeek и др.), если всё остальное не ответило.
@@ -572,12 +611,14 @@ def try_provider(query, context=""):
     context — история диалога; провайдеру передаётся, чтобы он учитывал
     предыдущие реплики и не терял нить разговора.
     """
+    ans = None
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.providers import fallback
-        return fallback(query, system=context or None)
-    except: pass
-    return None
+        ans = fallback(query, system=context or None)
+    except Exception:
+        ans = None
+    return ans
 
 
 def answer_looks_bad(query, answer):
@@ -609,26 +650,29 @@ def answer_looks_bad(query, answer):
 
 def _provider_help_hint():
     """Подсказка, когда внешний провайдер недоступен (нет ключа)."""
+    hint = (" Подсказка: чтобы я отвечала на такие вопросы, добавь ключ DeepSeek. "
+            "Положить его сюда: core/providers_secret.json "
+            '(формат {"deepseek": "sk-..."}) или задать переменную DEEPSEEK_API_KEY.)')
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.providers import status as _pv_status
         if any(_pv_status().values()):
-            return ""  # провайдер настроен — не морочим голову
+            hint = ""  # провайдер настроен — не морочим голову
     except Exception:
-        pass
-    return (" Подсказка: чтобы я отвечала на такие вопросы, добавь ключ DeepSeek. "
-            "Положить его сюда: core/providers_secret.json "
-            '(формат {"deepseek": "sk-..."}) или задать переменную DEEPSEEK_API_KEY.)')
+        hint = hint
+    return hint
 
 
 def _voice(raw, query, strategy="base"):
     """Обернуть сырой ответ в голос Mirro (свои слова, характер)."""
+    ans = raw
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.voice import speak
-        return speak(raw, query, strategy)
+        ans = speak(raw, query, strategy)
     except Exception:
-        return raw
+        ans = raw
+    return ans
 
 
 def try_stylize_generated_output(raw_text, chemistry=None):
@@ -657,15 +701,16 @@ def try_bosova_engine(prompt):
     """Выполнимые алгоритмы по правилам Босовой: арифметика по конструкциям
     ЕСЛИ/ТО/ЦИКЛ ПОКА, схемы мышления, тройственное рассуждение «нейрон-нигде».
     Возвращает готовый ответ или None, если вопрос не подходит."""
+    ans = None
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from algos.bosova_engine import применить
         res = применить(prompt)
-        if not res:
-            return None
-        return res["answer"]
+        if res:
+            ans = res["answer"]
     except Exception:
-        return None
+        ans = None
+    return ans
 
 
 def _try_direct_handlers(prompt):
@@ -677,90 +722,119 @@ def _try_direct_handlers(prompt):
     if str(MIRRO_HOME) not in _sys.path:
         _sys.path.insert(0, str(MIRRO_HOME))
     def try_knowledge_graph(q):
+        ans = None
         try:
             from algos.knowledge_graph import try_knowledge_graph as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_graph_infer(q):
+        ans = None
         try:
             from algos.graph_infer import try_graph_infer as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_dialogue_memory(q):
+        ans = None
         try:
             from algos.dialogue_memory import try_dialogue_memory as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_zero_dim(q):
+        ans = None
         try:
             from algos.zero_dimensional import try_zero_dim as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_metacognition(q):
+        ans = None
         try:
             from algos.mindstream import try_metacognition as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_growth(q):
+        ans = None
         try:
             from algos.zero_dimensional import try_growth as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_neuromod(q):
+        ans = None
         try:
             from algos.neuromodulators import try_neuromod as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_enrich(q):
+        ans = None
         try:
             from algos.knowledge_graph import try_enrich as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_definition(q):
+        ans = None
         try:
             from algos.module_knowledge import try_definition as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_what_links(q):
+        ans = None
         try:
             from algos.knowledge_graph import try_what_links as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_similar(q):
+        ans = None
         try:
             from algos.knowledge_graph import try_similar as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_function_knowledge(q):
+        ans = None
         try:
             from algos.module_knowledge import try_function_knowledge as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_evo(q):
+        ans = None
         try:
             from algos.evolve import try_evolve as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_quantum_graph(q):
+        ans = None
         try:
             from algos.quantum_graph import try_quantum as _f
-            return _f(q)
+            ans = _f(q)
         except Exception:
-            return None
+            ans = None
+        return ans
     def try_neural_elec(q):
+        ans = None
         try:
             from algos.neural_electric import try_neural_electric as _f
             from algos.knowledge_graph import kg as _kg
@@ -771,9 +845,9 @@ def _try_direct_handlers(prompt):
                     _kg.save(MODELS / "knowledge_graph.pkl")
                 except Exception:
                     pass
-            return ans
         except Exception:
-            return None
+            ans = None
+        return ans
     handlers = [
         ("greeting", try_greetings),
         ("learn", try_learn),
@@ -927,6 +1001,23 @@ def build_response(prompt, cluster, context=""):
                     result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
+    # видимая внутренняя речь: добавляем итоговый шаг о выбранной стратегии,
+    # чтобы было видно, как именно Mirro пришла к ответу
+    try:
+        strat = result.get("strategy", "")
+        strat_ru = {"definition":"отвечаю своим определением понятия",
+                    "ai_history":"восстанавливаю из истории знаний об ИИ",
+                    "func_kb":"подбираю подходящий алгоритм из своих функций",
+                    "enrich":"собираю родственные связи в графе знаний",
+                    "metacognition":"смотрю на собственное внутреннее состояние",
+                    "base":"беру готовый ответ из базы знаний",
+                    "web":"ищу в интернете свежую информацию",
+                    "greeting":"веду обычный приветственный диалог",
+                    "dialog":"веду обычный диалог",
+                    "similar":"сравниваю понятия по подобию"}.get(strat, "размышляю и подбираю лучший ответ")
+        thinking.append(f"Итог: {strat_ru}.")
+    except Exception:
+        pass
     result["thinking"] = thinking
     return result
 
@@ -934,12 +1025,14 @@ def try_ai_history(prompt):
     """Справочник «рост понимания: нейрочеловек и ИИ» (Тьюринг, Шеннон, Питтс,
     Хебб, Розенблатт, IIT, GNWT и др.) — с авторами в записях. Один return:
     str-ответ или None."""
+    ans = None
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from algos.knowledge_ai_history import применить as _ai_hist
-        return _ai_hist(prompt)
+        ans = _ai_hist(prompt)
     except Exception:
-        return None
+        ans = None
+    return ans
 
 
 # ========== HTTP API ==========
@@ -955,6 +1048,7 @@ class MirroAPI(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         return json.loads(self.rfile.read(length).decode("utf-8"))
     def _serve_file(self, path, ctype):
+        served = False
         if path.exists():
             body = path.read_bytes()
             self.send_response(200)
@@ -962,55 +1056,67 @@ class MirroAPI(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers(); self.wfile.write(body)
-            return True
-        return False
+            served = True
+        return served
     def _authorized(self):
         """Проверяет токен доступа. Один return: bool.
 
         Пропускает, если AUTH_TOKEN пуст (локальный режим). Иначе сверяет
         заголовок Authorization: Bearer <token> или query-параметр ?token=.
         """
-        if not AUTH_TOKEN:
-            return True
-        supplied = ""
-        auth = self.headers.get("Authorization", "")
-        if auth.lower().startswith("bearer "):
-            supplied = auth[7:].strip()
-        if not supplied:
-            from urllib.parse import urlparse, parse_qs
-            qs = parse_qs(urlparse(self.path).query)
-            supplied = (qs.get("token") or [""])[0]
-        return supplied == AUTH_TOKEN
+        ok = True
+        if AUTH_TOKEN:
+            supplied = ""
+            auth = self.headers.get("Authorization", "")
+            if auth.lower().startswith("bearer "):
+                supplied = auth[7:].strip()
+            if not supplied:
+                from urllib.parse import urlparse, parse_qs
+                qs = parse_qs(urlparse(self.path).query)
+                supplied = (qs.get("token") or [""])[0]
+            ok = supplied == AUTH_TOKEN
+        return ok
     def _require_auth(self):
         """Если токен неверен — пишет 401. Один return: bool (разрешено)."""
-        if self._authorized():
-            return True
-        self._json({"error": "unauthorized"}, 401)
-        return False
+        ok = self._authorized()
+        if not ok:
+            self._json({"error": "unauthorized"}, 401)
+        return ok
     def _route_path(self):
         """Путь без query-параметров (для маршрутизации). Один return: str."""
+        route = ""
         try:
             from urllib.parse import urlsplit
-            return urlsplit(self.path).path or "/"
+            route = urlsplit(self.path).path or "/"
         except Exception:
-            return self.path.split("?", 1)[0]
+            route = self.path.split("?", 1)[0]
+        return route
     def do_GET(self):
-        if not self._require_auth():
-            return
-        route = self._route_path()
-        if route in ("/", "/index.html"):
-            if self._serve_file(MIRRO_HOME / "web" / "index.html", "text/html; charset=utf-8"): return
-        elif route == "/meysto-neiroset.html":
-            if self._serve_file(MIRRO_HOME / "web" / "meysto-neiroset.html", "text/html; charset=utf-8"): return
-        elif route == "/mirro-evolve.html":
-            if self._serve_file(MIRRO_HOME / "web" / "mirro-evolve.html", "text/html; charset=utf-8"): return
-        elif route == "/catalog.json":
-            if self._serve_file(DATA / "catalog_phase1.json", "application/json; charset=utf-8"): return
-        elif route == "/health":
+        if self._require_auth():
+            route = self._route_path()
+            served = False
+            if route in ("/", "/index.html"):
+                served = self._serve_file(MIRRO_HOME / "web" / "index.html", "text/html; charset=utf-8")
+            elif route == "/meysto-neiroset.html":
+                served = self._serve_file(MIRRO_HOME / "web" / "meysto-neiroset.html", "text/html; charset=utf-8")
+            elif route == "/mirro-evolve.html":
+                served = self._serve_file(MIRRO_HOME / "web" / "mirro-evolve.html", "text/html; charset=utf-8")
+            elif route == "/catalog.json":
+                served = self._serve_file(DATA / "catalog_phase1.json", "application/json; charset=utf-8")
+            elif not served:
+                served = self._route_GET_dispatch(route)
+            if not served:
+                self._json({"error": "not found"}, 404)
+
+    def _route_GET_dispatch(self, route):
+        """Диспетчер не-файловых GET-маршрутов. Один return: bool (обработано)."""
+        handled = True
+        if route == "/health":
             status = core.status()
-            try: status["algorithms"] = _grab_algo().status()
-            except: status["algorithms"] = {}
-            # нейро: медиаторы + граф знаний для дашборда
+            try:
+                status["algorithms"] = _grab_algo().status()
+            except Exception:
+                status["algorithms"] = {}
             try:
                 from algos.neuromodulators import nm as _nm
                 from algos.knowledge_graph import kg as _kg
@@ -1021,8 +1127,9 @@ class MirroAPI(BaseHTTPRequestHandler):
                 st["knowledge_graph"] = {
                     "nodes": len(_kg.nodes), "edges": len(_kg.edges),
                     "avg_dimension": _dimen(_kg),
+                    "density": round(len(_kg.edges) / max(1, len(_kg.nodes)), 3),
+                    "edges_per_node": round(len(_kg.edges) / max(1, len(_kg.nodes)), 2),
                 }
-                # квантовая суперпозиция концептов (для дашборда)
                 try:
                     from algos.quantum_graph import init_quantum_states
                     qst = init_quantum_states(_kg)
@@ -1034,7 +1141,6 @@ class MirroAPI(BaseHTTPRequestHandler):
                                      "P_active_sample": p_active}
                 except Exception:
                     st["quantum"] = {"superposed_nodes": 0, "P_active_sample": []}
-                # иммунная защита + синаптическое утомление (реальные метрики)
                 try:
                     from algos.immune_sentinel import run_graph_immune_scan
                     from algos.refractory import init_refractory_counters
@@ -1051,26 +1157,24 @@ class MirroAPI(BaseHTTPRequestHandler):
                 status["algorithms"] = st
             except Exception:
                 pass
-            self._json(status); return
+            self._json(status)
         elif route == "/v1/models":
             t = int(time.time())
             self._json({"object": "list", "data": [
                 {"id": "mirro/default", "object": "model", "created": t, "owned_by": "mirro"},
                 {"id": "mirro/ru", "object": "model", "created": t, "owned_by": "mirro"},
-            ]}); return
+            ]})
         elif route == "/v1/top-questions":
             top = core.stats.get("top_questions", {})
             ranked = sorted(top.items(), key=lambda x: -x[1])[:15]
-            self._json({"questions": [{"q": q, "count": c} for q, c in ranked]}); return
+            self._json({"questions": [{"q": q, "count": c} for q, c in ranked]})
         elif route == "/v1/evolve":
-            # Эволюционный отбор: шаг нейроэволюции популяции графов
             try:
                 from algos.evolve import get_evolver, _default_A, _default_X, report
                 ev = get_evolver()
                 from urllib.parse import parse_qs, urlsplit
                 pq = parse_qs(urlsplit(self.path).query)
                 steps = int(pq.get("steps", ["1"])[0])
-                rr = None
                 for _ in range(min(max(steps, 0), 20)):
                     ev.evolve_step(_default_A(ev.num_nodes), _default_X(ev.num_nodes, ev.input_dim))
                 best = ev.best_genome()
@@ -1085,13 +1189,12 @@ class MirroAPI(BaseHTTPRequestHandler):
                            "experience": len(ev.experience_base),
                            "best_chemistry": chem,
                            "report": report()}
-                self._json(payload); return
+                self._json(payload)
             except Exception as e:
-                self._json({"error": str(e)}, 500); return
+                self._json({"error": str(e)}, 500)
         elif route == "/v1/learn-report":
-            self._json(self._learn_report()); return
+            self._json(self._learn_report())
         elif route == "/v1/knowledge":
-            # Умные запросы знаниевого графа: enrich / what_links / similarity
             from urllib.parse import parse_qs, urlsplit
             try:
                 query = parse_qs(urlsplit(self.path).query).get("q", [""])[0]
@@ -1108,13 +1211,15 @@ class MirroAPI(BaseHTTPRequestHandler):
                     payload["similarity"] = _kg.similarity(a, b) if (a and b) else None
                 elif kind == "function":
                     from algos.module_knowledge import try_function_knowledge as _fk
-                    payload["answer"] = _fk(query) if query else f"база знаний по функциям: готова"
+                    payload["answer"] = _fk(query) if query else "база знаний по функциям: готова"
                 else:
                     payload["answer"] = []
-                self._json(payload); return
+                self._json(payload)
             except Exception as e:
-                self._json({"error": str(e)}, 500); return
-        self._json({"error": "not found"}, 404)
+                self._json({"error": str(e)}, 500)
+        else:
+            handled = False
+        return handled
 
     def _learn_report(self):
         """Живой отчёт об обучении Mirro: реальные веса MLP, статус, метрики.
@@ -1175,128 +1280,150 @@ class MirroAPI(BaseHTTPRequestHandler):
         stream = body.get("stream", False)
         if not messages:
             self._json({"error": "no messages"}, 400)
-            return None
-        conversation = []
-        last_user = ""
-        for m in messages:
-            role = (m.get("role") or "").lower()
-            content = (m.get("content") or "").strip()
-            if content:
-                conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
-                if role in ("user", "human"):
-                    last_user = content
-        prompt = last_user or " ".join(m.get("content", "") for m in messages)
-        context = "\n".join(conversation)
-        cluster = core.classify_task(prompt or context)
-        t0 = time.time()
-        response = build_response(prompt, cluster, context)
-        try:
-            if response.get("strategy") in ("base",) and response.get("content"):
-                algo = _grab_algo()
-                if algo.should_auto_learn(prompt, response["content"]):
-                    algo.autonomous_learn(cycles=15)
-        except: pass
-        # самообучение на новых темах: новое/свежее в диалоге Mirro запоминает
-        # себе в корпус (вопрос → ответ) и фиксирует тему во внутренней речи.
-        try:
-            if response and response.get("content") and response.get("strategy") != "error":
-                from algos.mindstream import mind as _m2, MindStream as _MS2
-                topic = _MS2.extract_topic(prompt)
-                _m2.observe(prompt)
-                if topic and response.get("strategy") in ("definition", "base", "func_kb", "ai_history"):
-                    _m2.learn_new_pair(prompt, response.get("content", ""))
-        except Exception:
-            pass
-        if response:
-            core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
-        content = response.get("content", "") if response else "Ошибка"
-        # темпераментный стилизатор: характер «мозга» формирует оформление ответа
-        try:
-            from algos.voice_temperament import determine_voice_temperament, try_apply_temperament_filters
-            from algos.neuromodulators import nm as _nm
-            tch = getattr(_nm, "level", {})
-            tmp = determine_voice_temperament(tch)
-            filtered = try_apply_temperament_filters(content.split(" "), tmp)
-            styled = " ".join(filtered)
-            if styled and len(styled) >= 20:
-                content = styled
-        except Exception:
-            pass
-        if stream:
-            self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
-            self.send_header("Cache-Control", "no-cache"); self.end_headers()
-            for chunk in content.split("\n"):
-                self.wfile.write(f"data: {json.dumps({'choices':[{'delta':{'content':chunk+chr(10)}}]}, separators=(',',':'))}\n\n".encode())
-                self.wfile.flush()
-            self.wfile.write(b"data: [DONE]\n\n")
         else:
-            payload = self._chat_payload(messages, model, response, prompt)
-            self._json(payload)
+            conversation = []
+            last_user = ""
+            for m in messages:
+                role = (m.get("role") or "").lower()
+                content = (m.get("content") or "").strip()
+                if content:
+                    conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
+                    if role in ("user", "human"):
+                        last_user = content
+            prompt = last_user or " ".join(m.get("content", "") for m in messages)
+            context = "\n".join(conversation)
+            cluster = core.classify_task(prompt or context)
+            t0 = time.time()
+            response = build_response(prompt, cluster, context)
+            try:
+                if response.get("strategy") in ("base",) and response.get("content"):
+                    algo = _grab_algo()
+                    if algo.should_auto_learn(prompt, response["content"]):
+                        algo.autonomous_learn(cycles=15)
+            except Exception:
+                pass
+            # самообучение на новых темах: новое/свежее в диалоге Mirro запоминает
+            # себе в корпус (вопрос → ответ) и фиксирует тему во внутренней речи.
+            try:
+                if response and response.get("content") and response.get("strategy") != "error":
+                    from algos.mindstream import mind as _m2, MindStream as _MS2
+                    topic = _MS2.extract_topic(prompt)
+                    _m2.observe(prompt)
+                    if topic and response.get("strategy") in ("definition", "base", "func_kb", "ai_history"):
+                        _m2.learn_new_pair(prompt, response.get("content", ""))
+                        # Хебб-усиление: раз ответ удался и у вопроса есть тема,
+                        # связываем её с ядром ответа, чтобы связь укреплялась с повтором
+                        try:
+                            from algos.knowledge_graph import kg as _kg3
+                            from algos.mindstream import _STOP as _MS_STOP
+                            words = [w for w in _re.findall(r"[а-яёa-z]{3,}",
+                                     str(response.get("content", "")).lower()) if w not in _MS_STOP]
+                            if topic and words:
+                                _kg3.hebbian_learn(topic, words[0], amount=0.05)
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+            if response:
+                core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
+            content = response.get("content", "") if response else "Ошибка"
+            # темпераментный стилизатор: характер «мозга» формирует оформление ответа
+            try:
+                from algos.voice_temperament import determine_voice_temperament, try_apply_temperament_filters
+                from algos.neuromodulators import nm as _nm
+                tch = getattr(_nm, "level", {})
+                tmp = determine_voice_temperament(tch)
+                filtered = try_apply_temperament_filters(content.split(" "), tmp)
+                styled = " ".join(filtered)
+                if styled and len(styled) >= 20:
+                    content = styled
+            except Exception:
+                pass
+            if stream:
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream")
+                self.send_header("Cache-Control", "no-cache"); self.end_headers()
+                for chunk in content.split("\n"):
+                    self.wfile.write(f"data: {json.dumps({'choices':[{'delta':{'content':chunk+chr(10)}}]}, separators=(',',':'))}\n\n".encode())
+                    self.wfile.flush()
+                self.wfile.write(b"data: [DONE]\n\n")
+            else:
+                payload = self._chat_payload(messages, model, response, prompt)
+                self._json(payload)
         return None
 
     def do_POST(self):
-        if not self._require_auth():
-            return
-        route = self._route_path()
-        if route == "/v1/chat/completions":
-            try: body = self._read()
-            except: return self._json({"error": "bad request"}, 400)
-            self._handle_chat(body)
-            return
-        elif route == "/v1/feedback":
-            try:
-                body = self._read(); algo = _grab_algo()
-                algo.train_from_feedback(body.get("query",""), body.get("response",""), body.get("liked",True))
-                # Хебб-обучение роу-ссылок графа из отклика: sign фидбека → укрепление/ослабление
-                kg_note = ""
+        if self._require_auth():
+            route = self._route_path()
+            if route == "/v1/chat/completions":
                 try:
-                    from algos.knowledge_graph import kg as _kg, _clean_q, _pair_from
-                    from algos.neural_electric import hebbian_update_path
-                    liked = body.get("liked", True)
-                    fb = 1.0 if liked else -1.0
-                    q = _clean_q(body.get("query",""))
-                    a, b = _pair_from(q)
-                    # если известна пара понятий — Хебб-обновляем прямую связь
-                    if a and b:
-                        _kg.reward_sign(a, b, fb, 0.05)
-                    # если ответ дал цепочку активации — закрепляем рёбра пути
-                    path = algo.hebbian_path if hasattr(algo, "hebbian_path") and algo.hebbian_path else None
-                    if path and len(path) >= 2:
-                        r = hebbian_update_path(_kg, path, fb, learning_rate=0.02)
-                        if r["updated"]:
-                            kg_note = f", routes={r['updated']}(+{r['strengthened']}/-{r['weakened']})"
-                    _kg.save(MODELS / "knowledge_graph.pkl")
-                    if a and b and not kg_note:
-                        kg_note = f", pair_hebb={fb}"
+                    body = self._read()
                 except Exception:
-                    kg_note = ""
-                self._json({"status": "ok" + kg_note})
-            except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
-            return
-        elif route == "/v1/self-learn":
+                    body = None
+                if body is not None:
+                    self._handle_chat(body)
+                else:
+                    self._json({"error": "bad request"}, 400)
+            elif route == "/v1/feedback":
+                self._post_feedback()
+            elif route == "/v1/self-learn":
+                self._post_self_learn()
+            elif route == "/v1/brain-eval":
+                self._post_brain_eval()
+            else:
+                self._json({"error": "not found"}, 404)
+
+    def _post_feedback(self):
+        try:
+            body = self._read(); algo = _grab_algo()
+            algo.train_from_feedback(body.get("query",""), body.get("response",""), body.get("liked",True))
+            kg_note = ""
             try:
-                algo = _grab_algo(); n = min(50, len(algo.examples)); learned = 0
-                for inst, out, cl in algo.examples[::max(1, len(algo.examples)//n)][:n]:
-                    if len(inst) < 10: continue
+                from algos.knowledge_graph import kg as _kg, _clean_q, _pair_from
+                from algos.neural_electric import hebbian_update_path
+                liked = body.get("liked", True)
+                fb = 1.0 if liked else -1.0
+                q = _clean_q(body.get("query",""))
+                a, b = _pair_from(q)
+                if a and b:
+                    _kg.reward_sign(a, b, fb, 0.05)
+                path = algo.hebbian_path if hasattr(algo, "hebbian_path") and algo.hebbian_path else None
+                if path and len(path) >= 2:
+                    r = hebbian_update_path(_kg, path, fb, learning_rate=0.02)
+                    if r["updated"]:
+                        kg_note = f", routes={r['updated']}(+{r['strengthened']}/-{r['weakened']})"
+                _kg.save(MODELS / "knowledge_graph.pkl")
+                if a and b and not kg_note:
+                    kg_note = f", pair_hebb={fb}"
+            except Exception:
+                kg_note = ""
+            self._json({"status": "ok" + kg_note})
+        except Exception as e:
+            self._json({"status": "error", "message": str(e)}, 500)
+
+    def _post_self_learn(self):
+        try:
+            algo = _grab_algo(); n = min(50, len(algo.examples)); learned = 0
+            for inst, out, cl in algo.examples[::max(1, len(algo.examples)//n)][:n]:
+                if len(inst) >= 10:
                     ans = algo.compose_answer(inst, top_n=3)
-                    if ans and algo.qa_score(inst, ans) > 0.5: learned += 1
-                self._json({"status": "ok", "learned": learned, "checked": n})
-            except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
-            return
-        elif route == "/v1/brain-eval":
-            # Оценка паспорта/пары на НАСТОЯЩЕМ MLP-перцептроне Мирро
-            # (в отличие от локальной заглушки весов в браузере).
-            try:
-                body = self._read(); algo = _grab_algo()
-                q = body.get("query", "") or ""; c = body.get("candidate", "") or ""
-                if not c: c = body.get("candidate", "")
-                score = algo.perceptron_predict(q, c) if (q or c) else 0.5
-                self._json({"status": "ok", "score": round(float(score), 4),
-                            "trained": bool(getattr(algo, "perceptron_trained", False))})
-            except Exception as e: self._json({"status": "error", "message": str(e)}, 500)
-            return
-        self._json({"error": "not found"}, 404)
+                    if ans and algo.qa_score(inst, ans) > 0.5:
+                        learned += 1
+            self._json({"status": "ok", "learned": learned, "checked": n})
+        except Exception as e:
+            self._json({"status": "error", "message": str(e)}, 500)
+
+    def _post_brain_eval(self):
+        try:
+            body = self._read(); algo = _grab_algo()
+            q = body.get("query", "") or ""; c = body.get("candidate", "") or ""
+            if not c:
+                c = body.get("candidate", "")
+            score = algo.perceptron_predict(q, c) if (q or c) else 0.5
+            self._json({"status": "ok", "score": round(float(score), 4),
+                        "trained": bool(getattr(algo, "perceptron_trained", False))})
+        except Exception as e:
+            self._json({"status": "error", "message": str(e)}, 500)
     def do_DELETE(self):
         # У Mirro нет изменяемых ресурсов, удаляемых через DELETE —
         # отвечаем JSON-404 единообразно с остальным API (вместо HTML-501).
@@ -1326,11 +1453,12 @@ def _lan_ip():
 
 def _access_addresses():
     """Список адресов, по которым доступен сервер. Один return: str."""
+    ans = f"Только локально: http://127.0.0.1:{PORT}"
     if HOST in ("0.0.0.0", ""):
         lan = _lan_ip()
-        return (f"Локально:  http://127.0.0.1:{PORT}\n"
-                f"По сети (WiFi/модем): http://{lan}:{PORT}")
-    return f"Только локально: http://127.0.0.1:{PORT}"
+        ans = (f"Локально:  http://127.0.0.1:{PORT}\n"
+               f"По сети (WiFi/модем): http://{lan}:{PORT}")
+    return ans
 
 def _seed_knowledge_graph():
     """Наполняет знаниевый граф при старте: понятия из корпусов + ТТЛ-извлечение
@@ -1482,6 +1610,31 @@ def _seed_knowledge_graph():
             except Exception:
                 pass
         print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total}, из кэша: {prev_edges})")
+        # Связываем функции базы знаний с графом, чтобы «куча функций» стала
+        # частью связей (каждая функция — узел с рёбрами к своим понятиям)
+        try:
+            from algos.knowledge_graph import build_function_links
+            fn_edges = build_function_links()
+            if fn_edges:
+                print(f"  Связей от функций добавлено: {fn_edges}")
+        except Exception:
+            pass
+        # Достраиваем связи между понятиями из реальных QA-пар корпуса
+        try:
+            from algos.knowledge_graph import build_concept_links
+            cl_edges = build_concept_links(max_pairs=1500, co_min=2)
+            if cl_edges:
+                print(f"  Связей между понятиями из корпуса добавлено: {cl_edges}")
+        except Exception:
+            pass
+        # Мосты между базовыми понятиями (нейросеть→обучение→алгоритм)
+        try:
+            from algos.knowledge_graph import build_concept_bridges
+            cb_edges = build_concept_bridges()
+            if cb_edges:
+                print(f"  Мостов между понятиями добавлено: {cb_edges}")
+        except Exception:
+            pass
         # Сохраняем граф на диск, чтобы знания не терялись при перезапуске
         try:
             kg.save(gpath)
@@ -1501,11 +1654,13 @@ def _seed_knowledge_graph():
 
 def _read_small_head(path, limit):
     """Читает первые `limit` символов файла (utf-8, с запасом). Один return: str."""
+    text = ""
     try:
         with open(str(path), "r", encoding="utf-8", errors="ignore") as fh:
-            return fh.read(limit)
+            text = fh.read(limit)
     except Exception:
-        return ""
+        text = ""
+    return text
 
 
 def _jsonl_to_text(chunk):
