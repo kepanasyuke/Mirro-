@@ -662,6 +662,12 @@ function resetReaction() {
     </div>
     <div class="grid" style="margin-top:12px">
       <div class="card" style="grid-column:1/-1">
+        <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Здоровье подсистем</div>
+        <div id="subsystemHealth" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 2px 8px"></div>
+      </div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="card" style="grid-column:1/-1">
         <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Рост графа знаний</div>
         <canvas id="cvGraphGrowth" width="880" height="220" style="width:100%;height:auto;background:#0c1220;border:1px solid var(--border);border-radius:10px"></canvas>
         <div id="graphGrowthMeta" style="margin-top:8px;font-size:var(--fs-small);color:var(--muted)"></div>
@@ -1083,11 +1089,35 @@ async function loadStats() {
       '<div style="font-size:var(--fs-tiny);color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:8px 4px 6px">Алгоритмы</div>' +
       lines.map(([n, ok]) => '<div class="algo-line"><span class="nm">' + n + '</span><span class="st ' + (ok?'yes':'no') + '">' + (ok?'активен':'—') + '</span></div>').join('');
     drawGraphGrowth(a.knowledge_graph);
+    drawSubsystemHealth(d);
     loadGraphLog();
     loadTopQuestions();
   } catch {
     grid.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--danger)">Сервер недоступен — запусти Mirro через лаунчер.</div>';
   }
+}
+
+function drawSubsystemHealth(d) {
+  const el = document.getElementById('subsystemHealth');
+  if (!el) return;
+  const a = d.algorithms || {};
+  const kg = a.knowledge_graph || {};
+  const imm = a.immunity || {};
+  const nm = a.neuromodulators || {};
+  const items = [
+    ['Граф знаний', (kg.nodes||0) > 0 ? 'ok' : 'warn', (kg.nodes||0) + ' узлов · ' + (kg.edges||0) + ' рёбер'],
+    ['Поиск (TF-IDF)', a.vocab ? 'ok' : 'warn', (a.vocab||0) + ' слов в словаре'],
+    ['Иммунитет', (imm.quarantined||0) === 0 ? 'ok' : 'warn', 'карантин: ' + (imm.quarantined||0)],
+    ['Нейромедиаторы', nm && (nm.dop!=null||nm.ser!=null) ? 'ok' : 'warn', 'хим. уровни активны'],
+    ['Память диалога', (d.total_calls||0) > 0 ? 'ok' : 'warn', (d.total_calls||0) + ' вызовов'),
+  ];
+  el.innerHTML = items.map(([name, st, desc]) =>
+    '<div style="flex:1;min-width:170px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--card)">' +
+    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+    '<span style="width:8px;height:8px;border-radius:50%;background:' + (st==='ok'?'#2ecc71':'#f1c40f') + '"></span>' +
+    '<span style="font-size:var(--fs-small);font-weight:600">' + name + '</span></div>' +
+    '<div style="font-size:var(--fs-tiny);color:var(--muted)">' + desc + '</div></div>'
+  ).join('');
 }
 
 function drawGraphGrowth(kg) {

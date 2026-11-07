@@ -24,6 +24,19 @@ SOURCES = [
     "models/model_state.json",
     "core/stats.json",
     "scripts/improvements.json",
+    "models/knowledge_graph.pkl",          # знаниевый граф (восстановление связей)
+    "algos/user_profile.py",               # профиль пользователя (код-модуль)
+    "algos/empathy.py",                    # эмпатия (код-модуль)
+    "algos/graph_infer.py",                # граф-вывод
+    "algos/dialogue_memory.py",            # память диалога
+]
+
+# Динамические данные пользователя (JSON/JSONL) — автосохраняемые состояния
+DATA_SOURCES = [
+    "data/user_profile.json",
+    "data/dialogue_memory.json",
+    "data/self_learned",
+    "data/mindstream",
 ]
 
 # Большой индекс копируем опционально (--full), т.к. это ~1.6 ГБ
@@ -52,6 +65,19 @@ def create(full=False):
         src = ROOT / rel
         if src.exists():
             shutil.copy2(src, dirname / rel)
+            copied += 1
+    # Пользовательские данные: профиль, память диалога, самообучение
+    for rel in DATA_SOURCES:
+        src = ROOT / rel
+        if src.is_dir():
+            dst = dirname / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+            copied += 1
+        elif src.exists():
+            dst = dirname / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
             copied += 1
     if full:
         src = ROOT / INDEX_SRC

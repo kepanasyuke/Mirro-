@@ -105,6 +105,17 @@ def score_candidate(query, inst, out, cluster, tfidf_score, preferred=None):
     return s, reasons
 
 
+def confidence_from_score(score, has_result=True):
+    """Преобразует сырой score-кандидата в уверенность 0..1.
+    Порог выдачи choose_best = 4.0; уверенность растёт от 4.0 до ~12.0.
+    Если результата нет — уверенность 0.0. Один return: float."""
+    conf = 0.0
+    if has_result and score is not None:
+        raw = max(0.0, float(score) - 4.0)
+        conf = min(1.0, raw / 8.0)
+    return round(conf, 2)
+
+
 def choose_best(query, candidates, preferred=None):
     b_out = None
     b_sc = 0.0

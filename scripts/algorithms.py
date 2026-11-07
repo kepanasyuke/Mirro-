@@ -127,6 +127,12 @@ class MirroAlgorithms:
                     self.nb_train()
                 if not self._cbow_built:
                     self.build_cbow_embeddings(max_examples=20000)
+                    # фиксируем embeddings в кэше, чтобы следующий старт
+                    # не переобучал их заново (главная задержка прогрева)
+                    try:
+                        self._save_index()
+                    except Exception:
+                        pass
         except Exception as e:
             print(f"  (побочное обучение пропущено: {e})")
 
@@ -150,21 +156,22 @@ class MirroAlgorithms:
         Экспоненциальное затухание: за каждые boost_decay_hours буст делится
         на 2. Старые предпочтения перестают доминировать.
         """
-        if key not in self.qa_boost:
-            return 0.0
-        now = now or time.time()
-        last = self.qa_boost_ts.get(key, now)
-        elapsed = max(0.0, now - last) / 3600.0  # в часах
-        halflife = self.boost_decay_hours
-        factor = 0.5 ** (elapsed / halflife) if halflife > 0 else 1.0
-        current = self.qa_boost[key] * factor
-        # срезаем совсем малые значения
-        if current < 0.05:
-            self.qa_boost.pop(key, None)
-            self.qa_boost_ts.pop(key, None)
-            return 0.0
-        self.qa_boost[key] = current
-        self.qa_boost_ts[key] = now
+        current = 0.0
+        if key in self.qa_boost:
+            now = now or time.time()
+            last = self.qa_boost_ts.get(key, now)
+            elapsed = max(0.0, now - last) / 3600.0  # в часах
+            halflife = self.boost_decay_hours
+            factor = 0.5 ** (elapsed / halflife) if halflife > 0 else 1.0
+            current = self.qa_boost[key] * factor
+            # срезаем совсем малые значения
+            if current < 0.05:
+                self.qa_boost.pop(key, None)
+                self.qa_boost_ts.pop(key, None)
+                current = 0.0
+            else:
+                self.qa_boost[key] = current
+                self.qa_boost_ts[key] = now
         return current
 
     def _add_boost(self, key, delta):
@@ -236,6 +243,11 @@ class MirroAlgorithms:
                 self._ingested_corpus_files = state.get("ingested_corpus_files", set())
                 self.qa_boost = state.get("qa_boost", {})
                 self.qa_boost_ts = state.get("qa_boost_ts", {})
+                # CBOW-векторы из кэша: если есть — не переобучаем дорогие embeddings
+                self.cbow_vectors = state.get("cbow_vectors", {}) or {}
+                self._cbow_built = bool(state.get("cbow_built", False)) and bool(self.cbow_vectors)
+                if state.get("cbow_dim"):
+                    self.cbow_dim = state["cbow_dim"]
                 self._load_boost_state()
                 self._loaded = True
                 if not LITE_MODE:
@@ -282,6 +294,11 @@ class MirroAlgorithms:
                 "ingested_corpus_files": self._ingested_corpus_files,
                 "qa_boost": self.qa_boost,
                 "qa_boost_ts": self.qa_boost_ts,
+                # CBOW-векторы: персистентны между стартами, чтобы не переобучать
+                # дорогие embeddings при каждом запуске (основная задержка прогрева)
+                "cbow_vectors": self.cbow_vectors,
+                "cbow_built": self._cbow_built,
+                "cbow_dim": self.cbow_dim,
             }
             tmp = self.INDEX_CACHE.with_suffix(".pkl.tmp")
             with open(tmp, "wb") as f:
@@ -326,10 +343,12 @@ class MirroAlgorithms:
                         "3d", "document", "presentation", "research", "system", "generated"]
 
     def _cluster_priority(self, name):
+        priority = 99
         try:
-            return self.CLUSTER_PRIORITY.index(name)
+            priority = self.CLUSTER_PRIORITY.index(name)
         except ValueError:
-            return 99
+            priority = 99
+        return priority
 
     def _load_processed_files(self):
         """Файлы processed, отсортированные по приоритету кластера. Один return: list."""
@@ -420,20 +439,18 @@ class MirroAlgorithms:
 
     def _ingest_jsonl_dir(self, directory, cluster):
         """Добавляет малые .jsonl из папки в индекс. Один return: int добавлено."""
-        if not directory.exists():
-            return 0
         added = 0
-        for f in sorted(directory.glob("*.jsonl")):
-            if f.name in self._ingested_corpus_files:
-                continue
-            if f.stat().st_size > 10_000_000:
-                self._ingested_corpus_files.add(f.name)
-                continue
-            with open(f, "r", encoding="utf-8") as fh:
-                added += self._ingest_lines(fh, cluster)
-            self._ingested_corpus_files.add(f.name)
-            if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
-                break
+        if directory.exists():
+            for f in sorted(directory.glob("*.jsonl")):
+                if f.name not in self._ingested_corpus_files:
+                    if f.stat().st_size > 10_000_000:
+                        self._ingested_corpus_files.add(f.name)
+                    else:
+                        with open(f, "r", encoding="utf-8") as fh:
+                            added += self._ingest_lines(fh, cluster)
+                        self._ingested_corpus_files.add(f.name)
+                        if len(self.examples) >= MAX_INMEMORY_EXAMPLES:
+                            break
         return added
 
     def _extend_from_corpus(self):
@@ -470,25 +487,24 @@ class MirroAlgorithms:
         """Обрезает загруженный индекс под lite-режим: оставляет первые
         MAX_INMEMORY_EXAMPLES примеров и пересобирает term_docs на их основе.
         Это компактнее, чем set-of-int на весь объём. Один return: None."""
-        if len(self.examples) <= MAX_INMEMORY_EXAMPLES:
-            return None
-        keep = MAX_INMEMORY_EXAMPLES
-        self.examples = self.examples[:keep]
-        self.total_docs = max(len(self.examples), 1)
-        self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
-        self.word2idx = {w: i for i, w in enumerate(self.vocab)}
-        new_term_docs = defaultdict(set)
-        for idx, (inst, out, _cl) in enumerate(self.examples):
-            valid = set(self.tokenize(inst + " " + out[:200]))
-            for w in valid:
-                new_term_docs[w].add(idx)
-        self.term_docs = new_term_docs
-        # Обрезаем частотные словари до слов, реально оставшихся в индексе
-        if self.doc_freq:
-            self.doc_freq = Counter({w: self.doc_freq[w] for w in set(self.doc_freq) & set(new_term_docs)})
-        if self.term_freq:
-            self.term_freq = Counter({w: self.term_freq[w] for w in set(self.term_freq) & set(new_term_docs)})
-        print(f"  lite-режим: индекс обрезан до {len(self.examples)} примеров, {len(self.doc_freq)} terms")
+        if len(self.examples) > MAX_INMEMORY_EXAMPLES:
+            keep = MAX_INMEMORY_EXAMPLES
+            self.examples = self.examples[:keep]
+            self.total_docs = max(len(self.examples), 1)
+            self.vocab = [w for w, _ in self.doc_freq.most_common(50000)]
+            self.word2idx = {w: i for i, w in enumerate(self.vocab)}
+            new_term_docs = defaultdict(set)
+            for idx, (inst, out, _cl) in enumerate(self.examples):
+                valid = set(self.tokenize(inst + " " + out[:200]))
+                for w in valid:
+                    new_term_docs[w].add(idx)
+            self.term_docs = new_term_docs
+            # Обрезаем частотные словари до слов, реально оставшихся в индексе
+            if self.doc_freq:
+                self.doc_freq = Counter({w: self.doc_freq[w] for w in set(self.doc_freq) & set(new_term_docs)})
+            if self.term_freq:
+                self.term_freq = Counter({w: self.term_freq[w] for w in set(self.term_freq) & set(new_term_docs)})
+            print(f"  lite-режим: индекс обрезан до {len(self.examples)} примеров, {len(self.doc_freq)} terms")
         return None
 
     def _accumulate_scores(self, scored_words):
@@ -536,41 +552,41 @@ class MirroAlgorithms:
         Чистый Python, без numpy.
         """
         sentences = [s.strip() for s in _re.split(r'[.!?]', text) if len(s.strip()) > 20]
-        if len(sentences) <= 3:
-            return text
+        result = text
+        if len(sentences) > 3:
+            # Build similarity matrix (cosine overlap)
+            n = len(sentences)
+            sim_matrix = [[0.0] * n for _ in range(n)]
+            sent_words = [set(self.tokenize(s)) for s in sentences]
 
-        # Build similarity matrix (cosine overlap)
-        n = len(sentences)
-        sim_matrix = [[0.0] * n for _ in range(n)]
-        sent_words = [set(self.tokenize(s)) for s in sentences]
-
-        for i in range(n):
-            for j in range(i + 1, n):
-                if sent_words[i] and sent_words[j]:
-                    overlap = len(sent_words[i] & sent_words[j])
-                    sim = overlap / math.sqrt(len(sent_words[i]) * len(sent_words[j]))
-                    sim_matrix[i][j] = sim
-                    sim_matrix[j][i] = sim
-
-        # Power iteration (PageRank on graph)
-        scores = [1.0 / n] * n
-        damping = 0.85
-        for _ in range(20):
-            new_scores = [0.0] * n
             for i in range(n):
-                s = 0.0
-                for j in range(n):
-                    if j != i and sim_matrix[j][i] > 0:
-                        out_sum = sum(sim_matrix[j][k] for k in range(n) if k != j) or 1
-                        s += scores[j] * sim_matrix[j][i] / out_sum
-                new_scores[i] = (1 - damping) / n + damping * s
-            scores = new_scores
+                for j in range(i + 1, n):
+                    if sent_words[i] and sent_words[j]:
+                        overlap = len(sent_words[i] & sent_words[j])
+                        sim = overlap / math.sqrt(len(sent_words[i]) * len(sent_words[j]))
+                        sim_matrix[i][j] = sim
+                        sim_matrix[j][i] = sim
 
-        # Pick top sentences
-        ranked = sorted([(scores[i], i) for i in range(n)], key=lambda x: -x[0])
-        top_n = max(1, int(n * ratio))
-        top_indices = sorted([idx for _, idx in ranked[:top_n]])
-        return " ".join(sentences[i] for i in top_indices)
+            # Power iteration (PageRank on graph)
+            scores = [1.0 / n] * n
+            damping = 0.85
+            for _ in range(20):
+                new_scores = [0.0] * n
+                for i in range(n):
+                    s = 0.0
+                    for j in range(n):
+                        if j != i and sim_matrix[j][i] > 0:
+                            out_sum = sum(sim_matrix[j][k] for k in range(n) if k != j) or 1
+                            s += scores[j] * sim_matrix[j][i] / out_sum
+                    new_scores[i] = (1 - damping) / n + damping * s
+                scores = new_scores
+
+            # Pick top sentences
+            ranked = sorted([(scores[i], i) for i in range(n)], key=lambda x: -x[0])
+            top_n = max(1, int(n * ratio))
+            top_indices = sorted([idx for _, idx in ranked[:top_n]])
+            result = " ".join(sentences[i] for i in top_indices)
+        return result
 
     # ========================
     #  3. EMBEDDINGS (word co-occurrence)
@@ -618,16 +634,15 @@ class MirroAlgorithms:
     def _train_cbow_step(self, target, ctx, in_vec, out_vec, dim, lr):
         """Один шаг обучения CBOW. Один return: None."""
         ctx = [w for w in ctx if w in self.word2idx]
-        if not ctx:
-            return None
-        avg = [sum(in_vec[w][d] for w in ctx) / len(ctx) for d in range(dim)]
-        score = sum(x * y for x, y in zip(avg, out_vec[target]))
-        error = (1.0 / (1.0 + math.exp(-score))) - 1.0
-        for d in range(dim):
-            out_vec[target][d] -= lr * error * avg[d]
-        for w in ctx:
+        if ctx:
+            avg = [sum(in_vec[w][d] for w in ctx) / len(ctx) for d in range(dim)]
+            score = sum(x * y for x, y in zip(avg, out_vec[target]))
+            error = (1.0 / (1.0 + math.exp(-score))) - 1.0
             for d in range(dim):
-                in_vec[w][d] -= (lr * error * out_vec[target][d]) / len(ctx)
+                out_vec[target][d] -= lr * error * avg[d]
+            for w in ctx:
+                for d in range(dim):
+                    in_vec[w][d] -= (lr * error * out_vec[target][d]) / len(ctx)
         return None
 
     def _normalize_cbow(self, in_vec, vocab):
@@ -663,20 +678,22 @@ class MirroAlgorithms:
 
     def cbow_similarity(self, word_a, word_b):
         """Косинусная близость по CBOW-векторам (0..1)."""
-        if not self._cbow_built or word_a not in self.cbow_vectors or word_b not in self.cbow_vectors:
-            return 0.0
-        va = self.cbow_vectors[word_a]
-        vb = self.cbow_vectors[word_b]
-        return sum(x * y for x, y in zip(va, vb))
+        sim = 0.0
+        if self._cbow_built and word_a in self.cbow_vectors and word_b in self.cbow_vectors:
+            va = self.cbow_vectors[word_a]
+            vb = self.cbow_vectors[word_b]
+            sim = sum(x * y for x, y in zip(va, vb))
+        return sim
 
     def cosine_similarity(self, text1, text2):
         """Cosine similarity between two texts."""
         words1 = set(self.tokenize(text1))
         words2 = set(self.tokenize(text2))
         common = words1 & words2
-        if not common:
-            return 0.0
-        return len(common) / math.sqrt(len(words1) * len(words2))
+        sim = 0.0
+        if common:
+            sim = len(common) / math.sqrt(len(words1) * len(words2))
+        return sim
 
     # ========================
     #  4. NAIVE BAYES — классификация
@@ -713,11 +730,12 @@ class MirroAlgorithms:
         alpha=1.0 — частотные (без изменений); меньше 1 — сильнее выравнивает
         дисбаланс (калибровка). Сумма нормируется к 1.
         """
-        if not priors:
-            return {}
-        vals = {cl: (p ** alpha) for cl, p in priors.items() if p > 0}
-        s = sum(vals.values()) or 1.0
-        return {cl: v / s for cl, v in vals.items()}
+        result = {}
+        if priors:
+            vals = {cl: (p ** alpha) for cl, p in priors.items() if p > 0}
+            s = sum(vals.values()) or 1.0
+            result = {cl: v / s for cl, v in vals.items()}
+        return result
 
     def nb_classify(self, text):
         """Naive Bayes классификация текста по кластерам."""
@@ -747,16 +765,17 @@ class MirroAlgorithms:
     def extract_keywords(self, text, top_n=5):
         """Извлечение ключевых слов через TF-IDF взвешивание."""
         words = self.tokenize(text)
-        if not words:
-            return []
-        word_scores = {}
-        total = len(words)
-        for w in set(words):
-            tf = words.count(w) / total
-            idf = self.tfidf(w)
-            word_scores[w] = tf * idf
-        ranked = sorted(word_scores.items(), key=lambda x: -x[1])
-        return [w for w, _ in ranked[:top_n]]
+        result = []
+        if words:
+            word_scores = {}
+            total = len(words)
+            for w in set(words):
+                tf = words.count(w) / total
+                idf = self.tfidf(w)
+                word_scores[w] = tf * idf
+            ranked = sorted(word_scores.items(), key=lambda x: -x[1])
+            result = [w for w, _ in ranked[:top_n]]
+        return result
 
     # ========================
     #  6. QA SCORING — качество ответа
@@ -768,26 +787,26 @@ class MirroAlgorithms:
         - Покрытие ключевых слов вопроса в ответе
         - Разнообразие (не повторяется)
         """
-        if len(answer) < 20:
-            return 0.0
-
         q_words = set(self.tokenize(question))
         a_words = set(self.tokenize(answer))
 
-        if not q_words:
-            return 0.3
+        score = 0.0
+        if len(answer) < 20:
+            score = 0.0
+        elif not q_words:
+            score = 0.3
+        else:
+            # Coverage: сколько ключевых слов вопроса есть в ответе
+            coverage = len(q_words & a_words) / len(q_words)
 
-        # Coverage: сколько ключевых слов вопроса есть в ответе
-        coverage = len(q_words & a_words) / len(q_words)
+            # Novelty: ответ не слишком похож на вопрос
+            a_set = set(a_words)
+            novelty = 1 - (len(q_words & a_set) / max(len(q_words | a_set), 1))
 
-        # Novelty: ответ не слишком похож на вопрос
-        a_set = set(a_words)
-        novelty = 1 - (len(q_words & a_set) / max(len(q_words | a_set), 1))
+            # Length bonus (мягкий: от 20 до 500 символов)
+            length_bonus = min(1.0, max(0.0, (len(answer) - 20) / 480))
 
-        # Length bonus (мягкий: от 20 до 500 символов)
-        length_bonus = min(1.0, max(0.0, (len(answer) - 20) / 480))
-
-        score = 0.4 * coverage + 0.3 * novelty + 0.3 * length_bonus
+            score = 0.4 * coverage + 0.3 * novelty + 0.3 * length_bonus
         return score
 
     # ========================
@@ -806,32 +825,34 @@ class MirroAlgorithms:
 
         def _precision(ref_tokens, hyp_tokens, n):
             ref_ngrams = _ngrams(ref_tokens, n)
+            pr = 0.0
             if not ref_ngrams:
-                return 1.0 if n == 1 else 0.0
-            hyp_ngrams = _ngrams(hyp_tokens, n)
-            if not hyp_ngrams:
-                return 0.0
-            from collections import Counter as _C
-            ref_counts = _C(ref_ngrams)
-            hyp_counts = _C(hyp_ngrams)
-            clipped = sum(min(c, ref_counts.get(g, 0)) for g, c in hyp_counts.items())
-            return clipped / len(hyp_ngrams)
+                pr = 1.0 if n == 1 else 0.0
+            else:
+                hyp_ngrams = _ngrams(hyp_tokens, n)
+                if hyp_ngrams:
+                    from collections import Counter as _C
+                    ref_counts = _C(ref_ngrams)
+                    hyp_counts = _C(hyp_ngrams)
+                    clipped = sum(min(c, ref_counts.get(g, 0)) for g, c in hyp_counts.items())
+                    pr = clipped / len(hyp_ngrams)
+            return pr
 
         import re as _re
         ref_tokens = _re.findall(r"[а-яёa-z0-9]+", reference.lower())
         hyp_tokens = _re.findall(r"[а-яёa-z0-9]+", hypothesis.lower())
-        if not ref_tokens or not hyp_tokens:
-            return 0.0
+        score = 0.0
+        if ref_tokens and hyp_tokens:
+            # Средняя точность n-грамм (shift от 1 для стабильности 0..1)
+            precisions = [_precision(ref_tokens, hyp_tokens, n) for n in range(1, max_n + 1)]
+            avg_prec = sum(precisions) / max_n
 
-        # Средняя точность n-грамм (shift от 1 для стабильности 0..1)
-        precisions = [_precision(ref_tokens, hyp_tokens, n) for n in range(1, max_n + 1)]
-        avg_prec = sum(precisions) / max_n
+            # Brevity penalty: штраф за слишком короткий ответ
+            bp = 1.0 if len(hyp_tokens) > len(ref_tokens) else max(0.0, min(1.0, len(hyp_tokens) / max(len(ref_tokens), 1)))
 
-        # Brevity penalty: штраф за слишком короткий ответ
-        bp = 1.0 if len(hyp_tokens) > len(ref_tokens) else max(0.0, min(1.0, len(hyp_tokens) / max(len(ref_tokens), 1)))
-
-        # Взвешиваем: unigram важнее, brevity-штраф умеренный
-        return min(1.0, avg_prec * (0.7 + 0.3 * bp))
+            # Взвешиваем: unigram важнее, brevity-штраф умеренный
+            score = min(1.0, avg_prec * (0.7 + 0.3 * bp))
+        return score
 
     def self_eval_bleu(self, question, answer):
         """Self-eval: находит эталон из базы и сравнивает с ответом через BLEU.
@@ -841,10 +862,12 @@ class MirroAlgorithms:
         совпадает с эталоном знаний.
         """
         results = self.search_tfidf(question, top_n=1)
-        if not results:
-            return 0.0, None
-        (inst, ref, cl), sc = results[0]
-        return self.bleu_score(ref, answer), ref
+        bleu = 0.0
+        ref = None
+        if results:
+            (inst, ref, cl), sc = results[0]
+            bleu = self.bleu_score(ref, answer)
+        return bleu, ref
 
     # ========================
     #  7. SELF-CORRECTION
@@ -855,25 +878,24 @@ class MirroAlgorithms:
         """
         # Check quality
         score = self.qa_score(question, initial_answer)
-        if score > 0.6:
-            return initial_answer, score
-
-        # Try to improve: search for better examples
-        results = self.search_tfidf(question, top_n=8)
-        if results:
-            best_text = ""
-            best_score = 0
-            for (inst, out, cl), sc in results:
-                if out and len(out) > 50:
-                    s = self.qa_score(question, out)
-                    if s > best_score:
-                        best_score = s
-                        best_text = out
-
-            if best_text and best_score > score:
-                return best_text, best_score
-
-        return initial_answer, score
+        best_text = initial_answer
+        best_score = score
+        if score <= 0.6:
+            # Try to improve: search for better examples
+            results = self.search_tfidf(question, top_n=8)
+            if results:
+                found_text = ""
+                found_score = 0
+                for (inst, out, cl), sc in results:
+                    if out and len(out) > 50:
+                        s = self.qa_score(question, out)
+                        if s > found_score:
+                            found_score = s
+                            found_text = out
+                if found_text and found_score > score:
+                    best_text = found_text
+                    best_score = found_score
+        return best_text, best_score
 
 # ========================
 #  9. PERCEPTRON — мини-нейросеть
@@ -915,10 +937,12 @@ class MirroAlgorithms:
 
     @staticmethod
     def _sigmoid(z):
+        val = 0.0
         try:
-            return 1.0 / (1.0 + math.exp(-z))
+            val = 1.0 / (1.0 + math.exp(-z))
         except OverflowError:
-            return 0.0 if z < 0 else 1.0
+            val = 0.0 if z < 0 else 1.0
+        return val
 
     def _mlp_activation(self, x):
         """Совместный проход: вход → скрытый → выход (без сигмоиды на конце).
@@ -1009,17 +1033,16 @@ class MirroAlgorithms:
         без хрупкой последовательности (epochs проходов по батчу).
         Возвращает количество отработанных примеров.
         """
-        if not self.feedback_history:
-            return 0
-        batch = self.feedback_history[-batch_size:]
         processed = 0
-        for _ in range(max(1, epochs)):
-            for query, response, liked in batch:
-                label = 1 if liked else -1
-                self.perceptron_train(query, response, label)
-                processed += 1
-        # Сохраняем одиночную персистентность модели (буст уже в JSON)
-        self._save_perceptron()
+        if self.feedback_history:
+            batch = self.feedback_history[-batch_size:]
+            for _ in range(max(1, epochs)):
+                for query, response, liked in batch:
+                    label = 1 if liked else -1
+                    self.perceptron_train(query, response, label)
+                    processed += 1
+            # Сохраняем одиночную персистентность модели (буст уже в JSON)
+            self._save_perceptron()
         return processed
 
     def _save_perceptron(self):
@@ -1207,17 +1230,16 @@ class MirroAlgorithms:
         """Детектор галлюцинаций: проверяет, сколько фактов ответа подкреплено базой."""
         q_words = set(self.tokenize(question))
         ans_words = set(self.tokenize(answer))
-        if not ans_words:
-            return 1.0
-
-        # What fraction of answer's key words appear in the index at all
-        supported = 0
-        for w in ans_words:
-            if w in self.doc_freq and self.doc_freq[w] > 0:
-                supported += 1
-        coverage = supported / len(ans_words)
-        # Lower = more hallucination
-        risk = 1.0 - coverage
+        risk = 1.0
+        if ans_words:
+            # What fraction of answer's key words appear in the index at all
+            supported = 0
+            for w in ans_words:
+                if w in self.doc_freq and self.doc_freq[w] > 0:
+                    supported += 1
+            coverage = supported / len(ans_words)
+            # Lower = more hallucination
+            risk = 1.0 - coverage
         return risk
 
     # ========================
@@ -1298,11 +1320,12 @@ class MirroAlgorithms:
         """Jaccard: |пересечение| / |объединение| на множествах слов."""
         w1 = set(self.tokenize(text1))
         w2 = set(self.tokenize(text2))
-        if not w1 or not w2:
-            return 0.0
-        inter = len(w1 & w2)
-        union = len(w1 | w2)
-        return inter / union if union else 0.0
+        sim = 0.0
+        if w1 and w2:
+            inter = len(w1 & w2)
+            union = len(w1 | w2)
+            sim = inter / union if union else 0.0
+        return sim
 
     # 2. SPELLCHECK — исправление опечаток по словарю
     def spellcheck(self, text):
@@ -1366,16 +1389,17 @@ class MirroAlgorithms:
     def sentence_rank(self, question, answer, top_k=3):
         """Разбивает ответ на предложения и возвращает самые релевантные."""
         sentences = [s.strip() for s in _re.split(r"(?<=[.!?])\s+", answer) if len(s.strip()) > 15]
-        if len(sentences) <= top_k:
-            return sentences
-        q_words = set(self.tokenize(question))
-        ranked = []
-        for s in sentences:
-            s_words = set(self.tokenize(s))
-            score = len(q_words & s_words) + self.jaccard_similarity(question, s)
-            ranked.append((score, s))
-        ranked.sort(key=lambda x: -x[0])
-        return [s for _, s in ranked[:top_k]]
+        result = sentences
+        if len(sentences) > top_k:
+            q_words = set(self.tokenize(question))
+            ranked = []
+            for s in sentences:
+                s_words = set(self.tokenize(s))
+                score = len(q_words & s_words) + self.jaccard_similarity(question, s)
+                ranked.append((score, s))
+            ranked.sort(key=lambda x: -x[0])
+            result = [s for _, s in ranked[:top_k]]
+        return result
 
     # 5. AUTO-LEARN TRIGGER — сигнал автообучения
     def should_auto_learn(self, question, answer):
@@ -1425,12 +1449,12 @@ class MirroAlgorithms:
         """Улучшенный пайплайн: spellcheck → query expansion → jaccard/rank."""
         search_query = self._expanded_query(query)
         results = self.search_tfidf(search_query, top_n=top_n)
-        if not results:
-            return None
-        scored = self._score_candidates(query, self.spellcheck(query), results)
-        if not scored:
-            return None
-        return self._pick_parts(self.spellcheck(query), scored, max_len)
+        answer_parts = None
+        if results:
+            scored = self._score_candidates(query, self.spellcheck(query), results)
+            if scored:
+                answer_parts = self._pick_parts(self.spellcheck(query), scored, max_len)
+        return answer_parts
 
 
 # Singleton

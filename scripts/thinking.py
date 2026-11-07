@@ -73,12 +73,13 @@ class MirroThinking:
         self._cache_lock = threading.Lock()
 
     def _load_cache(self):
+        cache = {}
         try:
             if WEB_CACHE.exists():
-                return json.loads(WEB_CACHE.read_text("utf-8"))
+                cache = json.loads(WEB_CACHE.read_text("utf-8"))
         except Exception:
-            pass
-        return {}
+            cache = {}
+        return cache
 
     def _save_cache(self):
         try:
@@ -136,19 +137,17 @@ class MirroThinking:
     def confidence_from_results(results, top_k=3):
         """Оценивает уверенность ответа из базы по скорингу результатов.
         Формат results: [(example_tuple, score), ...]"""
-        if not results:
-            return 0.0
+        conf = 0.0
         try:
-            # search_tfidf возвращает (example, score) — берём score (индекс 1)
             top_scores = [r[1] for r in results[:top_k] if isinstance(r, (tuple, list)) and len(r) > 1]
         except Exception:
-            return 0.0
-        if not top_scores:
-            return 0.0
-        top = max(top_scores)
-        # Нормализуем: типичный топ ≈ 1-5, уверенность = сигмоид
-        import math
-        return 1.0 / (1.0 + math.exp(-(top - 1.5)))
+            top_scores = []
+        if top_scores:
+            top = max(top_scores)
+            # Нормализуем: типичный топ ≈ 1-5, уверенность = сигмоид
+            import math
+            conf = 1.0 / (1.0 + math.exp(-(top - 1.5)))
+        return conf
 
     # ========================
     #  ВЕБ-ПОИСК (Wikidata + Wikipedia фоллбэк)
@@ -161,27 +160,28 @@ class MirroThinking:
         """
         # 1. Кэш (только для успешных результатов — пустоту не кэшируем)
         cache_key = query.strip().lower()[:100]
+        result = None
         with self._cache_lock:
             cached = self.web_cache.get(cache_key)
             if cached and cached.get("title"):
-                return cached
+                result = cached
+        if result is None:
+            # 2. Wikidata (основной, быстрый, русский)
+            result = self._search_wikidata(query)
+            if not result.get("title"):
+                # 3. Фоллбэк: Wikipedia параллельно
+                result = self._search_wikipedia_parallel(query)
 
-        # 2. Wikidata (основной, быстрый, русский)
-        result = self._search_wikidata(query)
-        if not result.get("title"):
-            # 3. Фоллбэк: Wikipedia параллельно
-            result = self._search_wikipedia_parallel(query)
+            if not result or not result.get("title"):
+                result = {"title": "", "summary": "Не удалось найти в сети.", "url": "", "source": "none"}
 
-        if not result or not result.get("title"):
-            result = {"title": "", "summary": "Не удалось найти в сети.", "url": "", "source": "none"}
-
-        # 4. Сохранить в кэш только успешные результаты (пустоту не храним)
-        if result.get("title"):
-            with self._cache_lock:
-                if len(self.web_cache) > 300:
-                    self.web_cache = dict(list(self.web_cache.items())[-200:])
-                self.web_cache[cache_key] = result
-            self._save_cache()
+            # 4. Сохранить в кэш только успешные результаты (пустоту не храним)
+            if result.get("title"):
+                with self._cache_lock:
+                    if len(self.web_cache) > 300:
+                        self.web_cache = dict(list(self.web_cache.items())[-200:])
+                    self.web_cache[cache_key] = result
+                self._save_cache()
 
         return result
 
@@ -194,6 +194,7 @@ class MirroThinking:
             clean = query
         query = clean
 
+        result = {}
         try:
             # 1. Поиск сущности
             search_url = (
@@ -202,20 +203,13 @@ class MirroThinking:
                 + "&language=ru&uselang=ru&format=json&limit=3"
             )
             data = self._fetch_json(search_url, timeout=10)
-            if not data:
-                return {}
-            search = data.get("search", [])
-            if not search:
-                return {}
+            search = data.get("search", []) if data else []
 
             # 2. Взять описание сущности
-            qid = search[0].get("id", "")
-            if not qid:
-                return {}
-            label = search[0].get("label", "") or search[0].get("id", "")
-            desc = search[0].get("description", "")
-            url = f"https://www.wikidata.org/wiki/{qid}"
-
+            qid = search[0].get("id", "") if search else ""
+            label = (search[0].get("label", "") or search[0].get("id", "")) if search else ""
+            desc = search[0].get("description", "") if search else ""
+            url = f"https://www.wikidata.org/wiki/{qid}" if qid else ""
             if label:
                 summary = desc or f"{label} — сведения из Wikidata."
                 # Дополнительно: попробовать алиасы
@@ -233,20 +227,19 @@ class MirroThinking:
                             summary = desc_from_ent
                 except Exception:
                     pass
-
-                return {
+                result = {
                     "title": label,
                     "summary": summary[:3000],
                     "url": url,
                     "source": "wikidata",
                 }
         except Exception:
-            pass
-        return {}
+            result = {}
+        return result
 
     def _search_wikipedia_parallel(self, query: str) -> dict:
         """Запускает поиск по ru и en параллельно, берёт первый успешный."""
-        results = [None, None]
+        result = {}
         if _HAS_TPE:
             with ThreadPoolExecutor(max_workers=2) as pool:
                 f1 = pool.submit(self._search_wikipedia_lang, query, "ru")
@@ -256,16 +249,20 @@ class MirroThinking:
             # Сначала ru (важнее для русских запросов), потом en
             for r in (r1, r2):
                 if r.get("title"):
-                    return r
-            return {}
-        # Фоллбэк без threading
-        r = self._search_wikipedia_lang(query, "ru")
-        if r.get("title"):
-            return r
-        return self._search_wikipedia_lang(query, "en")
+                    result = r
+                    break
+        else:
+            # Фоллбэк без threading
+            r = self._search_wikipedia_lang(query, "ru")
+            if r.get("title"):
+                result = r
+            else:
+                result = self._search_wikipedia_lang(query, "en")
+        return result
 
     def _search_wikipedia_lang(self, query: str, lang: str) -> dict:
         """Поиск Wikipedia в одном языке."""
+        result = {}
         try:
             search_url = (
                 f"https://{lang}.wikipedia.org/w/api.php"
@@ -273,61 +270,76 @@ class MirroThinking:
                 + "&srlimit=3&format=json"
             )
             data = self._fetch_json(search_url, timeout=12)
-            if not data:
-                return {}
-            search = data.get("query", {}).get("search", [])
-            if not search:
-                return {}
-            best_title = search[0]["title"]
+            search = data.get("query", {}).get("search", []) if data else []
+            if search:
+                best_title = search[0]["title"]
 
-            extract_url = (
-                f"https://{lang}.wikipedia.org/w/api.php"
-                "?action=query&prop=extracts&exintro&explaintext"
-                "&titles=" + urllib.parse.quote(best_title)
-                + "&format=json"
-            )
-            extract_data = self._fetch_json(extract_url, timeout=12)
-            if not extract_data:
-                return {}
-            pages = extract_data.get("query", {}).get("pages", {})
-            for pid, page in pages.items():
-                if pid != "-1":
-                    summary = page.get("extract", "")
-                    if summary:
-                        return {
-                            "title": best_title,
-                            "summary": summary[:3000],
-                            "url": f"https://{lang}.wikipedia.org/wiki/{urllib.parse.quote(best_title.replace(' ', '_'))}",
-                            "source": f"wikipedia-{lang}",
-                        }
+                extract_url = (
+                    f"https://{lang}.wikipedia.org/w/api.php"
+                    "?action=query&prop=extracts&exintro&explaintext"
+                    "&titles=" + urllib.parse.quote(best_title)
+                    + "&format=json"
+                )
+                extract_data = self._fetch_json(extract_url, timeout=12)
+                if extract_data:
+                    pages = extract_data.get("query", {}).get("pages", {})
+                    for pid, page in pages.items():
+                        if pid != "-1":
+                            summary = page.get("extract", "")
+                            if summary:
+                                result = {
+                                    "title": best_title,
+                                    "summary": summary[:3000],
+                                    "url": f"https://{lang}.wikipedia.org/wiki/{urllib.parse.quote(best_title.replace(' ', '_'))}",
+                                    "source": f"wikipedia-{lang}",
+                                }
+                                break
         except Exception:
-            pass
-        return {}
+            result = {}
+        return result
 
     def _fetch_json(self, url, timeout=10):
+        data = None
         try:
             req = urllib.request.Request(url, headers={
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Mirro/0.2"
             })
             with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return json.loads(resp.read().decode("utf-8", errors="replace"))
+                data = json.loads(resp.read().decode("utf-8", errors="replace"))
         except Exception:
-            return None
+            data = None
+        return data
 
     # ========================
     #  ФОРМАТИРОВАНИЕ ВЕБ-ОТВЕТА
     # ========================
     def format_web_answer(self, query, result) -> str:
-        if not result or not result.get("summary"):
-            return "Я не нашла это в интернете. Попробуй переформулировать."
-        lines = [
-            f"[Веб] {result['title']}",
-            "",
-            result["summary"][:2500],
-            "",
-            f"Источник: {result['url']}",
-        ]
-        return "\n".join(lines)
+        ans = "Я не нашла это в интернете. Попробуй переформулировать."
+        if result and result.get("summary"):
+            lines = [
+                f"[Веб] {result['title']}",
+                "",
+                result["summary"][:2500],
+                "",
+                f"Источник: {result['url']}",
+            ]
+            # умный веб: если вопрос про свежее/новости — помечаем, что данные
+            # актуальны на момент обращения, и разделяем тип ответа
+            q = (query or "").lower()
+            is_news = any(t in q for t in ("новост", "сегодня", "вчера", "завтра",
+                                           "последн", "итоги", "результаты матч",
+                                           "курс", "доллар", "евро", "нефть", "тренд"))
+            if is_news:
+                source_kind = "актуальная справка/новость"
+                lines.append("")
+                lines.append("Данные актуальны на момент обращения (свежая справка).")
+            else:
+                source_kind = "объяснение/справка"
+                lines.append("")
+                lines.append("Это справочное объяснение; факты могут меняться — уточняй при важности.")
+            result["kind"] = source_kind
+            ans = "\n".join(lines)
+        return ans
 
     def status(self):
         return dict(self.stats)

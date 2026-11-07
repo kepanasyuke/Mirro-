@@ -108,7 +108,18 @@ class MirroCore:
             prov = _pv_status()
         except Exception:
             prov = {}
-        return {"name": "Mirro", "version": "0.3", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
+        # статус отказоустойчивости: свежий ли бэкап, есть ли восстанавливаемые данные
+        backup_info = {}
+        try:
+            bdir = MIRRO_HOME / "backups"
+            if bdir.is_dir():
+                dirs = [d for d in bdir.iterdir() if d.is_dir() and d.name.startswith("model_")]
+                if dirs:
+                    latest = max(dirs, key=lambda d: d.name)
+                    backup_info = {"latest": latest.name, "dirs": len(dirs)}
+        except Exception:
+            backup_info = {}
+        return {"name": "Mirro", "version": "0.3", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "backup": backup_info, "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
     def corpus_total(self):
         if not hasattr(self, "_corpus_total"):
             t = 0
@@ -1155,6 +1166,18 @@ def build_response(prompt, cluster, context=""):
                 elif has_result:
                     result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
                     result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
+                    # уверенность ответа: низкая -> честно «не уверена» + куда копать
+                    try:
+                        from scripts.reasoning_engine import confidence_from_score
+                        conf = confidence_from_score(best_score, has_result=True)
+                        result["confidence"] = conf
+                        if conf < 0.4:
+                            hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
+                            result["content"] = (result["content"]
+                                + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
+                                + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
+                    except Exception:
+                        pass
                 else:
                     result = _fallback_chain(prompt)
                     result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
@@ -1535,7 +1558,8 @@ class MirroAPI(BaseHTTPRequestHandler):
                              "content": content,
                              "reasoning_content": reasoning,
                              "plan": response.get("plan", ""),
-                             "source": response.get("source", "")}}]}
+                             "source": response.get("source", ""),
+                             "confidence": response.get("confidence", None)}}]}
 
     def _handle_chat(self, body):
         """Обрабатывает POST /v1/chat/completions. Единственный return: None.
