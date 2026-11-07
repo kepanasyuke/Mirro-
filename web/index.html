@@ -682,6 +682,17 @@ function resetReaction() {
         </div>
       </div>
     </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="card" style="grid-column:1/-1">
+        <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Сеть понятий</div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+          <input id="netInput" placeholder="Напиши понятие (напр. граф)…" style="flex:1;min-width:200px;padding:8px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px">
+          <button class="s-btn" onclick="showNetMap()">Показать связи</button>
+        </div>
+        <canvas id="cvNetMap" width="880" height="360" style="width:100%;height:auto;margin-top:10px;background:#0c1220;border:1px solid var(--border);border-radius:10px"></canvas>
+        <div id="netInfo" style="margin-top:8px;font-size:var(--fs-small);color:var(--muted)"></div>
+      </div>
+    </div>
     <div class="list-pad">
       <div class="k" style="padding:2px 2px 8px; font-size:var(--fs-small); color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Частые вопросы</div>
       <div id="topQuestions" style="display:flex; flex-direction:column; gap:6px"></div>
@@ -1081,6 +1092,43 @@ async function loadGraphLog() {
         ? links.map(l => '<div class="algo-line"><span class="nm">' + l.replace(/`/g,'').substring(0,52) + '</span></div>').join('')
         : '<div style="color:var(--muted);font-size:var(--fs-small)">новых связей ещё нет</div>');
   } catch { if (host) host.innerHTML = '<div style="color:var(--muted)">лог недоступен</div>'; }
+}
+
+async function showNetMap() {
+  const inp = document.getElementById('netInput');
+  const cv = document.getElementById('cvNetMap');
+  const info = document.getElementById('netInfo');
+  if (!cv || !inp) return;
+  let concept = (inp.value || '').trim();
+  if (!concept) { inp.value = 'граф'; concept = 'граф'; }
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if (info) info.textContent = 'загружаю связи «' + concept + '»…';
+  try {
+    const r = await fetch(API + '/v1/knowledge?q=' + encodeURIComponent(concept) + '&kind=links', {headers: AUTH_HDR});
+    const d = await r.json();
+    const links = d.answer || [];
+    ctx.fillStyle = '#0c1220'; ctx.fillRect(0,0,cv.width,cv.height);
+    const cx = cv.width/2, cy = cv.height/2;
+    // центр — понятие
+    ctx.fillStyle = '#d8231c'; ctx.beginPath(); ctx.arc(cx,cy,16,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
+    ctx.fillText(concept.substring(0,14), cx, cy+5);
+    // связи по кругу
+    ctx.textAlign='left';
+    const n = Math.min(links.length, 8);
+    for (let i=0;i<n;i++) {
+      const ang = -Math.PI/2 + (i/(Math.max(1,n)))*Math.PI*2;
+      const x = cx + Math.cos(ang)*150, y = cy + Math.sin(ang)*120;
+      ctx.strokeStyle = 'rgba(217,120,60,0.5)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.moveTo(cx+14*Math.cos(ang), cy+14*Math.sin(ang)); ctx.lineTo(x,y); ctx.stroke();
+      ctx.fillStyle = '#9aa0b5';
+      ctx.fillText(String(links[i]).replace(concept,'…').substring(0,26), x-60, y+4);
+    }
+    if (info) info.textContent = 'связи «' + concept + '»: ' + (links.length ? links.slice(0,8).join(' · ') : 'нет связей');
+  } catch {
+    if (info) info.textContent = 'не удалось загрузить связи сети';
+  }
 }
 
 async function loadTopQuestions() {

@@ -793,6 +793,15 @@ def _try_direct_handlers(prompt):
         except Exception:
             ans = None
         return ans
+
+    def try_full_explanation(q):
+        ans = None
+        try:
+            from algos.knowledge_graph import try_full_explanation as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
     def try_what_links(q):
         ans = None
         try:
@@ -860,6 +869,7 @@ def _try_direct_handlers(prompt):
         ("ai_history", try_ai_history),
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
+        ("full_explanation", try_full_explanation),
         ("definition", try_definition),
         ("enrich", try_enrich),
         ("what_links", try_what_links),
@@ -999,6 +1009,25 @@ def build_response(prompt, cluster, context=""):
                 else:
                     result = _fallback_chain(prompt)
                     result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
+        # метка источника ответа для ответа-выбора лучшего пути: граф/функции/история ИИ/база/веб
+        try:
+            s = result.get("strategy", "")
+            source_map = {"definition": "мои понятия",
+                          "full_explanation": "мои понятия + граф",
+                          "ai_history": "история знаний об ИИ",
+                          "func_kb": "база функций",
+                          "knowledge_graph": "граф знаний",
+                          "graph_infer": "вывод из графа",
+                          "enrich": "связи графа",
+                          "metacognition": "внутреннее состояние",
+                          "base": "база знаний",
+                          "web": "интернет",
+                          "greeting": "диалог",
+                          "dialog": "диалог",
+                          "provider": "внешний провайдер"}
+            result["source"] = source_map.get(s, "разные источники")
+        except Exception:
+            result["source"] = "разные источники"
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
     # видимая внутренняя речь: добавляем итоговый шаг о выбранной стратегии,
@@ -1461,6 +1490,14 @@ class MirroAPI(BaseHTTPRequestHandler):
                     kg_note = f", pair_hebb={fb}"
             except Exception:
                 kg_note = ""
+            # память успешных ответов: при лайке пара (вопрос→ответ) запоминается
+            # в корпус через mindstream, чтобы на похожий вопрос ответ звучал так же
+            try:
+                if body.get("liked", True) and body.get("query") and body.get("response"):
+                    from algos.mindstream import mind as _ms_fb
+                    _ms_fb.learn_new_pair(body.get("query", ""), body.get("response", ""))
+            except Exception:
+                pass
             self._json({"status": "ok" + kg_note})
         except Exception as e:
             self._json({"status": "error", "message": str(e)}, 500)

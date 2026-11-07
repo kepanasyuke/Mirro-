@@ -28,6 +28,7 @@ class KnowledgeGraph:
         self.nodes = {}      # name -> Node
         self.edges = {}      # (src, p, dst) -> weight  (p = предикат/связь)
         self._adj = {}       # name -> [(pred, other, weight)]  (индекс соседей)
+        self._cache = {}     # кэш дорогих вычислений (connectivity/closest_concepts)
 
     # ---------- построение ----------
     def add_node(self, name, tag="понятие", facts=None, weight=1.0):
@@ -267,6 +268,8 @@ class KnowledgeGraph:
         for (s, p, d), w in self.edges.items():
             self._adj[s].append((p, d, w))
             self._adj[d].append((p, s, w))
+        # граф изменился — сбрасываем кэш дорогих вычислений
+        self._cache = {}
         return None
 
     # ---------- обогащение ответа связями ----------
@@ -480,7 +483,15 @@ class KnowledgeGraph:
     def connectivity(self, top_n=5):
         """Метрики связности графа: число компонент, топ узлов по рёбрам,
         число изолированных узлов, размер крупнейшей компоненты.
+        Результат кэшируется (дорогой расчёт), инвалидация при add/_rebuild.
         Один return: dict."""
+        cache_key = ("conn", top_n, len(self.edges))
+        hit = self._cache.get(cache_key)
+        out = None
+        if hit is not None:
+            out = dict(hit)
+            out["top_degree"] = list(hit["top_degree"])
+            return out
         neigh = {}
         for (s, p, d) in self.edges:
             neigh.setdefault(s, set()).add(d)
@@ -510,27 +521,44 @@ class KnowledgeGraph:
             degree[d] = degree.get(d, 0) + 1
         top = sorted(degree.items(), key=lambda kv: -kv[1])[:top_n]
         isolated = [n for n in self.nodes if n not in neigh]
-        return {"components": components, "biggest_component": biggest,
+        conn = {"components": components, "biggest_component": biggest,
                 "isolated": len(isolated), "top_degree": top}
+        try:
+            # кэшируем только счётчики, top_degree копируем (список изменяемый)
+            self._cache[cache_key] = {"components": components,
+                                      "biggest_component": biggest,
+                                      "isolated": len(isolated),
+                                      "top_degree": list(top)}
+        except Exception:
+            pass
+        return conn
 
-    def closest_concepts(self, name, top_n=5, min_sim=0.02):
+    def closest_concepts(self, name, top_n=5, min_sim=0.02, limit_nodes=8000):
         """Семантически ближайшие понятия к name: ранжируются по доле общих
         соседей (Jaccard на окрестностях), а НЕ по сырым весам рёбер.
-        Мусорные стоп-узлы отбрасываются. Вернёт (другое_понятие, близость).
-        Один return: list."""
+        Ограничивает перебор узлов (limit_nodes) для скорости; результат кэшируется.
+        Мусорные стоп-узлы отбрасываются. Один return: list."""
         a = self._norm(name)
         out = []
+        cache_key = ("close", a, top_n, min_sim, len(self.edges))
+        hit = self._cache.get(cache_key)
+        if hit is not None:
+            return list(hit)
         if a in self.nodes:
             na = {row[1] for row in self._adj.get(a, [])}
             junk = {"займет", "работать", "относительно", "хоть", "петабайты",
                     "нашел", "нашла", "сделать", "скажи", "можно", "давай", "это",
                     "что", "как", "чтобы", "также", "который", "там", "туда"}
             scored = []
+            scanned = 0
             for n in self.nodes:
+                if scanned >= limit_nodes:
+                    break
                 ncore = n.split()[0] if " " in n else n
                 if (n == a or ncore in junk or len(n) > 18
                         or (" " in n and len(n.split()) > 2)):
                     continue
+                scanned += 1
                 nb = {row[1] for row in self._adj.get(n, [])}
                 union = na | nb
                 sim = (len(na & nb) / len(union)) if union else 0.0
@@ -538,6 +566,10 @@ class KnowledgeGraph:
                     scored.append((sim, n))
             scored.sort(key=lambda kv: -kv[0])
             out = [(n, round(s, 3)) for s, n in scored[:top_n]]
+            try:
+                self._cache[cache_key] = list(out)
+            except Exception:
+                pass
         return out
 
     # ---------- обучение из отклика ----------
@@ -962,6 +994,56 @@ def _we_is_algo_ask(q):
             if hit:
                 break
     return hit
+
+
+def try_full_explanation(query):
+    """Связное объяснение понятия: определение (из базы словаря/понятий) +
+    ключевые связи (из графа) + цепочка пути. Формирует единый абзац.
+    Один return: str|None."""
+    ans = None
+    q0 = (query or "").lower()
+    want_define = any(w in q0 for w in ("что такое", "что значит", "что за",
+                                        "объясни", "расскажи про", "поясни"))
+    if not want_define:
+        return ans
+    topic = _extract_topic(query)
+    stop_topic = {"объясни", "что", "такое", "расскажи", "значит"}
+    if not topic or (topic.split()[0] in stop_topic):
+        # надёжный fallback: последнее значащее слово запроса (имя понятия)
+        import re as _re_x
+        words = [w for w in _re_x.findall(r"[а-яёa-z]{4,}", q0.lower())
+                 if w not in ("что", "такое", "объясни", "расскажи", "про",
+                              "значит", "поясни", "это", "какое")]
+        if words:
+            topic = words[-1]
+    if not topic:
+        return ans
+    start = topic.split()[0] if " " in topic else topic
+    parts = []
+    # 1) определение из базы понятий/функций
+    try:
+        from algos.module_knowledge import try_definition, try_function_knowledge
+        definition = try_definition("что такое " + start) or try_function_knowledge("что такое " + start)
+        if definition:
+            parts.append(definition.strip())
+    except Exception:
+        parts = parts
+    # 2) ключевые связи из графа
+    if start in kg.nodes:
+        try:
+            ranked = sorted(kg._adj.get(start, []), key=lambda r: -r[2])
+            links = []
+            for p, other, w in ranked[:4]:
+                otherc = other.split()[0] if " " in other else other
+                if otherc and otherc != start:
+                    links.append(f"{start} {p} {otherc}")
+            if links:
+                parts.append("Связи: " + "; ".join(links) + ".")
+        except Exception:
+            pass
+    if parts:
+        ans = " ".join(parts)
+    return ans
 
 
 def try_enrich(query):
