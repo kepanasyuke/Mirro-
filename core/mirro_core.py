@@ -674,33 +674,45 @@ def answer_looks_bad(query, answer):
     if not answer or len(answer) < 10:
         bad = True
     else:
-        # Ответ похож на код (PHP/JS/C++/SQL) — а вопрос фактологический
-        code_markers = ["<?php", "function ", "std::", "#include", "import ", "class ", "=>", "console.", "npm ", "git ", "def "]
-        code_hits = sum(1 for m in code_markers if m in answer)
-        if code_hits >= 2:
+        # Ответ — служебная ошибка / дамп трассировки / JSON-нуб — это не ответ
+        _sl = (answer or "").lower()
+        error_markers = ["traceback", "file \"", "syntaxerror", "internalerror",
+                         "не удалось связаться", "[mirro]", "500 internal", "500 server"]
+        if any(m in _sl for m in error_markers):
             bad = True
+        elif _re.search(r"\{['\"](content|error|choices)['\"]\s*:", _sl):
+            bad = True  # сырой JSON вместо текста
         else:
-            # Вопрос вида «что такое X / кто такой X» — ответ должен содержать ключевые слова
-            q = query.lower().strip()
-            is_factual = any(p in q for p in ["что такое", "кто такой", "кто такая", "что значит", "расскажи про", "что такое ндс"])
-            if is_factual:
-                q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
-                a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
-                # Ключевые слова вопроса: убираем стоп-слова
-                stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или"}
-                key = q_words - stop
-                if key and not key & a_words:
-                    bad = True  # ответ вообще не про это
-            # самопроверка: тавтология/«вода» — ответ почти целиком повторяет вопрос
-            if not bad:
-                q_tokens = _re.findall(r"[а-яёa-z]{3,}", q.lower())
-                a_tokens = _re.findall(r"[а-яёa-z]{3,}", answer.lower())
-                if q_tokens and a_tokens:
-                    q_set = set(q_tokens)
-                    a_set = set(a_tokens)
-                    overlap = len(q_set & a_set)
-                    if len(q_set) >= 2 and overlap >= 0.7 * len(q_set) and len(a_set) <= len(q_set) + 1:
-                        bad = True  # ответ буквально пересказывает вопрос, новой инфы нет
+            # Ответ похож на код (PHP/JS/C++/SQL) — а вопрос фактологический
+            code_markers = ["<?php", "#include", "std::", "import ", "console.", "npm ", "function ", "=>"]
+            code_hits = sum(1 for m in code_markers if m in answer)
+            if code_hits >= 2:
+                bad = True
+            else:
+                # Вопрос вида «что такое X / кто такой X» — ответ должен содержать ключевые слова
+                q = query.lower().strip()
+                is_factual = any(p in q for p in ["что такое", "кто такой", "кто такая", "что значит", "расскажи про"])
+                if is_factual:
+                    q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
+                    a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
+                    # Ключевые слова вопроса: убираем стоп-слова
+                    stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или"}
+                    key = q_words - stop
+                    if key and not key & a_words:
+                        bad = True  # ответ вообще не про это
+                    # «красный флаг»: длинный ответ почти без значащих слов
+                    if not bad and a_words and len(a_words) < 2:
+                        bad = True
+                # самопроверка: тавтология / «вода» — ответ почти целиком повторяет вопрос
+                if not bad:
+                    q_tokens = _re.findall(r"[а-яёa-z]{3,}", q.lower())
+                    a_tokens = _re.findall(r"[а-яёa-z]{3,}", answer.lower())
+                    if q_tokens and a_tokens:
+                        q_set = set(q_tokens)
+                        a_set = set(a_tokens)
+                        overlap = len(q_set & a_set)
+                        if len(q_set) >= 2 and overlap >= 0.7 * len(q_set) and len(a_set) <= len(q_set) + 1:
+                            bad = True  # ответ буквально пересказывает вопрос, новой инфы нет
     return bad
 
 
@@ -913,6 +925,50 @@ def _try_direct_handlers(prompt):
         except Exception:
             ans = None
         return ans
+    def try_user_profile(q):
+        ans = None
+        try:
+            from algos.user_profile import try_user_profile as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
+    def try_empathy(q):
+        ans = None
+        try:
+            from algos.empathy import observe
+            observe(q)  # молча обновляем настроение диалога
+        except Exception:
+            pass
+        return ans
+    def try_steps(q):
+        ans = None
+        try:
+            from algos.reasoning import list_schemes
+            ql = q.lower()
+            wants_steps = any(w in ql for w in ("по шагам", "пошагово", "что мне делать",
+                                                "как сделать", "с чего начать", "составь план",
+                                                "разбей на шаги", "поэтапно"))
+            if wants_steps:
+                # собираем пошаговый план: схема мышления + подзадачи
+                import re as _re_s
+                words = [w for w in _re_s.findall(r"[а-яёa-z]{4,}", ql)
+                         if w not in ("чтобы", "как", "что", "это", "мне", "делать",
+                                      "сделать", "начать", "шаги", "план", "можно", "нужно")]
+                topic = "этой задаче"
+                if words:
+                    topic = words[-1]
+                steps = [
+                    f"1. Понять суть: разберём, что нужно по «{topic}».",
+                    "2. Разбить на части: главное действие и его подготовка.",
+                    "3. Сделать последовательно: сначала первый шаг, затем следующий.",
+                    "4. Проверить результат: сходится ли с тем, что просили.",
+                    "5. Итог: зафиксировать, что получилось и что дальше.",
+                ]
+                ans = "Сделаю по шагам:\n" + "\n".join(steps)
+        except Exception:
+            ans = None
+        return ans
     handlers = [
         ("greeting", try_greetings),
         ("learn", try_learn),
@@ -921,6 +977,7 @@ def _try_direct_handlers(prompt):
         ("creative", try_creative),
         ("direct", try_jarvis),
         ("dialog", try_dialog),
+        ("steps", try_steps),
         ("algo", try_bosova_engine),
         ("ai_history", try_ai_history),
         ("knowledge_graph", try_knowledge_graph),
@@ -939,6 +996,8 @@ def _try_direct_handlers(prompt):
         ("growth", try_growth),
         ("neuromod", try_neuromod),
         ("neural_elec", try_neural_elec),
+        ("user_profile", try_user_profile),
+        ("empathy_observe", try_empathy),
     ]
     result = None
     for strategy, fn in handlers:
@@ -1114,10 +1173,26 @@ def build_response(prompt, cluster, context=""):
                           "web": "интернет",
                           "greeting": "диалог",
                           "dialog": "диалог",
-                          "provider": "внешний провайдер"}
+                          "provider": "внешний провайдер",
+                          "steps": "пошаговый план"}
             result["source"] = source_map.get(s, "разные источники")
         except Exception:
             result["source"] = "разные источники"
+        # персональность: если знаем имя пользователя, обращаемся по имени
+        try:
+            if result.get("strategy") not in ("greeting", "dialog", "error", "user_profile"):
+                from algos.user_profile import greet_name
+                result["content"] = greet_name(result.get("content", ""), prompt)
+        except Exception:
+            pass
+        # эмпатичность: под тон собеседника добавляем тёплую заставку
+        try:
+            if result.get("strategy") not in ("greeting", "dialog", "error", "user_profile", "empathy_observe"):
+                from algos.empathy import apply_empathy, observe
+                observe(prompt)
+                result["content"] = apply_empathy(prompt, result.get("content", ""))
+        except Exception:
+            pass
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
     # видимая внутренняя речь: добавляем итоговый шаг о выбранной стратегии,
@@ -1596,12 +1671,12 @@ class MirroAPI(BaseHTTPRequestHandler):
                     kg_note = f", pair_hebb={fb}"
             except Exception:
                 kg_note = ""
-            # память успешных ответов: при лайке пара (вопрос→ответ) запоминается
-            # в корпус через mindstream, чтобы на похожий вопрос ответ звучал так же
+            # умное самообучение: при лайке пара (вопрос→ответ) попадает в корпус ТОЛЬКО
+            # если она хорошая и не дублируется — Mirro умнеет от лайков, а не копит мусор
             try:
                 if body.get("liked", True) and body.get("query") and body.get("response"):
                     from algos.mindstream import mind as _ms_fb
-                    _ms_fb.learn_new_pair(body.get("query", ""), body.get("response", ""))
+                    _ms_fb.learn_liked_pair(body.get("query", ""), body.get("response", ""))
             except Exception:
                 pass
             self._json({"status": "ok" + kg_note})

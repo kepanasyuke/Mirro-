@@ -201,6 +201,58 @@ class MindStream:
             pass
         return ok
 
+    def learn_liked_pair(self, instruction, output):
+        """Умное самообучение: сохраняет (вопрос→ответ) в self_learned ТОЛЬКО
+        если пара хорошая — ответ не мусорный, нет дубля по вопросу, корпус
+        не разросся. Возвращает True, если пара реально добавлена. Один return: bool."""
+        ok = False
+        try:
+            inst = (instruction or "").strip()
+            out = (output or "").strip()
+            if len(inst) < 10 or len(out) < 10:
+                return ok
+            # фильтр мусора: служебные ошибки/JSON/пересказ вопроса не учим
+            low = out.lower()
+            if any(m in low for m in ("traceback", "[mirro]", "не удалось связаться",
+                                      "переформулируй", "не нашла это")):
+                return ok
+            SELF_LEARNED.mkdir(parents=True, exist_ok=True)
+            target = SELF_LEARNED / "mindstream.jsonl"
+            # дедуп по нормализованному вопросу
+            import hashlib
+            key = hashlib.md5(inst.lower().strip().encode("utf-8")).hexdigest()
+            seen = False
+            prefs = []
+            if target.exists():
+                with open(target, "r", encoding="utf-8") as fh:
+                    for line in fh:
+                        if not line.strip():
+                            continue
+                        prefs.append(line)
+                        try:
+                            r = json.loads(line)
+                            if hashlib.md5(r.get("instruction", "").lower().strip().encode("utf-8")).hexdigest() == key:
+                                seen = True
+                        except Exception:
+                            continue
+            if seen:
+                return ok
+            # лимит корпуса: не даём раздуваться бесконечно
+            if len(prefs) < 12000:
+                rec = {"instruction": inst, "input": "",
+                       "output": out, "source": "liked"}
+                with open(target, "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+                ok = True
+        except Exception:
+            ok = False
+        if ok:
+            try:
+                self._anchor_in_graph(instruction + " " + output)
+            except Exception:
+                pass
+        return ok
+
     def _anchor_in_graph(self, text):
         """Связывает ядро темы с парой самых частотных слов текста в графе.
         Побочный эффект: добавляет/укрепляет узлы графа. Один return: None."""
