@@ -1432,6 +1432,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                            "population": len(ev.population),
                            "experience": len(ev.experience_base),
                            "best_chemistry": chem,
+                           "history": list(getattr(ev, "fitness_history", [])[-30:]),
                            "report": report()}
                 self._json(payload)
             except Exception as e:

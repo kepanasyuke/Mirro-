@@ -23,10 +23,12 @@ import random as _rnd
 
 def _sigmoid(x):
     """Мешает плавно. Один return: float."""
+    val = 0.0
     try:
-        return 1.0 / (1.0 + math.exp(-x))
+        val = 1.0 / (1.0 + math.exp(-x))
     except OverflowError:
-        return 0.0 if x < 0 else 1.0
+        val = 0.0 if x < 0 else 1.0
+    return val
 
 
 class PerceptronNode:
@@ -183,6 +185,7 @@ class MirroEvolver:
         self.max_experience = 50
         self._best = None
         self._best_fitness = float("-inf")
+        self.fitness_history = []       # лучший fitness по поколениям (для дашборда)
 
     # ---------- отбор ----------
     def _physics_loss(self, energy):
@@ -228,6 +231,10 @@ class MirroEvolver:
         self.population = new_pop
         self.generation += 1
         avg_fit = sum(f for f, _ in scored) / len(scored)
+        # фиксируем лучший fitness этого поколения в историю (для прогресса на дашборде)
+        self.fitness_history.append(round(scored[0][0], 4))
+        if len(self.fitness_history) > 200:
+            self.fitness_history = self.fitness_history[-200:]
         return {
             "generation": self.generation,
             "best_fit": round(scored[0][0], 4),
@@ -235,6 +242,7 @@ class MirroEvolver:
             "best_dopamine": round(self._best.dopamine, 3) if self._best else None,
             "best_serotonin": round(self._best.serotonin, 3) if self._best else None,
             "experience": len(self.experience_base),
+            "history": list(self.fitness_history[-30:]),
         }
 
     def save_experience(self, embedding):
@@ -303,20 +311,28 @@ def _integrated_fitness(ev, genome, A, X):
 
 
 def try_evolve(query):
-    """Точка входа: запускает шаг эволюции с учётом живого состояния Mirro
-    (граф знаний + нейромедиаторы). Один return: str."""
-    ev = get_evolver()
-    n = ev.num_nodes
-    A = _default_A(n)
-    X = _default_X(n, ev.input_dim)
-    ev.evolve_step(A, X)  # обычный шаг с базовым фитнесом внутри
-    # дополнительно усилим связь с системой: подмешаем живые факторы
-    fit_base = max(ev._fitness(ev.best_genome(), A, X), 0.0)
-    boost = _integrated_fitness(ev, ev.best_genome(), A, X) - fit_base
-    return (f"Эволюция поколение {ev.generation}: лучший fitness "
-            f"{fit_base:.3f} (+{boost:.3f} от знаний и медиаторов), "
-            f"в популяции {len(ev.population)} графов, "
-            f"опыт: {len(ev.experience_base)} паттернов.")
+    """Точка входа: запускает шаг эволюции только по явному запросу
+    («эволюция», «поколение», «нейроэволюция», «развивайся»).
+    Иначе возвращает None, чтобы не перехватывать обычный диалог.
+    Один return: str|None."""
+    ans = None
+    q = (query or "").lower()
+    want_evolve = any(w in q for w in ("эволюц", "поколени", "нейроэволюц",
+                                       "развивайся", "мутац", "скрещива"))
+    if want_evolve:
+        ev = get_evolver()
+        n = ev.num_nodes
+        A = _default_A(n)
+        X = _default_X(n, ev.input_dim)
+        ev.evolve_step(A, X)  # обычный шаг с базовым фитнесом внутри
+        # дополнительно усилим связь с системой: подмешаем живые факторы
+        fit_base = max(ev._fitness(ev.best_genome(), A, X), 0.0)
+        boost = _integrated_fitness(ev, ev.best_genome(), A, X) - fit_base
+        ans = (f"Эволюция поколение {ev.generation}: лучший fitness "
+               f"{fit_base:.3f} (+{boost:.3f} от знаний и медиаторов), "
+               f"в популяции {len(ev.population)} графов, "
+               f"опыт: {len(ev.experience_base)} паттернов.")
+    return ans
 
 
 def report(query=""):

@@ -1167,14 +1167,34 @@ class MirroAlgorithms:
     # ========================
     def autonomous_learn(self, cycles=30):
         """Автономное самообучение: генерирует вопросы из своей базы,
-        отвечает, оценивает, корректирует перцептрон."""
+        отвечает, оценивает, корректирует перцептрон.
+
+        Умный отбор: редкие кластеры (которые редко спрашивали) получают
+        приоритет, чтобы наука росла равномерно, а не только к популярному."""
         learned = 0
         import random as _rnd
 
-        # Pick sample of examples
+        # Считаем, как часто отвечалось на кластер (балансировка)
+        cluster_use = dict(self.cluster_calls) if hasattr(self, "cluster_calls") else {}
+        use_counts = {}
+        for _, _, cl in self.examples:
+            use_counts[cl] = use_counts.get(cl, 0) + 1
+        total = sum(use_counts.values()) or 1
+        # кластеры с долей использования < половины средней — «редкие»
+        avg_share = 1.0 / max(1, len(use_counts))
+        rare = [cl for cl, n in use_counts.items() if n / total < avg_share * 0.7]
+
+        # Pick sample of examples, preferring rare clusters
         sample = self.examples
         if len(sample) > 5000:
-            sample = _rnd.sample(self.examples, 5000)
+            if rare:
+                rare_examples = [e for e in self.examples if e[2] in rare]
+                rest = [e for e in self.examples if e[2] not in rare]
+                take_rare = min(len(rare_examples), int(cycles * 0.6))
+                sample = (_rnd.sample(rare_examples, take_rare) if rare_examples else []) + \
+                         (_rnd.sample(rest, cycles - take_rare) if rest and cycles > take_rare else [])
+            else:
+                sample = _rnd.sample(self.examples, 5000)
 
         for inst, out, cl in sample[:cycles]:
             if len(inst) >= 8:

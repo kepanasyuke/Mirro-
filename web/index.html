@@ -1047,6 +1047,12 @@ document.addEventListener('click', e => {
   setTimeout(() => ink.remove(), 600);
 });
 
+// клик по карте знаний раскрывает узел (интерактивный режим исследования)
+document.addEventListener('click', e => {
+  const cv = e.target.closest('#cvNetMap');
+  if (cv) { netMapClick(e); }
+});
+
 /* ===== Toast ===== */
 let toastTimer;
 function toast(msg, type) {
@@ -1156,6 +1162,7 @@ async function loadGraphLog() {
   } catch { if (host) host.innerHTML = '<div style="color:var(--muted)">лог недоступен</div>'; }
 }
 
+let netNodes = [];   // позиции узлов для клика #0 центр, далее связи
 async function showNetMap() {
   const inp = document.getElementById('netInput');
   const cv = document.getElementById('cvNetMap');
@@ -1166,6 +1173,7 @@ async function showNetMap() {
   const ctx = cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   if (info) info.textContent = 'загружаю связи «' + concept + '»…';
+  netNodes = [];
   try {
     const r = await fetch(API + '/v1/knowledge?q=' + encodeURIComponent(concept) + '&kind=links', {headers: AUTH_HDR});
     const d = await r.json();
@@ -1176,7 +1184,8 @@ async function showNetMap() {
     ctx.fillStyle = '#d8231c'; ctx.beginPath(); ctx.arc(cx,cy,16,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
     ctx.fillText(concept.substring(0,14), cx, cy+5);
-    // связи по кругу
+    netNodes.push({x:cx, y:cy, name:concept});
+    // связи по кругу — каждый узел кликабелен
     ctx.textAlign='left';
     const n = Math.min(links.length, 8);
     for (let i=0;i<n;i++) {
@@ -1185,11 +1194,33 @@ async function showNetMap() {
       ctx.strokeStyle = 'rgba(217,120,60,0.5)'; ctx.lineWidth=1.5;
       ctx.beginPath(); ctx.moveTo(cx+14*Math.cos(ang), cy+14*Math.sin(ang)); ctx.lineTo(x,y); ctx.stroke();
       ctx.fillStyle = '#9aa0b5';
-      ctx.fillText(String(links[i]).replace(concept,'…').substring(0,26), x-60, y+4);
+      // вытаскиваем имя понятия из строки связи
+      let nm = String(links[i]).replace(concept,'…').replace(/\(вес[\s\S]*$/, '').split(/\s+/)[0];
+      ctx.beginPath(); ctx.arc(x, y+4, 4, 0, Math.PI*2); ctx.fillStyle='#e8c05a'; ctx.fill();
+      ctx.fillStyle = '#9aa0b5';
+      ctx.fillText(nm.substring(0,18), x-40, y-4);
+      netNodes.push({x:x, y:y+4, name:nm});
     }
-    if (info) info.textContent = 'связи «' + concept + '»: ' + (links.length ? links.slice(0,8).join(' · ') : 'нет связей');
+    if (info) info.textContent = 'связи «' + concept + '»: кликни узел, чтобы раскрыть его · ' + (links.length ? links.slice(0,8).join(' · ') : 'нет связей');
   } catch {
     if (info) info.textContent = 'не удалось загрузить связи сети';
+  }
+}
+
+// интерактив: клик по узлу карты раскрывает это понятие (режим исследования)
+function netMapClick(e) {
+  const cv = document.getElementById('cvNetMap');
+  if (!cv || !netNodes.length) return;
+  const rect = cv.getBoundingClientRect();
+  const scaleX = cv.width / rect.width, scaleY = cv.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX, my = (e.clientY - rect.top) * scaleY;
+  for (const nd of netNodes) {
+    const dx = mx - nd.x, dy = my - nd.y;
+    if (dx*dx + dy*dy < 400) {   // радиус клика 20px
+      document.getElementById('netInput').value = nd.name;
+      showNetMap();
+      return;
+    }
   }
 }
 
