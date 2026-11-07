@@ -645,6 +645,16 @@ def answer_looks_bad(query, answer):
                 key = q_words - stop
                 if key and not key & a_words:
                     bad = True  # ответ вообще не про это
+            # самопроверка: тавтология/«вода» — ответ почти целиком повторяет вопрос
+            if not bad:
+                q_tokens = _re.findall(r"[а-яёa-z]{3,}", q.lower())
+                a_tokens = _re.findall(r"[а-яёa-z]{3,}", answer.lower())
+                if q_tokens and a_tokens:
+                    q_set = set(q_tokens)
+                    a_set = set(a_tokens)
+                    overlap = len(q_set & a_set)
+                    if len(q_set) >= 2 and overlap >= 0.7 * len(q_set) and len(a_set) <= len(q_set) + 1:
+                        bad = True  # ответ буквально пересказывает вопрос, новой инфы нет
     return bad
 
 
@@ -898,16 +908,27 @@ def _try_direct_handlers(prompt):
 
 def _enrich_followup(prompt, context):
     """Если реплика слишком короткая и без своей темы, обогащает её словами из
-    истории диалога, чтобы поиск не ушёл в мусор. Единственный return: str."""
+    истории диалога, чтобы поиск не ушёл в мусор. Также подхватывает «продолжение
+    темы» (а это…, про это…, дальше…) из последней реплики. Единственный return: str."""
     q_words = set(_tokenize_for_search(prompt))
     content_words = {w for w in q_words if w not in _DIALOG_STOPWORDS}
     enriched = prompt
     if len(content_words) < 2 and context:
+        lines = [l for l in context.split("\n") if l.strip()]
         hist_words = set()
-        for line in context.split("\n"):
-            for w in _tokenize_for_search(line.replace("Пользователь:", " ").replace("Mirro:", " ")):
+        continuation = any(w in prompt.lower() for w in ("это", "её", "его", "этих",
+                                                         "дальше", "продолж", "ещё"))
+        # для продолжения темы берём из ПОСЛЕДНЕЙ реплики (Mirro / пользователь)
+        if continuation and lines:
+            last_text = lines[-1]
+            for w in _tokenize_for_search(last_text.replace("Пользователь:", " ").replace("Mirro:", " ")):
                 if w not in _DIALOG_STOPWORDS:
                     hist_words.add(w)
+        else:
+            for line in lines:
+                for w in _tokenize_for_search(line.replace("Пользователь:", " ").replace("Mirro:", " ")):
+                    if w not in _DIALOG_STOPWORDS:
+                        hist_words.add(w)
         enrichment = " ".join(sorted(hist_words)[:60])
         enriched = (prompt + " " + enrichment).strip()
     return enriched
@@ -1158,6 +1179,8 @@ class MirroAPI(BaseHTTPRequestHandler):
                     "avg_dimension": _dimen(_kg),
                     "density": round(len(_kg.edges) / max(1, len(_kg.nodes)), 3),
                     "edges_per_node": round(len(_kg.edges) / max(1, len(_kg.nodes)), 2),
+                    "central_nodes": [n for n, _d in _kg.centrality(top_n=5)["top"]],
+                    "mean_degree": _kg.centrality(top_n=2)["mean_degree"],
                 }
                 try:
                     _conn = _kg.connectivity(top_n=3)
