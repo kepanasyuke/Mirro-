@@ -1094,6 +1094,22 @@ def _voice_or_none(raw, prompt, strategy):
     return result
 
 
+def _moderation_gate(prompt):
+    """Проверяет вход на нежелательный контент; если он опасен — возвращает
+    безопасный отказ. Иначе None (продолжать). Один return: dict|None."""
+    result = None
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from algos.moderation import moderate_input
+        m = moderate_input(prompt)
+        if not m.get("ok"):
+            result = {"content": m.get("reply", "Эта тема вне моей компетенции."),
+                      "strategy": "moderated"}
+    except Exception:
+        result = None
+    return result
+
+
 def _graph_infer_unknown(prompt):
     """Вывод знаний из графа для неизвестных вопросов (нет прямого ответа в базе).
     Если в вопросе есть узлы графа и по ним строятся цепочки — возвращает связный
@@ -1140,18 +1156,24 @@ def build_response(prompt, cluster, context=""):
             thinking = _ms.reasoning_steps(topic)
         except Exception:
             thinking = []
-        direct = _try_direct_handlers(prompt)
-        if direct is not None:
-            result = direct
-            result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
+        # модерация: опасный входящий запрос гасим до всех обработчиков
+        gate = _moderation_gate(prompt)
+        if gate is not None:
+            result = gate
+            result["workspace"] = "сознание: безопасность (запрос отсечён фильтром модерации)"
         else:
-            prompt = _enrich_followup(prompt, context)
-            web_first = _try_web_first(prompt)
-            if web_first is not None:
-                result = web_first
-                result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
+            direct = _try_direct_handlers(prompt)
+            if direct is not None:
+                result = direct
+                result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
             else:
-                best_answer, best_score, has_result = _search_best(prompt, cluster)
+                prompt = _enrich_followup(prompt, context)
+                web_first = _try_web_first(prompt)
+                if web_first is not None:
+                    result = web_first
+                    result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
+                else:
+                    best_answer, best_score, has_result = _search_best(prompt, cluster)
                 if has_result and answer_looks_bad(prompt, best_answer):
                     bad_web = try_web(prompt)
                     if bad_web:

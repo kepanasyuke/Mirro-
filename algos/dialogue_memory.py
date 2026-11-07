@@ -43,10 +43,12 @@ def _keywords(text):
 
 
 class DialogueMemory:
-    def __init__(self, max_topics=8, max_context=30):
+    def __init__(self, max_topics=8, max_context=30, summary_length=12):
         self.topics = deque(maxlen=max_topics)     # темы последних реплик
         self.context = deque(maxlen=max_context)   # (user_keywords, bot_reply_keywords)
         self.emotion = 0.0                          # скользящая тональность -1..1
+        self.summary = []                           # резюме-накопление длинного диалога
+        self._summary_target = summary_length       # порог для сжатия
         self.pos_words = {"спасибо","отлично","круто","здорово","супер","люблю","нравится","помогло"}
         self.neg_words = {"плохо","грустно","злюсь","не работает","ошибка","не получается","жаль","ужас","ненавижу"}
         self._persist_path = None
@@ -78,6 +80,7 @@ class DialogueMemory:
                 self.context = deque(data.get("context", [])[-(self.context.maxlen or 30):],
                                      maxlen=self.context.maxlen)
                 self.emotion = float(data.get("emotion", 0.0))
+                self.summary = list(data.get("summary", []))
                 ok = True
         except Exception:
             ok = False
@@ -98,7 +101,8 @@ class DialogueMemory:
                     pass
             data = {"topics": [list(t) for t in self.topics],
                     "context": [list(c) for c in self.context],
-                    "emotion": self.emotion}
+                    "emotion": self.emotion,
+                    "summary": self.summary}
             tmp = str(path) + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False)
@@ -109,7 +113,7 @@ class DialogueMemory:
         return ok
 
     def remember(self, user_text, bot_reply=""):
-        """Фиксирует реплику: тему + тональность + контекст."""
+        """Фиксирует реплику: тему + тональность + контекст + резюме-накопление."""
         kw = _keywords(user_text)
         if kw:
             self.topics.append(tuple(kw[:4]))
@@ -120,10 +124,33 @@ class DialogueMemory:
         delta = 0.1 if pos > neg else (-0.1 if neg > pos else 0.0)
         self.emotion = max(-1.0, min(1.0, self.emotion + delta))
         self.context.append((kw, _keywords(bot_reply)))
+        # резюме-накопление: когда реплик становится много — сжимаем старые ключевые
+        # темы в краткое резюме, чтобы долгий диалог не терял суть между сессиями
+        try:
+            if len(self.context) >= self._summary_target and kw:
+                old = " ".join(" ".join(c[0]) for c in list(self.context)[:-4])
+                words = [w for w in _re.findall(r"[а-яёa-z]{4,}", old) if w not in _STOP]
+                if len(words) >= 4:
+                    # топ ключевых слов старого диалога — это «суть» прошлой беседы
+                    from collections import Counter
+                    top = [w for w, _c in Counter(words).most_common(8)]
+                    if " ".join(top) not in self.summary:
+                        self.summary.append(" ".join(top))
+                        self.summary = self.summary[-8:]
+                    # оставляем только свежие реплики, чтобы резюме было про «давно»
+                    self.context = deque(list(self.context)[-6:], maxlen=self.context.maxlen)
+        except Exception:
+            pass
         self.save()
         return kw
 
     # ----- интерфейс для try_* -----
+    def get_summary(self):
+        """Резюме-накопление длинного диалога. Один return: str."""
+        if not self.summary:
+            return ""
+        return " ; ".join(self.summary)
+
     def last_topic(self):
         """Свежая тема последней реплики. Один return: str или None."""
         result = None

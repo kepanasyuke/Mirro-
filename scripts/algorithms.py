@@ -1100,6 +1100,37 @@ class MirroAlgorithms:
         self.cache[cache_key] = value
         return None
 
+    # ----- FAQ-ускорение: тёплый кэш частых запросов с готовыми ответами -----
+    def _faq_key(self, query):
+        """Нормализованный ключ FAQ. Один return: str."""
+        return _re.sub(r"[^а-яёa-z0-9 ]+", " ", (query or "").lower()).strip()[:80]
+
+    def _faq_get(self, query):
+        """Ищет готовый ответ в FAQ-кэше. Один return: str|None."""
+        result = None
+        key = self._faq_key(query)
+        if key and key in getattr(self, "faq_cache", {}):
+            result = self.faq_cache[key]
+        return result
+
+    def _faq_put(self, query, answer, min_hits=3):
+        """Накапливает популярные пары: при частом повторе вопроса кэширует
+        готовый ответ, чтобы отвечать мгновенно. Один return: None."""
+        key = self._faq_key(query)
+        if not key:
+            return None
+        if not hasattr(self, "faq_cache"):
+            self.faq_cache = {}
+        if not hasattr(self, "faq_hits"):
+            self.faq_hits = {}
+        self.faq_hits[key] = self.faq_hits.get(key, 0) + 1
+        if self.faq_hits[key] >= min_hits:
+            if len(self.faq_cache) >= self.cache_max:
+                # вытесняем первый (по порядку вставки)
+                self.faq_cache = dict(list(self.faq_cache.items())[-self.cache_max:])
+            self.faq_cache[key] = answer
+        return None
+
     def _score_answers(self, query, results):
         """Оценивает кандидатов (перцептрон+qa+буст предпочтений). Один return: list."""
         scored = []
@@ -1136,11 +1167,15 @@ class MirroAlgorithms:
 
     def compose_answer(self, query, top_n=8, max_len=4000):
         """
-        Полный пайплайн: кэш → поиск → фильтрация перцептроном → дедупликация → TextRank → самокоррекция.
+        Полный пайплайн: FAQ-кэш → кэш → поиск → фильтрация перцептроном → дедупликация → TextRank → самокоррекция.
         Один return: str-ответ или None.
         """
         result = None
-        cached = self._cache_get(query)
+        cached = self._faq_get(query)
+        if cached is not None:
+            result = cached
+        else:
+            cached = self._cache_get(query)
         if cached is not None:
             result = cached
         else:
@@ -1153,6 +1188,8 @@ class MirroAlgorithms:
                         combined = self._summarize_parts(parts, max_len)
                         corrected, _ = self.self_correct(query, combined)
                         self._cache_put(query, corrected)
+                        # FAQ-ускорение: накапливаем популярные пары для мгновенных ответов
+                        self._faq_put(query, corrected)
                         result = corrected
                     else:
                         self._cache_put(query, None)
