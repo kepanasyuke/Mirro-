@@ -329,6 +329,70 @@ class KnowledgeGraph:
         return removed
 
     # ---------- умные запросы связей ----------
+    def bridge_components(self, max_edges=2000, weight=0.25, sample_conn=None):
+        """Семантический мост: связывает изолированные узлы (без рёбер) со
+        связными через общее значащее слово. Сращивает компоненты графа в одну
+        сеть. Один return: int — число добавленных рёбер."""
+        import re as _re_b
+        connected = set()
+        for (s, p, d) in self.edges:
+            connected.add(s)
+            connected.add(d)
+        isolated = [n for n in self.nodes if n not in connected]
+        if sample_conn and len(connected) > sample_conn:
+            import random as _rnd
+            connected = set(_rnd.sample(list(connected), sample_conn))
+        stop = {"это", "что", "как", "для", "на", "в", "по", "с", "из", "и", "или"}
+        added = 0
+        # для быстрого поиска: слово -> связные узлы, содержащие его (по одному на слово)
+        word_index = {}
+        for c in connected:
+            for w in set(_re_b.findall(r"[а-яёa-z]{4,}", c.lower())):
+                if w not in stop and w not in word_index:
+                    word_index[w] = c
+        for node in isolated:
+            if added >= max_edges:
+                break
+            words = set(_re_b.findall(r"[а-яёa-z]{4,}", node.lower())) - stop
+            target = None
+            for w in words:
+                cand = word_index.get(w)
+                if cand and cand != node:
+                    target = cand
+                    break
+            if target:
+                try:
+                    self.add_edge(node, "связано_с", target, weight=weight)
+                    added += 1
+                except Exception:
+                    pass
+        return added
+
+    def normalize_nodes(self, max_phrase_words=4, weight=0.4):
+        """Нормализация узлов: из узла-фразы извлекает чистое ядро-понятие
+        (первые 1–2 значащих слова, без стоп-слов) и связывает фразу с понятием
+        ребром «про_понятие». Мусорные связки («таким образом») пропускаются.
+        Один return: int — число добавленных рёбер/понятий."""
+        import re as _re_n
+        stop = {"это", "что", "как", "для", "на", "в", "по", "с", "из", "и", "или",
+                "таким", "образом", "всего", "даже", "уже", "если", "то", "не", "при"}
+        added = 0
+        for node in list(self.nodes):
+            if " " not in node or len(node.split()) > max_phrase_words:
+                continue
+            tokens = [w for w in _re_n.findall(r"[а-яёa-z]{4,}", node.lower()) if w not in stop]
+            if not tokens:
+                continue
+            core = " ".join(tokens[:2]) if len(tokens) >= 2 else tokens[0]
+            if core == node.lower():
+                continue
+            try:
+                self.add_edge(node, "про_понятие", core, weight=weight)
+                added += 1
+            except Exception:
+                pass
+        return added
+
     def what_links(self, name, max_hop=1):
         """Все прямые и ближайшие связи понятия (уже есть neighbors, но с фактами).
         Один return: list строк."""
@@ -703,15 +767,21 @@ def try_concept_path(query):
         if chain:
             out = [start]
             weights = []
+            pred_chain = []
             for p, other, w in chain:
                 clean = other if " " not in other or len(other) <= 12 else other.split()[0]
                 if clean not in out:
+                    pred_chain.append((clean, p))
                     out.append(clean)
                     weights.append(w)
                 if len(out) >= 6:
                     break
             conf = (sum(weights) / len(weights)) if weights else 0.0
-            ans = f"{' → '.join(out)} (уверенность {conf:.2f})"
+            # «нейросеть —обучается—> данные»: предикат между узлами
+            parts = [start]
+            for node, pred in pred_chain:
+                parts.append(f"─{pred}→ {node}")
+            ans = " ".join(parts) + f" (уверенность {conf:.2f})"
     return ans
 
 

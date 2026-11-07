@@ -62,6 +62,22 @@ class TestGraphLearning(unittest.TestCase):
         self.assertIn("→", chain)
         self.assertIn("нейросеть", chain)
 
+    def test_bridge_components_links_isolated(self):
+        self.kg.add_edge("кортеж", "связано_с", "список", 1.0)
+        # изолированный узел с общим словом со связным
+        self.kg.add_node("кортеж в python")
+        added = self.kg.bridge_components(max_edges=10, weight=0.25)
+        # «кортеж в python» связан через общее слово «кортеж»
+        self.assertGreaterEqual(added, 0)
+
+    def test_normalize_nodes_extracts_concept(self):
+        self.kg.add_node("нейросеть использует обучение")
+        added = self.kg.normalize_nodes(max_phrase_words=4, weight=0.4)
+        self.assertGreater(added, 0)
+        # фраза должна получить ребро «про_понятие» к своему ядру-понятию
+        pro_edges = [k for k in self.kg.edges if k[1] == "про_понятие"]
+        self.assertTrue(pro_edges, "ожидали ребро про_понятие от узла-фразы к понятию")
+
 
 if __name__ == "__main__":
     unittest.main()

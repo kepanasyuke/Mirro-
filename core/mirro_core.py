@@ -1239,11 +1239,26 @@ class MirroAPI(BaseHTTPRequestHandler):
             story = MIRRO_HOME / "data" / "graph_story.jsonl"
             try:
                 story.parent.mkdir(parents=True, exist_ok=True)
+                # топ новых/свежих связей (по весу) для отчёта «что бот сформировал»
+                top_edges = []
+                try:
+                    seen = set()
+                    for (s, p, d), w in list(graph.edges.items())[-400:]:
+                        small = s if len(s) <= 18 else s[:15]
+                        dsmall = d if len(d) <= 18 else d[:15]
+                        key = (small, dsmall)
+                        if key not in seen:
+                            seen.add(key)
+                            top_edges.append(f"{small}─{p}→{dsmall}")
+                    top_edges = top_edges[-6:]
+                except Exception:
+                    top_edges = []
                 with open(story, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({
                         "ts": _dt.datetime.now().isoformat(timespec="seconds"),
                         "nodes": len(graph.nodes),
                         "edges": len(graph.edges),
+                        "new_links": top_edges,
                     }, ensure_ascii=False) + "\n")
             except Exception:
                 pass
@@ -1725,6 +1740,22 @@ def _seed_knowledge_graph():
             pl_edges = predict_links(min_common=3, max_edges=1500, weight=0.3)
             if pl_edges:
                 print(f"  Предсказано недостающих связей: {pl_edges}")
+        except Exception:
+            pass
+        # Семантический мост: сращиваем изолированные узлы с компонентами сети
+        try:
+            from algos.knowledge_graph import kg as _kgb
+            br_edges = _kgb.bridge_components(max_edges=1500, weight=0.25, sample_conn=40000)
+            if br_edges:
+                print(f"  Семантических мостов к изолированным узлам: {br_edges}")
+        except Exception:
+            pass
+        # Нормализация узлов-фраз: извлекаем чистые понятия, связываем фразы с ними
+        try:
+            from algos.knowledge_graph import kg as _kgn
+            norm_added = _kgn.normalize_nodes(max_phrase_words=4, weight=0.4)
+            if norm_added:
+                print(f"  Нормализовано узлов в понятия: {norm_added}")
         except Exception:
             pass
         # Сохраняем граф на диск, чтобы знания не терялись при перезапуске
