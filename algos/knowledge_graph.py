@@ -95,6 +95,33 @@ class KnowledgeGraph:
     def _norm(name):
         return _re.sub(r"\s+", " ", name or "").strip().lower().rstrip(".!?;")
 
+    def prune_noise(self, noise_preds=None, max_phrase_words=4):
+        """Убирает мусор: рёбра с шумовыми предикатами («это», «есть», «если»)
+        и узлы-фразы длиннее max_phrase_words слов (корпусный шум, не понятия).
+        Один return: int — число удалённых элементов (узлы+рёбра+предикаты)."""
+        removed = 0
+        if noise_preds is None:
+            noise_preds = {"это", "есть", "если", "является", "и", "или", ",", ".", "-"}
+        # 1) рёбра с шумовыми предикатами
+        dead_edges = [k for k in self.edges if self._norm(k[1]) in noise_preds]
+        for k in dead_edges:
+            del self.edges[k]
+        removed += len(dead_edges)
+        # 2) узлы-фразы (корпусные): слишком длинные, не чистые понятия
+        dead_nodes = set()
+        for n in self.nodes:
+            if " " in n and len(n.split()) > max_phrase_words:
+                dead_nodes.add(n)
+        for d in dead_nodes:
+            del self.nodes[d]
+            if d in self._adj:
+                del self._adj[d]
+        removed += len(dead_nodes)
+        if dead_nodes:
+            self.edges = {k: w for k, w in self.edges.items() if k[0] not in dead_nodes and k[2] not in dead_nodes}
+            self._rebuild_adj()
+        return removed
+
     def prune_stopwords(self, stopwords):
         """Удаляет узлы-связки (мусорные слова типа «однако», «затем») из графа
         и связанные с ними рёбра. Один return: int — число удалённых узлов."""
@@ -466,6 +493,76 @@ def build_concept_bridges():
     return added
 
 
+def predict_links(min_common=3, max_edges=2000, weight=0.3):
+    """Эвристика предсказания связей: если два узла делят НЕСКОЛЬКО общих
+    соседей, но прямой связи между ними нет — добавляем ребро «связано_с»
+    (сигнал, что они скорее всего связаны тематически). Один return: int."""
+    added = 0
+    try:
+        from collections import defaultdict
+        pred = defaultdict(set)   # предикат -> направление (тут просто известные)
+        # соседи узла по всем рёбрам, где он встречается
+        neigh = defaultdict(set)
+        for k in kg.edges:
+            if isinstance(k, (tuple, list)) and len(k) >= 2:
+                a, b = k[0], k[-1]
+                neigh[a].add(b)
+                neigh[b].add(a)
+        nodes_sample = list(kg.nodes)
+        created = 0
+        for a in nodes_sample:
+            if created >= max_edges:
+                break
+            for b in neigh.get(a, ()):
+                if created >= max_edges:
+                    break
+                if b == a or (a, "связано_с", b) in kg.edges:
+                    continue
+                common = len(neigh.get(a, set()) & neigh.get(b, set()))
+                if common >= min_common:
+                    kg.add_edge(a, "связано_с", b, weight=weight)
+                    created += 1
+        added = created
+    except Exception:
+        added = 0
+    return added
+
+
+def link_orphans(max_word_len=20, max_edges=3000):
+    """Связывает изолированные (без рёбер) узлы-понятия с ближайшим связным
+    узлом по общему соседу или первому слову темы. Длинные корпусные фразы
+    не трогает. Делает граф связнее. Один return: int (число добавленных рёбер)."""
+    added = 0
+    try:
+        connected = set()
+        for k in kg.edges:
+            if isinstance(k, (tuple, list)) and len(k) >= 2:
+                connected.add(k[0])
+                connected.add(k[-1])
+        orphans = [n for n in kg.nodes if n not in connected and len(n) <= max_word_len]
+        links_created = 0
+        for o in orphans:
+            if links_created >= max_edges:
+                break
+            core = o.split()[0]
+            # ищем связный узел, у которого общее первое слово или общий сосед
+            best = None
+            candidates = [c for c in connected if core in c or c in o]
+            if candidates:
+                best = candidates[0]
+            else:
+                share = [c for c in connected if c.split()[0] == core]
+                if share:
+                    best = share[0]
+            if best:
+                kg.add_edge(o, "связано_с", best, weight=0.2)
+                links_created += 1
+        added = links_created
+    except Exception:
+        added = 0
+    return added
+
+
 # ---------- быстрый интерфейс для try_* (все функции — один return) ----------
 def _clean_q(query):
     """Нормализует запрос для разбора. Один return: str."""
@@ -544,6 +641,31 @@ def try_knowledge_graph(query):
         ans = _answer_relation(a, b) or _answer_path(a, b)
     else:
         ans = _answer_explain(q)
+        # если понятие просили объяснить — покажем цепочку его связей
+        if not ans:
+            ans = try_concept_path(q) or _answer_explain(q)
+    return ans
+
+
+def try_concept_path(query):
+    """Показывает читаемую цепочку связей (путь в графе) про понятие из запроса:
+    «нейросеть → обучение → алгоритм». Берет только короткие узлы-понятия.
+    Один return: str или None."""
+    ans = None
+    q = _clean_q(query)
+    topic = _extract_topic(q)
+    if topic:
+        start = topic.split()[0] if " " in topic else topic
+        chain = kg._adj.get(start, [])
+        if chain:
+            out = [start]
+            for p, other, _w in chain:
+                clean = other if " " not in other or len(other) <= 12 else other.split()[0]
+                if clean not in out:
+                    out.append(clean)
+                if len(out) >= 6:
+                    break
+            ans = " → ".join(out)
     return ans
 
 

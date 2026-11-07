@@ -323,6 +323,10 @@ html[data-theme="light"] .theme-toggle .tt-label { color: var(--accent); }
   background: linear-gradient(180deg, var(--accent), var(--accent2), var(--accent));
   border-radius: 2px; opacity: .65;
 }
+.think { margin-bottom: 6px; border: 1px dashed var(--border); border-radius: 10px; padding: 6px 10px; font-size: var(--fs-tiny); }
+.think summary { cursor: pointer; color: var(--muted); font-size: var(--fs-micro); letter-spacing: .06em; text-transform: uppercase; user-select: none; }
+.think-body { margin-top: 6px; color: var(--muted); white-space: pre-wrap; line-height: 1.45; opacity: .9; }
+html[data-theme="dark"] .think { color: #9aa0b5; }
 .msg .meta { font-size: var(--fs-micro); color: var(--muted); margin-top: 4px; }
 .msg .acts { display: flex; gap: 5px; margin-top: 6px; }
 .msg .acts button { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 2px 8px; font-size: var(--fs-tiny); cursor: pointer; transition: all .15s; }
@@ -534,18 +538,18 @@ function updateThemeBtn(isLight) {
 /* Лампочка-реакция: распознавание «ключевых слов» перцептроном Mirro.
    Набор тем-ключей, на которые Mirro «загорается» (анимация). */
 const REACT_KEYWORDS = {
-  'матем': {emoji:'∑', words:['сколько','реши','уравнен','вычисли','процент','нод','корень']},
-  'код':   {emoji:'</>', words:['python','функци','код','скрипт','программ','алгоритм','баг']},
-  'робот': {emoji:'🤖', words:['робот','нейросеть','ии','искусственн']},
-  'стих':  {emoji:'✍', words:['стих','рассказ','напиши стих','загадк']},
-  'привет':{emoji:'👋', words:['привет','здравств','добрый']},
+  'матем': {emoji:'M', words:['сколько','реши','уравнен','вычисли','процент','нод','корень']},
+  'код':   {emoji:'{}', words:['python','функци','код','скрипт','программ','алгоритм','баг']},
+  'робот': {emoji:'AI', words:['робот','нейросеть','ии','искусственн']},
+  'стих':  {emoji:'.', words:['стих','рассказ','напиши стих','загадк']},
+  'привет':{emoji:'!', words:['привет','здравств','добрый']},
 };
 function reactToQuery(query) {
   const lamp = document.getElementById('reactLamp');
   const happy = document.getElementById('welcome');
   if (!lamp) return;
   const q = (query || '').toLowerCase();
-  let emoji = '⚡', hit = false;
+  let emoji = '', hit = false;
   for (const key in REACT_KEYWORDS) {
     if (REACT_KEYWORDS[key].words.some(w => q.includes(w))) {
       emoji = REACT_KEYWORDS[key].emoji; hit = true; break;
@@ -655,6 +659,13 @@ function resetReaction() {
     </div>
     <div class="grid" id="statGrid">
       <div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--muted)">Загрузка...</div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="card" style="grid-column:1/-1">
+        <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Рост графа знаний</div>
+        <canvas id="cvGraphGrowth" width="880" height="220" style="width:100%;height:auto;background:#0c1220;border:1px solid var(--border);border-radius:10px"></canvas>
+        <div id="graphGrowthMeta" style="margin-top:8px;font-size:var(--fs-small);color:var(--muted)"></div>
+      </div>
     </div>
     <div class="grid" style="margin-top:12px">
       <div class="card" style="grid-column:1/-1">
@@ -832,7 +843,7 @@ function addMsg(role, text) {
 }
 
 /* Печать ответа посимвольно (живой набор текста) */
-async function addBotTyping(fullText) {
+async function addBotTyping(fullText, reasoning) {
   welcomeEl?.remove();
   const d = document.createElement('div');
   d.className = 'msg bot';
@@ -841,6 +852,15 @@ async function addBotTyping(fullText) {
     '<div class="meta">' + new Date().toLocaleTimeString() + '</div></div>';
   msgsEl.appendChild(d);
   const bubble = d.querySelector('.bubble');
+
+  // видимая внутренняя речь: раскрывающийся блок «мысли» над ответом
+  if (reasoning && String(reasoning).trim().length > 3) {
+    const rb = document.createElement('details');
+    rb.className = 'think';
+    rb.innerHTML = '<summary>думала</summary><div class="think-body">' +
+      esc(String(reasoning)) + '</div>';
+    bubble.parentNode.insertBefore(rb, bubble);
+  }
 
   // если ответ короткий (<=140) — печатаем посимвольно, иначе сразу целиком
   const step = fullText.length <= 140 ? 2 : 24;
@@ -896,8 +916,9 @@ async function sendChat() {
     });
     const d = await r.json();
     const reply = d.choices?.[0]?.message?.content || 'Нет ответа';
+    const reasoning = d.choices?.[0]?.message?.reasoning_content || '';
     document.getElementById('typing')?.remove();
-    await addBotTyping(reply);   // печать ответа посимвольно
+    await addBotTyping(reply, reasoning);   // печать ответа посимвольно («мысли» сверху)
     history.push({q:text, a:reply, ts:new Date().toISOString()});
     if (history.length > 200) history.shift();
     localStorage.setItem('mirro_history', JSON.stringify(history));
@@ -1005,7 +1026,8 @@ async function loadStats() {
       '<div class="card"><div class="k">Активный индекс</div><div class="v">' + (a.examples||'?') + '</div><div class="s">документов</div></div>' +
       '<div class="card"><div class="k">Топ кластер</div><div class="v v-md">' + topC + '</div><div class="s">' + topN.toLocaleString() + ' примеров</div></div>' +
       '<div class="card"><div class="k">Алгоритмы</div><div class="v v-md">10 шт</div><div class="s">TF-IDF · TextRank · NB · RAG…</div></div>' +
-      '<div class="card"><div class="k">Веса перцептрона</div><div class="v v-md">' + Object.keys(a.perceptron_weights||{}).length + '</div><div class="s">обучено на оценках</div></div>';
+      '<div class="card"><div class="k">Граф: узлов</div><div class="v v-md">' + String((a.knowledge_graph&&a.knowledge_graph.nodes)||0).replace(/\B(?=(\d{3})+(?!\d))/g,' ') + '</div><div class="s">рёбер ' + String((a.knowledge_graph&&a.knowledge_graph.edges)||0).replace(/\B(?=(\d{3})+(?!\d))/g,' ') + '</div></div>' +
+      '<div class="card"><div class="k">Плотность графа</div><div class="v v-md">' + (a.knowledge_graph?a.knowledge_graph.density:'?') + '</div><div class="s">рёбер на узел</div></div>';
     const lines = [
       ['TF-IDF + BM25 поиск', true], ['TextRank суммаризация', true],
       ['Naive Bayes классификация', true], ['Перцептрон', true],
@@ -1016,10 +1038,28 @@ async function loadStats() {
     document.getElementById('algoList').innerHTML =
       '<div style="font-size:var(--fs-tiny);color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:8px 4px 6px">Алгоритмы</div>' +
       lines.map(([n, ok]) => '<div class="algo-line"><span class="nm">' + n + '</span><span class="st ' + (ok?'yes':'no') + '">' + (ok?'активен':'—') + '</span></div>').join('');
+    drawGraphGrowth(a.knowledge_graph);
     loadTopQuestions();
   } catch {
     grid.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--danger)">Сервер недоступен — запусти Mirro через лаунчер.</div>';
   }
+}
+
+function drawGraphGrowth(kg) {
+  const cv = document.getElementById('cvGraphGrowth');
+  const meta = document.getElementById('graphGrowthMeta');
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  if (!kg) { if (meta) meta.textContent='граф не загружен'; return; }
+  const n = kg.nodes||0, e = kg.edges||0;
+  if (meta) meta.textContent='узлов: ' + n.toLocaleString() + ' · рёбер: ' + e.toLocaleString() + ' · плотность: ' + (kg.density||(e/Math.max(1,n))).toFixed(3);
+  ctx.fillStyle='#0c1220'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#9aa0b5'; ctx.font='12px sans-serif';
+  ctx.fillText('nodes: ' + n.toLocaleString(), 10, 20);
+  ctx.strokeStyle='#d8231c'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(10, cv.height-30);
+  ctx.lineTo(cv.width-10, cv.height-30); ctx.stroke();
 }
 
 async function loadTopQuestions() {

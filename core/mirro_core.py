@@ -1221,6 +1221,35 @@ class MirroAPI(BaseHTTPRequestHandler):
             handled = False
         return handled
 
+    def _graph_growth_history(self, graph, limit=60):
+        """Дописывает текущий снимок роста графа (узлы/рёбра + метка времени) в
+        data/graph_story.jsonl и возвращает последние <limit> точек для дашборда.
+        Один return: list[dict]."""
+        import datetime as _dt
+        points = []
+        try:
+            story = MIRRO_HOME / "data" / "graph_story.jsonl"
+            try:
+                story.parent.mkdir(parents=True, exist_ok=True)
+                with open(story, "a", encoding="utf-8") as fh:
+                    fh.write(json.dumps({
+                        "ts": _dt.datetime.now().isoformat(timespec="seconds"),
+                        "nodes": len(graph.nodes),
+                        "edges": len(graph.edges),
+                    }, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
+            if story.exists():
+                lines = [l for l in story.read_text("utf-8").splitlines() if l.strip()][-limit:]
+                for line in lines:
+                    try:
+                        points.append(json.loads(line))
+                    except Exception:
+                        pass
+        except Exception:
+            points = []
+        return points
+
     def _learn_report(self):
         """Живой отчёт об обучении Mirro: реальные веса MLP, статус, метрики.
 
@@ -1250,6 +1279,12 @@ class MirroAPI(BaseHTTPRequestHandler):
             pass
         report["clusters"] = {k: v.get("examples", 0) for k, v in core.get_cluster_info().items()}
         report["clusters_calls"] = dict(core.stats.get("clusters_used", {}))
+        # Рост графа знаний во времени (для дашборда): последние точки узлов/рёбер
+        try:
+            from algos.knowledge_graph import kg as _kg_page
+            report["graph_story"] = self._graph_growth_history(_kg_page)
+        except Exception:
+            report["graph_story"] = []
         # Соответствие весов формату «Мозг Мирро» в Мейсто (f0..f3) — если MLP,
         # отдаём и выходные h*_out, и плоские f* для простого предсказания.
         return report
@@ -1320,6 +1355,12 @@ class MirroAPI(BaseHTTPRequestHandler):
                                      str(response.get("content", "")).lower()) if w not in _MS_STOP]
                             if topic and words:
                                 _kg3.hebbian_learn(topic, words[0], amount=0.05)
+                                # персистентно сохраняем обученное ребро, чтобы оно
+                                # не терялось между запусками сервера
+                                try:
+                                    _kg3.save(MODELS / "knowledge_graph.pkl")
+                                except Exception:
+                                    pass
                         except Exception:
                             pass
             except Exception:
@@ -1484,6 +1525,17 @@ def _seed_knowledge_graph():
             ("Память", "укрепляет", "понимание"),
             ("Граф", "хранит", "связи"),
             ("Алгоритм", "решает", "задачу"),
+            # --- осмысленные связи нейросети и машинного обучения ---
+            ("Нейросеть", "состоит из", "нейрон"),
+            ("Нейросеть", "обучается на", "данные"),
+            ("Нейросеть", "находит", "закономерности"),
+            ("Нейросеть", "использует", "алгоритм"),
+            ("Обучение", "меняет", "веса"),
+            ("Веса", "хранят", "знание"),
+            ("Знание", "лежит в", "связях"),
+            ("Машинное обучение", "изучает", "данные"),
+            ("Модель", "обучается на", "данные"),
+            ("Интеллект", "растёт через", "обучение"),
             # --- постоянные знания о мире (чтобы граф не был пуст) ---
             ("Вода", "кипит при", "100 градусов"),
             ("Земля", "вращается вокруг", "Солнце"),
@@ -1610,6 +1662,14 @@ def _seed_knowledge_graph():
             except Exception:
                 pass
         print(f"  Граф знаний готов: {kg.summary()} (извлечено из корпуса: {total}, из кэша: {prev_edges})")
+        # Чистим мусор: шумовые предикаты («это/есть/если») и корпусные узлы-фразы,
+        # чтобы граф состоял из чистых понятий и осмысленных связей
+        try:
+            removed = kg.prune_noise()
+            if removed:
+                print(f"  Убрано мусора из графа: {removed} элементов")
+        except Exception:
+            pass
         # Связываем функции базы знаний с графом, чтобы «куча функций» стала
         # частью связей (каждая функция — узел с рёбрами к своим понятиям)
         try:
@@ -1633,6 +1693,22 @@ def _seed_knowledge_graph():
             cb_edges = build_concept_bridges()
             if cb_edges:
                 print(f"  Мостов между понятиями добавлено: {cb_edges}")
+        except Exception:
+            pass
+        # Связываем изолированные узлы-сироты с ближайшими темами
+        try:
+            from algos.knowledge_graph import link_orphans
+            lo_edges = link_orphans(max_word_len=20, max_edges=1500)
+            if lo_edges:
+                print(f"  Изолированных узлов связано: {lo_edges}")
+        except Exception:
+            pass
+        # Предсказываем недостающие связи по общим соседям
+        try:
+            from algos.knowledge_graph import predict_links
+            pl_edges = predict_links(min_common=3, max_edges=1500, weight=0.3)
+            if pl_edges:
+                print(f"  Предсказано недостающих связей: {pl_edges}")
         except Exception:
             pass
         # Сохраняем граф на диск, чтобы знания не терялись при перезапуске
