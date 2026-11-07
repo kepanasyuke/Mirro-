@@ -70,6 +70,25 @@ class MirroAlgorithms:
             "ал": "ть", "ил": "ть", "лась": "ться", "лись": "ться",
         }
         self.stem_exceptions_ru = {"человек": "человек", "люди": "человек", "детей": "ребенок", "дети": "ребенок"}
+        # Словарь синонимов для поиска: разные слова -> один канонический стем.
+        # Позволяет вопросам «автомобиль/машина», «сеть/нейросеть», «мозг/нервная система»
+        # находить одни и те же документы.
+        self.synonyms_ru = {
+            "автомобиль": "машина", "авто": "машина", "машин": "машина",
+            "приложение": "программ", "прога": "программ",
+            "нейросеть": "нейронн", "нейро": "нейронн",
+            "мозг": "мозг", "сердце": "сердц",
+            "ученый": "учен", "учёный": "учен",
+            "нлс": "нейронн", "ai": "ии", "ии": "ии",
+            "быстрый": "быстр", "скорый": "быстр", "медленный": "медлен",
+        }
+        # морфологические исключения (род/число/падеж) — дополнительно к stem_exceptions
+        self.morph_exceptions = {
+            "дети": "ребен", "ребёнок": "ребен", "детей": "ребен",
+            "люди": "человек", "человека": "человек", "человеку": "человек",
+            "овцы": "овц", "овца": "овц",
+            "времени": "врем", "время": "врем",
+        }
 
         # Стоп-слова
         self.stop_words = {
@@ -319,21 +338,34 @@ class MirroAlgorithms:
         stemmed = []
         for w in words:
             if w not in self.stop_words and len(w) >= 3:
-                # Кэш стемминга
-                if w in self._stem_cache:
-                    stemmed.append(self._stem_cache[w])
+                # Кэш стемминга (только как ускоритель; синонимизацию применяем всегда)
+                cached = self._stem_cache.get(w)
+                if cached is not None:
+                    stemmed.append(self._apply_synonym(w, cached))
+                    continue
+                original_w = w
+                if w in self.morph_exceptions:
+                    w = self.morph_exceptions[w]
+                elif w in self.stem_exceptions_ru:
+                    w = self.stem_exceptions_ru[w]
                 else:
-                    original_w = w
-                    if w in self.stem_exceptions_ru:
-                        w = self.stem_exceptions_ru[w]
-                    else:
-                        for suffix, replacement in self.stem_rules_ru.items():
-                            if w.endswith(suffix) and len(w) > len(suffix) + 2:
-                                w = w[:-len(suffix)] + replacement
-                                break
-                    self._stem_cache[original_w] = w
-                    stemmed.append(w)
+                    for suffix, replacement in self.stem_rules_ru.items():
+                        if w.endswith(suffix) and len(w) > len(suffix) + 2:
+                            w = w[:-len(suffix)] + replacement
+                            break
+                w = self._apply_synonym(original_w, w)
+                self._stem_cache[original_w] = w
+                stemmed.append(w)
         return stemmed
+
+    def _apply_synonym(self, word, stem):
+        """Канонизирует стем через словарь синонимов (по исходному слову И по стему).
+        Один return: str."""
+        if word in self.synonyms_ru:
+            return self.synonyms_ru[word]
+        if stem in self.synonyms_ru:
+            return self.synonyms_ru[stem]
+        return stem
 
     # ========================
     #  BUILD INDEX
@@ -1145,6 +1177,31 @@ class MirroAlgorithms:
                 scored.append((combined, out, cl))
         return scored
 
+    def _semantic_rerank(self, query, candidates):
+        """Второй проход: переоценивает кандидатов по ОХВАТУ ТЕМЫ вопроса
+        (доля стем-слов вопроса, найденных в ответе), а не только по
+        сырому score. Возвращает отранжированный список (score, out, cl),
+        где итоговый = 0.6*старый + 0.4*покрытие темы. Мягкий: если нет
+        пересечения слов — оставляет исходный порядок. Один return: list."""
+        q_set = {self.tokenize(w)[0] for w in query.split() if self.tokenize(w)} if query else set()
+        if not q_set:
+            return candidates
+        ranked = []
+        # нормируем raw score к [0,1] для стабильного веса
+        scores = [c[0] for c in candidates] or [0.0]
+        lo, hi = min(scores), max(scores)
+        rng = (hi - lo) or 1.0
+        for sc, out, cl in candidates:
+            out_set = set(self.tokenize(out)) if out else set()
+            cov = len(q_set & out_set) / max(len(q_set), 1) if out_set else 0.0
+            norm = (sc - lo) / rng
+            # нулевой охват темы = явно мимо → штраф, чтобы релевантность не проигрывала
+            penalty = 0.25 if cov < 0.1 else 0.0
+            final = 0.5 * norm + 0.5 * min(cov, 1.0) - penalty
+            ranked.append((final, out, cl))
+        ranked.sort(key=lambda x: -x[0])
+        return ranked
+
     def _pick_3_parts(self, scored):
         """Берёт топ-3 ответа из разных кластеров. Один return: list строк."""
         scored.sort(key=lambda x: -x[0])
@@ -1183,7 +1240,7 @@ class MirroAlgorithms:
             if results:
                 scored = self._score_answers(query, results)
                 if scored:
-                    parts = self._pick_3_parts(scored)
+                    parts = self._pick_3_parts(self._semantic_rerank(query, scored))
                     if parts:
                         combined = self._summarize_parts(parts, max_len)
                         corrected, _ = self.self_correct(query, combined)

@@ -230,3 +230,28 @@ def greet_name(content, query):
     except Exception:
         out = content if isinstance(content, str) else str(content or "")
     return out
+
+
+def adapt_style(content, query):
+    """Адаптирует длину ответа под предпочтение пользователя из профиля
+    (verbosity: -1 = кратко, +1 = подробно). Длинный ответ для «кратко»
+    сжимается до первых двух предложений + подсказки. Один return: str."""
+    out = content if isinstance(content, str) else str(content or "")
+    try:
+        prof = load_profile()
+        v = prof.get("verbosity", 0.0)
+        if v is None:
+            return out
+        # порог: при заметном предпочтении «кратко» (verbosity < -0.3)
+        if v < -0.3 and len(out) > 600:
+            import re as _re_a
+            sents = _re_a.split(r"(?<=[.!?])\s+", out.strip())
+            if len(sents) > 3:
+                short = " ".join(sents[:2]).strip()
+                out = short + " Хочешь подробнее — скажи, разверну."
+        elif v > 0.3 and len(out) < 300:
+            # «подробно»: добавляем приглашение развернуть (я дам больше по запросу)
+            out = out.rstrip() + " Могу раскрыть ещё детальнее — спроси."
+    except Exception:
+        out = content if isinstance(content, str) else str(content or "")
+    return out

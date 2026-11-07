@@ -647,6 +647,87 @@ class KnowledgeGraph:
     def summary(self):
         return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей"
 
+    def topic_clusters(self, max_clusters=6, max_nodes=60):
+        """Выделяет кластеры тем в графе (простая агломеративная кластеризация):
+        стартуем с центральных узлов и «притягиваем» их соседей, группируя по
+        общности связей. Возвращает список (тема-центр, [узлы]). Плюс мосты —
+        узлы, которые соединяют несколько кластеров между собой.
+
+        Один return: dict {'clusters': [...], 'bridges': [...], 'edges': ...}."""
+        cache_key = ("clusters", len(self.edges))
+        hit = self._cache.get(cache_key)
+        if hit is not None:
+            return dict(hit)
+        # топ-узлы по степени как потенциальные центры тем (без мусорных хабов)
+        junk = {"означает", "понятно", "надеюсь", "такой", "пример", "связано",
+                "можно", "это", "что", "как", "ещё", "тоже", "вроде", "типа",
+                "короче", "собственно", "наверное", "вероятно", "обычно",
+                "конечно", "именно", "причём", "вот",
+                "кроме того", "может быть", "во-первых", "во вторых", "во" "-первых",
+                "делать", "делает", "надо", "нужно", "можно ли", "если",
+                "смысл", "простыми", "словами", "просто", "работает", "функция",
+                "вывод", "затем", "далее", "рассмотрим", "скажем", "допустим"}
+        degree = {}
+        for (s, p, d) in self.edges:
+            degree[s] = degree.get(s, 0) + 1
+            degree[d] = degree.get(d, 0) + 1
+        # структурный фильтр: исключаем узлы, чьи связи почти все через мусорный
+        # предикат «связано_с» — это корпусные хабы-связки, а не «темы знаний»
+        good_pred_share = {}
+        edge_totals = {}
+        noisy_preds = {"связано_с", "связано"}
+        for (s, p, d) in self.edges:
+            edge_totals[s] = edge_totals.get(s, 0) + 1
+            edge_totals[d] = edge_totals.get(d, 0) + 1
+            if p not in noisy_preds:
+                good_pred_share[s] = good_pred_share.get(s, 0) + 1
+                good_pred_share[d] = good_pred_share.get(d, 0) + 1
+        capacity = min(len(degree), max_nodes)
+        ranked = []
+        for n, dd in degree.items():
+            if n in junk or len(n) <= 3:
+                continue
+            total = edge_totals.get(n, dd)
+            good = good_pred_share.get(n, 0)
+            # узел должен иметь хоть часть осмысленных предикатов (иначе мусор-хаб)
+            if total > 0 and good / total < 0.2:
+                continue
+            ranked.append((dd, n))
+        ranked.sort(key=lambda x: -x[0])
+        centers = [n for _d, n in ranked[:capacity]]
+        used = set()
+        clusters = []
+        for center in centers:
+            if center in used:
+                continue
+            member = {center}
+            used.add(center)
+            # соседи центра + их соседи (2 хопа) — «тема»
+            for p, other, w in self.neighbors(center):
+                if other not in used and len(member) < 8:
+                    member.add(other)
+                    used.add(other)
+                if len(member) >= 8:
+                    break
+            clusters.append((center, list(member)))
+            if len(clusters) >= max_clusters:
+                break
+        # мосты: узлы, чьи соседи принадлежат разным кластерам
+        bridge_set = {}
+        for name in used:
+            member_of = [cl for cl, mem in clusters if name in mem]
+            if len(member_of) > 1:
+                bridge_set[name] = len(member_of)
+        bridges = sorted(bridge_set.items(), key=lambda x: -x[1])[:10]
+        result = {"clusters": [(c, m) for c, m in clusters],
+                  "bridges": [{"node": n, "topics": k} for n, k in bridges],
+                  "edges": len(self.edges)}
+        try:
+            self._cache[cache_key] = result
+        except Exception:
+            pass
+        return result
+
 
 # Общий синглтон графа для всего процесса
 kg = KnowledgeGraph()

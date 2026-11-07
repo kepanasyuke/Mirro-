@@ -1233,8 +1233,10 @@ def build_response(prompt, cluster, context=""):
         # персональность: если знаем имя пользователя, обращаемся по имени
         try:
             if result.get("strategy") not in ("greeting", "dialog", "error", "user_profile"):
-                from algos.user_profile import greet_name
+                from algos.user_profile import greet_name, adapt_style
                 result["content"] = greet_name(result.get("content", ""), prompt)
+                # адаптация стиля: сжимаем/приглашаем по предпочтению длины в профиле
+                result["content"] = adapt_style(result.get("content", ""), prompt)
         except Exception:
             pass
         # эмпатичность: под тон собеседника добавляем тёплую заставку
@@ -1495,7 +1497,52 @@ class MirroAPI(BaseHTTPRequestHandler):
                 else:
                     top = _kg2.centrality(top_n=8)
                     payload["central"] = [n for n, _d in top["top"]]
+                # метрики графа: кластеры тем и мосты между областями
+                try:
+                    tc = _kg2.topic_clusters(max_clusters=5, max_nodes=50)
+                    payload["clusters"] = [{"topic": c, "members": m[:8]}
+                                           for c, m in tc.get("clusters", [])]
+                    payload["bridges"] = tc.get("bridges", [])
+                except Exception:
+                    payload["clusters"] = []
+                    payload["bridges"] = []
                 self._json(payload)
+            except Exception as e:
+                self._json({"error": str(e)}, 500)
+        elif route == "/v1/report":
+            # сводный отчёт о состоянии Mirro: агрегированная статистика одним эндпоинтом
+            try:
+                import datetime as _dt_rep
+                rep = {"name": "Mirro", "version": "0.3",
+                       "calls": core.stats.get("calls", 0),
+                       "generated_at": _dt_rep.datetime.now().isoformat(timespec="seconds")}
+                # база/индекс
+                algo = _grab_algo()
+                clusters = {}
+                for _i, _o, cl in getattr(algo, "examples", [])[:1]:
+                    clusters = {}
+                for _i, _o, cl in getattr(algo, "examples", []):
+                    clusters[cl] = clusters.get(cl, 0) + 1
+                rep["index"] = {"examples": len(getattr(algo, "examples", [])),
+                                "vocab": len(getattr(algo, "doc_freq", {})),
+                                "clusters": clusters}
+                # граф
+                from algos.knowledge_graph import kg as _kg_rep
+                rep["graph"] = {"nodes": len(_kg_rep.nodes), "edges": len(_kg_rep.edges)}
+                try:
+                    conn = _kg_rep.connectivity(top_n=3)
+                    rep["graph"]["components"] = conn.get("components", 0)
+                    rep["graph"]["isolated"] = conn.get("isolated", 0)
+                except Exception:
+                    pass
+                # корпус
+                try:
+                    rep["corpus_total"] = core.corpus_total()
+                except Exception:
+                    rep["corpus_total"] = 0
+                # бэкап
+                rep["backup"] = core.status().get("backup", {})
+                self._json(rep)
             except Exception as e:
                 self._json({"error": str(e)}, 500)
         elif route == "/v1/knowledge":
