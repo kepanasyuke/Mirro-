@@ -847,15 +847,36 @@ function addMsg(role, text) {
   d.innerHTML = '<div class="av">' + av + '</div><div class="body">' +
     '<div class="bubble">' + body + '</div>' +
     '<div class="meta">' + new Date().toLocaleTimeString() + '</div>' +
-    (role === 'bot' ? '<div class="acts"><button onclick="rate(this,1,true)">+ Полезно</button><button onclick="rate(this,-1,false)">— Не то</button></div>' : '') +
+    (role === 'bot' ? '<div class="acts"><button onclick="rate(this,1,true)">+ Полезно</button><button onclick="rate(this,-1,false)">— Не то</button><button onclick="improve(this)">↻ Улучшить</button></div>' : '') +
     '</div>';
   msgsEl.appendChild(d);
   scrollTop();
   return d;
 }
 
+/* Переформулировка ответа: просит сервер собрать ответ иначе/лучше */
+async function improve(btn) {
+  const body = btn.closest('.body');
+  const bubble = body.querySelector('.bubble');
+  const q = lastQuery || '';
+  const prev = bubble.textContent || '';
+  if (!q) { toast('Сначала задай вопрос', 'err'); return; }
+  btn.disabled = true;
+  try {
+    const r = await fetch(API + '/v1/improve', {
+      method: 'POST', headers: {'Content-Type':'application/json', ...AUTH_HDR},
+      body: JSON.stringify({query: q, response: prev})
+    });
+    const d = await r.json();
+    const better = d.content || d.error || 'Не удалось улучшить';
+    bubble.innerHTML = renderContent(better);
+    btn.closest('.acts').querySelectorAll('button').forEach(b => { b.classList.add('done'); b.disabled = true; });
+    toast('Переформулировала ответ.', 'ok');
+  } catch { toast('Не удалось улучшить', 'err'); btn.disabled = false; }
+}
+
 /* Печать ответа посимвольно (живой набор текста) */
-async function addBotTyping(fullText, reasoning) {
+async function addBotTyping(fullText, reasoning, plan, source) {
   welcomeEl?.remove();
   const d = document.createElement('div');
   d.className = 'msg bot';
@@ -872,6 +893,15 @@ async function addBotTyping(fullText, reasoning) {
     rb.innerHTML = '<summary>думала</summary><div class="think-body">' +
       esc(String(reasoning)) + '</div>';
     bubble.parentNode.insertBefore(rb, bubble);
+  }
+
+  // агент-план: из каких источников Mirro строит ответ
+  if (plan && String(plan).trim().length > 3) {
+    const pb = document.createElement('details');
+    pb.className = 'think plan';
+    pb.innerHTML = '<summary>план</summary><div class="think-body">' +
+      esc(String(plan)) + (source ? '<div class="src-chip">источник: ' + esc(String(source)) + '</div>' : '') + '</div>';
+    bubble.parentNode.insertBefore(pb, bubble);
   }
 
   // если ответ короткий (<=140) — печатаем посимвольно, иначе сразу целиком
@@ -929,8 +959,10 @@ async function sendChat() {
     const d = await r.json();
     const reply = d.choices?.[0]?.message?.content || 'Нет ответа';
     const reasoning = d.choices?.[0]?.message?.reasoning_content || '';
+    const plan = d.choices?.[0]?.message?.plan || '';
+    const source = d.choices?.[0]?.message?.source || '';
     document.getElementById('typing')?.remove();
-    await addBotTyping(reply, reasoning);   // печать ответа посимвольно («мысли» сверху)
+    await addBotTyping(reply, reasoning, plan, source);   // печать ответа («мысли»+план сверху)
     history.push({q:text, a:reply, ts:new Date().toISOString()});
     if (history.length > 200) history.shift();
     localStorage.setItem('mirro_history', JSON.stringify(history));

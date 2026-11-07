@@ -575,6 +575,52 @@ def try_tfidf(query, cluster):
         ans = []
     return ans
 
+
+def _semantic_expand(query):
+    """Смысловое расширение запроса: ассоциированные термины из корпусной
+    матрицы со-встречаемости (query_expansion) + близкие понятия графа.
+    Один return: строка — исходный запрос + добавленные термины."""
+    q = (query or "").strip()
+    extra = []
+    if not q:
+        return q
+    # 1) корпусные ассоциации (синонимы/со-встречаемые термины)
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from scripts.algorithms import algo
+        extra += algo.query_expansion(q, top_terms=4)
+    except Exception:
+        extra = extra
+    # 2) близкие понятия графа (смысловая схожесть окрестностей)
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from algos.knowledge_graph import kg as _kg
+        for w in _tokenize_for_search(q)[:6]:
+            close = _kg.closest_concepts(w, top_n=2, min_sim=0.05)
+            extra += [c for c, _sim in close]
+    except Exception:
+        pass
+    expanded = q
+    if extra:
+        seen = set(_tokenize_for_search(q))
+        add = " ".join(dict.fromkeys([t for t in extra if t not in seen]))[:400]
+        if add:
+            expanded = (q + " " + add).strip()
+    return expanded
+
+
+def _search_best(prompt, cluster):
+    """TF-IDF → RAG → выбор лучшего кандидата по кластеру.
+    Единственный return: кортеж (best_answer, best_score, has_result)."""
+    q = _semantic_expand(prompt)
+    results = try_tfidf(q, cluster)
+    if not results:
+        results = try_rag(q, cluster)
+    _, choose_best, _ = _reasoning()
+    best_answer, best_score, _reason = choose_best(prompt, results, preferred=cluster)
+    has_result = best_answer is not None and best_score > 1.0
+    return best_answer, best_score, has_result
+
 def try_rag(query, cluster):
     ans = []
     try:
@@ -971,6 +1017,23 @@ def _voice_or_none(raw, prompt, strategy):
     return result
 
 
+def _graph_infer_unknown(prompt):
+    """Вывод знаний из графа для неизвестных вопросов (нет прямого ответа в базе).
+    Если в вопросе есть узлы графа и по ним строятся цепочки — возвращает связный
+    «вывод», иначе None. Один return: dict-ответ или None."""
+    result = None
+    try:
+        sys.path.insert(0, str(MIRRO_HOME))
+        from algos.graph_infer import try_infer_unknown
+        from algos.knowledge_graph import kg as _kg
+        raw = try_infer_unknown(_kg, prompt)
+        if raw:
+            result = _voice_or_none(raw, prompt, "graph_infer")
+    except Exception:
+        result = None
+    return result
+
+
 def _fallback_chain(prompt):
     """Финальная цепочка: веб → провайдер → подсказка. Единственный return: dict."""
     web_answer = try_web(prompt)
@@ -1021,9 +1084,15 @@ def build_response(prompt, cluster, context=""):
                         result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
                         result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
                 elif not has_result and cluster in ("ru", "knowledge"):
-                    cl_web = try_web(prompt)
-                    result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
-                    result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
+                    # нет прямого ответа — пробуем вывести знания из графа по связям
+                    ginf = _graph_infer_unknown(prompt)
+                    if ginf is not None:
+                        result = ginf
+                        result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
+                    else:
+                        cl_web = try_web(prompt)
+                        result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
+                        result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
                 elif has_result:
                     result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
                     result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
@@ -1068,6 +1137,16 @@ def build_response(prompt, cluster, context=""):
         thinking.append(f"Итог: {strat_ru}.")
     except Exception:
         pass
+    # агент-план: явные шаги решения + источник, чтобы было видно, откуда ответ
+    try:
+        plan_text = ("Куда я смотрела: свой словарь понятий → связи в графе знаний → "
+                     "база примеров → поиск по интернету (в этом порядке, пока не найду). ")
+        plan_text += f"Сработал источник: {result.get('source', 'разные источники')}."
+        result["plan"] = plan_text
+    except Exception:
+        result["plan"] = ""
+    result["thinking"] = thinking
+    return result
     result["thinking"] = thinking
     return result
 
@@ -1379,7 +1458,9 @@ class MirroAPI(BaseHTTPRequestHandler):
                 "usage": {"prompt_tokens": len(prompt)//4, "completion_tokens": len(content)//4},
                 "choices": [{"index": 0, "message": {"role": "assistant",
                              "content": content,
-                             "reasoning_content": reasoning}}]}
+                             "reasoning_content": reasoning,
+                             "plan": response.get("plan", ""),
+                             "source": response.get("source", "")}}]}
 
     def _handle_chat(self, body):
         """Обрабатывает POST /v1/chat/completions. Единственный return: None.
@@ -1482,6 +1563,8 @@ class MirroAPI(BaseHTTPRequestHandler):
                     self._json({"error": "bad request"}, 400)
             elif route == "/v1/feedback":
                 self._post_feedback()
+            elif route == "/v1/improve":
+                self._post_improve()
             elif route == "/v1/self-learn":
                 self._post_self_learn()
             elif route == "/v1/brain-eval":
@@ -1524,6 +1607,38 @@ class MirroAPI(BaseHTTPRequestHandler):
             self._json({"status": "ok" + kg_note})
         except Exception as e:
             self._json({"status": "error", "message": str(e)}, 500)
+
+    def _post_improve(self):
+        """Переформулировка ответа по запросу «улучшить»: берёт вопрос и прошлый
+        ответ, повторяет поиск с бо́льшим охватом и возвращает альтернативную
+        формулировку либо отредактированный вариант. Один return: None."""
+        try:
+            body = self._read()
+            q = (body.get("query") or "").strip()
+            prev = (body.get("response") or "").strip()
+            if not q:
+                self._json({"error": "no query"}, 400)
+                return None
+            # расширенный поиск: больше кандидатов → другой набор для лучшей фразы
+            from scripts.algorithms import algo as _imp_algo
+            q2 = _semantic_expand(q)
+            results = _imp_algo.search_tfidf(q2, top_n=8)
+            _, choose_best, _ = _reasoning()
+            best, sc, _r = choose_best(q, results, preferred=None)
+            improved = None
+            if best and not answer_looks_bad(q, best) and best.strip() != prev.strip():
+                improved = _voice(best, q, "base")[:2500]
+            if not improved:
+                # нет лучшего кандидата — перефразируем прошлый ответ короче и проще
+                improved = prev[:1200]
+                short = improved[:60].rstrip()
+                if short:
+                    improved = short + " — если коротко. Хочешь, разложу подробнее?"
+            core.log_call(q, core.classify_task(q), "improve", 1, True)
+            self._json({"content": improved})
+        except Exception as e:
+            self._json({"error": str(e)}, 500)
+        return None
 
     def _post_self_learn(self):
         try:

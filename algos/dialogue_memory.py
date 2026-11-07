@@ -12,7 +12,25 @@
 Лёгкий, без внешних библиотек; состояние хранится в памяти процесса.
 """
 import re as _re
+import os
 from collections import deque
+
+# ----- персистентная память диалога (между сессиями) -----
+_MEM_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
+_MEM_FILE = os.path.join(_MEM_DIR, "dialogue_memory.json")
+
+
+def _default_mem_path():
+    """Путь к файлу персистентной памяти (создаёт каталог при необходимости).
+    Один return: str."""
+    d = os.path.dirname(_MEM_FILE)
+    if not os.path.isdir(d):
+        try:
+            os.makedirs(d, exist_ok=True)
+        except Exception:
+            pass
+    return _MEM_FILE
+
 
 # стоп-слова для извлечения «темы» из реплики
 _STOP = set(("и","или","а","но","то","как","что","это","мне","меня","меня","ты","я",
@@ -31,6 +49,64 @@ class DialogueMemory:
         self.emotion = 0.0                          # скользящая тональность -1..1
         self.pos_words = {"спасибо","отлично","круто","здорово","супер","люблю","нравится","помогло"}
         self.neg_words = {"плохо","грустно","злюсь","не работает","ошибка","не получается","жаль","ужас","ненавижу"}
+        self._persist_path = None
+        self.load()
+
+    # ----- персистентность между сессиями -----
+    def set_persist_path(self, path):
+        """Задаёт файл сохранения (по умолчанию data/dialogue_memory.json).
+        Один return: str."""
+        self._persist_path = path
+        return path
+
+    def _path(self):
+        """Файл персистентной памяти. Один return: str."""
+        return self._persist_path or _default_mem_path()
+
+    def load(self):
+        """Восстанавливает память из файла (если есть и корректен JSON).
+        Один return: bool."""
+        ok = False
+        try:
+            import json
+            path = self._path()
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                self.topics = deque(data.get("topics", [])[-(self.topics.maxlen or 8):],
+                                    maxlen=self.topics.maxlen)
+                self.context = deque(data.get("context", [])[-(self.context.maxlen or 30):],
+                                     maxlen=self.context.maxlen)
+                self.emotion = float(data.get("emotion", 0.0))
+                ok = True
+        except Exception:
+            ok = False
+        return ok
+
+    def save(self):
+        """Сохраняет память на диск (JSON, атомарно через tmp+replace).
+        Один return: bool."""
+        ok = False
+        try:
+            import json
+            path = self._path()
+            d = os.path.dirname(path)
+            if d and not os.path.isdir(d):
+                try:
+                    os.makedirs(d, exist_ok=True)
+                except Exception:
+                    pass
+            data = {"topics": [list(t) for t in self.topics],
+                    "context": [list(c) for c in self.context],
+                    "emotion": self.emotion}
+            tmp = str(path) + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+            os.replace(tmp, str(path))
+            ok = True
+        except Exception:
+            ok = False
+        return ok
 
     def remember(self, user_text, bot_reply=""):
         """Фиксирует реплику: тему + тональность + контекст."""
@@ -44,6 +120,7 @@ class DialogueMemory:
         delta = 0.1 if pos > neg else (-0.1 if neg > pos else 0.0)
         self.emotion = max(-1.0, min(1.0, self.emotion + delta))
         self.context.append((kw, _keywords(bot_reply)))
+        self.save()
         return kw
 
     # ----- интерфейс для try_* -----

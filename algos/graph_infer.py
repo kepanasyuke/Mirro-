@@ -109,6 +109,119 @@ def try_graph_infer(query):
     return answer
 
 
+_TOPIC_STOP = {"что", "такое", "объясни", "расскажи", "про", "значит", "поясни",
+               "это", "как", "почему", "если", "который", "работает", "напиши",
+               "покажи", "есть", "быть", "сделать", "можно", "нужно", "ещё",
+               "можно сказать", "можно попробовать", "связано с", "про понятие",
+               "если говорить", "мачу-пикчу", "переустановить ide",
+               "искусство возможного", "давай", "иначе", "вообще", "просто",
+               "смотря", "пока что", "так сказать", "связано", "связан",
+               "связь", "связан с"}
+
+_JUNK_TOPIC_MARKERS = ("можно сказать", "попробовать", "переустановить",
+                       "про понятие", "если говорить о", "связано с",
+                       "мачу-пикчу", "насколько", "хочешь", "поиграть",
+                       "обида", "дай тебе", "смотри намека")
+
+
+def _is_junk_topic(n):
+    """Мусорное ли понятие-фраза (личные обращения, «вода» из корпуса).
+    Один return: bool."""
+    nlow = (n or "").lower()
+    return any(m in nlow for m in _JUNK_TOPIC_MARKERS) or nlow in _TOPIC_STOP
+
+
+def _graph_topics(graph, query, limit=12):
+    """Узлы графа, встреченные в запросе (также по словоформе: 4-буквенный
+    префикс узла входит в текст). graph — KnowledgeGraph. Один return: list."""
+    import re as _re
+    graph = graph or kg
+    q = (query or "").lower()
+    found = []
+    for n in graph.nodes:
+        if not n or len(n) < 4 or _is_junk_topic(n):
+            continue
+        core = n.split()[0] if " " in n else n
+        if " " in n:
+            # понятие-фраза: совпадение нужно по всей фразе
+            if n in q:
+                found.append(n)
+        elif core in _TOPIC_STOP or len(core) < 4:
+            continue
+        elif core in q:
+            found.append(n)
+    seen = set()
+    uniq = []
+    for n in sorted(found, key=len, reverse=True)[:limit]:
+        if n not in seen:
+            seen.add(n)
+            uniq.append(n)
+    return uniq
+
+
+def _infer_paragraph(kg_obj, start, max_depth=2):
+    """Строит связное рассуждение от start по самым сильным рёбрам графа:
+    собрать 2-шаговые цепочки и склеить в один абзац «вывода».
+    Один return: str или None."""
+    if start not in kg_obj.nodes:
+        return None
+    text = None
+    ranked = sorted(kg_obj.neighbors(start), key=lambda r: -r[2])
+    parts = []
+    for p, other, w in ranked[:3]:
+        nxt = sorted(kg_obj.neighbors(other), key=lambda r: -r[2])
+        for p2, other2, w2 in nxt[:2]:
+            if other2 == start or other2 == other:
+                continue
+            parts.append(f"{start} {p} {other}, а это {p2} {other2}")
+    if parts:
+        text = ("Если говорить о «" + start + "», в моих связях выходит так: "
+                + "; ".join(dict.fromkeys(parts[:4])) + ".")
+    return text
+
+
+def try_infer_unknown(graph, query):
+    """Вывод знаний для неизвестных вопросов: когда прямого ответа нет, берём
+    узлы графа из вопроса и строим цепочку рассуждений по сильным связям.
+    graph — GRAPH объект (KnowledgeGraph), НЕ модуль kg.
+    Один return: str или None."""
+    if graph is None:
+        return None
+    tokens = _graph_topics(graph, query)
+    # если узлов в вопросе нет — используем понятия, схожие по основе словам запроса
+    if not tokens and len(graph.nodes) >= 3 and graph.edges:
+        tokens = _graph_topics_for_unknown(graph, query)
+    answer = None
+    for start in tokens:
+        block = _infer_paragraph(graph, start, max_depth=2)
+        if block:
+            answer = block
+            break
+    return answer
+
+
+def _graph_topics_for_unknown(graph, query):
+    """Когда в вопросе нет точных узлов графа, возвращает понятия, чья основа
+    (стем-подобный 4-префикс) близка словам запроса. graph — KnowledgeGraph.
+    Один return: list."""
+    import re as _re
+    graph = graph or kg
+    q = (query or "").lower()
+    words = [w for w in _re.findall(r"[а-яёa-z]{4,}", q) if w not in _TOPIC_STOP]
+    scores = []
+    for n in graph.nodes:
+        if not n or len(n) < 4 or _is_junk_topic(n):
+            continue
+        core = n.split()[0] if " " in n else n
+        for w in words[:8]:
+            prefix = core[:4]
+            if prefix == w[:4] and len(core) >= len(w) - 2:
+                scores.append((len(core), n))
+                break
+    scores.sort(key=lambda kv: -kv[0])
+    return [n for _, n in scores[:5]]
+
+
 # ============================================================
 #  Интеграция опыта и динамический вывод (на реальном KnowledgeGraph:
 #  edges[(src,pred,dst)] -> weight). Опыт — список латентных паттернов
