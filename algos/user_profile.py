@@ -44,27 +44,41 @@ def _path():
     return _PROF_FILE
 
 
-def load_profile():
-    """Читает профиль из диска; если нет/битый — пустой. Один return: dict."""
-    prof = _default_profile()
+def _load_all():
+    """Читает все профили из диска: {user_id: profile}. Один return: dict."""
+    all_profiles = {}
     try:
         if os.path.exists(_path()):
             with open(_path(), "r", encoding="utf-8") as f:
                 data = json.load(f)
-            prof["name"] = data.get("name")
-            prof["topics"] = list(data.get("topics", []))[:20]
-            prof["verbosity"] = float(data.get("verbosity", 0.0))
-            prof["remarks"] = list(data.get("remarks", []))[:30]
+            if isinstance(data, dict):
+                all_profiles = {str(k): v for k, v in data.items() if isinstance(v, dict)}
     except Exception:
-        prof = _default_profile()
+        all_profiles = {}
+    return all_profiles
+
+
+def load_profile(user_id="default"):
+    """Читает профиль конкретного пользователя (по умолчанию — единый).
+    Если нет/битый — пустой. Один return: dict."""
+    all_p = _load_all()
+    prof = _default_profile()
+    entry = all_p.get(str(user_id))
+    if entry:
+        prof["name"] = entry.get("name")
+        prof["topics"] = list(entry.get("topics", []))[:20]
+        prof["verbosity"] = float(entry.get("verbosity", 0.0))
+        prof["remarks"] = list(entry.get("remarks", []))[:30]
     return prof
 
 
-def save_profile(prof):
-    """Атомарно сохраняет профиль на диск. Один return: bool."""
+def save_profile(prof, user_id="default"):
+    """Атомарно сохраняет профиль пользователя (мультипрофиль: по ключу user_id).
+    Один return: bool."""
     ok = False
     try:
-        data = {
+        all_p = _load_all()
+        all_p[str(user_id)] = {
             "name": prof.get("name"),
             "topics": prof.get("topics", [])[:20],
             "verbosity": prof.get("verbosity", 0.0),
@@ -72,7 +86,7 @@ def save_profile(prof):
         }
         tmp = str(_path()) + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
+            json.dump(all_p, f, ensure_ascii=False)
         os.replace(tmp, str(_path()))
         ok = True
     except Exception:
@@ -181,13 +195,14 @@ def _say_remember(prof, q):
     return _remember_text(prof, q)
 
 
-def try_user_profile(query):
+def try_user_profile(query, user_id="default"):
     """Точка входа для try_директ: отвечает на вопросы о знании пользователя,
     а также молча запоминает имя/темы/длину и отвечает None (не перебивает).
+    Многопользовательский режим: user_id выбирает профиль.
     q — вопрос. Один return: str или None."""
     q = (query or "").strip().lower()
     ans = None
-    prof = load_profile()
+    prof = load_profile(user_id)
     if any(w in q for w in ("как меня зовут", "как зовут", "помнишь меня",
                             "что ты обо мне", "ты меня знаешь", "моё имя")):
         ans = _say_remember(prof, q)
@@ -196,7 +211,7 @@ def try_user_profile(query):
                               "покороче", "коротко", "в двух словах", "кратко")):
         new_prof, _ch = learn_from_message(prof, query)
         if _ch:
-            save_profile(new_prof)
+            save_profile(new_prof, user_id)
     return ans
 
 

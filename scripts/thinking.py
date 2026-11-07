@@ -167,16 +167,33 @@ class MirroThinking:
                 result = cached
         if result is None:
             # 2. Wikidata (основной, быстрый, русский)
-            result = self._search_wikidata(query)
-            if not result.get("title"):
+            try:
+                search_ok = True
+                result = self._search_wikidata(query)
+            except Exception:
+                search_ok = False
+                result = {}
+            if not search_ok or not result.get("title"):
                 # 3. Фоллбэк: Wikipedia параллельно
-                result = self._search_wikipedia_parallel(query)
+                try:
+                    result = self._search_wikipedia_parallel(query)
+                except Exception:
+                    result = {}
 
             if not result or not result.get("title"):
-                result = {"title": "", "summary": "Не удалось найти в сети.", "url": "", "source": "none"}
+                # 4. ОФЛАЙН-ФОЛЛБЭК: сеть недоступна или пусто → ищем лучшее
+                #    совпадение в ЛОКАЛЬНОМ кэше по ключевым словам (а не пустоту)
+                offline = self._cache_fallback(query)
+                if offline:
+                    offline["offline"] = True
+                    result = offline
+                else:
+                    result = {"title": "", "summary": "Не удалось найти в сети (офлайн).", "url": "", "source": "none"}
 
-            # 4. Сохранить в кэш только успешные результаты (пустоту не храним)
+            # 5. Сохранить в кэш только успешные результаты (пустоту не храним),
+            #    помечая время, чтобы знать «свежесть» данных
             if result.get("title"):
+                result["ts"] = int(time.time())
                 with self._cache_lock:
                     if len(self.web_cache) > 300:
                         self.web_cache = dict(list(self.web_cache.items())[-200:])
@@ -184,6 +201,29 @@ class MirroThinking:
                 self._save_cache()
 
         return result
+
+    def _cache_fallback(self, query, max_hits=3):
+        """Офлайн-фоллбэк: ищет в локальном кэше запись, ближайшую по словам
+        (жадный словарный разброс), чтобы хоть что-то вернуть без сети.
+        Один return: dict или None."""
+        q_words = set(_re.findall(r"[а-яёa-z]{3,}", (query or "").lower()))
+        best = None
+        best_score = 0
+        if q_words:
+            for key, entry in list(self.web_cache.items())[-300:]:
+                if not entry or not entry.get("title"):
+                    continue
+                e_words = set(_re.findall(r"[а-яёa-z]{3,}", key.lower()))
+                if not e_words:
+                    continue
+                ov = len(q_words & e_words)
+                score = ov / max(len(q_words | e_words), 1)
+                if score > 0.25 and score > best_score:
+                    best_score = score
+                    best = dict(entry)
+                if best_score > 0.6:
+                    break
+        return best
 
     def _search_wikidata(self, query: str) -> dict:
         """Поиск в Wikidata: сущность → русское описание + алиасы."""

@@ -961,22 +961,29 @@ def _try_direct_handlers(prompt):
                                                 "как сделать", "с чего начать", "составь план",
                                                 "разбей на шаги", "поэтапно"))
             if wants_steps:
-                # собираем пошаговый план: схема мышления + подзадачи
+                # собираем пошаговый план: применяем шаги к КОНКРЕТНЫМ данным вопроса,
+                # а не показываем абстракцию. Из вопроса вытаскиваем тему и элементы.
                 import re as _re_s
                 words = [w for w in _re_s.findall(r"[а-яёa-z]{4,}", ql)
                          if w not in ("чтобы", "как", "что", "это", "мне", "делать",
-                                      "сделать", "начать", "шаги", "план", "можно", "нужно")]
+                                      "сделать", "начать", "шаги", "план", "можно",
+                                      "нужно", "составь", "объясни", "разбей", "поэтапно")]
                 topic = "этой задаче"
                 if words:
                     topic = words[-1]
-                steps = [
-                    f"1. Понять суть: разберём, что нужно по «{topic}».",
-                    "2. Разбить на части: главное действие и его подготовка.",
-                    "3. Сделать последовательно: сначала первый шаг, затем следующий.",
-                    "4. Проверить результат: сходится ли с тем, что просили.",
-                    "5. Итог: зафиксировать, что получилось и что дальше.",
+                # ищем числа/факты, чтобы шаги ссылались на реальные данные
+                nums = _re_s.findall(r"\d+[,\s]?\d*", ql)
+                data_note = ""
+                if nums:
+                    data_note = f" (вижу данные: {', '.join(n.strip() for n in nums[:3])})"
+                then_steps = [
+                    f"Шаг 1. Возьми тему «{topic}»{data_note} — исходные данные на руках.",
+                    "Шаг 2. Разбей на части: главное действие и подготовка к нему.",
+                    "Шаг 3. Выполни последовательно: сделай первый шаг, затем следующий.",
+                    "Шаг 4. Проверь: сходится ли результат с тем, что просили.",
+                    f"Шаг 5. Итог по «{topic}»: зафиксируй ответ и что делать дальше.",
                 ]
-                ans = "Сделаю по шагам:\n" + "\n".join(steps)
+                ans = "Сделаю и применю к твоему вопросу:\n" + "\n".join(then_steps)
         except Exception:
             ans = None
         return ans
@@ -1431,6 +1438,43 @@ class MirroAPI(BaseHTTPRequestHandler):
                 self._json({"error": str(e)}, 500)
         elif route == "/v1/learn-report":
             self._json(self._learn_report())
+        elif route == "/v1/search":
+            # внешний поиск по базе знаний: /v1/search?q=...&top=5
+            from urllib.parse import parse_qs, urlsplit as _us
+            try:
+                pq = parse_qs(_us(self.path).query)
+                query = pq.get("q", [""])[0]
+                top = int(pq.get("top", ["5"])[0])
+                if not query:
+                    self._json({"error": "no query"}, 400)
+                else:
+                    from scripts.algorithms import algo as _alg
+                    results = _alg.search_tfidf(query, top_n=min(max(top, 1), 20))
+                    items = []
+                    for (inst, out, cl), sc in results[:min(max(top, 1), 10)]:
+                        items.append({"question": inst[:200], "answer": out[:500], "cluster": cl, "score": round(sc, 3)})
+                    self._json({"query": query, "results": items, "count": len(items)})
+            except Exception as e:
+                self._json({"error": str(e)}, 500)
+        elif route == "/v1/graph":
+            # внешний снимок графа: /v1/graph?concept=X&depth=1
+            from urllib.parse import parse_qs, urlsplit as _us2
+            try:
+                pq = parse_qs(_us2(self.path).query)
+                concept = pq.get("concept", [""])[0]
+                from algos.knowledge_graph import kg as _kg2
+                payload = {"nodes": len(_kg2.nodes), "edges": len(_kg2.edges)}
+                if concept:
+                    cc = concept.lower().strip()
+                    links = _kg2.what_links(cc)[:8]
+                    payload["concept"] = cc
+                    payload["links"] = links
+                else:
+                    top = _kg2.centrality(top_n=8)
+                    payload["central"] = [n for n, _d in top["top"]]
+                self._json(payload)
+            except Exception as e:
+                self._json({"error": str(e)}, 500)
         elif route == "/v1/knowledge":
             from urllib.parse import parse_qs, urlsplit
             try:

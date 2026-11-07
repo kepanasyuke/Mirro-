@@ -1060,17 +1060,39 @@ def try_full_explanation(query):
             parts.append(definition.strip())
     except Exception:
         parts = parts
-    # 2) ключевые связи из графа
+    # 2) ключевые связи из графа: ДЕКЛАРАТИВНАЯ речь, а не сырые цепочки.
+    # Каждая связь превращается в осмысленную фразу: «X — это то, что p к Y,
+    # потому что (через Y) связано с Z» — как люди объясняют через ассоциации.
     if start in kg.nodes:
         try:
             ranked = sorted(kg._adj.get(start, []), key=lambda r: -r[2])
             links = []
+            # предикаты, которые звучат как определение («есть», «является»)
+            definitional = {"есть", "является", "представляет", "это", "это такое"}
             for p, other, w in ranked[:4]:
                 otherc = other.split()[0] if " " in other else other
-                if otherc and otherc != start:
-                    links.append(f"{start} {p} {otherc}")
+                if not otherc or otherc == start:
+                    continue
+                pred_full = p if p else "связан с"
+                pred = pred_full.split()[0] if p else "связан с"
+                if pred in definitional:
+                    links.append(f"{start} — это {otherc}")
+                elif pred in ("влияет", "укрепляет", "порождает", "формирует", "усиливает"):
+                    links.append(f"{start} {pred_full} {otherc}")
+                else:
+                    # «X связан с Y» + добавим ещё один ход — почему/к чему
+                    deeper = ""
+                    nxt = sorted(kg._adj.get(otherc, []), key=lambda r: -r[2])[:2]
+                    for p2, other2, w2 in nxt:
+                        o2 = other2.split()[0] if " " in other2 else other2
+                        if o2 not in (start, otherc):
+                            deeper = f", а это влияет на {o2}"
+                            break
+                    links.append(f"{start} связан с {otherc}{deeper}")
             if links:
-                parts.append("Связи: " + "; ".join(links) + ".")
+                # склеиваем фразами, не «|» и не через точку-запятую: как речь
+                spoken = "; ".join(dict.fromkeys(links[:4]))
+                parts.append(spoken[0].upper() + spoken[1:] + ".")
         except Exception:
             pass
     if parts:
