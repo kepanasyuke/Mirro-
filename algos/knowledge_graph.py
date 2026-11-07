@@ -290,8 +290,13 @@ class KnowledgeGraph:
                             nxt.append(other)
                 frontier = nxt
             # ранжируем по весу, отдаём самое связанное (без корпусных фраз-шума)
-            filtered = {o: (p, w) for o, (p, w) in candidates.items()
-                        if len(o) <= 24 and " " not in o.strip()}
+            junk_neighbors = {"откуда", "нашел", "нашла", "найти", "хочешь", "давай",
+                              "спросить", "скажи", "посмотрю", "сделаю", "можно", "тебя"}
+            filtered = {}
+            for o, (p, w) in candidates.items():
+                oclean = o.split()[0] if " " in o else o
+                if len(o) <= 24 and " " not in o.strip() and oclean not in junk_neighbors:
+                    filtered[o] = (p, w)
             ordered = sorted(filtered.items(), key=lambda kv: -kv[1][1])[:10]
             for other, (p, w) in ordered:
                 node = self.nodes.get(other)
@@ -300,7 +305,56 @@ class KnowledgeGraph:
                     out.append(f"{name} {p} {other}: {joined}")
                 elif other:
                     out.append(f"{name} {p} {other}")
-                    return out
+        return out
+
+    def dedupe_nodes(self, top_groups=100):
+        """Сжатие: сливает узлы-дубли (словоформы одного понятия: «граф/графа/
+        графе») в один канонический узел, перенаправляя на него рёбра.
+        Один return: int — число удалённых узлов-дублей."""
+        import re as _re_d
+        removed = 0
+
+        def stem(w):
+            w = w.lower().strip()
+            for suf in ("ться", "ность", "ного", "ной", "ное", "нии", "тый",
+                        "ый", "ая", "ой", "ее", "ие", "их", "ам", "ами", "ой",
+                        "е", "а", "и", "ы", "у", "ю", "о"):
+                if len(w) > len(suf) + 3 and w.endswith(suf):
+                    return w[:-len(suf)]
+            return w
+
+        from collections import defaultdict
+        groups = defaultdict(list)
+        for n in self.nodes:
+            if " " not in n and len(n) > 3:
+                groups[stem(n)].append(n)
+
+        merged = 0
+        for key, variants in groups.items():
+            if merged >= top_groups:
+                break
+            if len(variants) < 2:
+                continue
+            canon = min(variants, key=len)
+            dups = [v for v in variants if v != canon]
+            for d in dups:
+                # перенаправляем рёбра с узла-дубля на канонический
+                for (s, p, t), w in list(self.edges.items()):
+                    if s == d:
+                        self.edges[(canon, p, t)] = w if (canon, p, t) not in self.edges else max(w, self.edges[(canon, p, t)])
+                        del self.edges[(s, p, t)]
+                    elif t == d:
+                        self.edges[(s, p, canon)] = w if (s, p, canon) not in self.edges else max(w, self.edges[(s, p, canon)])
+                        del self.edges[(s, p, t)]
+                if d in self.nodes:
+                    del self.nodes[d]
+                if d in self._adj:
+                    del self._adj[d]
+                removed += 1
+                merged += 1
+        if removed:
+            self._rebuild_adj()
+        return removed
 
     def consolidate(self, min_weight=0.15, max_phrase_words=4):
         """Автоочистка и консолидация: удаляет слабые рёбра ниже порога и
@@ -422,6 +476,69 @@ class KnowledgeGraph:
             else:
                 result = len(inter) / len(union)
         return result
+
+    def connectivity(self, top_n=5):
+        """Метрики связности графа: число компонент, топ узлов по рёбрам,
+        число изолированных узлов, размер крупнейшей компоненты.
+        Один return: dict."""
+        neigh = {}
+        for (s, p, d) in self.edges:
+            neigh.setdefault(s, set()).add(d)
+            neigh.setdefault(d, set()).add(s)
+        visited = set()
+        components = 0
+        biggest = 0
+        for node in self.nodes:
+            if node in visited:
+                continue
+            stack = [node]
+            visited.add(node)
+            size = 0
+            while stack:
+                cur = stack.pop()
+                size += 1
+                for nxt in neigh.get(cur, ()):
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        stack.append(nxt)
+            components += 1
+            if size > biggest:
+                biggest = size
+        degree = {}
+        for (s, p, d) in self.edges:
+            degree[s] = degree.get(s, 0) + 1
+            degree[d] = degree.get(d, 0) + 1
+        top = sorted(degree.items(), key=lambda kv: -kv[1])[:top_n]
+        isolated = [n for n in self.nodes if n not in neigh]
+        return {"components": components, "biggest_component": biggest,
+                "isolated": len(isolated), "top_degree": top}
+
+    def closest_concepts(self, name, top_n=5, min_sim=0.02):
+        """Семантически ближайшие понятия к name: ранжируются по доле общих
+        соседей (Jaccard на окрестностях), а НЕ по сырым весам рёбер.
+        Мусорные стоп-узлы отбрасываются. Вернёт (другое_понятие, близость).
+        Один return: list."""
+        a = self._norm(name)
+        out = []
+        if a in self.nodes:
+            na = {row[1] for row in self._adj.get(a, [])}
+            junk = {"займет", "работать", "относительно", "хоть", "петабайты",
+                    "нашел", "нашла", "сделать", "скажи", "можно", "давай", "это",
+                    "что", "как", "чтобы", "также", "который", "там", "туда"}
+            scored = []
+            for n in self.nodes:
+                ncore = n.split()[0] if " " in n else n
+                if (n == a or ncore in junk or len(n) > 18
+                        or (" " in n and len(n.split()) > 2)):
+                    continue
+                nb = {row[1] for row in self._adj.get(n, [])}
+                union = na | nb
+                sim = (len(na & nb) / len(union)) if union else 0.0
+                if sim >= min_sim and sim < 1.0:
+                    scored.append((sim, n))
+            scored.sort(key=lambda kv: -kv[0])
+            out = [(n, round(s, 3)) for s, n in scored[:top_n]]
+        return out
 
     # ---------- обучение из отклика ----------
     def edge_weight(self, a, b):

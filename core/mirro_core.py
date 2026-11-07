@@ -1701,6 +1701,13 @@ def _seed_knowledge_graph():
                 print(f"  Консолидировано графа: {con_removed} элементов")
         except Exception:
             pass
+        # Дедупликация: сливаем узлы-словоформы («граф/графа/графе») в один
+        try:
+            dedup_removed = kg.dedupe_nodes(top_groups=150)
+            if dedup_removed:
+                print(f"  Узлов-дублей слито: {dedup_removed} (граф компактнее)")
+        except Exception:
+            pass
         # Связываем функции базы знаний с графом, чтобы «куча функций» стала
         # частью связей (каждая функция — узел с рёбрами к своим понятиям)
         try:
