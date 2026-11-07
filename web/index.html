@@ -1053,10 +1053,13 @@ function drawGraphGrowth(kg) {
   ctx.clearRect(0,0,cv.width,cv.height);
   if (!kg) { if (meta) meta.textContent='граф не загружен'; return; }
   const n = kg.nodes||0, e = kg.edges||0;
-  if (meta) meta.textContent='узлов: ' + n.toLocaleString() + ' · рёбер: ' + e.toLocaleString() + ' · плотность: ' + (kg.density||(e/Math.max(1,n))).toFixed(3);
+  let m = 'узлов: ' + n.toLocaleString() + ' · рёбер: ' + e.toLocaleString() + ' · плотность: ' + (kg.density||(e/Math.max(1,n))).toFixed(3);
+  if (kg.components != null) m += ' · компоненты: ' + kg.components + ' · изолированных: ' + kg.isolated + ' · топ: ' + (kg.top_nodes||[]).join(', ');
+  if (meta) meta.textContent = m;
   ctx.fillStyle='#0c1220'; ctx.fillRect(0,0,cv.width,cv.height);
   ctx.fillStyle='#9aa0b5'; ctx.font='12px sans-serif';
   ctx.fillText('nodes: ' + n.toLocaleString(), 10, 20);
+  ctx.fillText('components: ' + (kg.components!==undefined?kg.components:'?') + ' · isolated: ' + (kg.isolated!==undefined?kg.isolated:'?'), 10, 40);
   ctx.strokeStyle='#d8231c'; ctx.lineWidth=2;
   ctx.beginPath(); ctx.moveTo(10, cv.height-30);
   ctx.lineTo(cv.width-10, cv.height-30); ctx.stroke();

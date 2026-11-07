@@ -66,18 +66,26 @@ class KnowledgeGraph:
             self._adj.setdefault(from_node, []).append((pred, to_node, weight))
         return None
 
-    def hebbian_learn(self, node_a, node_b, amount=0.2):
+    def hebbian_learn(self, node_a, node_b, amount=0.2, depth=0):
         """Синаптическая пластичность: если два узла активировались вместе —
-        связь между ними усиливается (Хебб). Один return: int — число укреплённых."""
+        связь между ними усиливается (Хебб). Если depth>0, попутно усиливаются
+        соседи первого хопа (рост размерности/связности активированного блока).
+        Один return: int — число укреплённых рёбер."""
         a, b = self._norm(node_a), self._norm(node_b)
         strengthened = 0
-        for (s, p, d), w in list(self.edges.items()):
-            if (s == a and d == b) or (s == b and d == a):
-                nw = min(2.0, w + amount)
-                self.edges[(s, p, d)] = nw
-                self._set_adj_weight(s, p, d, nw)
-                self._set_adj_weight(d, p, s, nw)
-                strengthened += 1
+        targets = [b]
+        if depth > 0:
+            for p, other, _w in self._adj.get(a, [])[:depth]:
+                if other not in targets:
+                    targets.append(other)
+        for tgt in targets:
+            for (s, p, d), w in list(self.edges.items()):
+                if (s == a and d == tgt) or (s == tgt and d == a):
+                    nw = min(2.0, w + amount)
+                    self.edges[(s, p, d)] = nw
+                    self._set_adj_weight(s, p, d, nw)
+                    self._set_adj_weight(d, p, s, nw)
+                    strengthened += 1
         return strengthened
 
     def synapse_decay(self, amount=0.01, floor=0.2):
@@ -281,8 +289,10 @@ class KnowledgeGraph:
                             candidates[other] = (p, w)
                             nxt.append(other)
                 frontier = nxt
-            # ранжируем по весу, отдаём самое связанное
-            ordered = sorted(candidates.items(), key=lambda kv: -kv[1][1])[:10]
+            # ранжируем по весу, отдаём самое связанное (без корпусных фраз-шума)
+            filtered = {o: (p, w) for o, (p, w) in candidates.items()
+                        if len(o) <= 24 and " " not in o.strip()}
+            ordered = sorted(filtered.items(), key=lambda kv: -kv[1][1])[:10]
             for other, (p, w) in ordered:
                 node = self.nodes.get(other)
                 if node and node.facts:
@@ -290,7 +300,33 @@ class KnowledgeGraph:
                     out.append(f"{name} {p} {other}: {joined}")
                 elif other:
                     out.append(f"{name} {p} {other}")
-        return out
+                    return out
+
+    def consolidate(self, min_weight=0.15, max_phrase_words=4):
+        """Автоочистка и консолидация: удаляет слабые рёбра ниже порога и
+        узлы-фразы длиннее порога. Рост плотности за счёт смысла, а не шума.
+        Один return: int — число удалённых элементов (рёбра+узлы)."""
+        removed = 0
+        # рёбра ниже порога (шум от частых пар) — убираем
+        weak = [k for k, w in self.edges.items() if w < min_weight]
+        for k in weak:
+            del self.edges[k]
+        removed += len(weak)
+        # узлы-фразы длиннее порога (корпусный мусор)
+        dead = set()
+        for n in self.nodes:
+            if " " in n and len(n.split()) > max_phrase_words:
+                dead.add(n)
+        for d in dead:
+            del self.nodes[d]
+            if d in self._adj:
+                del self._adj[d]
+        if dead:
+            self.edges = {k: w for k, w in self.edges.items()
+                          if k[0] not in dead and k[2] not in dead}
+            self._rebuild_adj()
+        removed += len(dead)
+        return removed
 
     # ---------- умные запросы связей ----------
     def what_links(self, name, max_hop=1):
@@ -648,24 +684,34 @@ def try_knowledge_graph(query):
 
 
 def try_concept_path(query):
-    """Показывает читаемую цепочку связей (путь в графе) про понятие из запроса:
-    «нейросеть → обучение → алгоритм». Берет только короткие узлы-понятия.
-    Один return: str или None."""
+    """Показывает читаемую цепочку связей (путь в графе) про понятие из запроса,
+    НО только если пользователь явно спросил про связи/как относится, а не про
+    определение («что такое X»). Берет короткие узлы-понятия и считает
+    уверенность. Один return: str|None."""
     ans = None
+    q0 = (query or "").lower()
+    link_intent = any(w in q0 for w in ("связ", "связан", "относит", "цепочк",
+                                        "путь", "родит", "похож", "общего",
+                                        "как связано", "что общего у"))
+    if not link_intent:
+        return ans
     q = _clean_q(query)
     topic = _extract_topic(q)
-    if topic:
+    if topic and link_intent:
         start = topic.split()[0] if " " in topic else topic
         chain = kg._adj.get(start, [])
         if chain:
             out = [start]
-            for p, other, _w in chain:
+            weights = []
+            for p, other, w in chain:
                 clean = other if " " not in other or len(other) <= 12 else other.split()[0]
                 if clean not in out:
                     out.append(clean)
+                    weights.append(w)
                 if len(out) >= 6:
                     break
-            ans = " → ".join(out)
+            conf = (sum(weights) / len(weights)) if weights else 0.0
+            ans = f"{' → '.join(out)} (уверенность {conf:.2f})"
     return ans
 
 

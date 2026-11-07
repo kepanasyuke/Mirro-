@@ -57,7 +57,7 @@ class TestGraphLearning(unittest.TestCase):
         _kgm.kg.add_edge("нейросеть", "связано_с", "обучение", 1.0)
         _kgm.kg.add_edge("обучение", "связано_с", "алгоритм", 1.0)
         from algos.knowledge_graph import try_concept_path
-        chain = try_concept_path("расскажи про нейросеть")
+        chain = try_concept_path("как связано с нейросеть")
         self.assertIsNotNone(chain)
         self.assertIn("→", chain)
         self.assertIn("нейросеть", chain)

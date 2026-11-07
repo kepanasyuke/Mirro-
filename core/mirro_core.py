@@ -1131,6 +1131,14 @@ class MirroAPI(BaseHTTPRequestHandler):
                     "edges_per_node": round(len(_kg.edges) / max(1, len(_kg.nodes)), 2),
                 }
                 try:
+                    _conn = _kg.connectivity(top_n=3)
+                    st["knowledge_graph"]["components"] = _conn["components"]
+                    st["knowledge_graph"]["biggest_component"] = _conn["biggest_component"]
+                    st["knowledge_graph"]["isolated"] = _conn["isolated"]
+                    st["knowledge_graph"]["top_nodes"] = [n for n, _d in _conn["top_degree"]]
+                except Exception:
+                    pass
+                try:
                     from algos.quantum_graph import init_quantum_states
                     qst = init_quantum_states(_kg)
                     n_sup = len(qst.states)
@@ -1354,7 +1362,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                             words = [w for w in _re.findall(r"[а-яёa-z]{3,}",
                                      str(response.get("content", "")).lower()) if w not in _MS_STOP]
                             if topic and words:
-                                _kg3.hebbian_learn(topic, words[0], amount=0.05)
+                                _kg3.hebbian_learn(topic, words[0], amount=0.08, depth=3)
                                 # персистентно сохраняем обученное ребро, чтобы оно
                                 # не терялось между запусками сервера
                                 try:
@@ -1668,6 +1676,14 @@ def _seed_knowledge_graph():
             removed = kg.prune_noise()
             if removed:
                 print(f"  Убрано мусора из графа: {removed} элементов")
+        except Exception:
+            pass
+        # Консолидация: зачищаем слабые рёбра и избыточные узлы-фразы, чтобы
+        # плотность росла за счёт осмысленных связей, а не шума
+        try:
+            con_removed = kg.consolidate(min_weight=0.15, max_phrase_words=4)
+            if con_removed:
+                print(f"  Консолидировано графа: {con_removed} элементов")
         except Exception:
             pass
         # Связываем функции базы знаний с графом, чтобы «куча функций» стала
