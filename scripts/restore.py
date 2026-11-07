@@ -70,12 +70,15 @@ def main():
     ap.add_argument("--file", default="", help="конкретный файл бэкапа (иначе — самый свежий)")
     args = ap.parse_args()
     filepath = args.file or try_find_latest_backup(args.backup_dir)
+    code = 0
     if not filepath:
         print("Нет бэкапов для восстановления.")
-        return 1
-    res = try_restore_graph_from_backup(filepath, args.out)
-    print(res.get("status"), "—", res.get("message", ""))
-    return 0 if res.get("status") == "success" else 1
+        code = 1
+    else:
+        res = try_restore_graph_from_backup(filepath, args.out)
+        print(res.get("status"), "—", res.get("message", ""))
+        code = 0 if res.get("status") == "success" else 1
+    return code
 
 
 if __name__ == "__main__":

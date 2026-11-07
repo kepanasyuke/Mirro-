@@ -55,10 +55,11 @@ def set_genome_edges(graph, weights):
 def physics_loss(graph, target_energy=0.6):
     """Отклонение средней квадратичной энергии от эталона. Один return: float."""
     vals = list(graph.edges.values())
-    if not vals:
-        return 0.0
-    mean_e = sum(w * w for w in vals) / len(vals)
-    return abs(mean_e - target_energy)
+    dev = 0.0
+    if vals:
+        mean_e = sum(w * w for w in vals) / len(vals)
+        dev = abs(mean_e - target_energy)
+    return dev
 
 
 def fitness(graph, target_energy=0.6, penalty=0.05):
@@ -153,22 +154,24 @@ def main():
     ap.add_argument("--generations", type=int, default=15)
     args = ap.parse_args()
     graph = _get_global_graph()
+    code = 0
     if not graph.edges:
         print("Граф пуст — нечего эволюционировать. Запустите Mirro, чтобы он наполнился.")
-        return 1
-    report = run(graph, int(args.generations))
-    print("Эволюция весов графа:")
-    for k, v in report.items():
-        print(f"  {k}: {v}")
-    print("Лучший паттерн записан в память опыта круг.")
-    try:
-        from pathlib import Path
-        _home = Path(__file__).resolve().parent.parent
-        graph.save(_home / "models" / "knowledge_graph.pkl")
-        print("Граф сохранён в models/knowledge_graph.pkl")
-    except Exception as e:
-        print(f"  (граф не сохранён: {e})")
-    return 0
+        code = 1
+    else:
+        report = run(graph, int(args.generations))
+        print("Эволюция весов графа:")
+        for k, v in report.items():
+            print(f"  {k}: {v}")
+        print("Лучший паттерн записан в память опыта круг.")
+        try:
+            from pathlib import Path
+            _home = Path(__file__).resolve().parent.parent
+            graph.save(_home / "models" / "knowledge_graph.pkl")
+            print("Граф сохранён в models/knowledge_graph.pkl")
+        except Exception as e:
+            print(f"  (граф не сохранён: {e})")
+    return code
 
 
 if __name__ == "__main__":

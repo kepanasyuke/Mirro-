@@ -41,38 +41,39 @@ def _pairs():
 def _existing_prefixes(path):
     """Множество префиксов вопросов уже в файле. Один return: set of str."""
     prefixes = set()
-    if not path.exists():
-        return prefixes
-    with open(path, encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                try:
-                    ex = json.loads(line)
-                    prefixes.add((ex.get("instruction") or "")[:50].lower())
-                except Exception:
-                    pass
+    if path.exists():
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if line:
+                    try:
+                        ex = json.loads(line)
+                        prefixes.add((ex.get("instruction") or "")[:50].lower())
+                    except Exception:
+                        pass
     return prefixes
 
 
 def main():
     pairs = _pairs()
+    code = 0
     if not pairs:
         print("[err] нет пар из knowledge_ai_history")
-        return 1
-    TARGET.parent.mkdir(parents=True, exist_ok=True)
-    existing = _existing_prefixes(TARGET)
-    added = 0
-    with open(TARGET, "a", encoding="utf-8") as fh:
-        for q, a in pairs:
-            key = q[:50].lower()
-            if key not in existing:
-                fh.write(json.dumps({"instruction": q, "input": "", "output": a}, ensure_ascii=False) + "\n")
-                existing.add(key)
-                added += 1
-    print(f"[ok] добавлено {added} пар по истории ИИ в {TARGET}")
-    print(f"     теперь Mirro найдёт их через поиск при следующем обучении/пересборке индекса")
-    return 0
+        code = 1
+    else:
+        TARGET.parent.mkdir(parents=True, exist_ok=True)
+        existing = _existing_prefixes(TARGET)
+        added = 0
+        with open(TARGET, "a", encoding="utf-8") as fh:
+            for q, a in pairs:
+                key = q[:50].lower()
+                if key not in existing:
+                    fh.write(json.dumps({"instruction": q, "input": "", "output": a}, ensure_ascii=False) + "\n")
+                    existing.add(key)
+                    added += 1
+        print(f"[ok] добавлено {added} пар по истории ИИ в {TARGET}")
+        print(f"     теперь Mirro найдёт их через поиск при следующем обучении/пересборке индекса")
+    return code
 
 
 if __name__ == "__main__":

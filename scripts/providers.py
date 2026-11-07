@@ -46,61 +46,60 @@ PROVIDERS = {
 def _resolve_key(provider):
     """Ключ провайдера: env → файл secrets (не коммитится)."""
     cfg = PROVIDERS.get(provider)
-    if not cfg:
-        return ""
-    # 1) переменная окружения
-    env_key = os.environ.get(cfg["env"], "").strip()
-    if env_key:
-        return env_key
-    # 2) файл секретов <корень>/core/providers_secret.json (в .gitignore)
-    try:
-        secret_file = Path(__file__).resolve().parent.parent / "core" / "providers_secret.json"
-        if secret_file.exists():
-            data = json.loads(secret_file.read_text("utf-8"))
-            val = str(data.get(provider, "")).strip()
-            if val and val.lower() not in ("", "none", "your-key-here"):
-                return val
-    except Exception:
-        pass
-    return ""
+    key = ""
+    if cfg:
+        # 1) переменная окружения
+        env_key = os.environ.get(cfg["env"], "").strip()
+        if env_key:
+            key = env_key
+        # 2) файл секретов <корень>/core/providers_secret.json (в .gitignore)
+        if not key:
+            try:
+                secret_file = Path(__file__).resolve().parent.parent / "core" / "providers_secret.json"
+                if secret_file.exists():
+                    data = json.loads(secret_file.read_text("utf-8"))
+                    val = str(data.get(provider, "")).strip()
+                    if val and val.lower() not in ("", "none", "your-key-here"):
+                        key = val
+            except Exception:
+                pass
+    return key
 
 
 def _call_provider(provider, messages, timeout=DEFAULT_TIMEOUT):
     """Послать запрос провайдеру (OpenAI-совместимый формат). Вернуть текст ответа."""
     cfg = PROVIDERS.get(provider)
-    if not cfg:
-        return None
     key = _resolve_key(provider)
-    if not key:
-        return None
-
-    body = {
-        "model": cfg["model"],
-        "messages": messages,
-        "max_tokens": MAX_TOKENS,
-        "temperature": 0.6,
-    }
-    req = urllib.request.Request(
-        cfg["url"],
-        data=json.dumps(body).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {key}",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        return data["choices"][0]["message"]["content"].strip()
-    except urllib.error.HTTPError as e:
+    out = None
+    if cfg and key:
+        body = {
+            "model": cfg["model"],
+            "messages": messages,
+            "max_tokens": MAX_TOKENS,
+            "temperature": 0.6,
+        }
+        req = urllib.request.Request(
+            cfg["url"],
+            data=json.dumps(body).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {key}",
+            },
+            method="POST",
+        )
         try:
-            detail = e.read().decode("utf-8")[:200]
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            out = data["choices"][0]["message"]["content"].strip()
+        except urllib.error.HTTPError as e:
+            try:
+                detail = e.read().decode("utf-8")[:200]
+            except Exception:
+                detail = str(e)
+            out = f"[провайдер {provider}: ошибка {e.code}] {detail}"
         except Exception:
-            detail = str(e)
-        return f"[провайдер {provider}: ошибка {e.code}] {detail}"
-    except Exception as e:
-        return None
+            out = None
+    return out
 
 
 def deepseek(prompt, system=None, timeout=DEFAULT_TIMEOUT):

@@ -20,9 +20,10 @@ SEG_SIZE = 200_000   # примеров в сегменте
 
 
 def tokenize(text):
-    if not text:
-        return []
-    return [w for w in _re.findall(r"[а-яёa-z0-9]+", text.lower()) if len(w) > 2]
+    toks = []
+    if text:
+        toks = [w for w in _re.findall(r"[а-яёa-z0-9]+", text.lower()) if len(w) > 2]
+    return toks
 
 
 class MirroRAG:
@@ -121,18 +122,13 @@ class MirroRAG:
         """
         t0 = time.time()
         q_words = Counter(tokenize(query))
-        if not q_words:
-            return []
-
-        # --- Уровень 1: ранжирование сегментов ---
         seg_scores = defaultdict(float)
-        for w, qt in q_words.items():
-            segs = self.global_index.get(w, set())
-            for s in segs:
-                seg_scores[s] += qt
-        if not seg_scores:
-            return []
-
+        if q_words:
+            # --- Уровень 1: ранжирование сегментов ---
+            for w, qt in q_words.items():
+                segs = self.global_index.get(w, set())
+                for s in segs:
+                    seg_scores[s] += qt
         best_segs = [s for s, _ in sorted(seg_scores.items(), key=lambda x: -x[1])[:top_segments]]
 
         # --- Уровень 2: локальный поиск внутри сегментов ---
@@ -167,17 +163,19 @@ class MirroRAG:
     def _read_doc(self, seg_idx, doc_id):
         """Читает один документ из сегмента по номеру строки."""
         seg = self.seg_files.get(seg_idx) or self.segments[seg_idx]
+        hit = None
         with open(seg, encoding="utf-8", errors="replace") as f:
             for i, line in enumerate(f):
                 if i == doc_id:
                     try:
                         ex = json.loads(line)
-                        return (ex.get("instruction", ""), ex.get("output", ""))
+                        hit = (ex.get("instruction", ""), ex.get("output", ""))
                     except Exception:
-                        return None
+                        hit = None
+                    break
                 if i > doc_id:
                     break
-        return None
+        return hit
 
     def run_quantum_guided_rag(self, user_query, meta_pair=None, top_k=3):
         """Направленный RAG-поиск с дееериминированным мета-контекстом.

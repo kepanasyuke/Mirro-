@@ -65,10 +65,12 @@ def create(full=False):
 
 
 def list_backups(include_full=False):
-    if not BACKUP_DIR.exists():
+    items = []
+    exists = BACKUP_DIR.exists()
+    if not exists:
         print("Бэкапов нет.")
-        return []
-    items = sorted([d for d in BACKUP_DIR.iterdir() if d.is_dir() and d.name.startswith("model_")])
+    if exists:
+        items = sorted([d for d in BACKUP_DIR.iterdir() if d.is_dir() and d.name.startswith("model_")])
     for d in reversed(items):
         tag = d.name.replace("model_", "")
         meta = {}
@@ -85,32 +87,35 @@ def list_backups(include_full=False):
 
 
 def restore(target=None):
-    if not BACKUP_DIR.exists():
-        print("Бэкапов нет — восстанавливать нечего.")
-        return False
-    items = sorted([d for d in BACKUP_DIR.iterdir() if d.is_dir() and d.name.startswith("model_")])
+    ok = False
+    items = []
+    if BACKUP_DIR.exists():
+        items = sorted([d for d in BACKUP_DIR.iterdir() if d.is_dir() and d.name.startswith("model_")])
     if not items:
-        print("Бэкапов нет.")
-        return False
-    src = None
-    if target:
-        src = next((d for d in items if d.name == f"model_{target}"), None)
-        if not src:
-            print(f"Бэкап '{target}' не найден. Доступные: {', '.join(d.name for d in items)}")
-            return False
+        print("Бэкапов нет — восстанавливать нечего.")
+        ok = False
     else:
-        src = items[-1]  # последний
-    restored = 0
-    for d in src.rglob("*"):
-        if d.is_file() and d.name != "meta.json":
-            rel = d.relative_to(src)
-            dst = ROOT / rel
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(d, dst)
-            restored += 1
-    print(f"Восстановлено из {src.name}: {restored} файлов")
-    print("Внимание: перезапустите Mirro, чтобы изменения вступили в силу.")
-    return True
+        src = None
+        if target:
+            src = next((d for d in items if d.name == f"model_{target}"), None)
+            if not src:
+                print(f"Бэкап '{target}' не найден. Доступные: {', '.join(d.name for d in items)}")
+                ok = False
+        else:
+            src = items[-1]  # последний
+        if src is not None:
+            restored = 0
+            for d in src.rglob("*"):
+                if d.is_file() and d.name != "meta.json":
+                    rel = d.relative_to(src)
+                    dst = ROOT / rel
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(d, dst)
+                    restored += 1
+            print(f"Восстановлено из {src.name}: {restored} файлов")
+            print("Внимание: перезапустите Mirro, чтобы изменения вступили в силу.")
+            ok = True
+    return ok
 
 
 def main():

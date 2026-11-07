@@ -13,15 +13,10 @@ def load_zst(path):
     data = dctx.decompress(path.read_bytes())
     return data.decode("utf-8", errors="replace")
 
-def convert_item(item):
-    if not isinstance(item, dict):
-        return None
-    if "instruction" in item:
-        return {
-            "instruction": str(item.get("instruction", ""))[:1000],
-            "input": str(item.get("input", ""))[:500],
-            "output": str(item.get("output", item.get("response", "")))[:3000],
-        }
+def _chat_pair(item):
+    """Из блоков messages/conversations строит (instruction,_) или None.
+    Один return: dict|None."""
+    out = None
     for key in ("messages", "conversations"):
         msgs = item.get(key)
         if isinstance(msgs, list) and msgs:
@@ -34,15 +29,30 @@ def convert_item(item):
                         user_p.append(str(content))
                     elif role in ("assistant", "gpt", "bot"):
                         asst_p.append(str(content))
-            if user_p and asst_p:
-                return {"instruction": "\n".join(user_p)[:1000], "input": "", "output": "\n".join(asst_p)[:3000]}
-    if "question" in item and "answer" in item:
-        return {
-            "instruction": str(item.get("question", ""))[:1000],
-            "input": str(item.get("system_prompt", ""))[:500],
-            "output": str(item.get("answer", item.get("response", "")))[:3000],
-        }
-    return None
+            if not out and user_p and asst_p:
+                out = {"instruction": "\n".join(user_p)[:1000], "input": "",
+                       "output": "\n".join(asst_p)[:3000]}
+    return out
+
+
+def convert_item(item):
+    out = None
+    if isinstance(item, dict):
+        if "instruction" in item:
+            out = {
+                "instruction": str(item.get("instruction", ""))[:1000],
+                "input": str(item.get("input", ""))[:500],
+                "output": str(item.get("output", item.get("response", "")))[:3000],
+            }
+        elif "question" in item and "answer" in item:
+            out = {
+                "instruction": str(item.get("question", ""))[:1000],
+                "input": str(item.get("system_prompt", ""))[:500],
+                "output": str(item.get("answer", item.get("response", "")))[:3000],
+            }
+        else:
+            out = _chat_pair(item)
+    return out
 
 def main():
     total = 0

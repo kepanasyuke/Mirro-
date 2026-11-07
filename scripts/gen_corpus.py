@@ -103,13 +103,14 @@ def gen_from_base(base, rng):
     ex = rng.choice(base)
     inst = ex.get("instruction", "")
     out = ex.get("output", "")
-    if not inst or not out:
-        return None
-    # переформулируем вопрос и чуть обрежем ответ
-    q_variants = paraphrase(inst, count=2, rng=rng)
-    q = rng.choice(q_variants)
-    a = out[:1200]
-    return {"instruction": q[:600], "input": "", "output": a}
+    rec = None
+    if inst and out:
+        # переформулируем вопрос и чуть обрежем ответ
+        q_variants = paraphrase(inst, count=2, rng=rng)
+        q = rng.choice(q_variants)
+        a = out[:1200]
+        rec = {"instruction": q[:600], "input": "", "output": a}
+    return rec
 
 # =============== ГЛАВНЫЙ ЦИКЛ ===============
 def main():
@@ -137,16 +138,16 @@ def main():
     def flush():
         """Записывает буфер в текущий сегмент-файл (200k примеров на файл)."""
         nonlocal total_bytes
-        if not buf:
-            return 0
-        fname = OUT_DIR / f"corpus-{written // per_file:06d}.jsonl"
-        with open(fname, "a", encoding="utf-8") as f:
-            for entry in buf:
-                line = json.dumps(entry, ensure_ascii=False) + "\n"
-                f.write(line)
-                total_bytes += len(line.encode("utf-8"))
-        n = len(buf)
-        buf.clear()
+        n = 0
+        if buf:
+            fname = OUT_DIR / f"corpus-{written // per_file:06d}.jsonl"
+            with open(fname, "a", encoding="utf-8") as f:
+                for entry in buf:
+                    line = json.dumps(entry, ensure_ascii=False) + "\n"
+                    f.write(line)
+                    total_bytes += len(line.encode("utf-8"))
+            n = len(buf)
+            buf.clear()
         return n
 
     # запускаем потоковую генерацию

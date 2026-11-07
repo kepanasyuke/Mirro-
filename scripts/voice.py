@@ -70,10 +70,11 @@ JARVIS_WORDS = ["джарвис", "jarvis", "железный человек", "
 def try_jarvis(query):
     """Если в запросе про ДЖАРВИС / Железного человека — ответ в его стиле."""
     q = (query or "").lower()
-    if not any(w in q for w in JARVIS_WORDS):
-        return None
-    return ("Слушаю, мама. Все системы в норме. Мирро online, броня в разработке. "
-            "Прошу беречь себя от простуды. Удачи не ищу — она и так рядом. 💙")
+    ans = None
+    if any(w in q for w in JARVIS_WORDS):
+        ans = ("Слушаю, мама. Все системы в норме. Мирро online, броня в разработке. "
+               "Прошу беречь себя от простуды. Удачи не ищу — она и так рядом. 💙")
+    return ans
 
 
 def _clean(text):
@@ -133,43 +134,45 @@ def speak(raw_answer, query, strategy="base"):
 
     Возвращает строку с характером Mirro.
     """
+    out = None
     if not raw_answer:
-        return None
-
-    raw_answer = _clean(raw_answer)
-    if len(raw_answer) < 15:
-        # слишком короткий — всё равно звучим по-своему
-        return (random.choice(INTRO) + raw_answer + random.choice(OUTRO)).strip()
-
-    # Переформулируем первые 1-2 предложения своими словами
-    sentences = _re.split(r"(?<=[.!?])\s+", raw_answer)
-    core = sentences[0] if sentences else raw_answer
-    rest = " ".join(sentences[1:]) if len(sentences) > 1 else ""
-
-    core = _rephrase(core)
-    rest = _rephrase(rest)
-
-    lead = random.choice(LEAD_INS)
-
-    # Собираем ответ
-    if rest:
-        answer = f"{lead}{core} {rest}"
+        out = None
     else:
-        answer = f"{lead}{core}"
+        raw_answer = _clean(raw_answer)
+        if len(raw_answer) < 15:
+            # слишком короткий — всё равно звучим по-своему
+            out = (random.choice(INTRO) + raw_answer + random.choice(OUTRO)).strip()
+        else:
+            # Переформулируем первые 1-2 предложения своими словами
+            sentences = _re.split(r"(?<=[.!?])\s+", raw_answer)
+            core = sentences[0] if sentences else raw_answer
+            rest = " ".join(sentences[1:]) if len(sentences) > 1 else ""
 
-    answer = _clip(answer)
+            core = _rephrase(core)
+            rest = _rephrase(rest)
 
-    # Тематическая присказка
-    q = query.lower()
-    hint = ""
-    if any(w in q for w in ["код", "python", "программ", "функц"]):
-        hint = " " + BY_TOPIC["код"]
-    elif any(w in q for w in ["ндс", "налог", "бухгалтер", "закон"]):
-        hint = " " + BY_TOPIC["nds"]
-    elif any(w in q for w in ["человек", "психолог", "биолог"]):
-        hint = " " + BY_TOPIC["bio"]
+            lead = random.choice(LEAD_INS)
 
-    return (answer + hint + random.choice(OUTRO)).strip()
+            # Собираем ответ
+            if rest:
+                answer = f"{lead}{core} {rest}"
+            else:
+                answer = f"{lead}{core}"
+
+            answer = _clip(answer)
+
+            # Тематическая присказка
+            q = query.lower()
+            hint = ""
+            if any(w in q for w in ["код", "python", "программ", "функц"]):
+                hint = " " + BY_TOPIC["код"]
+            elif any(w in q for w in ["ндс", "налог", "бухгалтер", "закон"]):
+                hint = " " + BY_TOPIC["nds"]
+            elif any(w in q for w in ["человек", "психолог", "биолог"]):
+                hint = " " + BY_TOPIC["bio"]
+
+            out = (answer + hint + random.choice(OUTRO)).strip()
+    return out
 
 
 if __name__ == "__main__":

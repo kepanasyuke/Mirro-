@@ -20,9 +20,10 @@ for _p in (_ROOT, os.path.join(_ROOT, "algos")):
 def _mean_edge_energy(graph):
     """Средняя квадратичная энергия рёбер. Один return: float."""
     vals = list(graph.edges.values()) if graph is not None else []
-    if not vals:
-        return 0.0
-    return sum(w * w for w in vals) / len(vals)
+    mean = 0.0
+    if vals:
+        mean = sum(w * w for w in vals) / len(vals)
+    return mean
 
 
 def _build_qstate(graph):

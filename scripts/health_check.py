@@ -26,29 +26,41 @@ PERCEP_JSON = MODELS / "index_cache.perceptron.json"
 
 
 def _load_json(p):
+    data = None
+    err = None
     if not p.exists():
-        return None, f"нет файла {p}"
-    try:
-        return json.loads(p.read_text("utf-8")), None
-    except Exception as e:
-        return None, f"битый JSON {p}: {e}"
+        err = f"нет файла {p}"
+    else:
+        try:
+            data = json.loads(p.read_text("utf-8"))
+        except Exception as e:
+            err = f"битый JSON {p}: {e}"
+    return data, err
 
 
 def check_index():
-    if not INDEX_CACHE.exists():
-        return False, "нет index_cache.pkl (будет пересобран при старте)"
-    try:
-        size = INDEX_CACHE.stat().st_size
-        if size < 1_000_000:  # <1MB — почти наверняка битый/пустой
-            return False, f"index_cache.pkl подозрительно мал ({size/1e6:.1f} МБ)"
-        with open(INDEX_CACHE, "rb") as f:
-            state = pickle.load(f)
-        n = len(state.get("examples", []))
-        if n == 0:
-            return False, "index_cache пуст (0 примеров)"
-        return True, f"index_cache: {n} примеров, {size/1e6:.0f} МБ"
-    except Exception as e:
-        return False, f"не удалось прочитать index_cache: {e}"
+    ok = False
+    msg = "нет index_cache.pkl (будет пересобран при старте)"
+    if INDEX_CACHE.exists():
+        try:
+            size = INDEX_CACHE.stat().st_size
+            if size < 1_000_000:  # <1MB — почти наверняка битый/пустой
+                ok = False
+                msg = f"index_cache.pkl подозрительно мал ({size/1e6:.1f} МБ)"
+            else:
+                with open(INDEX_CACHE, "rb") as f:
+                    state = pickle.load(f)
+                n = len(state.get("examples", []))
+                if n == 0:
+                    ok = False
+                    msg = "index_cache пуст (0 примеров)"
+                else:
+                    ok = True
+                    msg = f"index_cache: {n} примеров, {size/1e6:.0f} МБ"
+        except Exception as e:
+            ok = False
+            msg = f"не удалось прочитать index_cache: {e}"
+    return ok, msg
 
 
 def run():

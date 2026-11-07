@@ -15,12 +15,14 @@ BASE = f"http://{HOST}:{PORT}"
 
 
 def _server_up():
+    ok = False
     try:
         req = urllib.request.Request(BASE + "/health", method="GET")
         with urllib.request.urlopen(req, timeout=3) as resp:
-            return resp.status == 200
+            ok = resp.status == 200
     except Exception:
-        return False
+        ok = False
+    return ok
 
 
 class TestLiveAPI(unittest.TestCase):
@@ -40,13 +42,18 @@ class TestLiveAPI(unittest.TestCase):
         data = json.dumps(body).encode("utf-8") if body is not None else None
         req = urllib.request.Request(BASE + path, data=data, method=method,
                                      headers={"Content-Type": "application/json"})
+        status = 0
+        parsed = {}
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
                 raw = resp.read().decode("utf-8")
-                return resp.status, (json.loads(raw) if raw else {})
+                status = resp.status
+                parsed = json.loads(raw) if raw else {}
         except urllib.error.HTTPError as e:
             raw = e.read().decode("utf-8") if e.readable() else ""
-            return e.code, (json.loads(raw) if raw else {})
+            status = e.code
+            parsed = json.loads(raw) if raw else {}
+        return status, parsed
 
     def test_health_ok(self):
         status, body = self._request("GET", "/health")

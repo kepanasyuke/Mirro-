@@ -43,16 +43,17 @@ def _duplicates(index):
 
 def report(dups):
     """Собирает текстовый отчёт. Один return: str."""
-    if not dups:
-        return "Дублей не найдено. Функции уникальны."
-    lines = ["Найденные повторения функций (кандидаты на общий код):", ""]
-    for name, files in dups:
-        lines.append(f"  {name}  ({len(files)}):")
-        for f in files:
-            lines.append(f"      {f}")
-    lines.append("")
-    lines.append("Проверь: это настоящие дубли (одинаковая логика) или одноимённые-lок-ально разные функции.")
-    return "\n".join(lines)
+    out = "Дублей не найдено. Функции уникальны."
+    if dups:
+        lines = ["Найденные повторения функций (кандидаты на общий код):", ""]
+        for name, files in dups:
+            lines.append(f"  {name}  ({len(files)}):")
+            for f in files:
+                lines.append(f"      {f}")
+        lines.append("")
+        lines.append("Проверь: это настоящие дубли (одинаковая логика) или одноимённые-lок-ально разные функции.")
+        out = "\n".join(lines)
+    return out
 
 def main():
     """Точка входа. Один return: int (код выхода)."""

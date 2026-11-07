@@ -69,8 +69,9 @@ def _evaluate_fitness(graph, chem, decoder):
     Использует тот же закон (средняя квадратичная энергия), что и
     try_route_pipeline, но на подвыборке до LIMIT рёбер — порядок пригодности
     химии сохраняется, время работы константное. Один return: float."""
-    from algos.neural_electric import compute_modulated_edges, calculate_physics_loss
+    from algos.neural_electric import calculate_physics_loss
     limit = 3000
+    score = 999.0
     try:
         edges = list(graph.edges.items())
         if len(edges) > limit:
@@ -90,9 +91,10 @@ def _evaluate_fitness(graph, chem, decoder):
         ser = chem.get("serotonin", 1.0)
         dop = chem.get("dopamine", 0.0)
         chem_penalty = abs(ach - 1.1) * 0.1 + abs(ser - 0.9) * 0.1 + abs(dop) * 0.05
-        return loss + chem_penalty
+        score = loss + chem_penalty
     except Exception:
-        return 999.0
+        score = 999.0
+    return score
 
 
 def run_evolution_epoch(graph, population, generations=20, num_weights=4):
@@ -121,21 +123,23 @@ def main():
     args = ap.parse_args()
 
     graph = _get_global_graph()
+    code = 0
     if not graph.edges:
         print("Граф пуст — запустите Mirro, чтобы он наполнился.")
-        return 1
-    pop = create_initial_population(int(args.pop), int(args.weights))
-    _pop, best = run_evolution_epoch(graph, pop,
-                                     generations=int(args.generations),
-                                     num_weights=int(args.weights))
-    print("Эволюция нейрохимии завершена:")
-    print(f"  поколений: {args.generations}, популяция: {args.pop}")
-    print(f"  PINN-loss лучшего: {best['fitness']:.4f}")
-    print(f"  ацетилхолин: {best['chemistry']['acetylcholine']:.3f}, "
-          f"серотонин: {best['chemistry']['serotonin']:.3f}, "
-          f"дофамин: {best['chemistry']['dopamine']:.3f}")
-    print(f"  W_decoder: {[round(w, 3) for w in best['W_decoder']]}")
-    return 0
+        code = 1
+    else:
+        pop = create_initial_population(int(args.pop), int(args.weights))
+        _pop, best = run_evolution_epoch(graph, pop,
+                                         generations=int(args.generations),
+                                         num_weights=int(args.weights))
+        print("Эволюция нейрохимии завершена:")
+        print(f"  поколений: {args.generations}, популяция: {args.pop}")
+        print(f"  PINN-loss лучшего: {best['fitness']:.4f}")
+        print(f"  ацетилхолин: {best['chemistry']['acetylcholine']:.3f}, "
+              f"серотонин: {best['chemistry']['serotonin']:.3f}, "
+              f"дофамин: {best['chemistry']['dopamine']:.3f}")
+        print(f"  W_decoder: {[round(w, 3) for w in best['W_decoder']]}")
+    return code
 
 
 if __name__ == "__main__":

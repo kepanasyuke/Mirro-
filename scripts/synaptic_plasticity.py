@@ -20,14 +20,13 @@ def clean_weak_meta_edges(graph, extinction_threshold=0.05):
     """Прунит слабые роу-ссылки мета-графа: |mod| < порога -> связь увядает.
     Возвращает число удалённых роу-ссылок. Один return: int."""
     meta = getattr(graph, "meta_routes", None)
-    if not meta:
-        return 0
     dead_keys = []
-    for key, mod in meta.items():
-        if abs(mod) < extinction_threshold:
-            dead_keys.append(key)
-    for key in dead_keys:
-        del meta[key]
+    if meta:
+        for key, mod in meta.items():
+            if abs(mod) < extinction_threshold:
+                dead_keys.append(key)
+        for key in dead_keys:
+            del meta[key]
     return len(dead_keys)
 
 
