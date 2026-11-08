@@ -1389,10 +1389,7 @@ def build_response(prompt, cluster, context=""):
         if clarify is not None:
             result = clarify
             result["workspace"] = "сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
-        else:
-            # модерация: опасный входящий запрос гасим до всех обработчиков
-            gate = _moderation_gate(prompt)
-        if gate is not None:
+        elif (gate := _moderation_gate(prompt)) is not None:
             result = gate
             result["workspace"] = "сознание: безопасность (запрос отсечён фильтром модерации)"
         else:
