@@ -81,6 +81,11 @@ class MirroAlgorithms:
             "ученый": "учен", "учёный": "учен",
             "нлс": "нейронн", "ai": "ии", "ии": "ии",
             "быстрый": "быстр", "скорый": "быстр", "медленный": "медлен",
+            # научно-бытовые эквиваленты для поиска
+            "стоимость": "цен", "цена": "цен", "стоит": "цен",
+            "понимание": "пониман", "смысл": "пониман",
+            "правило": "закон", "закона": "закон",
+            "метод": "способ", "методика": "способ",
         }
         # морфологические исключения (род/число/падеж) — дополнительно к stem_exceptions
         self.morph_exceptions = {
@@ -88,6 +93,10 @@ class MirroAlgorithms:
             "люди": "человек", "человека": "человек", "человеку": "человек",
             "овцы": "овц", "овца": "овц",
             "времени": "врем", "время": "врем",
+            # падежные формы ключевых понятий сводим к основе
+            "закона": "закон", "закону": "закон", "законом": "закон",
+            "метода": "метод", "методу": "метод", "методом": "метод",
+            "способа": "способ", "способу": "способ", "способом": "способ",
         }
 
         # Стоп-слова
@@ -98,6 +107,9 @@ class MirroAlgorithms:
             "a", "an", "the", "is", "are", "was", "were", "be", "been",
             "it", "at", "in", "on", "of", "to", "for", "by", "with",
             "this", "that", "these", "those", "and", "or", "but", "if",
+            "мы", "вы", "они", "его", "её", "их", "наш", "ваш",
+            "более", "менее", "очень", "совсем", "уже", "ещё", "только",
+            "даже", "вот", "там", "тут", "здесь", "тоже", "также",
         }
 
         # TF-IDF
@@ -829,12 +841,15 @@ class MirroAlgorithms:
         elif not q_words:
             score = 0.3
         else:
-            # Coverage: сколько ключевых слов вопроса есть в ответе
-            coverage = len(q_words & a_words) / len(q_words)
+            # Coverage: сколько ключевых слов вопроса есть в ответе (защита от z/0)
+            coverage = len(q_words & a_words) / max(len(q_words), 1)
 
             # Novelty: ответ не слишком похож на вопрос
             a_set = set(a_words)
             novelty = 1 - (len(q_words & a_set) / max(len(q_words | a_set), 1))
+            # Pегулярность: не поощряем ответ, целиком состоящий из слов вопроса
+            if coverage > 0.85 and novelty < 0.15:
+                score = 0.0
 
             # Length bonus (мягкий: от 20 до 500 символов)
             length_bonus = min(1.0, max(0.0, (len(answer) - 20) / 480))
@@ -1329,7 +1344,14 @@ class MirroAlgorithms:
         scores = [c[0] for c in candidates] or [0.0]
         lo, hi = min(scores), max(scores)
         rng = (hi - lo) or 1.0
+        seen_out = set()
         for sc, out, cl in candidates:
+            if not out:
+                continue
+            key = out.strip().lower()[:80]
+            if key in seen_out:      # дедуп: не держим два одинаковых ответа
+                continue
+            seen_out.add(key)
             out_set = set(self.tokenize(out)) if out else set()
             cov = len(q_set & out_set) / max(len(q_set), 1) if out_set else 0.0
             norm = (sc - lo) / rng
