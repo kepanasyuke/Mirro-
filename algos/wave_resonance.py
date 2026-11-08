@@ -18,8 +18,15 @@ from quantum_graph import QState
 
 
 def calculate_complex_phase(alpha, beta):
-    """Угол фазы комплексного состояния (atan2). Один return: float."""
-    return math.atan2(beta, alpha)
+    """Угол фазы комплексного состояния (atan2).
+    Нулевые/нечисловые амплитуды → 0.0. Один return: float."""
+    try:
+        a, b = float(alpha), float(beta)
+    except Exception:
+        return 0.0
+    if a == 0.0 and b == 0.0:
+        return 0.0
+    return math.atan2(b, a)
 
 
 def _routes_of_graph(graph):
@@ -31,20 +38,27 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
                              coupling_constant=0.12):
     """Синхронизирует фазы узлов целевого ребра под фазу узлов источника.
 
-    src_edge/tgt_edge — ключи рёбер (src, pred, dst). Возвращает НОВЫЙ QState
-    (чистая функция, не мутирует входной). Один return: QState.
+    src_edge/tgt_edge — ключи рёбер (src, pred, dst). Пустые граф/состояние
+    → неизменённая копия. Возвращает НОВЫЙ QState (не мутирует входной).
+    Один return: QState.
     """
+    if graph is None or qst is None or not getattr(qst, "states", None) \
+        or not getattr(graph, "edges", None):
+        return QState()
     new_states = dict(qst.states)
-    if src_edge in graph.edges and tgt_edge in graph.edges:
-        s_from, _p1, s_to = src_edge
-        t_from, _p2, t_to = tgt_edge
-        a_f, b_f = qst.get(s_from)
-        phase_a = calculate_complex_phase(a_f, b_f)
-        for node in (t_from, t_to):
-            a, b = qst.get(node)
-            phase_b = calculate_complex_phase(a, b)
-            new_phase_b = phase_b + coupling_constant * (phase_a - phase_b) * mod
-            new_states[node] = (math.cos(new_phase_b), math.sin(new_phase_b))
+    try:
+        if src_edge in graph.edges and tgt_edge in graph.edges:
+            s_from, _p1, s_to = src_edge
+            t_from, _p2, t_to = tgt_edge
+            a_f, b_f = qst.get(s_from)
+            phase_a = calculate_complex_phase(a_f, b_f)
+            for node in (t_from, t_to):
+                a, b = qst.get(node)
+                phase_b = calculate_complex_phase(a, b)
+                new_phase_b = phase_b + coupling_constant * (phase_a - phase_b) * mod
+                new_states[node] = (math.cos(new_phase_b), math.sin(new_phase_b))
+    except Exception:
+        new_states = dict(qst.states)
     out = QState()
     out.states = new_states
     return out
