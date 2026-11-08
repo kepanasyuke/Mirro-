@@ -23,24 +23,28 @@ _cache = {}
 
 
 def load_module(name):
-    """Загружает модуль алгоса по имени файла (с кэшем). Один return: module|None."""
+    """Загружает модуль алгоса по имени файла (с кэшем).
+    Битый/несуществующий модуль не кэшируется (позволяет повторную попытку).
+    Один return: module|None."""
     mod = _cache.get(name)
-    if mod is None:
-        path = ALGO_DIR / f"{name}.py"
-        if path.exists():
-            try:
-                spec = importlib.util.spec_from_file_location(name, path)
-                candidate = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(candidate)
-                _cache[name] = candidate
-                mod = candidate
-            except Exception:
-                mod = None
+    if mod is not None:
+        return mod
+    path = ALGO_DIR / f"{name}.py"
+    if not path.exists():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location(name, path)
+        candidate = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(candidate)
+        _cache[name] = candidate
+        mod = candidate
+    except Exception:
+        mod = None
     return mod
 
 
 def all_loaded():
-    """Число загруженных модулей."""
+    """Число загруженных модулей. Один return: int."""
     return len(_cache)
 
 
@@ -58,8 +62,15 @@ def list_available():
 
 
 def _numbers(text):
-    """Все числа из текста (float)."""
-    return [float(x.replace(",", ".")) for x in re.findall(r"-?\d+[.,]?\d*", text)]
+    """Все числа из текста (float). Некорректные пропускаются.
+    Один return: list."""
+    out = []
+    for x in re.findall(r"-?\d+[.,]?\d*", text or ""):
+        try:
+            out.append(float(x.replace(",", ".")))
+        except Exception:
+            continue
+    return out
 
 
 def _int_numbers(text):
@@ -406,7 +417,9 @@ def think(query):
 # ================== ИНТЕРФЕЙС ДЛЯ ЯДРА ==================
 
 def answer_question(query):
-    """Обёртка: строка-ответ для чата. Один return: str."""
+    """Обёртка: строка-ответ для чата. Пустой запрос → подсказка. Один return: str."""
+    if not (query or "").strip():
+        return "[unknown] Сформулируй вопрос, и я посчитаю или объясню."
     r = think(query)
     head = f"[{r['category']}] "
     answer_value = r["answer"]
@@ -424,9 +437,9 @@ def answer_question(query):
 
 
 def catalog():
-    """Каталог всех доступных алгоритмов по модулям."""
-    reg = list_available()
-    total = sum(len(m["functions"]) for m in reg)
+    """Каталог всех доступных алгоритмов по модулям. Один return: dict."""
+    reg = list_available() or []
+    total = sum(len(m.get("functions", [])) for m in reg if isinstance(m, dict))
     return {"modules": reg, "total_functions": total, "total_modules": len(reg)}
 
 
