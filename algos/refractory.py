@@ -24,8 +24,10 @@ class RefractoryState:
 
 def init_refractory_counters(graph):
     """Инициализирует нулевые счётчики для всех узлов и рёбер.
-    Один return: RefractoryState."""
+    Пустой граф → пустой стейт. Один return: RefractoryState."""
     st = RefractoryState()
+    if graph is None:
+        return st
     for name in graph.nodes:
         st.node_fatigue[name] = 0.0
     for key in graph.edges:
@@ -36,7 +38,12 @@ def init_refractory_counters(graph):
 def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
                              fatigue_rate=0.25):
     """Пересчитывает утомление узлов и рёбер за одну эпоху.
-    Возвращает новый RefractoryState. Один return: RefractoryState."""
+    Ставки клампятся в [0,1] на входе. Возвращает новый RefractoryState.
+    Один return: RefractoryState."""
+    recovery_rate = max(0.0, min(1.0, recovery_rate))
+    fatigue_rate = max(0.0, min(1.0, fatigue_rate))
+    if st is None:
+        st = init_refractory_counters(graph)
     new_st = RefractoryState()
     act = set(activated_nodes or ())
     for name in graph.nodes:
@@ -57,13 +64,18 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
 
 def apply_fatigue_to_weights(graph, st, floor=0.2):
     """Временно депрессирует веса рёбер на основе их утомления.
-    Возвращает dict {edge_key: активная проводимость} (не мутирует граф).
+    Если изначальный вес уже ниже floor — оставляем его как есть.
+    Пустой/некорректный граф → {}. Возвращает dict без мутации графа.
     Один return: dict."""
     out = {}
+    if graph is None or not hasattr(graph, "edges"):
+        return out
     for key, w in graph.edges.items():
         exhaustion = st.edge_exhaustion.get(key, 0.0)
         retention = 1.0 - (0.8 * exhaustion)
-        out[key] = w * retention if w * retention >= floor else w
+        fatigued = w * retention
+        # не завышаем исходно малые веса и не увеличиваем при утомлении
+        out[key] = fatigued if (w >= floor and fatigued >= floor) else w
     return out
 
 
