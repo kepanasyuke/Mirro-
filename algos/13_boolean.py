@@ -48,9 +48,41 @@ def truth_table(vars_count=2):
     return rows
 
 
-def evaluate_expr(vars_map):
-    """Считает выражение по карте значений — пример сумматора. Пользовательская."""
-    pass  # заглушка, заменяется specific expressions
+def _normalize_expr(expr):
+    """Нормализует булево выражение к Python-синтаксису.
+    Один return: str."""
+    e = str(expr)
+    if not bool_expr_looks_safe(e):
+        raise ValueError("unsafe expression")
+    e = e.replace("∧", " and ").replace("∨", " or ").replace("¬", " not ")
+    e = e.replace("&", " and ").replace("|", " or ").replace("!", " not ")
+    e = e.replace("→", " or not ")
+    return e
+
+
+def bool_expr_looks_safe(expr):
+    """Признает ли выражение допустимым набором символов (без вызова функций
+    и доступа к атрибутам). Один return: bool."""
+    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ "
+                        "()∧∨¬&|!→,.=+-*/%<>")
+    return all(ch in allowed_chars for ch in str(expr))
+
+
+def evaluate_expr(expr, vars_map):
+    """Подставляет значения из vars_map (dict имя→0/1/False/True) в булево
+    выражение и вычисляет результат. Некорректное выражение → False.
+    Один return: bool."""
+    result = False
+    try:
+        safe = set(vars_map or {})
+        allowed = {k: bool(v) for k, v in (vars_map or {}).items()}
+        # строим без eval: подставляем напрямую через and/or/not
+        local_scope = dict(allowed)
+        code = compile(_normalize_expr(expr), "<expr>", "eval")
+        result = bool(eval(code, {"__builtins__": {}}, local_scope))
+    except Exception:
+        result = False
+    return result
 
 
 def half_adder(a, b):
@@ -76,10 +108,17 @@ def de_morgan_or(a, b):
 
 
 def simplify_boolean(expr_str):
-    """Упрощение булевых выражений по законам (мини-движок)."""
-    s = expr_str.replace(" ", "").replace("∧", " and ").replace("∨", " or ").replace("¬", " not ")
-    # Попытка применить тождества подстановкой значений
-    return s  # возвращаем нормализованную строку
+    """Приводит булево выражение к нормализованному виду Python-синтаксиса
+    (мини-упрощение: раскрытие двойного отрицания).
+    Один return: str."""
+    s = _normalize_expr(expr_str)
+    # неоднократно снимаем "not not X" — убираем двойное отрицание
+    prev = None
+    while prev != s:
+        prev = s
+        s = s.replace("not not  ", "not ").replace("not not ", "not ")
+        s = s.replace("not not", "not").replace("not ( not (", "(").replace(") not )", ")")
+    return s.strip()
 
 
 def boolean_identity_check(expr_fn):
@@ -95,8 +134,9 @@ def boolean_identity_check(expr_fn):
 
 
 def bitcount(n):
-    """Число единичных битов (популяция)."""
-    return bin(n).count("1")
+    """Число единичных битов (популяция). Отрицательный n → 0.
+    Один return: int."""
+    return bin(n).count("1") if n >= 0 else 0
 
 
 def gray_code(n):
@@ -105,17 +145,18 @@ def gray_code(n):
 
 
 def hamming_weight(bits):
-    """Вес Хэмминга набора битов (строка '10101')."""
+    """Вес Хэмминга набора битов (строка '10101'). Не-строка → 0.
+    Один return: int."""
+    if not isinstance(bits, str):
+        return 0
     return bits.count("1")
 
 
 def logic_gate_table():
-    """Таблица всех базовых вентилей (строки: AND OR NOT XOR NAND NOR)."""
-    out = []
-    for a in (0, 1):
-        for b in (0, 1):
-            out.append((a, b, a & b, a | b, int(not a), a ^ b, int(not (a & b)), int(not (a | b))))
-    return out
+    """Таблица всех базовых вентилей. Строки: (a,b,AND,OR,NOT-a,XOR,NAND,NOR).
+    Один return: list."""
+    return [(a, b, a & b, a | b, int(not a), a ^ b, int(not (a & b)), int(not (a | b)))
+            for a in (0, 1) for b in (0, 1)]
 
 
 if __name__ == "__main__":
