@@ -46,6 +46,9 @@ class MirroThinking:
         # Актуальность/тренды — дополнено для веб-first
         "новейш", "тренд", "модно", "в 2025", "в 2026", "сейчас президент",
         "кто сейчас",
+        # английские триггеры свежести и персоналий (веб-first и для EN-вопросов)
+        "today", "news", "latest", "current", "who is", "who was",
+        "president", "election", "record", "hold on",
     }
 
     # ===== Rules: когда учиться =====
@@ -136,15 +139,17 @@ class MirroThinking:
     @staticmethod
     def confidence_from_results(results, top_k=3):
         """Оценивает уверенность ответа из базы по скорингу результатов.
-        Формат results: [(example_tuple, score), ...]"""
+        Формат results: [(example_tuple, score), ...].
+        Использует среднее топ-k (устойчиво к единичному выбросу).
+        Один return: float 0..1."""
         conf = 0.0
         try:
             top_scores = [r[1] for r in results[:top_k] if isinstance(r, (tuple, list)) and len(r) > 1]
         except Exception:
             top_scores = []
         if top_scores:
-            top = max(top_scores)
-            # Нормализуем: типичный топ ≈ 1-5, уверенность = сигмоид
+            top = sum(top_scores) / len(top_scores)
+            # Нормализуем: типичный топ ≈ 1-5, уверенность = сигмоид от среднего
             import math
             conf = 1.0 / (1.0 + math.exp(-(top - 1.5)))
         return conf
@@ -205,10 +210,12 @@ class MirroThinking:
     def _cache_fallback(self, query, max_hits=3):
         """Офлайн-фоллбэк: ищет в локальном кэше запись, ближайшую по словам
         (жадный словарный разброс), чтобы хоть что-то вернуть без сети.
+        Учитывает расхождение длины (немного штрафует слишком разные по объёму).
         Один return: dict или None."""
         q_words = set(_re.findall(r"[а-яёa-z]{3,}", (query or "").lower()))
         best = None
         best_score = 0
+        qn = len(q_words) or 1
         if q_words:
             for key, entry in list(self.web_cache.items())[-300:]:
                 if not entry or not entry.get("title"):
@@ -218,6 +225,10 @@ class MirroThinking:
                     continue
                 ov = len(q_words & e_words)
                 score = ov / max(len(q_words | e_words), 1)
+                # лёгкий штраф, если кэш-запрос в разы длиннее или короче вопроса
+                en = len(e_words)
+                if en > 0 and (en > qn * 2.5 or en * 2.5 < qn):
+                    score -= 0.15
                 if score > 0.25 and score > best_score:
                     best_score = score
                     best = dict(entry)
@@ -342,10 +353,16 @@ class MirroThinking:
         data = None
         try:
             req = urllib.request.Request(url, headers={
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Mirro/0.2"
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Mirro/0.2",
+                "Accept-Encoding": "gzip, deflate",
             })
             with urllib.request.urlopen(req, timeout=timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8", errors="replace"))
+                raw = resp.read()
+                # поддержка gzip-ответов
+                if getattr(resp, "headers", None) and resp.headers.get("Content-Encoding") == "gzip":
+                    import gzip as _gzip
+                    raw = _gzip.decompress(raw)
+                data = json.loads(raw.decode("utf-8", errors="replace"))
         except Exception:
             data = None
         return data
@@ -359,7 +376,7 @@ class MirroThinking:
             lines = [
                 f"[Веб] {result['title']}",
                 "",
-                result["summary"][:2500],
+                result["summary"][:2200],
                 "",
                 f"Источник: {result['url']}",
             ]
@@ -379,6 +396,10 @@ class MirroThinking:
                 lines.append("Это справочное объяснение; факты могут меняться — уточняй при важности.")
             result["kind"] = source_kind
             ans = "\n".join(lines)
+            # дедуп строк: если источник повторяется, оставляем один
+            if lines.count(f"Источник: {result['url']}") > 1:
+                ans = ans.replace(f"Источник: {result['url']}\nИсточник: {result['url']}",
+                                  f"Источник: {result['url']}")
         return ans
 
     def status(self):
