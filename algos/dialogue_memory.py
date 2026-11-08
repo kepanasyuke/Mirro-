@@ -34,12 +34,14 @@ def _default_mem_path():
 
 # стоп-слова для извлечения «темы» из реплики
 _STOP = set(("и","или","а","но","то","как","что","это","мне","меня","меня","ты","я",
-             "могу","быть","есть","был","была","в","на","по","с","из","для","не","про"))
+             "могу","быть","есть","был","была","в","на","по","с","из","для","не","про",
+             "который","которая","все","всё","очень","расскажи","напиши","объясни",
+             "можно","надо","нужно","давай","другой","ещё","уже","так"))
 
 
 def _keywords(text):
-    words = _re.findall(r"[а-яёa-z]+", (text or "").lower())
-    return [w for w in words if len(w) > 3 and w not in _STOP]
+    words = _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())
+    return [w for w in words if w not in _STOP]
 
 
 class DialogueMemory:
@@ -49,8 +51,8 @@ class DialogueMemory:
         self.emotion = 0.0                          # скользящая тональность -1..1
         self.summary = []                           # резюме-накопление длинного диалога
         self._summary_target = summary_length       # порог для сжатия
-        self.pos_words = {"спасибо","отлично","круто","здорово","супер","люблю","нравится","помогло"}
-        self.neg_words = {"плохо","грустно","злюсь","не работает","ошибка","не получается","жаль","ужас","ненавижу"}
+        self.pos_words = {"спасибо","отлично","круто","здорово","супер","люблю","нравится","помогло","класс","отличн","здоров","радуе"}
+        self.neg_words = {"плохо","грустно","злюсь","не работает","ошибка","не получается","жаль","ужас","ненавижу","разочар","сложно"}
         self._persist_path = None
         self.load()
 
@@ -116,7 +118,10 @@ class DialogueMemory:
         """Фиксирует реплику: тему + тональность + контекст + резюме-накопление."""
         kw = _keywords(user_text)
         if kw:
-            self.topics.append(tuple(kw[:4]))
+            t = tuple(kw[:4])
+            # не накапливаем одну и ту же тему подряд (анти-спам повторных реплик)
+            if not self.topics or self.topics[-1] != t:
+                self.topics.append(t)
         # тональность простым счётчиком совпадений
         seg = (user_text + " " + bot_reply).lower()
         pos = sum(w in seg for w in self.pos_words)
@@ -161,22 +166,28 @@ class DialogueMemory:
         return result
 
     def topic_context(self, user_text):
-        """Есть ли похожая тема в истории? Один return: str или None."""
+        """Есть ли похожая тема в истории? Требует не менее 2 общих слов,
+        чтобы избежать ложных пересечений по одному слову. Один return: str/None."""
         kw = set(_keywords(user_text))
         result = None
         for t in reversed(self.topics):
-            if set(t) & kw:
+            if len(set(t) & kw) >= 2:
                 result = " ".join(t)
                 break
         return result
 
     def mood(self, word_ru="да"):
-        """Разговорная фраза о текущем настроении диалога. Один return: str."""
+        """Разговорная фраза о текущем настроении диалога.
+        Учитывает отклонение от нейтрали. Один return: str."""
         phrase = "Нейтральный тон, слушаю внимательно."
         if self.emotion > 0.3:
             phrase = "Разговор тёплый, иду навстречу."
+        elif self.emotion > 0.12:
+            phrase = "Тон позитивный, приятно общаться."
         elif self.emotion < -0.3:
             phrase = "Разговор напряжённый — отвечу аккуратнее."
+        elif self.emotion < -0.12:
+            phrase = "Тон настороженный — стараюсь отвечать мягче."
         return phrase
 
     def summarize(self):
