@@ -19,6 +19,8 @@ SHUTKI = [
     ("анекдот про босову", "Учительница: 'ЕСЛИ хочешь быть здоров, ТО закаляйся, ИНАЧЕ валяйся весь день на диване'. Ученик выбрал ИНАЧЕ."),
     ("какой алгоритм самый ленивый", "Алгоритм НИЧЕГОНЕДЕЛАНИЯ: выполняется 0 секунд, результат — None."),
     ("что ответить на вопрос 'который час'", "Время делать алгоритмы, а не спрашивать."),
+    ("почему роботы не любят спорить", "Потому что у них нет разгона до 'я не согласен'."),
+    ("что общего у кота и алгоритма", "Оба иногда зацикливаются и не отзываются."),
 ]
 
 SARCASM = [
@@ -29,6 +31,8 @@ SARCASM = [
     "Ты уверен, что хочешь это знать? Потому что я не уверена, что хочу отвечать.",
     "Ответ есть. Но я за алгоритм 'ничегонеделание' сегодня.",
     "Мой детектор галлюцинаций говорит, что этот вопрос — галлюцинация.",
+    "Хороший вопрос. Одно плохо — он без ответа.",
+    "Я смогла бы ответить, но тогда пришлось бы думать."
 ]
 
 # Заводская настройка Mirro: «не очень верит в успех, но в удачу верит»
@@ -42,19 +46,42 @@ LUCK_NOT_SUCCESS = [
 ]
 
 
+_last_shutka = None  # последняя случайная шутка (анти-повтор подряд)
+
+
 def shutka(tema=None):
-    """Вернуть шутку по теме или случайную."""
+    """Вернуть шутку по теме или случайную.
+    По теме выбирает ту, у которой больше совпадающих слов с запросом.
+    Случайную — не повторяющую предыдущую подряд. Один return: str."""
+    global _last_shutka
+    answer = None
     if tema:
-        tema_lower = tema.lower()
+        tema_lower = (tema or "").lower()
+        tema_words = set(tema_lower.split())
+        best_score = 0
         for q, a in SHUTKI:
-            if any(w in tema_lower for w in q.split(" ")):
-                return f"— {q.capitalize()}?\n— {a}"
-    return random.choice(SHUTKI)[1]
+            score = len(tema_words & set(q.split(" ")))
+            if score > best_score:
+                best_score = score
+                answer = f"— {q.capitalize()}?\n— {a}"
+    if answer is None:
+        cands = [a for q, a in SHUTKI if a != _last_shutka] or [a for q, a in SHUTKI]
+        answer = random.choice(cands)
+        _last_shutka = answer
+    return answer
+
+
+_last_sarkazm = None  # последний ироничный ответ (анти-повтор подряд)
 
 
 def sarkazm():
-    """Вернуть ироничный ответ."""
-    return random.choice(SARCASM)
+    """Вернуть ироничный ответ, не повторяющий предыдущий подряд.
+    Один return: str."""
+    global _last_sarkazm
+    cands = [s for s in SARCASM if s != _last_sarkazm] or SARCASM
+    pick = random.choice(cands)
+    _last_sarkazm = pick
+    return pick
 
 
 def nichego_ne_delat():
@@ -78,9 +105,17 @@ def ya_ne_znau_chto_khotet():
     return random.choice(variants)
 
 
+_last_luck = None  # последняя фраза про удачу (анти-повтор подряд)
+
+
 def o_udache_i_uspehe():
-    """Заводская настройка: без веры в успех, но с верой в удачу."""
-    return random.choice(LUCK_NOT_SUCCESS)
+    """Заводская настройка: без веры в успех, но с верой в удачу.
+    Не повторяем одну фразу дважды подряд. Один return: str."""
+    global _last_luck
+    cands = [x for x in LUCK_NOT_SUCCESS if x != _last_luck] or LUCK_NOT_SUCCESS
+    pick = random.choice(cands)
+    _last_luck = pick
+    return pick
 
 
 if __name__ == "__main__":
