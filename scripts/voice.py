@@ -174,8 +174,11 @@ def speak(raw_answer, query, strategy="base"):
     else:
         raw_answer = _clean(raw_answer)
         if len(raw_answer) < 15:
-            # слишком короткий — всё равно звучим по-своему
-            out = (random.choice(INTRO) + raw_answer + random.choice(OUTRO)).strip()
+            # слишком короткий — всё равно звучим по-своему; берём НЕпустые
+            # заставки, иначе «Привет!» может остаться без обрамления
+            _intro = [x for x in INTRO if x] or [""]
+            _outro = [x for x in OUTRO if x] or [""]
+            out = (random.choice(_intro) + raw_answer + random.choice(_outro)).strip()
         else:
             # Переформулируем первые 1-2 предложения своими словами
             sentences = _re.split(r"(?<=[.!?])\s+", raw_answer)
