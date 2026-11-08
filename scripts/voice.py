@@ -23,14 +23,6 @@ INTRO = [
     "",
 ]
 
-OUTRO = [
-    " Вот так как-то.",
-    " Надеюсь, понятно.",
-    " Если что — переспроси, я уточню.",
-    " Ну а дальше ты уже сам(а) решишь.",
-    "",
-]
-
 LEAD_INS = [
     "Если говорить простыми словами, ",
     "По сути, ",
@@ -75,6 +67,11 @@ REPHRASE_PAIRS = [
     (r"\bв связи с\b", "поэтому"),
     (r"\bоднако\b", "но"),
     (r"\bтаким образом\b", "так что"),
+    (r"\bв течение\b", "за"),
+    (r"\bпутём\b", "через"),
+    (r"\bпри помощи\b", "с помощью"),
+    (r"\bв результате\b", "из-за"),
+    (r"\bнеобходимо\b", "нужно"),
 ]
 
 # ===== J.A.R.V.I.S.-режим =====
@@ -124,37 +121,45 @@ def _rephrase(text):
     """Лёгкая переформулировка: заменяем книжные обороты на разговорные."""
     for pat, repl in REPHRASE_PAIRS:
         text = _re.sub(pat, repl, text, flags=_re.IGNORECASE)
-    # убираем канцелярские хвосты «и т.д.», «и др.»
-    text = _re.sub(r"\s+(и т\.?д\.?|и др\.?|и т\.п\.?)\.?$", "", text)
+    # убираем канцелярские хвосты «и т.д.», «и др.», «и т.п.» в любом месте
+    text = _re.sub(r"[\s,;]*(и\s+т\.?\s*д\.?|и\s+др\.?|и\s+т\.?\s*п\.?)[\s,;]*", "", text)
+    # нормализуем пробелы после замен
+    text = _re.sub(r"\s{2,}", " ", text)
     return text.strip()
 
 
 def _clip(text, max_len=1800):
-    """Обрезаем текст по предложению. Один return: str."""
+    """Обрезаем текст по предложению. Если в срезе находится граница
+    предложения ближе начала — режем по ней; иначе обрезаем ровно по символу,
+    добавляя многоточие. Один return: str."""
     clipped = text
     if len(text) > max_len:
         cut = text[:max_len]
         last = cut.rfind(". ")
         if last > max_len * 0.6:
             clipped = cut[:last + 1]
+        elif last > 0:
+            clipped = cut[:last + 1] + "..."
         else:
-            clipped = cut + "..."
+            clipped = cut.rstrip() + "..."
     return clipped
 
 
-_last_lead = None  # запомненная последняя вступительная фраза (анти-повтор)
+_last_leads = []  # буфер из последних вступительных фраз (анти-повтор)
 
 
-def _pick_lead():
-    """Выбирает вступительную фразу, НЕ повторяющую предыдущую подряд.
+def _pick_lead(avoid=""):
+    """Выбирает вступительную фразу, НЕ повторяющую недавно использованные.
+    avoid — фраза, которую дополнительно нельзя брать в этот раз.
     Один return: str."""
-    global _last_lead
+    global _last_leads
     lead = None
     if LEAD_INS:
-        # избегаем той же фразы, что и в прошлый ответ
-        cands = [x for x in LEAD_INS if x != _last_lead] or LEAD_INS
+        banned = (_last_leads + [avoid]) if avoid else _last_leads
+        cands = [x for x in LEAD_INS if x not in banned] or LEAD_INS
         lead = random.choice(cands)
-    _last_lead = lead
+    # храним только последние 3, чтобы не накапливать бесконечно
+    _last_leads = (_last_leads + [lead])[-3:]
     return lead
 
 
