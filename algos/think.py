@@ -15,7 +15,9 @@ Mirro Think — мыслительный движок
 import importlib.util, re, math, json, time
 from pathlib import Path
 
-ALGO_DIR = Path(r"D:\Mirro\algos")
+# путь к каталогу алгосов — от текущего файла, а не жёстко прописанный
+# (кроссплатформенность: работает и на Windows, и на Linux)
+ALGO_DIR = Path(__file__).resolve().parent
 
 _cache = {}
 
@@ -47,12 +49,11 @@ def list_available():
     registry = []
     for f in sorted(ALGO_DIR.glob("*.py")):
         name = f.stem
-        if name.startswith("_"):
-            continue
-        mod = load_module(name)
-        if mod:
-            funcs = [x for x in dir(mod) if not x.startswith("_") and callable(getattr(mod, x))]
-            registry.append({"module": name, "functions": funcs})
+        if not name.startswith("_"):
+            mod = load_module(name)
+            if mod:
+                funcs = [x for x in dir(mod) if not x.startswith("_") and callable(getattr(mod, x))]
+                registry.append({"module": name, "functions": funcs})
     return registry
 
 
@@ -73,144 +74,196 @@ def classify(query):
     Распознаёт типовые задачи вузов/ссузов/олимпиад.
     """
     q = query.lower().strip()
+    result = None
+    if result is None:
+        result = _c_simple_math(q)
+    if result is None:
+        result = _c_percent(q)
+    if result is None:
+        result = _c_quadratic(q)
+    if result is None:
+        result = _c_linear(q)
+    if result is None:
+        result = _c_combinatorics(q)
+    if result is None:
+        result = _c_probability(q)
+    if result is None:
+        result = _c_physics(q)
+    if result is None:
+        result = _c_geometry(q)
+    if result is None:
+        result = _c_gcd_lcm_prime(q)
+    if result is None:
+        result = _c_strings_sorts(q)
+    return result
 
-    # --- простые вычисления (не трогаем уравнения с x) ---
+
+def _c_simple_math(q):
+    """Простая арифметика: сколько будет / x+y, x-y, x*y, x/y.
+    Не путает с уравнениями (есть x) и новыми датами (год не считает).
+    Один return: tuple|None."""
     has_math_words = "умнож" in q or "плюс" in q or "минус" in q or "дели" in q or "раздел" in q
+    out = None
+    # не считаем одиночное число без операции (даты, телефоны, номера)
+    has_op = any(op in q for op in ("+", "-", "*", "/", "×"))
+    if not has_op and not has_math_words:
+        return out
     if "x" not in q and ("сколько будет" in q or re.search(r"\d+\s*[+\-*/×]\s*\d+", q) or has_math_words):
         nums = _numbers(q)
         if ("*" in q.replace("×", "*") or "умнож" in q or "умножить" in q) and len(nums) >= 2:
             if "×" in q or "*" in q or "умнож" in q or "умножить" in q:
-                return ("математика", "01_stats", "product_of", None,
-                        f"{nums[0]:g} × {nums[1]:g} = {nums[0]*nums[1]:.6g}")
-            return ("математика", "01_stats", "product_of", None, str(nums[0] * nums[1]))
-        if ("+" in q or "плюс" in q) and len(nums) >= 2:
-            return ("математика", "01_stats", "sum_of", None,
-                    f"{nums[0]:g} + {nums[1]:g} = {nums[0]+nums[1]:.6g}")
-        if ("-" in q or "минус" in q) and len(nums) >= 2:
-            return ("математика", "01_stats", "diff_of", None,
-                    f"{nums[0]:g} − {nums[1]:g} = {nums[0]-nums[1]:.6g}")
-        if ("/" in q or "дели" in q or "раздел" in q) and len(nums) >= 2:
-            if nums[1] != 0:
-                return ("математика", "01_stats", "div_of", None,
-                        f"{nums[0]:g} / {nums[1]:g} = {nums[0]/nums[1]:.6g}")
+                out = ("математика", "01_stats", "product_of", None,
+                       f"{nums[0]:g} × {nums[1]:g} = {nums[0]*nums[1]:.6g}")
+            else:
+                out = ("математика", "01_stats", "product_of", None, str(nums[0] * nums[1]))
+        elif ("+" in q or "плюс" in q) and len(nums) >= 2:
+            out = ("математика", "01_stats", "sum_of", None,
+                   f"{nums[0]:g} + {nums[1]:g} = {nums[0]+nums[1]:.6g}")
+        elif ("-" in q or "минус" in q) and len(nums) >= 2:
+            out = ("математика", "01_stats", "diff_of", None,
+                   f"{nums[0]:g} − {nums[1]:g} = {nums[0]-nums[1]:.6g}")
+        elif ("/" in q or "дели" in q or "раздел" in q) and len(nums) >= 2 and nums[1] != 0:
+            out = ("математика", "01_stats", "div_of", None,
+                   f"{nums[0]:g} / {nums[1]:g} = {nums[0]/nums[1]:.6g}")
+    return out
 
-    # --- проценты ---
+
+def _c_percent(q):
+    """Проценты: «X% от Y» / «X процентов от Y». Один return: tuple|None."""
+    out = None
     # Поддерживаем и символ %, и словесную форму «15 процентов от 200».
     m = re.search(
         r"(\d+[.,]?\d*)\s*(?:%|процент(?:ов|а|у|ом)?)\s*(от|из|от числа|числа)?\s*(\d+[.,]?\d*)?",
         q)
-    if m:
+    if m and m.group(3):
         pct = float(m.group(1).replace(",", "."))
-        if m.group(3):
-            base = float(m.group(3).replace(",", "."))
-            return ("математика", "16_university", "percent_of", (pct, base),
-                    f"{pct:g}% от {base:g} = {pct/100*base:.6g}")
+        base = float(m.group(3).replace(",", "."))
+        result = pct / 100 * base
+        out = ("математика", "16_university", "percent_of", (pct, base),
+               f"{pct:g}% от {base:g} = {result:.6g}")
+    return out
 
-    # --- квадратное уравнение: парсим ax²+bx+c=0 с учётом неявной 1 и знаков ---
+
+def _c_quadratic(q):
+    """Квадратное уравнение ax²+bx+c=0. Один return: tuple|None."""
+    out = None
     is_quad = ("квадратн" in q or "x²" in q or "x^2" in q or "x**2" in q) and "=" in q
     if is_quad:
-        # нормализуем: x² -> 1x^2, -5x -> -5x, +6 -> +6
         expr = q.replace("×", "").replace(" ", "")
         m = re.search(r"([+-]?\d*\.?\d*)?x(?:\^2|\u00b2)?\s*([+-]\d*\.?\d*)?x\s*([+-]\d+\.?\d*)?\s*=\s*0", expr)
         if m:
             a_s, b_s, c_s = m.group(1), m.group(2), m.group(3)
-            a = 1.0 if a_s in (None, "", "+", "-") else (float(a_s) if a_s not in ("+", "-") else 1.0)
-            if a_s in ("+", "-"):
-                a = 1.0
-            if a_s:
-                a = 1.0 if a_s in ("+", "-") else float(a_s)
-            b = 0.0
-            if b_s:
-                b = 1.0 if b_s in ("+", "-") else float(b_s)
+            a = 1.0 if a_s in ("+", "-") else (float(a_s) if a_s else 1.0)
+            b = 1.0 if b_s in ("+", "-") else (float(b_s) if b_s else 0.0)
             c = float(c_s) if c_s else 0.0
             roots = _solve_quadratic(a, b, c)
-            return ("математика", "16_university", "solve_quadratic", (a, b, c),
-                    f"{a:g}x²{'+' if b>=0 else ''}{b:g}x{'+' if c>=0 else ''}{c:g}=0 → корни: {roots}")
+            out = ("математика", "16_university", "solve_quadratic", (a, b, c),
+                   f"{a:g}x²{'+' if b>=0 else ''}{b:g}x{'+' if c>=0 else ''}{c:g}=0 → корни: {roots}")
+    return out
 
-    # --- линейное: ax + b = 0 ---
+
+def _c_linear(q):
+    """Линейное ax + b = rhs. Один return: tuple|None."""
+    out = None
     if ("реши" in q or "найди x" in q or "уравнен" in q) and "x" in q:
-        nums = _numbers(q)
+        is_quad = ("квадратн" in q or "x²" in q or "x^2" in q or "x**2" in q) and "=" in q
         m = re.search(r"([+-]?\d*\.?\d*)x\s*([+-]\d*\.?\d*)?\s*=\s*(-?\d+\.?\d*)", q.replace(" ", "").replace("=", " = "))
         if m and not is_quad:
             a = 1.0 if m.group(1) in (None, "", "+", "-") else float(m.group(1))
             b_lin = float(m.group(2)) if m.group(2) else 0.0
             rhs = float(m.group(3)) if m.group(3) else 0.0
-            # ax + b = rhs -> ax = rhs - b
             root = (rhs - b_lin) / a if a else None
-            return ("математика", "16_university", "solve_linear", (a, rhs - b_lin),
-                    f"x = {(rhs - b_lin) / a:.6g}" if a else "нет решения")
+            out = ("математика", "16_university", "solve_linear", (a, rhs - b_lin),
+                   f"x = {(rhs - b_lin) / a:.6g}" if a else "нет решения")
+    return out
 
-    # --- комбинаторика ---
+
+def _c_combinatorics(q):
+    """Комбинаторика: C(n,k), сочетания, перестановки/факториал.
+    Один return: tuple|None."""
+    out = None
     m_c = re.match(r"c\s*\(?(\d+)\s*[;,]\s*(\d+)\)?", q)
     if m_c:
         n, k = int(m_c.group(1)), int(m_c.group(2))
-        return ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
-                f"C({n},{k}) = {_comb(n,k)}")
-    if ("сочет" in q or "c(" in q.lower()) and len(_int_numbers(q)) >= 2:
+        out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
+               f"C({n},{k}) = {_comb(n,k)}")
+    elif ("сочет" in q or "c(" in q.lower()) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
-        return ("комбинаторика", "10_combinatorics", "combinations_count", (nums[0], nums[1]),
-                f"C({nums[0]},{nums[1]}) = {_comb(nums[0],nums[1])}")
-    if ("перестанов" in q or "факториал" in q) and _int_numbers(q):
+        out = ("комбинаторика", "10_combinatorics", "combinations_count", (nums[0], nums[1]),
+               f"C({nums[0]},{nums[1]}) = {_comb(nums[0],nums[1])}")
+    elif ("перестанов" in q or "факториал" in q) and _int_numbers(q):
         n = _int_numbers(q)[0]
-        return ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
+        out = ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
+    return out
 
-    # --- вероятность ---
+
+def _c_probability(q):
+    """Классическая вероятность. Один return: tuple|None."""
+    out = None
     if "вероятн" in q and len(_numbers(q)) >= 2:
         nums = _numbers(q)[:2]
-        return ("вероятность", "12_probability", "classical_probability", (nums[0], nums[1]),
-                f"P = {nums[0]:g}/{nums[1]:g} = {nums[0]/nums[1]:.4f}")
+        out = ("вероятность", "12_probability", "classical_probability", (nums[0], nums[1]),
+               f"P = {nums[0]:g}/{nums[1]:g} = {nums[0]/nums[1]:.4f}")
+    return out
 
-    # --- физика: энергия связи / полураспад ---
+
+def _c_physics(q):
+    """Физика: энергия связи / полураспад. Один return: tuple|None."""
+    out = None
     if "энерги" in q and "связ" in q and _numbers(q):
         d = _numbers(q)[0]
-        return ("физика", "16_university", "binding_energy", (d,),
-                f"E = {d:g}·931.5 МэВ = {d*931.5:.3g} МэВ")
-    if "полураспад" in q and len(_numbers(q)) >= 3:
+        out = ("физика", "16_university", "binding_energy", (d,),
+               f"E = {d:g}·931.5 МэВ = {d*931.5:.3g} МэВ")
+    elif "полураспад" in q and len(_numbers(q)) >= 3:
         n0, t, th = _numbers(q)[:3]
-        return ("физика", "16_university", "half_life_remaining", (n0, t, th),
-                f"N = {n0:g}·2^(-{t:g}/{th:g}) = {n0*2**(-t/th):.4g}")
+        # защита от деления на ноль (период полураспада не может быть 0)
+        if th == 0:
+            th = 1.0
+        out = ("физика", "16_university", "half_life_remaining", (n0, t, th),
+               f"N = {n0:g}·2^(-{t:g}/{th:g}) = {n0*2**(-t/th):.4g}")
+    return out
 
-    # --- геометрия ---
+
+def _c_geometry(q):
+    """Геометрия: Пифагор / Герон. Один return: tuple|None."""
+    out = None
     if "пифагор" in q and len(_numbers(q)) >= 2:
         a, b = _numbers(q)[:2]
-        return ("геометрия", "16_university", "right_triangle_sides", (a, b),
-                f"гипотенуза = {math.hypot(a,b):.4g}")
-    if ("герон" in q or "площадь треугольн" in q) and len(_numbers(q)) >= 3:
+        out = ("геометрия", "16_university", "right_triangle_sides", (a, b),
+               f"гипотенуза = {math.hypot(a,b):.4g}")
+    elif ("герон" in q or "площадь треугольн" in q) and len(_numbers(q)) >= 3:
         a, b, c = _numbers(q)[:3]
         s = (a+b+c)/2
         area = math.sqrt(max(0, s*(s-a)*(s-b)*(s-c)))
-        return ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
-                f"площадь = {area:.4g}")
+        out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
+               f"площадь = {area:.4g}")
+    return out
 
-    # --- НОД/НОК ---
-    if "нод" in q or "наибольший общий" in q or "gcd" in q:
-        nums = _int_numbers(q)
-        if len(nums) >= 2:
-            a, b = nums[:2]
-            g = _gcd(a, b)
-            return ("математика", "08_math", "gcd", (a, b), f"НОД({a},{b}) = {g}")
-    if "нок" in q or "наименьшее общее" in q or "lcm" in q:
-        nums = _int_numbers(q)
-        if len(nums) >= 2:
-            a, b = nums[:2]
-            l = _lcm(a, b)
-            return ("математика", "08_math", "lcm", (a, b), f"НОК({a},{b}) = {l}")
 
-    # --- простое число ---
-    if "прост" in q and _int_numbers(q):
+def _c_gcd_lcm_prime(q):
+    """НОД/НОК/простое число. Один return: tuple|None."""
+    out = None
+    if ("нод" in q or "наибольший общий" in q or "gcd" in q) and len(_int_numbers(q)) >= 2:
+        a, b = _int_numbers(q)[:2]
+        out = ("математика", "08_math", "gcd", (a, b), f"НОД({a},{b}) = {_gcd(a, b)}")
+    elif ("нок" in q or "наименьшее общее" in q or "lcm" in q) and len(_int_numbers(q)) >= 2:
+        a, b = _int_numbers(q)[:2]
+        out = ("математика", "08_math", "lcm", (a, b), f"НОК({a},{b}) = {_lcm(a, b)}")
+    elif "прост" in q and _int_numbers(q):
         n = _int_numbers(q)[0]
-        return ("математика", "08_math", "is_prime", (n,), f"{n} простое? {_isprime(n)}")
+        out = ("математика", "08_math", "is_prime", (n,), f"{n} простое? {_isprime(n)}")
+    return out
 
-    # --- строки ---
-    if "палиндром" in q or "палиндром" in q:
-        return ("строки", "06_strings", "is_palindrome", (q,), None)
 
-    # --- сортировка ---
-    if "сортир" in q and _int_numbers(q):
+def _c_strings_sorts(q):
+    """Палиндром / сортировка. Один return: tuple|None."""
+    out = None
+    if "палиндром" in q:
+        out = ("строки", "06_strings", "is_palindrome", (q,), None)
+    elif "сортир" in q and _int_numbers(q):
         arr = _int_numbers(q)
-        return ("алгоритмы", "05_sorts", "quick_sort", (arr,), f"сортировка: {sorted(arr)}")
-
-    return None
+        out = ("алгоритмы", "05_sorts", "quick_sort", (arr,), f"сортировка: {sorted(arr)}")
+    return out
 
 
 # --- хелперы без импорта модулей (для мгновенных объяснений) ---
