@@ -116,13 +116,45 @@ def confidence_from_score(score, has_result=True):
     return round(conf, 2)
 
 
-def choose_best(query, candidates, preferred=None):
+def _dedupe_candidates(cands):
+    """Возвращает кандидатов без дублей по ответу (держит первый по входу).
+    Короткие/пустые ответы отбрасываются. Один return: list."""
+    seen = set()
+    out = []
+    for (inst, out_txt, cl), sc in cands:
+        if not out_txt or len(out_txt) < 6:
+            continue
+        key = out_txt.strip().lower()[:80]
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(((inst, out_txt, cl), sc))
+    return out
+
+
+def _prio_leaf_tie(cands, preferred):
+    """При равном score выбирает ответ из предпочтительного кластера.
+    Один return: (best_item, best_score) или None."""
+    best = None
+    best_sc = -999.0
+    for (inst, out, cl), sc in cands:
+        item_sc = sc
+        if preferred and cl == preferred:
+            item_sc += 0.001  # лёгкий приоритет предпочтительного кластера
+        if item_sc > best_sc:
+            best_sc = item_sc
+            best = ((inst, out, cl), sc)
+    return best, best_sc
+
+
+def choose_best(query, candidates, preferred=None, top_n=8):
     b_out = None
     b_sc = 0.0
     b_r = "нет кандидатов"
     cands = []
     if candidates:
         cands = [c for c in candidates if c[0][2] != "generated"] or candidates
+    cands = _dedupe_candidates(cands)  # 1) дедуп и очистка пустых
 
     if cands:
         if preferred:
@@ -140,10 +172,14 @@ def choose_best(query, candidates, preferred=None):
             best_out = None
             best_score = -999
             best_reason = ""
-            for (inst, out, cl), tfidf_score in cands[:5]:
+            # 2) учитываем больше кандидатов (top_n вместо жёстких 5)
+            ranked = []
+            for (inst, out, cl), tfidf_score in cands[:top_n]:
                 sc, rs = score_candidate(query, inst, out, cl, tfidf_score, preferred)
-                if sc > best_score:
-                    best_score, best_out, best_reason = sc, out, "; ".join(rs) if rs else "базовый"
+                ranked.append((sc, out, "; ".join(rs) if rs else "базовый"))
+            if ranked:
+                ranked.sort(key=lambda x: -x[0])
+                best_score, best_out, best_reason = ranked[0]
             if best_score >= 4.0:
                 b_out, b_sc, b_r = best_out, best_score, best_reason
             else:
