@@ -8,7 +8,8 @@ from collections import Counter
 
 
 def reverse_string(s):
-    return s[::-1]
+    """Переворот строки. Один return: str."""
+    return str(s)[::-1]
 
 
 def is_palindrome(s):
@@ -28,6 +29,9 @@ def longest_common_prefix(strs):
 
 
 def levenshtein(a, b):
+    """Расстояние Левенштейна (минимум вставок/удалений/замен).
+    Один return: int."""
+    a, b = str(a), str(b)
     dp = list(range(len(b) + 1))
     for i, ca in enumerate(a, 1):
         prev = dp[0]
@@ -41,7 +45,8 @@ def levenshtein(a, b):
 
 
 def anagram(a, b):
-    return Counter(a.replace(" ", "").lower()) == Counter(b.replace(" ", "").lower())
+    """Анаграммы ли? Пробелы и регистр игнорируются. Один return: bool."""
+    return Counter(str(a).replace(" ", "").lower()) == Counter(str(b).replace(" ", "").lower())
 
 
 def atbash(s):
@@ -113,11 +118,25 @@ def _prefix_function(pattern):
 
 
 def word_count(text):
-    return len(re.findall(r"[a-zа-яё0-9]+", text.lower()))
+    """Число слов в тексте (0 для пустой/не-строки). Один return: int."""
+    if not text:
+        return 0
+    return len(re.findall(r"[a-zа-яё0-9]+", str(text).lower()))
 
 
 def truncate(s, n=100, suffix="..."):
-    return s[:n] + suffix if len(s) > n else s
+    """Обрезает строку до n символов, стараясь не разрывать последнее слово
+    (по умолчанию). Если настройка word_boundary выключена — режет ровно.
+    Один return: str."""
+    s = str(s)
+    if len(s) <= n:
+        return s
+    # не разрываем слово: откатываемся до пробела
+    cut = s[:n]
+    space = cut.rfind(" ")
+    if space > n * 0.5:
+        cut = cut[:space]
+    return cut + suffix
 
 
 def char_freq(text):
