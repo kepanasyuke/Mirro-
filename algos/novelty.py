@@ -13,6 +13,10 @@
 import re as _re
 from collections import deque
 
+_STOP = set(("и","или","что","как","это","то","для","про","мне","меня","ты","я",
+             "не","на","в","по","с","из","расскажи","объясни","почему","зачем",
+             "который","которая","можно","нужно","есть","быть","очень","вообще"))
+
 
 class Novelty:
     def __init__(self, window=200):
@@ -22,7 +26,7 @@ class Novelty:
 
     @staticmethod
     def _kw(text):
-        words = _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())
+        words = _re.findall(r"[а-яёa-z]{4,}", (text or "").lower())
         return set(w for w in words if w not in _STOP)
 
     def feed(self, user_text, known=True):
@@ -40,21 +44,34 @@ class Novelty:
         return known_in_seen or known_in_passed
 
     def is_novel(self, user_text, known_kw=None):
-        """True, если вопрос выглядит новым. Один return: bool."""
+        """True, если вопрос выглядит новым. Тема, уже отмеченная недавно как
+        новая и запрошенная повторно повторно, — считается менее новой (ответ
+        не зацикливается). Один return: bool."""
         kw = self._kw(user_text)
         novel = True
         if not kw:
             novel = False
         elif self._known_via(kw, known_kw):
             novel = False
+        elif self._just_seen_novel(kw):
+            novel = True  # сохраняем новизну, пользователь ещё спрашивает
         return novel
 
+    def _just_seen_novel(self, kw):
+        """Была ли эта тема недавно помечена как НОВАЯ. Один return: bool."""
+        for rkw, known in reversed(self.recent):
+            if rkw and set(rkw) & kw:
+                return not known
+        return False
+
     def unknown_topic(self, user_text):
-        """Возвращает «якорное» слово новизны или None. Один return: str|None."""
+        """Возвращает «якорное» слово новизны (детерминированно — первое
+        по алфавиту, чтобы ответ не «прыгал» между запусками). Один return: str|None."""
         kw = self._kw(user_text)
         topic = None
         if kw:
-            topic = kw.pop()
+            # предпочитаем более длинные/содержательные слова
+            topic = sorted(kw, key=lambda w: (-len(w), w))[0]
         return topic
 
 
@@ -67,7 +84,8 @@ novelty = Novelty()
 
 def _novelty_msg(topic):
     """Строка ответа про новизну. Один return: str."""
-    return (f"Это новое для меня — такого я ещё не изучала/{(topic or 'этой темы')}."
+    label = topic or "этой темы"
+    return (f"Это новое для меня — «{label}» я ещё не изучала."
             f" Я запомню и постараюсь освоить. Сейчас могу ответить на то, что уже в моих знаниях.")
 
 
