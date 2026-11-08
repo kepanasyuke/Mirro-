@@ -46,10 +46,28 @@ def stddev(xs):
     return math.sqrt(variance(xs))
 
 
-def percentile(xs, p):
-    """Процентиль (0..100). Один return: float."""
+def range_stat(xs):
+    """Размах выборки (max − min). 0 на пустом списке. Один return: float."""
     result = 0.0
     if xs:
+        result = max(xs) - min(xs)
+    return result
+
+
+def midrange(xs):
+    """Середина размаха ((min + max)/2). 0 на пустом. Один return: float."""
+    result = 0.0
+    if xs:
+        result = (min(xs) + max(xs)) / 2
+    return result
+
+
+def percentile(xs, p):
+    """Процентиль (0..100). p за пределами диапазона клампится.
+    Один return: float."""
+    result = 0.0
+    if xs:
+        p = max(0.0, min(100.0, float(p)))
         s = sorted(xs)
         k = (len(s) - 1) * p / 100.0
         lo = int(math.floor(k))
@@ -69,10 +87,11 @@ def covariance(xs, ys):
 
 
 def pearson(xs, ys):
-    """Корреляция Пирсона. Один return: float."""
+    """Корреляция Пирсона. 0 при разной длине рядов или вырожденном сигм.
+    Один return: float."""
     sx, sy = stddev(xs), stddev(ys)
     result = 0.0
-    if sx and sy:
+    if sx and sy and len(xs) == len(ys):
         result = covariance(xs, ys) / (sx * sy)
     return result
 
@@ -93,6 +112,38 @@ def zscore(xs):
     if xs:
         m, s = mean(xs), stddev(xs)
         result = [(x - m) / s if s else 0.0 for x in xs]
+    return result
+
+
+def winsorize(xs, low=0.05, high=0.05):
+    """Обрезает выбросы: значения ниже нижнего и выше верхнего процентиля
+    заменяются на границы. Один return: list."""
+    result = []
+    if xs:
+        s = sorted(xs)
+        n = len(s)
+        lo_i = max(0, int(round(low * n)) - 1)
+        hi_i = min(n - 1, int(round((1 - high) * n)) - 1)
+        cmin, cmax = s[lo_i], s[hi_i]
+        result = [max(cmin, min(cmax, x)) for x in xs]
+    return result
+
+
+def geometric_mean(xs):
+    """Среднее геометрическое (произведение в степени 1/n).
+    0, если есть неположительные элементы или список пуст. Один return: float."""
+    result = 0.0
+    if xs and all(x > 0 for x in xs):
+        result = math.exp(sum(math.log(x) for x in xs) / len(xs))
+    return result
+
+
+def harmonic_mean(xs):
+    """Среднее гармоническое (n / сумма обратных).
+    0 при пустом списке или нулевых элементах. Один return: float."""
+    result = 0.0
+    if xs and all(x > 0 for x in xs):
+        result = len(xs) / sum(1.0 / x for x in xs)
     return result
 
 
