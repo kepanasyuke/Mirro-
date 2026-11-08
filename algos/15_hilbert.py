@@ -47,18 +47,29 @@ def planck_charge():
 
 
 def reduced_compton_wavelength(m):
-    """Приведённая комптоновская длина волны частицы массы m."""
-    return H_BAR / (m * C)
+    """Приведённая комптоновская длина волны частицы массы m.
+    При m<=0 → 0 (нефизично). Один return: float."""
+    result = 0.0
+    if m > 0:
+        result = H_BAR / (m * C)
+    return result
 
 
 def quantum_uncertainty(dx, dp):
-    """Проверка соотношения неопределённостей: Δx·Δp ≥ ħ/2."""
-    return (dx * dp) >= H_BAR / 2
+    """Проверка соотношения неопределённостей: Δx·Δp ≥ ħ/2.
+    Отрицательные/мусорные входы → False. Один return: bool."""
+    try:
+        return (float(dx) * float(dp)) >= H_BAR / 2
+    except Exception:
+        return False
 
 
 def de_broglie_energy_wavelength(m, v):
-    """Длина волны де Бройля и энергия частицы."""
-    wl = H_BAR * 2 * math.pi / (m * v)
+    """Длина волны де Бройля для массы m и скорости v. При m*v=0 → 0.
+    Один return: float."""
+    wl = 0.0
+    if m > 0 and v != 0:
+        wl = H_BAR * 2 * math.pi / (m * v)
     return wl
 
 
@@ -86,7 +97,10 @@ def vector_norm(v):
 
 
 def normalize_vector(v):
-    """Нормировка вектора к единице."""
+    """Нормировка вектора к единице. Нулевой вектор → копия без деления.
+    Один return: list."""
+    if not v:
+        return []
     n = vector_norm(v)
     return [x / n for x in v] if n else v[:]
 
@@ -120,7 +134,10 @@ def cauchy_schwarz(u, v):
 
 
 def is_orthogonal(u, v):
-    """Ортогональны ли векторы."""
+    """Ортогональны ли векторы (порог 1e-9). Пустой/разной длины → False.
+    Один return: bool."""
+    if not u or not v or len(u) != len(v):
+        return False
     return abs(inner_product(u, v)) < 1e-9
 
 
