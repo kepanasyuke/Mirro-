@@ -16,9 +16,14 @@ class Qubit:
     """Кубит: амплитуды alpha|0> + beta|1> (α²+β²=1)."""
 
     def __init__(self, alpha=1.0, beta=0.0):
-        norm = math.sqrt(alpha * alpha + beta * beta) or 1
-        self.alpha = alpha / norm
-        self.beta = beta / norm
+        norm = math.sqrt(alpha * alpha + beta * beta)
+        # нулевой/нефизичный вектор → состояние |0>
+        if norm <= 1e-12:
+            self.alpha = 1.0
+            self.beta = 0.0
+        else:
+            self.alpha = alpha / norm
+            self.beta = beta / norm
 
     def measure(self):
         """Измерение: возвращает 0 или 1 по вероятностям."""
@@ -93,8 +98,9 @@ def three_valued_not(a):
 
 
 def three_valued_implication(a, b):
-    """Импликация Лукасевича: min(1, 1-a+b)."""
-    return min(1, 1 - a + b)
+    """Импликация Лукасевича: min(1, 1-a+b). Клампится в [0,1].
+    Один return: float."""
+    return max(0.0, min(1.0, 1 - a + b))
 
 
 def three_valued_kleene_and(a, b):
@@ -128,8 +134,8 @@ def three_valued_table():
 
 
 def three_valued_equivalence(a, b):
-    """Эквивалентность Лукасевича: 1 - |a - b|."""
-    return 1 - abs(a - b)
+    """Эквивалентность Лукасевича: 1 - |a - b|. Клампится в [0,1]."""
+    return max(0.0, min(1.0, 1 - abs(a - b)))
 
 
 def truth_degree(model_fn):
@@ -148,18 +154,28 @@ def quantum_tsp_states():
 
 
 def quantum_probability(amplitude):
-    """Вероятность из амплитуды (борновское правило)."""
-    real, imag = amplitude if isinstance(amplitude, tuple) else (amplitude, 0)
-    return real * real + imag * imag
+    """Вероятность из амплитуды (борновское правило). Нечисловая → 0.
+    Один return: float."""
+    result = 0.0
+    try:
+        real, imag = amplitude if isinstance(amplitude, tuple) else (amplitude, 0)
+        result = real * real + imag * imag
+    except Exception:
+        result = 0.0
+    return result
 
 
 def superposition_measure(counts):
-    """Симуляция измерения суперпозиции: частоты исходов."""
+    """Симуляция измерения суперпозиции: частоты исходов.
+    Некорректное counts → {}. Один return: dict."""
     from collections import Counter
-    states = ["|0>", "|1>"]
-    probs = [0.5, 0.5]
-    c = Counter(random.choices(states, weights=probs, k=counts))
-    return dict(c)
+    result = {}
+    if isinstance(counts, int) and counts > 0:
+        states = ["|0>", "|1>"]
+        probs = [0.5, 0.5]
+        c = Counter(random.choices(states, weights=probs, k=counts))
+        result = dict(c)
+    return result
 
 
 if __name__ == "__main__":
