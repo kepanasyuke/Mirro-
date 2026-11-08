@@ -630,7 +630,14 @@ def _semantic_expand(query):
     expanded = q
     if extra:
         seen = set(_tokenize_for_search(q))
-        add = " ".join(dict.fromkeys([t for t in extra if t not in seen]))[:400]
+        # не добавляем слишком короткие термины и ограничиваем 8 уникальных расширений
+        candidates = []
+        for t in extra:
+            if t not in seen and len(t) >= 3:
+                seen.add(t)
+                if len(candidates) < 8:
+                    candidates.append(t)
+        add = " ".join(candidates)[:360]
         if add:
             expanded = (q + " " + add).strip()
     return expanded
@@ -771,6 +778,18 @@ def answer_looks_bad(query, answer):
                         overlap = len(q_set & a_set)
                         if len(q_set) >= 2 and overlap >= 0.7 * len(q_set) and len(a_set) <= len(q_set) + 1:
                             bad = True  # ответ буквально пересказывает вопрос, новой инфы нет
+                # ответ — одно и то же слово много раз («дадада…» / «нейроннейрон»)
+                if not bad and a_tokens and len(set(a_tokens)) == 1 and len(a_tokens) >= 4:
+                    bad = True
+                # ответ — почти без гласных (нечитаемый «жздрфт»)
+                if not bad and answer:
+                    letters = [c for c in answer.lower() if 'а' <= c <= 'я' or c == 'ё']
+                    vowels = [c for c in letters if c in "аеёиоуыэюя"]
+                    if letters and len(vowels) / max(len(letters), 1) < 0.12 and len(letters) >= 8:
+                        bad = True
+                # длинный ответ без единого предложения/точки
+                if not bad and len(answer) > 200 and not _re.search(r"[.!?]", answer):
+                    bad = True
     return bad
 
 
