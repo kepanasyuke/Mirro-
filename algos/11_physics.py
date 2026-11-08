@@ -13,43 +13,68 @@ AU = 1.496e11     # астрономическая единица
 
 
 def gravitational_force(m1, m2, r):
-    """Сила гравитационного притяжения."""
-    return G * m1 * m2 / (r * r)
+    """Сила гравитационного притяжения. 0 при нулевом расстоянии.
+    Один return: float."""
+    result = 0.0
+    if r > 0:
+        result = G * m1 * m2 / (r * r)
+    return result
 
 
 def orbital_period(a, m_central):
-    """Период орбиты (3-й закон Кеплера)."""
-    return 2 * math.pi * math.sqrt(a ** 3 / (G * m_central))
+    """Период орбиты (3-й закон Кеплера). 0 при нефизичных параметрах.
+    Один return: float."""
+    result = 0.0
+    if a > 0 and m_central > 0:
+        result = 2 * math.pi * math.sqrt(a ** 3 / (G * m_central))
+    return result
 
 
 def escape_velocity(m, r):
-    """Вторая космическая скорость."""
-    return math.sqrt(2 * G * m / r)
+    """Вторая космическая скорость. 0 при r<=0. Один return: float."""
+    result = 0.0
+    if r > 0:
+        result = math.sqrt(2 * G * m / r)
+    return result
 
 
 def kinetic_energy(m, v):
+    """Кинетическая энергия. Один return: float."""
     return 0.5 * m * v * v
 
 
 def potential_energy_grav(m1, m2, r):
-    return -G * m1 * m2 / r
+    """Гравитационная потенциальная энергия. При r<=0 → 0 (нефизично)."""
+    result = 0.0
+    if r > 0:
+        result = -G * m1 * m2 / r
+    return result
 
 
 def free_fall_time(h, g=9.81):
-    """Время падения с высоты (без учёта сопротивления)."""
-    return math.sqrt(2 * h / g)
+    """Время падения с высоты (без учёта сопротивления). 0 при g<=0."""
+    result = 0.0
+    if g > 0 and h >= 0:
+        result = math.sqrt(2 * h / g)
+    return result
 
 
 def pendulum_period(L, g=9.81):
-    """Период математического маятника."""
-    return 2 * math.pi * math.sqrt(L / g)
+    """Период математического маятника. 0 при g<=0."""
+    result = 0.0
+    if g > 0 and L >= 0:
+        result = 2 * math.pi * math.sqrt(L / g)
+    return result
 
 
 def rydberg_wavelength(n1, n2, Z=1):
     """
     Длина волны перехода по формуле Ридберга (спектр атома водорода).
-    n1 < n2. Возвращает длину волны в метрах или None. Один return.
+    n1 < n2 и n1, n2 — целые положительные. Возвращает длину волны в метрах
+    или None. Один return: float|None.
     """
+    if n1 <= 0 or n2 <= n1:
+        return None
     R = 1.097373e7  # постоянная Ридберга (м^-1)
     inv = R * (Z ** 2) * (1 / (n1 * n1) - 1 / (n2 * n2))
     result = None
@@ -74,21 +99,31 @@ def lyman_series(n_max):
 
 
 def hydrogen_level_energy(n):
-    """Энергия уровня атома водорода (эВ)."""
-    return -13.6 / (n * n)
+    """Энергия уровня атома водорода (эВ). 0 для нефизичного n<=0."""
+    result = 0.0
+    if n > 0:
+        result = -13.6 / (n * n)
+    return result
 
 
 def photon_energy_from_wavelength(wl_m):
-    """Энергия фотона по длине волны (Дж)."""
-    h = 6.626e-34
-    c = 3e8
-    return h * c / wl_m
+    """Энергия фотона по длине волны (Дж). 0 при нефизичной wl<=0.
+    Один return: float."""
+    result = 0.0
+    if wl_m > 0:
+        h = 6.626e-34
+        c = 3e8
+        result = h * c / wl_m
+    return result
 
 
 def de_broglie_wavelength(m, v):
-    """Длина волны де Бройля."""
-    h = 6.626e-34
-    return h / (m * v)
+    """Длина волны де Бройля. 0 при m<=0 или v<=0. Один return: float."""
+    result = 0.0
+    if m > 0 and v > 0:
+        h = 6.626e-34
+        result = h / (m * v)
+    return result
 
 
 def dv_dt(states):
