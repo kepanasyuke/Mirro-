@@ -16,10 +16,22 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     """Сканирует граф и подавляет аномальные веса / петлевые роу-ссылки.
+    Пустой граф или некорректные параметры → (graph, []).
+    Рёбра с не-трёхэлементным ключом пропускаются.
     Возвращает (graph, quarantined_edges). Один return: tuple."""
     quarantined = []
+    if graph is None or max_allowed_weight <= 0:
+        return graph, quarantined
+    # suppression 0..1 — «сила антитела»; вне диапазона берём по умолчанию
+    if not (0 < suppression <= 1):
+        suppression = 0.1
     # 1. иммунное подавление аномально разогнанных рёбер
     for key, w in list(graph.edges.items()):
+        try:
+            if len(key) < 3:
+                continue
+        except Exception:
+            continue
         if abs(w) > max_allowed_weight:
             graph.edges[key] = w * suppression
             if hasattr(graph, "_set_adj_weight"):
@@ -30,9 +42,22 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     meta = getattr(graph, "meta_routes", None)
     if meta:
         for key in list(meta.keys()):
-            if key[0] == key[1]:
-                del meta[key]
+            try:
+                if len(key) >= 2 and key[0] == key[1]:
+                    del meta[key]
+            except Exception:
+                continue
     return graph, quarantined
+
+
+def scan_report(graph):
+    """Краткий отчёт о состоянии графа после сканирования (для логирования).
+    Один return: str."""
+    if graph is None:
+        return "нет графа"
+    edges = getattr(graph, "edges", {})
+    n_high = sum(1 for w in edges.values() if abs(w) > 5.0)
+    return f"рёбер {len(edges)}, аномальных >5: {n_high}"
 
 
 if __name__ == "__main__":
@@ -43,4 +68,4 @@ if __name__ == "__main__":
     add_meta_route(g, ("a", "p", "b"), ("a", "p", "b"), mod=1.0)  # петля на себя
     gg, q = run_graph_immune_scan(g, max_allowed_weight=5.0)
     print("подавлено рёбер:", len(q), "вес после:", round(gg.edges[("a", "p", "b")], 2),
-          "meta:", dict(gg.meta_routes))
+          "meta:", dict(gg.meta_routes), "| отчёт:", scan_report(gg))
