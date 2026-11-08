@@ -101,10 +101,10 @@ class DialogueMemory:
                     os.makedirs(d, exist_ok=True)
                 except Exception:
                     pass
-            data = {"topics": [list(t) for t in self.topics],
-                    "context": [list(c) for c in self.context],
-                    "emotion": self.emotion,
-                    "summary": self.summary}
+            data = {"topics": [[str(x) for x in list(t)] for t in (self.topics or [])],
+                    "context": [[str(x) for x in list(c)] for c in (self.context or [])],
+                    "emotion": float(self.emotion or 0.0),
+                    "summary": list(self.summary or [])}
             tmp = str(path) + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False)
@@ -115,7 +115,10 @@ class DialogueMemory:
         return ok
 
     def remember(self, user_text, bot_reply=""):
-        """Фиксирует реплику: тему + тональность + контекст + резюме-накопление."""
+        """Фиксирует реплику: тему + тональность + контекст + резюме-накопление.
+        Пустой вход не фиксируется. Один return: list (ключевые слова)."""
+        if not (user_text or "").strip():
+            return []
         kw = _keywords(user_text)
         if kw:
             t = tuple(kw[:4])
@@ -167,8 +170,11 @@ class DialogueMemory:
 
     def topic_context(self, user_text):
         """Есть ли похожая тема в истории? Требует не менее 2 общих слов,
-        чтобы избежать ложных пересечений по одному слову. Один return: str/None."""
+        чтобы избежать ложных пересечений по одному слову. Пустой вход → None.
+        Один return: str/None."""
         kw = set(_keywords(user_text))
+        if not kw:
+            return None
         result = None
         for t in reversed(self.topics):
             if len(set(t) & kw) >= 2:
@@ -206,7 +212,10 @@ _MEM_TRIGGERS = ["сколько ты помнишь", "что ты помниш
 
 
 def _answer_topic(q):
-    """Ответ про вспоминание темы. Один return: str."""
+    """Ответ про вспоминание темы (пустой запрос → вежливая фраза).
+    Один return: str."""
+    if not (q or "").strip():
+        return "О чём именно ты хочешь вспомнить?"
     topic = dm.topic_context(q) or dm.last_topic()
     msg = "Мы ещё не обсуждали это — давай начнём."
     if topic:
@@ -216,6 +225,8 @@ def _answer_topic(q):
 
 def _has_trigger(q, triggers):
     """Есть ли в запросе любой из триггеров. Один return: bool."""
+    if not q or not triggers:
+        return False
     return any(w in q for w in triggers)
 
 
