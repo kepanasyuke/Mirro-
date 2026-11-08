@@ -119,7 +119,23 @@ class MirroCore:
                     backup_info = {"latest": latest.name, "dirs": len(dirs)}
         except Exception:
             backup_info = {}
-        return {"name": "Mirro", "version": "0.3", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "backup": backup_info, "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
+        # статус модерации: сколько раз фильтр отклонил запрос/ответ (из журнала)
+        moderation = {"rejected_input": 0, "rejected_output": 0}
+        try:
+            mlog = MIRRO_HOME / "data" / "moderation_log.jsonl"
+            if mlog.is_file():
+                for line in mlog.read_text("utf-8", errors="replace").splitlines()[-400:]:
+                    try:
+                        rec = json.loads(line)
+                    except Exception:
+                        continue
+                    if rec.get("kind") == "input":
+                        moderation["rejected_input"] = moderation.get("rejected_input", 0) + 1
+                    elif rec.get("kind") == "output":
+                        moderation["rejected_output"] = moderation.get("rejected_output", 0) + 1
+        except Exception:
+            moderation = {"rejected_input": 0, "rejected_output": 0}
+        return {"name": "Mirro", "version": "0.3", "total_calls": self.stats["calls"], "total_examples": self.stats["total_examples"], "providers": prov, "clusters": self.get_cluster_info(), "backup": backup_info, "moderation": moderation, "api": f"http://{HOST}:{PORT}/v1/chat/completions"}
     def corpus_total(self):
         if not hasattr(self, "_corpus_total"):
             t = 0
@@ -1153,7 +1169,8 @@ def _try_web_first(prompt):
         if web_hits > 0:
             web_first = try_web(prompt)
             if web_first:
-                result = {"content": _voice(web_first, prompt, "web"), "strategy": "web"}
+                result = {"content": _voice(web_first, prompt, "web"), "strategy": "web",
+                          "confidence": 0.45}  # веб-ответ — уверенность умеренная
     except Exception:
         result = None
     return result
@@ -1332,17 +1349,24 @@ def _multipart_answer(parts, cluster, context=""):
 
 
 def _fallback_chain(prompt):
-    """Финальная цепочка: веб → провайдер → подсказка. Единственный return: dict."""
+    """Финальная цепочка: веб → граф-вывод → провайдер → подсказка. Единственный return: dict."""
     web_answer = try_web(prompt)
     if web_answer:
-        result = {"content": _voice(web_answer, prompt, "web"), "strategy": "web"}
+        result = {"content": _voice(web_answer, prompt, "web"), "strategy": "web",
+                  "confidence": 0.45}
     else:
-        provider_answer = try_provider(prompt)
-        if provider_answer:
-            result = {"content": provider_answer[:2500], "strategy": "provider"}
+        # веб пуст — пробуем вывести знания из графа по связям до сдачи
+        ginf = _graph_infer_unknown(prompt)
+        if ginf is not None:
+            result = ginf
+            result["workspace"] = "сознание: веб пуст → вывод знаний из графа (рассуждение по связям)"
         else:
-            hint = _provider_help_hint()
-            result = {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
+            provider_answer = try_provider(prompt)
+            if provider_answer:
+                result = {"content": provider_answer[:2500], "strategy": "provider"}
+            else:
+                hint = _provider_help_hint()
+                result = {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
     return result
 
 
@@ -1396,6 +1420,7 @@ def build_response(prompt, cluster, context=""):
                     bad_web = try_web(prompt)
                     if bad_web:
                         result = _voice_or_none(bad_web, prompt, "web")
+                        result["confidence"] = 0.45
                         result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
                     else:
                         result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
@@ -1409,6 +1434,8 @@ def build_response(prompt, cluster, context=""):
                     else:
                         cl_web = try_web(prompt)
                         result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
+                        if result.get("strategy") == "web":
+                            result["confidence"] = 0.45
                         result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
                 elif has_result:
                     result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
@@ -1469,6 +1496,17 @@ def build_response(prompt, cluster, context=""):
                 elif q_len >= 8 and len(content) < 400 and result.get("source"):
                     # длинный вопрос — если ответ получился куцый, дополняем
                     result["content"] = content.rstrip() + " Могу раскрыть детальнее — спроси, что именно важно."
+        except Exception:
+            pass
+        # уточнение модерации: проверяем ИСХОДЯЩИЙ ответ после генерации и гасим,
+# если он нежелателен (замена на безопасную фразу)
+        try:
+            if result.get("content"):
+                from algos.moderation import moderate_output
+                mout = moderate_output(result.get("content", ""))
+                if mout.get("cleaned") and result.get("strategy") not in ("moderated",):
+                    result["content"] = mout["cleaned"]
+                    result["workspace"] = (result.get("workspace", "") + " (исходящий ответ отфильтрован модерацией)").strip()
         except Exception:
             pass
         # персональность: если знаем имя пользователя, обращаемся по имени
@@ -1783,6 +1821,32 @@ class MirroAPI(BaseHTTPRequestHandler):
                     rep["corpus_total"] = 0
                 # бэкап
                 rep["backup"] = core.status().get("backup", {})
+                # лог рефлексии: сколько раз укрепила связи по времени (из reflection_log)
+                reflection = {"total": 0, "recent_24h": 0}
+                try:
+                    rlog = MIRRO_HOME / "data" / "reflection_log.jsonl"
+                    if rlog.is_file():
+                        lines = rlog.read_text("utf-8", errors="replace").splitlines()
+                        reflection["total"] = len(lines)
+                        if lines:
+                            import datetime as _dtc
+                            from dateutil.parser import parse as _dparse
+                            now = _dtc.datetime.now()
+                            recent = 0
+                            for ln in lines[-50:]:
+                                try:
+                                    ts_s = (ln.split('"ts": "')[1].split('"')[0])
+                                    when = _dparse(ts_s)
+                                    if (now - when).total_seconds() < 86400:
+                                        recent += 1
+                                except Exception:
+                                    continue
+                            reflection["recent_24h"] = recent
+                        else:
+                            reflection["recent_24h"] = 0
+                except Exception:
+                    reflection = {"total": 0, "recent_24h": 0}
+                rep["reflection"] = reflection
                 self._json(rep)
             except Exception as e:
                 self._json({"error": str(e)}, 500)
