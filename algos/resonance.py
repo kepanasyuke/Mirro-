@@ -16,29 +16,48 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def calculate_vector_distance(vec_a, vec_b):
-    """Евклидово расстояние между векторами на чистом Python. Один return: float."""
-    return sum((a - b) ** 2 for a, b in zip(vec_a, vec_b)) ** 0.5
+    """Евклидово расстояние между векторами. Разная длина → минимум по паре,
+    хвост считается разницей. Один return: float."""
+    if vec_a is None or vec_b is None:
+        return 0.0
+    dist = 0.0
+    n = max(len(vec_a), len(vec_b))
+    for i in range(n):
+        a = vec_a[i] if i < len(vec_a) else 0.0
+        b = vec_b[i] if i < len(vec_b) else 0.0
+        dist += (a - b) ** 2
+    return dist ** 0.5
 
 
 def _edge_conductance(graph, key):
     """Активная проводимость ребра (текущий вес). Один return: float."""
-    return float(graph.edges.get(key, 0.0))
+    try:
+        return float(graph.edges.get(key, 0.0))
+    except Exception:
+        return 0.0
 
 
 def try_bridge_resonant_edges(graph, resonance_threshold=0.15):
     """Простраивает временные мостовые роу-ссылки между рёбрами с близкой
-    активной проводимостью (резонанс). Возвращает число созданных роу-ссылок.
-    Один return: int."""
+    активной проводимостью (резонанс). Пустой граф/некорректный порог → 0.
+    Возвращает число созданных роу-ссылок. Один return: int."""
+    if graph is None or not hasattr(graph, "edges") or resonance_threshold <= 0:
+        return 0
     from neural_electric import add_meta_route
     edges_keys = list(graph.edges.keys())
     created = 0
+    if len(edges_keys) < 2:
+        return 0
+    pairs = []
     for i in range(len(edges_keys)):
         for j in range(i + 1, len(edges_keys)):
             a = _edge_conductance(graph, edges_keys[i])
             b = _edge_conductance(graph, edges_keys[j])
             if abs(a - b) < resonance_threshold:
-                add_meta_route(graph, edges_keys[i], edges_keys[j], mod=0.35)
-                created += 1
+                pairs.append((edges_keys[i], edges_keys[j]))
+    for ea, eb in pairs:
+        add_meta_route(graph, ea, eb, mod=0.35)
+        created += 1
     return created
 
 
