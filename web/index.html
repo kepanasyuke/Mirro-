@@ -665,6 +665,10 @@ function resetReaction() {
         <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Здоровье подсистем</div>
         <div id="subsystemHealth" style="display:flex;flex-wrap:wrap;gap:8px;padding:4px 2px 8px"></div>
       </div>
+      <div class="card" style="grid-column:1/-1">
+        <div class="k" style="padding:2px 2px 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px">Резюме длинного диалога</div>
+        <div id="dialogueSummary" style="font-size:var(--fs-small); color:var(--muted); min-height:18px">Загрузка…</div>
+      </div>
     </div>
     <div class="grid" style="margin-top:12px">
       <div class="card" style="grid-column:1/-1">
@@ -1096,11 +1100,23 @@ async function loadStats() {
       lines.map(([n, ok]) => '<div class="algo-line"><span class="nm">' + n + '</span><span class="st ' + (ok?'yes':'no') + '">' + (ok?'активен':'—') + '</span></div>').join('');
     drawGraphGrowth(a.knowledge_graph);
     drawSubsystemHealth(d);
+    loadDialogueSummary();
     loadGraphLog();
     loadTopQuestions();
   } catch {
     grid.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--danger)">Сервер недоступен — запусти Mirro через лаунчер.</div>';
   }
+}
+
+async function loadDialogueSummary() {
+  try {
+    const el = document.getElementById('dialogueSummary');
+    if (!el) return;
+    const r = await fetch(API + '/v1/dialogue-summary', {headers: AUTH_HDR});
+    const d = await r.json();
+    const s = d.summary || '';
+    el.textContent = s ? s : 'Пока нет резюме длинного диалога.';
+  } catch { /* тихо */ }
 }
 
 function drawSubsystemHealth(d) {
@@ -1163,6 +1179,7 @@ async function loadGraphLog() {
 }
 
 let netNodes = [];   // позиции узлов для клика #0 центр, далее связи
+let netSelected = null;  // выбранное (кликнутое) понятие для подсветки
 async function showNetMap() {
   const inp = document.getElementById('netInput');
   const cv = document.getElementById('cvNetMap');
@@ -1174,14 +1191,16 @@ async function showNetMap() {
   ctx.clearRect(0,0,cv.width,cv.height);
   if (info) info.textContent = 'загружаю связи «' + concept + '»…';
   netNodes = [];
+  netSelected = concept;  // подсветка выбранного понятия
   try {
     const r = await fetch(API + '/v1/knowledge?q=' + encodeURIComponent(concept) + '&kind=links', {headers: AUTH_HDR});
     const d = await r.json();
     const links = d.answer || [];
     ctx.fillStyle = '#0c1220'; ctx.fillRect(0,0,cv.width,cv.height);
     const cx = cv.width/2, cy = cv.height/2;
-    // центр — понятие
-    ctx.fillStyle = '#d8231c'; ctx.beginPath(); ctx.arc(cx,cy,16,0,Math.PI*2); ctx.fill();
+    // центр — понятие (выбранное подсвечено ярче)
+    ctx.fillStyle = (netSelected && netSelected === concept) ? '#ffd75e' : '#d8231c';
+    ctx.beginPath(); ctx.arc(cx,cy,16,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center';
     ctx.fillText(concept.substring(0,14), cx, cy+5);
     netNodes.push({x:cx, y:cy, name:concept});
@@ -1218,6 +1237,7 @@ function netMapClick(e) {
     const dx = mx - nd.x, dy = my - nd.y;
     if (dx*dx + dy*dy < 400) {   // радиус клика 20px
       document.getElementById('netInput').value = nd.name;
+      netSelected = nd.name;   // подсветка выбранного
       showNetMap();
       return;
     }

@@ -1080,9 +1080,13 @@ class MirroAlgorithms:
             pass
         return None
 
-    def _interest_boost(self, candidate):
+    def _interest_boost(self, candidate, cluster=None):
         """Персонализация по интересам: если ответ перекликается с любимыми
         темами пользователя (из профиля user_profile.json), повышает score.
+        Может учитывать кластер ответа (cluster) и предпочтение длины (verbosity):
+        verbosity>0 усиливает буст (положительный настрой длинного ответа),
+        а пересечение темы с кластером профиля даёт отдельный прирост.
+
         Один return: float (0..0.3)."""
         boost = 0.0
         try:
@@ -1099,6 +1103,7 @@ class MirroAlgorithms:
         try:
             prof = load_profile()
             topics = prof.get("topics") or []
+            verb = float(prof.get("verbosity", 0.0) or 0.0)
             if not topics:
                 return boost
             cand_low = (candidate or "").lower()
@@ -1113,7 +1118,20 @@ class MirroAlgorithms:
                     if boost >= 0.15:
                         break
             if boost >= 0.15:
-                boost += 0.15  # заметный приоритет любимой темы
+                # кластер, согласный с длиной: verbosity>0 (подробно) уважается
+                # в базе/граф-кластерах чуть сильнее; любит кратко (verbosity<0) — меньше
+                strength = 0.15
+                if verb > 0.3:
+                    strength = 0.25
+                elif verb < -0.3:
+                    strength = 0.12
+                # если cluster совпадает со сферой интереса — дополнительный прирост
+                if cluster:
+                    cl_low = str(cluster).lower()
+                    if any(t[:3] in cl_low for t in topics if t):
+                        strength += 0.05
+                boost = strength
+                boost += 0.05  # как минимум заметный приоритет любимой темы
         except Exception:
             boost = 0.0
         return min(boost, 0.3)

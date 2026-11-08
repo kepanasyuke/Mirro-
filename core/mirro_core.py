@@ -1482,17 +1482,22 @@ def build_response(prompt, cluster, context=""):
                 result["content"] = _dedupe_answer(result.get("content", ""))
         except Exception:
             pass
-        # адаптация длины к длине вопроса: короткий вопрос -> лаконичнее,
-        # длинный развёрнутый -> не режем слишком жёстко
+        # адаптация длины к длине вопроса и кластеру:
+        # короткий вопрос -> лаконичнее; код/математика -> короче; рассказ/граф -> развёрнутее
         try:
             if result.get("content") and result.get("strategy") in ("base", "web", "graph_infer"):
                 q_len = len(_re.findall(r"[а-яёa-z]{3,}", prompt.lower()))
                 content = result.get("content", "")
-                if q_len <= 2 and len(content) > 1100:
-                    # короткий вопрос — оставляем только первые 2-3 предложения
+                # кластер нормирует лимиты: краткие кластеры (code/math) держат короче
+                cl_low = cluster.lower()
+                is_laconic = cl_low in ("code", "math") or cl_low.startswith("code") or cl_low.startswith("math")
+                hard_max = 900 if is_laconic else 1300
+                if q_len <= 2 and len(content) > hard_max:
+                    # короткий вопрос (и код/математика) — сжимаем до первых 2-3 предложений
                     sents = _re.split(r"(?<=[.!?])\s+", content.strip())
-                    if len(sents) > 3:
-                        result["content"] = " ".join(sents[:3]).strip()
+                    keep = 2 if is_laconic else 3
+                    if len(sents) > keep:
+                        result["content"] = " ".join(sents[:keep]).strip()
                 elif q_len >= 8 and len(content) < 400 and result.get("source"):
                     # длинный вопрос — если ответ получился куцый, дополняем
                     result["content"] = content.rstrip() + " Могу раскрыть детальнее — спроси, что именно важно."
@@ -1715,6 +1720,13 @@ class MirroAPI(BaseHTTPRequestHandler):
             top = core.stats.get("top_questions", {})
             ranked = sorted(top.items(), key=lambda x: -x[1])[:15]
             self._json({"questions": [{"q": q, "count": c} for q, c in ranked]})
+        elif route == "/v1/dialogue-summary":
+            # резюме длинного диалога (для UI-поля в Аналитике)
+            try:
+                from algos.dialogue_memory import dm as _dm
+                self._json({"summary": _dm.get_summary()})
+            except Exception:
+                self._json({"summary": ""})
         elif route == "/v1/evolve":
             try:
                 from algos.evolve import get_evolver, _default_A, _default_X, report
