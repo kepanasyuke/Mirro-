@@ -1833,6 +1833,18 @@ class MirroAPI(BaseHTTPRequestHandler):
                     rep["corpus_total"] = 0
                 # бэкап
                 rep["backup"] = core.status().get("backup", {})
+                # пробелы знаний: слабые темы из corpus_audit (где примеров мало)
+                gaps_rep = {"weak_topics": {}, "duplicates": 0}
+                try:
+                    sys.path.insert(0, str(MIRRO_HOME))
+                    import scripts.corpus_audit as _audit_mod
+                    arep = _audit_mod.audit(limit_topic_scan=8000)
+                    gaps_rep = {"weak_topics": arep.get("weak_topics", {}),
+                                "duplicates": arep.get("duplicates", 0),
+                                "strong_topics": arep.get("strong_topics", [])}
+                except Exception:
+                    gaps_rep = {"weak_topics": {}, "duplicates": 0, "strong_topics": []}
+                rep["gaps"] = gaps_rep
                 # лог рефлексии: сколько раз укрепила связи по времени (из reflection_log)
                 reflection = {"total": 0, "recent_24h": 0}
                 try:
