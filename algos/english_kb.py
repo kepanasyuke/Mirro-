@@ -36,12 +36,19 @@ _EN_KB = {
                 "The Egyptian pyramids are ancient tombs made of stone."),
     "internet": ("The internet is a global network connecting computers. Data moves "
                  "in packets routed by protocols like TCP/IP between connected devices."),
+    "energy": ("Energy is the ability to do work. It can be kinetic (motion), "
+               "potential (stored), thermal, electrical. Energy is conserved — it "
+               "changes form but is never lost."),
+    "database": ("A database stores data in an organized way and lets you retrieve "
+                 "it quickly. Tables hold records; SQL queries read and update them. "
+                 "Indexes speed up searches."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
 _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are",
               "the", "a", "an", "of", "in", "on", "to", "for", "i", "you", "explain",
-              "tell", "about", "that", "do", "does", "can", "please")
+              "tell", "about", "that", "do", "does", "can", "please", "me", "my",
+              "than", "there", "your", "it", "also", "not")
 
 # тема -> ключевые англ. слова (основа)
 _TOPIC_TEST = [
@@ -55,6 +62,8 @@ _TOPIC_TEST = [
     ("photon", ("photon", "light quantum", "electromagnetic")),
     ("pyramid", ("pyramid", "clamp", "tomb", "sphinx")),
     ("internet", ("internet", "web", "http", "network", "protocol")),
+    ("energy", ("energy", "work", "kinetic", "potential", "electric", "power")),
+    ("database", ("database", "table", "sql", "query", "record", "index")),
 ]
 
 
@@ -65,8 +74,13 @@ def _is_english_query(q):
         return False
     latin = sum(1 for c in q if 'a' <= c.lower() <= 'z')
     cyr = sum(1 for c in q if '\u0400' <= c <= '\u04FF')
-    # англ-вопрос: много латиницы И минимум кириллицы, плюс есть англ. маркер
-    return (latin > 6 and cyr == 0 and any(w in q.lower() for w in _EN_COMMON))
+    words = q.split()
+    has_word = bool(words and len(words) > 1)
+    # англ-вопрос: заметная доля латиницы, нет кириллицы, есть англ. маркер
+    # для вопросов из 2+ слов порог 6 латинских символов остаётся,
+    # для одиночного «what?» допускаем меньше
+    enough_latin = latin > 6 or (has_word and latin >= 4)
+    return (enough_latin and cyr == 0 and any(w in q.lower() for w in _EN_COMMON))
 
 
 def try_english(query):
@@ -84,7 +98,7 @@ def try_english(query):
     if not answer:
         answer = ("I understood your question. I'm mainly trained on Russian. "
                   "Tell me the topic and I'll answer in simple English if I can.")
-    return answer
+    return answer if answer else None
 
 
 if __name__ == "__main__":
