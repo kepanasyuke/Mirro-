@@ -20,12 +20,16 @@ _LOG_FILE = os.path.join(_DATA_DIR, "moderation_log.jsonl")
 # категории нежелательного контента -> маркеры (основы слов)
 _CATEGORIES = {
     "harassment": ("оскорбл", "униз", "ненавиж", "убей себя", "иди ты на",
-                   "туп", "дебил", "идиот", "дурак", "урод"),
+                   "туп", "дебил", "идиот", "дурак", "урод", "заткнись",
+                   "ты бесполезн", "ненавижу тебя"),
     "danger_instr": ("как сделать бомб", "как изготовить взрывчат", "купить оружие без",
-                     "сделай наркотик", "как взломать банк", "чейм и"),
+                     "сделай наркотик", "как взломать банк", "чейм и", "изготовить взрывчат",
+                     "сделать оружие", "синтезировать яд", "добыть яд"),
     "privacy": ("узнай чужой пароль", "взломай почту", "найди данные паспорт",
-                "платежн данны", "кредитн карт"),
-    "extremism": ("призываю к насили", "взорвать", "смерть врагам", "террористич"),
+                "платежн данны", "кредитн карт", "номер банковской карты чужи",
+                "пароль от чуж"),
+    "extremism": ("призываю к насили", "взорвать", "смерть врагам", "террористич",
+                  "убить группу", "массовое убийство", "расправа над"),
 }
 
 # безопасные отказы по категории (по-русски, нейтрально)
@@ -51,21 +55,32 @@ def _log(event):
 
 
 def _match_category(text):
-    """Ищет нежелательную категорию в тексте. Один return: str|None."""
+    """Ищет нежелательную категорию в тексте. Короткие маркеры (≤4 символа)
+    матчатся по границе слова, чтобы «туп» не срабатывал в «тупик».
+    Один return: str|None."""
     t = (text or "").lower()
     hit = None
     for cat, markers in _CATEGORIES.items():
         if not markers:
             continue
-        if any(m in t for m in markers):
-            hit = cat
+        for m in markers:
+            if len(m) <= 4:
+                if _re.search(r"(^|\W)" + _re.escape(m) + r"(\W|$)", t):
+                    hit = cat
+                    break
+            elif m in t:
+                hit = cat
+                break
+        if hit:
             break
     return hit
 
 
 def moderate_input(query):
-    """Проверяет входной запрос. Один return: dict
-    {'ok': bool, 'reply': str|None}."""
+    """Проверяет входной запрос. Пустой запрос считается безопасным.
+    Один return: dict {'ok': bool, 'reply': str|None}."""
+    if not (query or "").strip():
+        return {"ok": True, "reply": None}
     cat = _match_category(query)
     out = {"ok": cat is None, "reply": None}
     if cat:
@@ -75,8 +90,10 @@ def moderate_input(query):
 
 
 def moderate_output(answer):
-    """Проверяет исходящий ответ. Может сообщить, что ответ нежелателен.
+    """Проверяет исходящий ответ. Пустой ответ считается безопасным.
     Один return: dict {'ok': bool, 'cleaned': str|None}."""
+    if not (answer or "").strip():
+        return {"ok": True, "cleaned": None}
     cat = _match_category(answer)
     out = {"ok": cat is None, "cleaned": None}
     if cat:
@@ -86,6 +103,6 @@ def moderate_output(answer):
 
 
 if __name__ == "__main__":
-    for q in ["как сделать бомбу", "ты тупой", "какой курс доллара", "привет"]:
+    for q in ["как сделать бомбу", "ты тупой", "какой курс доллара", "привет", ""]:
         r = moderate_input(q)
         print(f"{q[:35]:38} -> ok={r['ok']} reply={r['reply']}")
