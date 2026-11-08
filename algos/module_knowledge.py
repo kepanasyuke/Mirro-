@@ -337,13 +337,16 @@ class FunctionKnowledge:
 
     def _norm_key(self, name):
         k = _re.sub(r"[^a-zа-яё0-9_]", "", (name or "").lower())
+        key = k
         if k in self._by_name:
-            return k
-        # допускаем суффикс «()» или «функция»
-        for variant in (k.rstrip("()"), re_k := k.replace("функция", "")):
-            if variant in self._by_name:
-                return variant
-        return k
+            key = k
+        else:
+            # допускаем суффикс «()» или «функция»
+            for variant in (k.rstrip("()"), k.replace("функция", "")):
+                if variant in self._by_name:
+                    key = variant
+                    break
+        return key
 
 
 # синглтон
@@ -360,13 +363,26 @@ _RU_SUFFIXES = ("оты", "оте", "ие", "ый", "ое", "ый", "ов", "е�
                 "ются", "ами", "ых", "нем", "тию", "ция", "ции", "ии", "ия",
                 "оя", "ы")
 
+_STEM_EXC = {
+    "человек": "человек", "люди": "человек", "человека": "человек",
+    "ребенок": "ребенок", "ребёнок": "ребенок", "дети": "ребенок",
+    "время": "врем", "времени": "врем", "временем": "врем",
+    "я": "я", "она": "он", "оно": "он", "они": "они",
+}
+
+
 def _stem_ru(word):
-    """Грубый русский стеммер для сравнения словоформ. Один return: str."""
+    """Грубый русский стеммер для сравнения словоформ (с исключениями-основами).
+    Один return: str."""
     w = word.lower()
-    for suf in _RU_SUFFIXES:
-        if len(w) > len(suf) + 3 and w.endswith(suf):
-            return w[:-len(suf)]
-    return w
+    stem = _STEM_EXC.get(w)
+    if stem is None:
+        stem = w
+        for suf in _RU_SUFFIXES:
+            if len(w) > len(suf) + 3 and w.endswith(suf):
+                stem = w[:-len(suf)]
+                break
+    return stem
 
 
 def _match_by_topic(q):
@@ -393,11 +409,15 @@ def _match_by_topic(q):
             elif w in _norm_q(info["topic"]) or w in _norm_q(info["what"]):
                 quality += 0.2
         if hit_words or quality >= 0.4:
-            scored.append((hit_words, quality, name))
-    if not scored:
-        return None
-    scored.sort(key=lambda x: (-x[0], -x[1]))
-    return scored[0][2]
+            # полное совпадение по теме — сильный признак
+            exact_topic = bool(words and set(words) <= topic_tokens)
+            scored.append((hit_words, quality, exact_topic, name))
+    best_name = None
+    if scored:
+        # сперва точное попадание по теме, затем покрытие и качество
+        scored.sort(key=lambda x: (-x[2], -x[0], -x[1]))
+        best_name = scored[0][3]
+    return best_name
 
 
 def _is_inventory_q(q):
@@ -427,33 +447,41 @@ def try_function_knowledge(query):
     q = (query or "").lower()
     # пустые бытовые реплики («можно тебя спросить», «как дела») не должны
     # перехватываться базой функций — требуется явный термин/сигнал
-    if not _has_function_term(q):
-        return ans
-    # инвентарь функций — раньше подбора по словам («сколько функций» не должно
-    # перехватывать «функция Эйлера: сколько чисел...»)
-    if _is_inventory_q(q) and ("функци" in q or "алгоритм" in q or "модул" in q):
-        mods = sorted(fk._by_module)
-        lines = [f"Знаний по функциям: {fk.count()}."]
-        for m in mods:
-            lines.append(f"{m}: {', '.join(fk.module_names(m))}")
-        ans = "\n".join(lines)
-        return ans
-    # ищем имя функции, встречающееся в запросе (точное вхождение слова)
-    best = []
-    for name in fk._by_name:
-        if name and len(name) > 2 and name in (" " + q + " . , ? ! ()"):
-            best.append((len(name), name))
-    found = None
-    if best:
-        best.sort(key=lambda x: -x[0])
-        found = best[0][1]
-    if found:
-        ans = fk.knowledge_for(found)
-    else:
-        # по теме описания (с учётом словоформ)
-        by_topic = _match_by_topic(q)
-        if by_topic:
-            ans = fk.knowledge_for(by_topic)
+    if _has_function_term(q):
+        # инвентарь функций — раньше подбора по словам («сколько функций» не должно
+        # перехватывать «функция Эйлера: сколько чисел...»)
+        if _is_inventory_q(q) and ("функци" in q or "алгоритм" in q or "модул" in q):
+            mods = sorted(fk._by_module)
+            lines = [f"Знаний по функциям: {fk.count()}."]
+            for m in mods:
+                lines.append(f"{m}: {', '.join(fk.module_names(m))}")
+            ans = "\n".join(lines)
+        else:
+            # ищем имя функции: точное вхождение слова или совпадение по стему
+            # (распознает «бинарь», «сортировка пузырьком», падежные формы)
+            q_names = _norm_q(q).split()
+            q_stems = {_stem_ru(w) for w in q_names if len(w) > 2}
+            best = []
+            for name in fk._by_name:
+                if not name or len(name) <= 2:
+                    continue
+                if name in (" " + q + " . , ? ! ()"):
+                    best.append((2, len(name), name))
+                else:
+                    name_stem = _stem_ru(name)
+                    if name_stem in q_stems:
+                        best.append((1, len(name), name))
+            found = None
+            if best:
+                best.sort(key=lambda x: (-x[0], -x[1]))
+                found = best[0][2]
+            if found:
+                ans = fk.knowledge_for(found)
+            else:
+                # по теме описания (с учётом словоформ)
+                by_topic = _match_by_topic(q)
+                if by_topic:
+                    ans = fk.knowledge_for(by_topic)
     return ans
 
 
@@ -469,15 +497,20 @@ def try_definition(query):
     for key in fk._by_name:
         if key.startswith("_"):
             info = fk._by_name[key]
-            # матчим по первому слову topic, полному topic и явным tags
+            # матчим по первому слову topic, полному topic, явным tags
+            # и по стему (чтобы распознавать падежи: «нейросетью», «граф_ом»)
             terms = [info.get("topic", "").split()[0].lower()]
             full = info.get("topic", "").lower()
             tags = [t.lower() for t in info.get("tags", [])]
+            q_words = _norm_q(q).split()
+            q_stems = {_stem_ru(w) for w in q_words if len(w) > 2}
             hit = None
             for t in terms:
                 if t and t in q:
                     hit = len(t)
                     break
+                if t and _stem_ru(t) in q_stems:
+                    hit = max(hit or 0, len(t))
             if hit is None and full in q:
                 hit = len(full)
             if hit is None:
@@ -485,12 +518,17 @@ def try_definition(query):
                     if t and t in q:
                         hit = len(t)
                         break
+                    if t and _stem_ru(t) in q_stems:
+                        hit = max(hit or 0, len(t))
             if hit:
                 best.append((hit, info["topic"], info["what"], info["ex"]))
     if best:
         best.sort(key=lambda x: -x[0])
         topic, what, ex = best[0][1], best[0][2], best[0][3]
-        ans = f"{topic[0].upper() + topic[1:]} — это {what}. Например: {ex}."
+        ans = f"{topic[0].upper() + topic[1:]} — это {what}."
+        # если примера нет — не печатаем «Например: пусто»
+        if ex and str(ex).strip():
+            ans += f" Например: {ex}."
     return ans
 
 
