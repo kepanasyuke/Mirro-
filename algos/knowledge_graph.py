@@ -615,6 +615,8 @@ class KnowledgeGraph:
     def edge_weight(self, a, b):
         """Текущий активный вес связи (проводимость) между a и b. Один return: float.
         Идёт по индексу соседей; берём максимальную связь между узлами."""
+        if not a or not b:
+            return 0.0
         a, b = self._norm(a), self._norm(b)
         best = 0.0
         for p, other, w in self._adj.get(a, []):
@@ -628,8 +630,10 @@ class KnowledgeGraph:
         return self.hebbian_learn(a, b, amount)
 
     def reward_sign(self, a, b, feedback_sign=1.0, amount=0.05):
-        """Хебб-обновление связи по знаку отклика через обычный reward/punish.
-        Один return: int — число изменённых связей."""
+        """Хебб-обновление связи по знаку отклика через reward/punish.
+        Малый знак (≈0) — нейтрально, почти ничего не меняем. Один return: int."""
+        if abs(feedback_sign) < 1e-9:
+            return 0
         changed = 0
         if feedback_sign >= 0:
             changed = self.hebbian_learn(a, b, amount)
@@ -638,7 +642,10 @@ class KnowledgeGraph:
         return changed
 
     def punish(self, a, b, amount=0.3, floor=0.15):
-        """Отрицательный отклик: ослабить связь (анти-Хебб). Один return: int."""
+        """Отрицательный отклик: ослабить связь (анти-Хебб).
+        amount <= 0 игнорируется. Один return: int."""
+        if amount <= 0:
+            return 0
         a, b = self._norm(a), self._norm(b)
         punished = 0
         for (s, p, d), w in list(self.edges.items()):
@@ -652,7 +659,8 @@ class KnowledgeGraph:
 
     # ---------- состояние ----------
     def summary(self):
-        return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей"
+        note = "" if self.edges else " (граф пуст)"
+        return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей{note}"
 
     def topic_clusters(self, max_clusters=6, max_nodes=60):
         """Выделяет кластеры тем в графе (простая агломеративная кластеризация):
@@ -1071,11 +1079,12 @@ def _extract_topic(query):
     stop = {"такое", "это", "связанное", "что", "как", "про", "расскажи",
             "объясни", "знаешь"}
     topic = None
+    q_words = set(q.split())
     # узлы графа, встреченные в запросе, исключая служебные и мусорные слова
     candidates = [n for n in kg.nodes
                   if n and len(n) > 3 and n not in stop
                   and n.split()[0] not in _TOPIC_JUNK
-                  and n in (" " + q + " ")]
+                  and n in q_words]
     if candidates:
         topic = max(candidates, key=len)
     return topic
