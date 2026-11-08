@@ -38,8 +38,10 @@ def bm25(query, docs, k1=1.5, b=0.75):
     """BM25 ранжирование документов по запросу.
     docs: список строк. Возвращает [(индекс, score)] по убыванию."""
     N = len(docs)
-    toks = [d.lower().split() for d in docs]
-    avgdl = sum(len(t) for t in toks) / N if N else 1
+    if N == 0 or not (query or "").strip():
+        return []
+    toks = [str(d).lower().split() for d in docs]
+    avgdl = sum(len(t) for t in toks) / N
     # df
     df = {}
     for t in toks:
@@ -87,12 +89,20 @@ def edit_distance(a, b):
 
 
 def hamming(a, b):
-    """Расстояние Хэмминга."""
-    return sum(x != y for x, y in zip(a, b))
+    """Расстояние Хэмминга; строки разной длины считаются с учётом
+    всех различающихся символов по длине большей. Один return: int."""
+    a, b = str(a), str(b)
+    if len(a) < len(b):
+        a, b = b, a
+    # лишние символы более длинной строки считаются отличиями
+    return sum(x != y for x, y in zip(a, b)) + (len(a) - len(b))
 
 
 def interpolation_search(sorted_arr, x):
-    """Интерполяционный поиск по отсортированному массиву. Один return: int."""
+    """Интерполяционный поиск по отсортированному массиву.
+    Пустой массив → -1. Один return: int."""
+    if not sorted_arr:
+        return -1
     lo, hi = 0, len(sorted_arr) - 1
     result = -1
     while lo <= hi and sorted_arr[lo] <= x <= sorted_arr[hi]:
@@ -111,20 +121,25 @@ def interpolation_search(sorted_arr, x):
 
 
 def fuzzy_match(query, candidates, max_dist=2):
-    """Нечёткий поиск: возвращает кандидатов с расстоянием <= max_dist."""
+    """Нечёткий поиск: возвращает кандидатов с расстоянием <= max_dist.
+    Пустой список кандидатов → []. Один return: list."""
     out = []
-    for c in candidates:
-        d = edit_distance(query.lower(), c.lower())
+    q = str(query or "").lower()
+    for c in candidates or []:
+        d = edit_distance(q, c.lower())
         if d <= max_dist:
             out.append((c, d))
-    return sorted(out, key=lambda x: x[1])
+    return sorted(out, key=lambda x: (x[1], str(x[0])))
 
 
 def invert_index(docs):
-    """Инвертированный индекс: {слово: [док_индексы]}."""
+    """Инвертированный индекс: {слово: [док_индексы]}.
+    Не учитывает пустые/не-строковые документы. Один return: dict."""
     idx = defaultdict(list)
-    for i, d in enumerate(docs):
-        for w in set(d.lower().split()):
+    for i, d in enumerate(docs or []):
+        if not d:
+            continue
+        for w in set(str(d).lower().split()):
             idx[w].append(i)
     return dict(idx)
 
