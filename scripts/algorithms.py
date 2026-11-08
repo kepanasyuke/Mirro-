@@ -1054,8 +1054,85 @@ class MirroAlgorithms:
         # Буст на ключ ответа (помогает выбирать похожие ответы в будущем)
         boost_key = self._boost_key(response)
         self._add_boost(boost_key, 0.4 if liked else -0.3)
+        # Негативное обучение: ЗАПОМИНАЕМ плохой ответ (дизлайк), чтобы в будущем
+        # он не предлагался снова — понижаем сильнее, чем простой буст, и держим
+        # в отдельной «чёрной» памяти (с экспоненциальным забыванием давних).
+        if not liked and response:
+            self._remember_bad_answer(query, response)
         self._save_boost_state()
         return learned
+
+    def _remember_bad_answer(self, query, response, decay_hours=72.0):
+        """Память о плохих ответах: запоминает (вопрос → не-подходящий ответ)
+        с меткой времени; находит при поиске и понижает. Один return: None."""
+        try:
+            if not hasattr(self, "bad_answers"):
+                self.bad_answers = {}
+            key = (self._boost_key(query), self._boost_key(response))
+            self.bad_answers[key] = time.time()
+            # забываем давние (дольше decay_hours) — чтобы отсев не был вечным
+            cutoff = time.time() - decay_hours * 3600
+            keep = {k: ts for k, ts in self.bad_answers.items() if ts > cutoff}
+            if len(keep) < len(self.bad_answers):
+                self.bad_answers = keep
+        except Exception:
+            pass
+        return None
+
+    def _interest_boost(self, candidate):
+        """Персонализация по интересам: если ответ перекликается с любимыми
+        темами пользователя (из профиля user_profile.json), повышает score.
+        Один return: float (0..0.3)."""
+        boost = 0.0
+        try:
+            from algos.user_profile import load_profile
+        except Exception:
+            try:
+                import os as _os_mod
+                sys.path.insert(0, _os_mod.path.dirname(_os_mod.path.dirname(_os_mod.path.abspath(__file__))))
+                from algos.user_profile import load_profile
+            except Exception:
+                load_profile = None
+        if load_profile is None or not candidate:
+            return boost
+        try:
+            prof = load_profile()
+            topics = prof.get("topics") or []
+            if not topics:
+                return boost
+            cand_low = (candidate or "").lower()
+            for t in topics:
+                t_low = (t or "").lower().strip()
+                core = t_low.split()[0] if t_low else ""
+                if core and len(core) >= 4:
+                    for w in self.tokenize(core):
+                        if w and w in cand_low:
+                            boost = max(boost, 0.15)
+                            break
+                    if boost >= 0.15:
+                        break
+            if boost >= 0.15:
+                boost += 0.15  # заметный приоритет любимой темы
+        except Exception:
+            boost = 0.0
+        return min(boost, 0.3)
+
+    def _bad_penalty(self, query, candidate):
+        """Штраф, если (вопрос,кандидат) похож на ранее отмеченный как плохой.
+        Один return: float (>=0)."""
+        penalty = 0.0
+        try:
+            bad = getattr(self, "bad_answers", {}) or {}
+            if not bad:
+                return penalty
+            qk = self._boost_key(query)
+            ck = self._boost_key(candidate)
+            for (bqk, bck) in bad:
+                if bck == ck or (bqk == qk and bck.split()[:3] == ck.split()[:3]):
+                    penalty += 0.5
+        except Exception:
+            penalty = 0.0
+        return penalty
 
     def train_from_history(self, batch_size=32, epochs=1):
         """Пакетное обучение перцептрона на накопленной истории feedback.
@@ -1174,6 +1251,11 @@ class MirroAlgorithms:
                 qa = self.qa_score(query, out)
                 boost = self._decay_boost(self._boost_key(out))
                 combined = 0.3 * tfidf_score + 0.3 * nn_score + 0.4 * qa + boost
+                # негативное обучение: ранее отмеченный дизлайком ответ понижается
+                combined -= self._bad_penalty(query, out)
+                # персонализация по интересам: ответы, перекликающиеся с любимыми
+                # темами пользователя (из профиля), ранжируются чуть выше
+                combined += self._interest_boost(out)
                 scored.append((combined, out, cl))
         return scored
 

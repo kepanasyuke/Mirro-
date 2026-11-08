@@ -944,6 +944,14 @@ def _try_direct_handlers(prompt):
         except Exception:
             ans = None
         return ans
+    def try_english(q):
+        ans = None
+        try:
+            from algos.english_kb import try_english as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
     def try_empathy(q):
         ans = None
         try:
@@ -1015,6 +1023,7 @@ def _try_direct_handlers(prompt):
         ("neuromod", try_neuromod),
         ("neural_elec", try_neural_elec),
         ("user_profile", try_user_profile),
+        ("english", try_english),
         ("empathy_observe", try_empathy),
     ]
     result = None
@@ -1036,23 +1045,26 @@ def _enrich_followup(prompt, context):
     q_words = set(_tokenize_for_search(prompt))
     content_words = {w for w in q_words if w not in _DIALOG_STOPWORDS}
     enriched = prompt
-    if len(content_words) < 2 and context:
+    continuation = any(w in prompt.lower() for w in ("это", "её", "его", "этих",
+                                                  "дальше", "продолж", "ещё",
+                                                  "а теперь", "и ещё", "такая же"))
+    if (len(content_words) < 2 or continuation) and context:
         lines = [l for l in context.split("\n") if l.strip()]
         hist_words = set()
-        continuation = any(w in prompt.lower() for w in ("это", "её", "его", "этих",
-                                                         "дальше", "продолж", "ещё"))
-        # для продолжения темы берём из ПОСЛЕДНЕЙ реплики (Mirro / пользователь)
-        if continuation and lines:
-            last_text = lines[-1]
-            for w in _tokenize_for_search(last_text.replace("Пользователь:", " ").replace("Mirro:", " ")):
-                if w not in _DIALOG_STOPWORDS:
-                    hist_words.add(w)
-        else:
-            for line in lines:
-                for w in _tokenize_for_search(line.replace("Пользователь:", " ").replace("Mirro:", " ")):
+        # для связности многоходовых тем всегда берём слова из ПОСЛЕДНЕГО
+        # вопроса Пользователя (предыдущая тема), а не только при короткой реплике
+        user_lines = [l for l in lines if l.startswith("Пользователь:")]
+        source = user_lines[-1] if user_lines else (lines[-1] if lines else "")
+        for w in _tokenize_for_search(source.replace("Пользователь:", " ").replace("Mirro:", " ")):
+            if w not in _DIALOG_STOPWORDS:
+                hist_words.add(w)
+        # если это явное «продолжение» — добавляем и всю историю как фон
+        if continuation:
+            for line in user_lines[-3:]:
+                for w in _tokenize_for_search(line.replace("Пользователь:", " ")):
                     if w not in _DIALOG_STOPWORDS:
                         hist_words.add(w)
-        enrichment = " ".join(sorted(hist_words)[:60])
+        enrichment = " ".join(sorted(hist_words)[:40])
         enriched = (prompt + " " + enrichment).strip()
     return enriched
 
@@ -1091,6 +1103,33 @@ def _voice_or_none(raw, prompt, strategy):
     result = None
     if raw:
         result = {"content": _voice(raw, prompt, strategy), "strategy": strategy}
+    return result
+
+
+def _clarify_guess(prompt):
+    """Если запрос неоднозначен/слишком широк (без конкретики), возвращает
+    уточняющий вопрос — чтобы найти точный ответ, а не гадать. Один return:
+    dict-ответ или None (вопрос конкретный — продолжаем)."""
+    result = None
+    try:
+        q = (prompt or "").strip().lower()
+        # признаки неоднозначности: явно широкая фраза БЕЗ конкретной темы,
+        # или очень короткий запрос с пустым смыслом
+        words = [w for w in _re.findall(r"[а-яёa-z]{4,}", q)]
+        broad = any(b in q for b in ("расскажи что-нибудь", "расскажи обо всём",
+                                     "что-нибудь интересное", "чем заняться",
+                                     "дай совет", "подскажи что", "не знаю что спросить"))
+        no_topic = (q in ("что это", "объясни это", "объясни", "расскажи", "подробнее")
+                    or (len(words) == 0 and q))
+        if (broad or no_topic):
+            sample = " ".join(words[:2]) if words else "эту тему"
+            result = {
+                "content": ("Уточни, пожалуйста: ты про «" + sample + "»? "
+                            "Скажи подробнее — какую именно сторону раскрыть?"),
+                "strategy": "clarify",
+            }
+    except Exception:
+        result = None
     return result
 
 
@@ -1156,8 +1195,14 @@ def build_response(prompt, cluster, context=""):
             thinking = _ms.reasoning_steps(topic)
         except Exception:
             thinking = []
-        # модерация: опасный входящий запрос гасим до всех обработчиков
-        gate = _moderation_gate(prompt)
+        # уточнение: неоднозначный запрос — спрашиваем сама, а не гадаем
+        clarify = _clarify_guess(prompt)
+        if clarify is not None:
+            result = clarify
+            result["workspace"] = "сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
+        else:
+            # модерация: опасный входящий запрос гасим до всех обработчиков
+            gate = _moderation_gate(prompt)
         if gate is not None:
             result = gate
             result["workspace"] = "сознание: безопасность (запрос отсечён фильтром модерации)"
