@@ -38,6 +38,8 @@ def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     for s in uniq[:5]:
         # поиск вглубь от s — все цепочки до max_depth
         _recurse(kg, s, [], max_depth, results, seen_prefix=set())
+        if len(results) >= 8:
+            break
     # обрезать до внятных
     return results[:8]
 
@@ -58,18 +60,16 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
 
 
 def format_path(path):
-    """path = ['a','b','c'] -> "a —св.→ b —св.→ c" """
-    s = ""
-    if path:
-        s = path[0]
-        for i in range(1, len(path)):
-            # подберём предикат между предыдущим и текущим узлом из edges
-            s += " → " + path[i]
-    return s
+    """path = ['a','b','c'] — соединяет узлы стрелками.
+    Один return: str."""
+    return " → ".join(path) if path else ""
 
 
 def _chain_to_str(kg, chain):
-    """Цепочка узлов -> строка вида «a —p→ b». Один return: str."""
+    """Цепочка узлов -> строка вида «a —p→ b». Пустая цепочка → «».
+    Один return: str."""
+    if not chain:
+        return ""
     parts = []
     for i in range(len(chain) - 1):
         rels = kg.relation(chain[i], chain[i + 1])
@@ -88,7 +88,8 @@ def _join_chains(kg, chains):
     return "Из своих связей вывожу: " + " | ".join(lines) + "."
 
 
-_INFER_WORDS = ("как", "почему", "объясни", "что такое", "выведи", "связано")
+_INFER_WORDS = ("как", "почему", "объясни", "что такое", "выведи", "связано",
+                "связи", "отношение", "вывод", "из чего следует")
 
 
 def _looks_like_reasoning(q):
@@ -184,8 +185,8 @@ def try_infer_unknown(graph, query):
     """Вывод знаний для неизвестных вопросов: когда прямого ответа нет, берём
     узлы графа из вопроса и строим цепочку рассуждений по сильным связям.
     graph — GRAPH объект (KnowledgeGraph), НЕ модуль kg.
-    Один return: str или None."""
-    if graph is None:
+    Пустой граф или запрос → None. Один return: str или None."""
+    if graph is None or not (query or "").strip():
         return None
     tokens = _graph_topics(graph, query)
     # если узлов в вопросе нет — используем понятия, схожие по основе словам запроса
