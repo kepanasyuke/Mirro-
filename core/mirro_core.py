@@ -622,15 +622,46 @@ def _semantic_expand(query):
 
 def _search_best(prompt, cluster):
     """TF-IDF → RAG → выбор лучшего кандидата по кластеру.
+    Пользуется семантическим реранком для кандидатов обоих источников.
     Единственный return: кортеж (best_answer, best_score, has_result)."""
     q = _semantic_expand(prompt)
     results = try_tfidf(q, cluster)
     if not results:
         results = try_rag(q, cluster)
+    # семантический реранк по охвату темы — улучшает выбор и для RAG-кандидатов
+    results = _semantic_rerank_results(prompt, results)
     _, choose_best, _ = _reasoning()
     best_answer, best_score, _reason = choose_best(prompt, results, preferred=cluster)
     has_result = best_answer is not None and best_score > 1.0
     return best_answer, best_score, has_result
+
+
+def _semantic_rerank_results(query, results):
+    """Перезачоняет кандидатов по покрытию темы вопроса (когда доступен algo).
+    results: list ((inst, out, cl), score). Возвращает тот же формат, отсортированный.
+    Тихий: при любой ошибке возвращает исходный список. Один return: list."""
+    out = results
+    try:
+        from scripts.algorithms import algo
+        if not results:
+            return out
+        q_tokens = set(algo.tokenize(query))
+        if not q_tokens:
+            return out
+        scored = []
+        for (inst, ans, cl), sc in results:
+            if not ans:
+                continue
+            a_set = set(algo.tokenize(ans))
+            cov = len(q_tokens & a_set) / max(len(q_tokens), 1) if a_set else 0.0
+            # мягкий реранк: 0.7 старый score + 0.3 покрытие темы
+            combined = sc * 0.7 + cov * 3.0
+            scored.append((combined, (inst, ans, cl), sc))
+        scored.sort(key=lambda x: -x[0])
+        out = [(item, sc) for _c, item, sc in scored]
+    except Exception:
+        out = results
+    return out
 
 def try_rag(query, cluster):
     ans = []
@@ -1038,6 +1069,48 @@ def _try_direct_handlers(prompt):
     return result
 
 
+def _split_multipart(prompt, max_parts=4):
+    """Разбивает вопрос на несколько подзапросов, если он многочастный.
+    Разделители: 'и как', 'и почему', 'и зачем', 'а ещё', 'а как', '; ',
+    ' а также', перечисления. НЕ режет простые вопросы с одним глаголом.
+    Возвращает список строк (1 элемент = вопрос простой). Один return: list."""
+    q = (prompt or "").strip()
+    if not q:
+        return [q]
+    q_low = q.lower()
+    has_marker = any(m in q for m in (" а ещё ", " и одновременно ", " а также ", "; "))
+    has_phrase = any(p in q_low for p in ("и как ", "и почему ", "и зачем ", "а как ", "а зачем "))
+    # простой вопрос без маркеров и без повторённого вопросительного слова — не режем
+    if not has_marker and not has_phrase:
+        return [q]
+    parts = []
+    # явные разрывы на несколько вопросов
+    sep_markers = [" а ещё ", " и одновременно ", " а также ", "; "]
+    for marker in sep_markers:
+        if marker in q:
+            left, _, right = q.partition(marker)
+            parts = [left.strip(), right.strip()]
+            break
+    if not parts:
+        # «как X и как Y» / «почему A и почему B»
+        for phrase in ("и как", "и почему", "и зачем", "а как", "а зачем"):
+            if phrase in q_low:
+                idx = q_low.find(phrase)
+                parts = [q[:idx].strip(), q[idx + len("и "):].strip()]
+                break
+    if not parts:
+        return [q]
+    # фильтр: части должны быть непустыми и несли достаточный смысл
+    clean = []
+    for p in parts:
+        wc = [w for w in _re.findall(r"[а-яёa-z]{3,}", p.lower())]
+        if p and len(wc) >= 2:
+            clean.append(p)
+    if len(clean) >= 2 and len(clean) <= max_parts:
+        return clean
+    return [q]
+
+
 def _enrich_followup(prompt, context):
     """Если реплика слишком короткая и без своей темы, обогащает её словами из
     истории диалога, чтобы поиск не ушёл в мусор. Также подхватывает «продолжение
@@ -1166,6 +1239,43 @@ def _graph_infer_unknown(prompt):
     return result
 
 
+def _multipart_answer(parts, cluster, context=""):
+    """Отвечает связно по каждой части многочастного вопроса и склеивает ответ.
+    Возвращает dict-ответ или None, если хотя бы по одной части нет ответа.
+    Один return: dict|None."""
+    segments = []
+    ok_all = True
+    for i, part in enumerate(parts, 1):
+        p2 = _enrich_followup(part, context)
+        web_first = _try_web_first(p2)
+        if web_first is not None:
+            segments.append(f"{i}. {web_first['content']}")
+            continue
+        best_answer, best_score, has_result = _search_best(p2, cluster)
+        if has_result and not answer_looks_bad(p2, best_answer):
+            segments.append(f"{i}. {_voice(best_answer, p2, 'base')[:700]}")
+        else:
+            ginf = _graph_infer_unknown(p2)
+            if ginf is not None:
+                segments.append(f"{i}. {ginf['content']}")
+            elif segments:
+                ok_all = False
+                break
+        if len(" ".join(segments)) > 1800:
+            break
+    if len(segments) < 2 or not ok_all:
+        return None
+    # оценка полноты: если на некоторые части вопрос был разбит, но ответ на них
+    # не нашёлся (или ответ по частям оборвался), честно указываем, что охвачено
+    covered = len(segments)
+    note = ""
+    if covered < len(parts) or segments[-1].startswith("Не нашла"):
+        note = "\n\nОтметила: не по всем частям вопроса нашёлся точный ответ — " \
+               "скажи, если нужно раскрыть какую-то часть подробнее."
+    return {"content": "Отвечу по частям:\n" + "\n".join(segments) + note,
+            "strategy": "multi", "parts_total": len(parts), "parts_covered": covered}
+
+
 def _fallback_chain(prompt):
     """Финальная цепочка: веб → провайдер → подсказка. Единственный return: dict."""
     web_answer = try_web(prompt)
@@ -1212,13 +1322,21 @@ def build_response(prompt, cluster, context=""):
                 result = direct
                 result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
             else:
-                prompt = _enrich_followup(prompt, context)
-                web_first = _try_web_first(prompt)
-                if web_first is not None:
-                    result = web_first
-                    result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
-                else:
-                    best_answer, best_score, has_result = _search_best(prompt, cluster)
+                # многочастный вопрос: отвечаем по каждой части отдельно и склеиваем
+                prompt_orig = prompt
+                parts = _split_multipart(prompt)
+                if len(parts) > 1:
+                    multi = _multipart_answer(parts, cluster, context)
+                    if multi is not None:
+                        result = multi
+                        result["workspace"] = "сознание: многочастный запрос разбит и отвечен по частям"
+                prompt = _enrich_followup(prompt_orig, context)
+            web_first = _try_web_first(prompt)
+            if web_first is not None:
+                result = web_first
+                result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
+            else:
+                best_answer, best_score, has_result = _search_best(prompt, cluster)
                 if has_result and answer_looks_bad(prompt, best_answer):
                     bad_web = try_web(prompt)
                     if bad_web:

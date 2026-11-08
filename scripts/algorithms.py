@@ -130,6 +130,7 @@ class MirroAlgorithms:
         # Кэш стемминга: слово -> результат
         self._stem_cache = {}
         self._try_load_index()
+        self._faq_load()  # тёплый FAQ-кэш: предзагрузка популярных пар после старта
         if not self._loaded:
             self._build()
             self._save_index()
@@ -1222,6 +1223,42 @@ class MirroAlgorithms:
             result = self.faq_cache[key]
         return result
 
+    def _faq_save(self):
+        """Персистентный FAQ-кэш: сохраняет faq_cache и faq_hits на диск рядом
+        с индексом (models/index_cache.faq.json), чтобы популярные пары пережили
+        перезапуск. Тихий. Один return: None."""
+        try:
+            import json as _json
+            data = {"cache": getattr(self, "faq_cache", {}),
+                    "hits": getattr(self, "faq_hits", {})}
+            path = self.INDEX_CACHE.with_suffix(".faq.json")
+            tmp = str(path) + ".tmp"
+            with open(tmp, "w", encoding="utf-8") as fh:
+                _json.dump(data, fh, ensure_ascii=False)
+            import os as _os
+            _os.replace(tmp, str(path))
+        except Exception:
+            pass
+        return None
+
+    def _faq_load(self):
+        """Загружает FAQ-кэш с диска после создания объекта. Всегда гарантирует
+        наличие атрибутов faq_cache/faq_hits (пустые при первом старте). Один return: None."""
+        try:
+            import json as _json
+            import os as _os
+            self.faq_cache = {}
+            self.faq_hits = {}
+            path = self.INDEX_CACHE.with_suffix(".faq.json")
+            if _os.path.exists(str(path)):
+                data = _json.loads(open(path, encoding="utf-8").read())
+                self.faq_cache = dict(data.get("cache", {}))
+                self.faq_hits = dict(data.get("hits", {}))
+        except Exception:
+            self.faq_cache = getattr(self, "faq_cache", {})
+            self.faq_hits = getattr(self, "faq_hits", {})
+        return None
+
     def _faq_put(self, query, answer, min_hits=3):
         """Накапливает популярные пары: при частом повторе вопроса кэширует
         готовый ответ, чтобы отвечать мгновенно. Один return: None."""
@@ -1238,6 +1275,7 @@ class MirroAlgorithms:
                 # вытесняем первый (по порядку вставки)
                 self.faq_cache = dict(list(self.faq_cache.items())[-self.cache_max:])
             self.faq_cache[key] = answer
+            self._faq_save()  # персистентность: сохраняем потребные пары на диск
         return None
 
     def _score_answers(self, query, results):
