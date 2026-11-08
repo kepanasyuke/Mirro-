@@ -173,9 +173,10 @@ class KnowledgeGraph:
                 rels.append((p, w))
         return rels
 
-    def _step(self, frontier, b, visited, max_fanout=40):
-        """Один шаг BFS: из текущего фронта к b, ограничен размахом.
-        Один return: (found_path_or_None, next_frontier)."""
+    def _step(self, frontier, b, visited, max_fanout=40, max_visited=4000):
+        """Один шаг BFS: из текущего фронта к b, ограничен размахом и числом
+        посещённых вершин (max_visited), чтобы не уйти в долгий обход на
+        огромных графах. Один return: (found_path_or_None, next_frontier)."""
         nxt = []
         found = None
         if frontier:
@@ -185,18 +186,19 @@ class KnowledgeGraph:
                 if other == b:
                     found = trail + [(cur, p, b, w)]
                     break
-                if other not in visited:
+                if other not in visited and len(visited) < max_visited:
                     visited.add(other)
                     nxt.append((other, trail + [(cur, p, other, w)]))
-            if found is not None:
+            if found is not None or len(visited) >= max_visited:
                 break
         next_frontier = nxt
         if found is not None:
             next_frontier = []
         return (found, next_frontier)
 
-    def path(self, a, b, max_depth=3, max_fanout=40):
+    def path(self, a, b, max_depth=3, max_fanout=40, max_visited=4000):
         """Цепочка связей от a к b (если есть) — «рассуждение через граф».
+        Ограничено числом посещённых вершин (защита от долгих обходов).
         Один return: list-путь или None."""
         a, b = self._norm(a), self._norm(b)
         result = None
@@ -206,7 +208,7 @@ class KnowledgeGraph:
             for _ in range(max_depth):
                 if result is not None or not frontier:
                     break
-                result, frontier = self._step(frontier, b, visited, max_fanout)
+                result, frontier = self._step(frontier, b, visited, max_fanout, max_visited)
         return result
 
     def explain(self, name, depth=1):
@@ -464,8 +466,8 @@ class KnowledgeGraph:
         return lines
 
     def similarity(self, a, b):
-        """Насколько понятия связаны: число общих соседей / общий путь.
-        Один return: float 0..1."""
+        """Насколько понятия связаны: число общих соседей / общий путь,
+        с мягким бонусом за прямое ребро. Один return: float 0..1."""
         a, b = self._norm(a), self._norm(b)
         result = 0.0
         if a in self.nodes and b in self.nodes:
@@ -477,7 +479,9 @@ class KnowledgeGraph:
                 # нет соседей ни у одного — проверяем прямую связь
                 result = 1.0 if self.relation(a, b) else 0.0
             else:
-                result = len(inter) / len(union)
+                # Jaccard на окрестностях + мягкий бонус за прямое соединение
+                direct = 1.0 if self.relation(a, b) else 0.0
+                result = 0.85 * (len(inter) / len(union)) + 0.15 * direct
         return result
 
     def centrality(self, top_n=10, exclude_junk=True):
@@ -501,7 +505,10 @@ class KnowledgeGraph:
                 "функция", "функцию", "сути", "строк", "этого", "стоит",
                 "расскажи", "напиши", "каждый", "каждая", "очень", "именно",
                 "какая", "обычно", "просто", "значит", "какие", "друг",
-                "может", "имеет", "вопрос", "ответ", "ясно", "ладно"}
+                "может", "имеет", "вопрос", "ответ", "ясно", "ладно",
+                "потом", "потому", "поэтому", "насколько", "скахем", "вроде",
+                "всё", "все", "весь", "свой", "своя", "сам", "сама",
+                "кроме", "между", "через", "внутри", "снаружи", "после", "перед"}
         items = []
         for node, deg in degree.items():
             core = node.split()[0] if " " in node else node
@@ -930,6 +937,10 @@ def _clean_q(query):
     """Нормализует запрос для разбора. Один return: str."""
     q = _re.sub(r"\s+", " ", (query or "").strip().lower())
     q = q.rstrip("!?.;,")
+    # схлопываем тире-разделители и снимаем лишнюю пунктуацию внутри
+    q = _re.sub(r"[\u2014\u2013-]{1,}", " ", q)
+    q = _re.sub(r"[«»\"']+", "", q)
+    q = _re.sub(r"\s{2,}", " ", q).strip()
     q = q.replace("что связывает ", "").replace("что общего у ", "").replace("как связан", "связан")
     q = q.replace("связано ли ", "").replace("есть ли связь между", "связь между")
     return q
@@ -1048,15 +1059,22 @@ def try_concept_path(query):
 
 
 # ---------- интерфейс обогащения ответа (для ядра: try_enrich) ----------
+_TOPIC_JUNK = {"можно", "смысл", "надеюсь", "понятно", "означает", "просто",
+               "короче", "вообще", "типа", "вроде", "конечно", "наверное",
+               "такой", "такая", "такие", "пример", "связано", "связан",
+               "использ", "надо", "нужно", "можно ли", "собственно"}
+
 def _extract_topic(query):
-    """Пытается вытащить главное понятие из запроса (узел графа, кроме служебных).
-    Один return: str или None."""
+    """Пытается вытащить главное понятие из запроса (узел графа, кроме служебных
+    и мусорных узлов-хабов). Один return: str или None."""
     q = _clean_q(query)
     stop = {"такое", "это", "связанное", "что", "как", "про", "расскажи",
             "объясни", "знаешь"}
     topic = None
-    # узлы графа, встреченные в запросе, исключая служебные слова
-    candidates = [n for n in kg.nodes if n and len(n) > 3 and n not in stop
+    # узлы графа, встреченные в запросе, исключая служебные и мусорные слова
+    candidates = [n for n in kg.nodes
+                  if n and len(n) > 3 and n not in stop
+                  and n.split()[0] not in _TOPIC_JUNK
                   and n in (" " + q + " ")]
     if candidates:
         topic = max(candidates, key=len)
