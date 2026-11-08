@@ -220,7 +220,8 @@ class MirroEvolver:
             if fit > 0:
                 emb = g.forward(A, X)["embedding"]
                 self.save_experience(emb)
-        # элита проходит дальше без изменений
+        # элита проходит дальше без изменений (минимум 1, чтобы не опустеть)
+        elite = max(1, elite)
         new_pop = [g for _fit, g in scored[:elite]]
         # остальные — скрещивание лучших + мутация
         while len(new_pop) < self.pop_size:
@@ -228,9 +229,9 @@ class MirroEvolver:
             p2 = scored[self.rng.randint(0, max(1, elite + 1))][1]
             child = p1.crossover(p2, self.rng).mutate(mutation, self.rng)
             new_pop.append(child)
-        self.population = new_pop
+        self.population = new_pop or self.population
         self.generation += 1
-        avg_fit = sum(f for f, _ in scored) / len(scored)
+        avg_fit = sum(f for f, _ in scored) / len(scored) if scored else 0.0
         # фиксируем лучший fitness этого поколения в историю (для прогресса на дашборде)
         self.fitness_history.append(round(scored[0][0], 4))
         if len(self.fitness_history) > 200:
@@ -253,13 +254,13 @@ class MirroEvolver:
         return None
 
     def best_genome(self):
-        """Текущий лучший геном. Один return: Genome или None."""
-        best = None
-        for g in self.population:
-            if self._best is not None and g is self._best:
-                best = g
-                break
-        return best if best is not None else self._best
+        """Текущий лучший геном (в популяции или за всю эволюцию).
+        Один return: Genome или None."""
+        best = self._best
+        # если лучший ещё не отдельно сохранён — ищем в текущей популяции
+        if best is None and self.population:
+            best = self.population[0]
+        return best
 
 
 # Глобальный эволюционер (синглтон для try_evolve)
@@ -280,11 +281,13 @@ def _default_A(n):
 
 
 def _default_X(n, dim=3):
-    """Биометрия узлов по умолчанию: [пульс, возбуждение, энергия]. Один return: list."""
+    """Биометрия узлов по умолчанию: [пульс, возбуждение, энергия].
+    Возвращает ровно n строк по dim значений. Один return: list."""
     rows = []
     for i in range(n):
-        rows.append([0.7 + 0.1 * i, 0.4 + 0.1 * i, 0.8 + 0.05 * i])
-    return rows[:dim][:] if n <= dim else [r[:dim] for r in rows[:n]]
+        values = [0.7 + 0.1 * i, 0.4 + 0.1 * i, 0.8 + 0.05 * i]
+        rows.append(values[:dim])
+    return rows[:n]
 
 
 def _integrated_fitness(ev, genome, A, X):
@@ -327,7 +330,11 @@ def try_evolve(query):
         ev.evolve_step(A, X)  # обычный шаг с базовым фитнесом внутри
         # дополнительно усилим связь с системой: подмешаем живые факторы
         fit_base = max(ev._fitness(ev.best_genome(), A, X), 0.0)
-        boost = _integrated_fitness(ev, ev.best_genome(), A, X) - fit_base
+        boost = 0.0
+        try:
+            boost = _integrated_fitness(ev, ev.best_genome(), A, X) - fit_base
+        except Exception:
+            boost = 0.0
         ans = (f"Эволюция поколение {ev.generation}: лучший fitness "
                f"{fit_base:.3f} (+{boost:.3f} от знаний и медиаторов), "
                f"в популяции {len(ev.population)} графов, "
