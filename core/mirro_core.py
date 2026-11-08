@@ -1239,6 +1239,61 @@ def _graph_infer_unknown(prompt):
     return result
 
 
+def _dedupe_answer(text, min_note_chars=25):
+    """Сжимает ответ: убирает повторяющиеся абзацы И дублирующие предложения
+    внутри абзаца (дедуп по нормализованному фрагменту). Один return: str."""
+    t = (text or "").strip()
+    if not t:
+        return t
+    # 1) дедуп предложений внутри каждого абзаца
+    blocks = [b.strip() for b in _re.split(r"\n{2,}", t) if b.strip()] or [t]
+    dedup_blocks = []
+    changed = False
+    for b in blocks:
+        sents = [s.strip() for s in _re.split(r"(?<=[.!?])\s+", b) if s.strip()]
+        if len(sents) > 1:
+            seen_s = set()
+            kept = []
+            for s in sents:
+                key = _re.sub(r"[^а-яёa-z0-9]+", " ", s.lower())[:55]
+                if key not in seen_s:
+                    seen_s.add(key)
+                    kept.append(s)
+                else:
+                    changed = True
+            if len(kept) != len(sents):
+                b = " ".join(kept)
+        if b.strip():
+            dedup_blocks.append(b.strip())
+    # 2) дедуп абзацев между собой
+    seen_p = set()
+    keep = []
+    for b in dedup_blocks:
+        if len(b) < min_note_chars:
+            keep.append(b)
+            continue
+        key = _re.sub(r"[^а-яёa-z0-9]+", " ", b.lower())[:60]
+        if key not in seen_p:
+            seen_p.add(key)
+            keep.append(b)
+        else:
+            changed = True
+    if changed and keep:
+        return "\n\n".join(keep) if len(keep) > 1 else keep[0]
+    return t
+
+
+def _part_lead(i, total):
+    """Дружелюбная связка для i-й части (из total) — естественные союзы вместо
+    сухих номеров «1. 2.». Один return: str."""
+    if total <= 2:
+        leads = {1: "Во-первых,", 2: "А во-вторых,"}
+        return leads.get(i, "Кроме того,")
+    seq = {1: "Во-первых,", 2: "Во-вторых,", 3: "В-третьих,",
+           4: "Затем,", 5: "Далее,"}
+    return seq.get(i, "И ещё:")
+
+
 def _multipart_answer(parts, cluster, context=""):
     """Отвечает связно по каждой части многочастного вопроса и склеивает ответ.
     Возвращает dict-ответ или None, если хотя бы по одной части нет ответа.
@@ -1249,15 +1304,15 @@ def _multipart_answer(parts, cluster, context=""):
         p2 = _enrich_followup(part, context)
         web_first = _try_web_first(p2)
         if web_first is not None:
-            segments.append(f"{i}. {web_first['content']}")
+            segments.append(_part_lead(i, len(parts)) + " " + web_first['content'].strip())
             continue
         best_answer, best_score, has_result = _search_best(p2, cluster)
         if has_result and not answer_looks_bad(p2, best_answer):
-            segments.append(f"{i}. {_voice(best_answer, p2, 'base')[:700]}")
+            segments.append(_part_lead(i, len(parts)) + " " + _voice(best_answer, p2, "base")[:700].strip())
         else:
             ginf = _graph_infer_unknown(p2)
             if ginf is not None:
-                segments.append(f"{i}. {ginf['content']}")
+                segments.append(_part_lead(i, len(parts)) + " " + ginf['content'].strip())
             elif segments:
                 ok_all = False
                 break
@@ -1269,10 +1324,10 @@ def _multipart_answer(parts, cluster, context=""):
     # не нашёлся (или ответ по частям оборвался), честно указываем, что охвачено
     covered = len(segments)
     note = ""
-    if covered < len(parts) or segments[-1].startswith("Не нашла"):
+    if covered < len(parts):
         note = "\n\nОтметила: не по всем частям вопроса нашёлся точный ответ — " \
                "скажи, если нужно раскрыть какую-то часть подробнее."
-    return {"content": "Отвечу по частям:\n" + "\n".join(segments) + note,
+    return {"content": "\n".join(segments) + note,
             "strategy": "multi", "parts_total": len(parts), "parts_covered": covered}
 
 
@@ -1389,10 +1444,33 @@ def build_response(prompt, cluster, context=""):
                           "greeting": "диалог",
                           "dialog": "диалог",
                           "provider": "внешний провайдер",
-                          "steps": "пошаговый план"}
+                          "steps": "пошаговый план",
+                          "english": "английская база знаний"}
             result["source"] = source_map.get(s, "разные источники")
         except Exception:
             result["source"] = "разные источники"
+        # сжатие ответа: убираем повторяющиеся абзацы, чтобы не было «воды» и дублей
+        try:
+            if result.get("content") and result.get("strategy") not in ("error", "moderated"):
+                result["content"] = _dedupe_answer(result.get("content", ""))
+        except Exception:
+            pass
+        # адаптация длины к длине вопроса: короткий вопрос -> лаконичнее,
+        # длинный развёрнутый -> не режем слишком жёстко
+        try:
+            if result.get("content") and result.get("strategy") in ("base", "web", "graph_infer"):
+                q_len = len(_re.findall(r"[а-яёa-z]{3,}", prompt.lower()))
+                content = result.get("content", "")
+                if q_len <= 2 and len(content) > 1100:
+                    # короткий вопрос — оставляем только первые 2-3 предложения
+                    sents = _re.split(r"(?<=[.!?])\s+", content.strip())
+                    if len(sents) > 3:
+                        result["content"] = " ".join(sents[:3]).strip()
+                elif q_len >= 8 and len(content) < 400 and result.get("source"):
+                    # длинный вопрос — если ответ получился куцый, дополняем
+                    result["content"] = content.rstrip() + " Могу раскрыть детальнее — спроси, что именно важно."
+        except Exception:
+            pass
         # персональность: если знаем имя пользователя, обращаемся по имени
         try:
             if result.get("strategy") not in ("greeting", "dialog", "error", "user_profile"):
@@ -2242,6 +2320,26 @@ def _seed_knowledge_graph():
             removed = kg.prune_noise()
             if removed:
                 print(f"  Убрано мусора из графа: {removed} элементов")
+        except Exception:
+            pass
+        # Стоп-гайд графа: расширенный чёрный список узлов-связок по кластерам
+        # (обрывки речи, вводные, личные обращения, интерфейсные шумы), которые
+        # не являются понятиями знаний и засоряют связи.
+        try:
+            stop_nodes = {
+                "однако", "затем", "далее", "итак", "во-первых", "во-вторых",
+                "в-третьих", "наконец", "короче", "кстати", "впрочем", "хотя",
+                "следовательно", "поэтому", "вероятно", "наверное", "конечно",
+                "просто", "вообще", "типа", "вроде", "как-то", "ну", "вот",
+                "привет", "пока", "спасибо", "пожалуйста", "добрый день",
+                "извините", "простите", "давай", "давайте", "будем", "будемте",
+                "читатель", "слушатель", "друг", "друзья", "ребята",
+                "дальше", "далее", "наверно", "действительно", "безусловно",
+                "разумеется", "правда", "в общем", "по сути", "на деле",
+            }
+            removed_stop = kg.prune_stopwords(stop_nodes)
+            if removed_stop:
+                print(f"  Стоп-гайд графа: удалено узлов-связок: {removed_stop}")
         except Exception:
             pass
         # Консолидация: зачищаем слабые рёбра и избыточные узлы-фразы, чтобы

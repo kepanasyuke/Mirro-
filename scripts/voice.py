@@ -142,6 +142,22 @@ def _clip(text, max_len=1800):
     return clipped
 
 
+_last_lead = None  # запомненная последняя вступительная фраза (анти-повтор)
+
+
+def _pick_lead():
+    """Выбирает вступительную фразу, НЕ повторяющую предыдущую подряд.
+    Один return: str."""
+    global _last_lead
+    lead = None
+    if LEAD_INS:
+        # избегаем той же фразы, что и в прошлый ответ
+        cands = [x for x in LEAD_INS if x != _last_lead] or LEAD_INS
+        lead = random.choice(cands)
+    _last_lead = lead
+    return lead
+
+
 def speak(raw_answer, query, strategy="base"):
     """Главная функция: сырой ответ базы → ответ «голосом Mirro».
 
@@ -164,7 +180,7 @@ def speak(raw_answer, query, strategy="base"):
             core = _rephrase(core)
             rest = _rephrase(rest)
 
-            lead = random.choice(LEAD_INS)
+            lead = _pick_lead()
 
             # Собираем ответ
             if rest:
