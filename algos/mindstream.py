@@ -28,7 +28,7 @@ MS_LOG = MIRRO_HOME / "data" / "mindstream" / "thoughts.jsonl"
 _STOP = set(("и","или","что","как","это","то","для","про","мне","меня","ты","я","не","на","в","по","с","из",
              "такое","расскажи","расскажи","почему","зачем","знаешь","думаешь","обо","о", "а", "но", "вот",
              "сделай","помоги","можешь","скажи","объясни","покажи","напиши","хочешь","давай","есть","можно",
-             "пользователь","спросил","спросила"))
+             "пользователь","спросил","спросила","оно","себя","своё","вообще","просто","ведь","разве","даже"))
 
 # темы, на которые Мirro размышляет сама, если инициатива включена
 _SEED_TOPICS = [
@@ -62,14 +62,16 @@ class MindStream:
     def extract_topic(text):
         """Ядро темы из строки: содержательные слова, кроме стоп-слов.
         Один return: str (может быть пустой)."""
-        words = _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())
+        words = _re.findall(r"[а-яёa-z]{4,}", (text or "").lower())
         keep = [w for w in words if w not in _STOP]
         return " ".join(keep)
 
     # ---------- инициатива ----------
     def _remember_topic(self, topic):
-        """Фиксирует тему с меткой времени (дедуп по недавней)."""
-        if topic and not any(t == topic for t, _ in self.topics[-8:]):
+        """Фиксирует тему с меткой времени (дедуп по недавней и по корню)."""
+        def _root(t):
+            return t[:6]  # грубый корень для падежных вариантов
+        if topic and not any(_root(t) == _root(topic) for t, _ in self.topics[-8:]):
             self.topics.append((topic, time.time()))
             # держим только недавнее, чтобы не расти бесконечно
             cutoff = time.time() - 12 * 3600
@@ -86,9 +88,12 @@ class MindStream:
 
     def pick_topic(self):
         """Выбирает тему для самостоятельного размышления: свежую, новую, или
-        тематический seed. Один return: str."""
+        тематический seed. Из недавних предпочитаем уникальную (не последнюю).
+        Один return: str."""
         topics = [t for t, _ in reversed(self.topics) if t]
         chosen = topics[0] if topics else ""
+        if len(topics) > 1 and len(set(map(lambda t: t[:6], topics))) > 1:
+            chosen = topics[1] if topics[1] != chosen else topics[0]
         if not chosen and _SEED_TOPICS:
             chosen = random.choice(_SEED_TOPICS)
         return chosen
@@ -125,7 +130,8 @@ class MindStream:
         return thought
 
     def think(self):
-        """Полный ход внутренней речи. Один return: dict со str-полями."""
+        """Полный ход внутренней речи. Не повторяет мысль, записанную сразу
+        до этого. Один return: dict со str-полями."""
         ts = time.time()
         thought = ""
         topic = ""
@@ -134,10 +140,14 @@ class MindStream:
             self.last_think_ts = ts
             topic = self.pick_topic()
             thought = self.draft_thought(topic)
-            written = self._persist(topic, thought)
-            self.thoughts.append((thought, time.time()))
-            if len(self.thoughts) > self.max_thought:
-                self.thoughts = self.thoughts[-self.max_thought:]
+            # не повторяем ту же мысль дважды подряд
+            if self.thoughts and self.thoughts[-1][0] == thought:
+                thought = ""
+            if thought:
+                written = self._persist(topic, thought)
+                self.thoughts.append((thought, time.time()))
+                if len(self.thoughts) > self.max_thought:
+                    self.thoughts = self.thoughts[-self.max_thought:]
         return {"thought": thought, "topic": topic, "written": written}
 
     def _persist(self, topic, thought):
