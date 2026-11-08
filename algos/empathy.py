@@ -18,12 +18,15 @@ import re as _re
 _RAD = {
     "positive": {"отличн", "прекрасн", "крут", "замечательн", "спасиб", "супер",
                  "нрав", "любл", "успех", "радостн", "помогл", "здорово", "лучш",
-                 "класс", "победа", "восхитительн"},
+                 "класс", "победа", "восхитительн", "рад", "рада", "приятн",
+                 "счастлив", "суперски", "потрясн"},
     "negative": {"плох", "ужасн", "проблем", "ошиб", "провал", "грустн", "ненавиж",
                  "катастроф", "худш", "сломал", "фейл", "огорч", "разочар",
-                 "злюсь", "раздраж", "не работает", "не получается"},
+                 "злюсь", "раздраж", "не работает", "не получается", "бесит",
+                 "раздража", "неприятн", "беспоко"},
     "fatigue": {"устал", "устала", "вымотан", "выдохся", "спать хочу", "нет сил",
-                "измотан", "выгорел", "перегруз"},
+                "измотан", "выгорел", "перегруз", "утоми", "не выспал",
+                "вымотан", "сложный день"},
 }
 
 # скользящее настроение диалога (в памяти процесса)
@@ -42,21 +45,37 @@ _LEAD_RAD = {
 }
 
 
+_SHORT_STRICT = ("рад", "плох", "класс", "ошиб", "лучш", "крут")
+
+
 def _detect_rad(message):
     """Определяет тональность и усталость реплики по словарям.
+    Короткие основы («рад», «плох», «класс») засчитываем только как отдельные
+    слова (словоформы), а не как часть «творад», «хлоплох» и т.п.
     Один return: dict {'pos', 'neg', 'fatigue'}."""
     m = (message or "").lower()
     pos = sum(1 for w in _RAD["positive"] if w in m)
     neg = sum(1 for w in _RAD["negative"] if w in m)
     fatigue = sum(1 for w in _RAD["fatigue"] if w in m)
-    return {"pos": pos, "neg": neg, "fatigue": fatigue}
+    for short in _SHORT_STRICT:
+        if short in _RAD["positive"] and short in m:
+            # считаем реальные вхождения как слова
+            real = len(_re.findall(r"(?<![а-яё])" + short, m))
+            if real == 0:
+                pos -= 1
+        elif short in _RAD["negative"] and short in m and not _re.search(r"(?<![а-яё])" + short, m):
+            neg -= 1
+    return {"pos": max(0, pos), "neg": max(0, neg), "fatigue": max(0, fatigue)}
 
 
 def observe(message):
-    """Обновляет скользящее настроение по новой реплике. Один return: dict."""
+    """Обновляет скользящее настроение по новой реплике.
+    Разнозначные сигналы в одной реплике не раскачивают настроение (баланс).
+    Один return: dict."""
     global _emotion, _fatigue
     d = _detect_rad(message)
-    delta = 0.15 * (d["pos"] - d["neg"])
+    net = (d["pos"] - d["neg"]) if d["pos"] == 0 or d["neg"] == 0 else 0
+    delta = 0.15 * net
     if d["pos"] == 0 and d["neg"] == 0:
         # нейтральная реплика мягко тянет к нулю
         delta = -0.02 * _emotion
@@ -75,16 +94,17 @@ def current_tone():
 
 def empathy_lead(message):
     """Подбирает эмпатичную заставку к ответу под тон собеседника.
+    Приоритет: усталость > сильный негатив > лёгкий негатив > позитив.
     Если разговор нейтральный — возвращает None (заставка не нужна).
     Один return: str или None."""
     d = _detect_rad(message)
     lead = None
     if d["fatigue"]:
         lead = _pick(_LEAD_RAD["fatigue"])
-    elif d["pos"] > d["neg"] and d["pos"] > 0:
-        lead = _pick(_LEAD_RAD["positive"])
     elif d["neg"] > 0:
-        lead = _pick(_LEAD_RAD["negative_mild"] if d["neg"] == 1 else _LEAD_RAD["negative_full"])
+        lead = _pick(_LEAD_RAD["negative_full"] if d["neg"] > 1 else _LEAD_RAD["negative_mild"])
+    elif d["pos"] > 0 and d["pos"] > d["neg"]:
+        lead = _pick(_LEAD_RAD["positive"])
     return lead
 
 
@@ -96,11 +116,15 @@ def _pick(options):
 
 def apply_empathy(message, answer):
     """Оборачивает ответ эмпатичной заставкой под тон сообщения.
+    Если ответ уже начинается с похожей заставки — не дублируем.
     Один return: str."""
     out = answer
     lead = empathy_lead(message)
     if lead and answer:
         ans = answer if isinstance(answer, str) else str(answer or "")
+        # уже начали схожей заставкой — пропускаем (анти-дубль)
+        if ans[:24].lower().startswith(lead[:12].lower()):
+            return ans
         # не дублируем, если пользователь просто спросил настроение/самочувствие
         low = (message or "").lower()
         if not any(w in low for w in ("как ты себя", "как настроение", "как дела")):
