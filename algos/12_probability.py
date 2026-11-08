@@ -20,14 +20,19 @@ def classical_probability(favorable, total):
     return prob
 
 
+def _clamp(p):
+    """Ограничивает вероятность интервалом [0,1]. Один return: float."""
+    return max(0.0, min(1.0, p))
+
+
 def prob_not(p):
-    """Вероятность противоположного события."""
-    return 1 - p
+    """Вероятность противоположного события (клампится в [0,1])."""
+    return _clamp(1 - p)
 
 
 def prob_union(p_a, p_b, p_intersect=0.0):
-    """Вероятность объединения: P(A∪B)."""
-    return p_a + p_b - p_intersect
+    """Вероятность объединения: P(A∪B) (клампится в [0,1])."""
+    return _clamp(p_a + p_b - p_intersect)
 
 
 def prob_intersect_independent(p_a, p_b):
@@ -55,8 +60,11 @@ def bayes(p_a, p_b_given_a, p_b_given_not_a):
 
 
 def prob_at_least_one(p_each, n):
-    """Вероятность хотя бы одного события из n независимых (одинаковая p)."""
-    return 1 - (1 - p_each) ** n
+    """Вероятность хотя бы одного события из n независимых (одинаковая p).
+    Клампится в [0,1]. Один return: float."""
+    if n <= 0:
+        return 0.0
+    return _clamp(1 - (1 - _clamp(p_each)) ** n)
 
 
 def expected_value(values, probs=None):
@@ -94,8 +102,13 @@ def poisson_pmf(k, lam):
 
 
 def normal_pdf(x, mu=0.0, sigma=1.0):
-    """Плотность нормального распределения."""
-    return (1 / (sigma * math.sqrt(2 * math.pi))) * math.exp(-((x - mu) ** 2) / (2 * sigma * sigma))
+    """Плотность нормального распределения. 0 при sigma<=0.
+    Один return: float."""
+    result = 0.0
+    if sigma > 0:
+        const = 1 / (sigma * math.sqrt(2 * math.pi))
+        result = const * math.exp(-((x - mu) ** 2) / (2 * sigma * sigma))
+    return result
 
 
 def normal_cdf(x, mu=0.0, sigma=1.0, steps=2000):
@@ -119,11 +132,16 @@ def zscore_probability_piecewise(z, mu=0.0, sigma=1.0):
 
 
 def mle_normal(data):
-    """Оценка максимального правдоподобия для нормального распределения."""
+    """Оценка максимального правдоподобия для нормального распределения
+    (пустой список → (0.0, 0.0)). Один return: tuple."""
+    mu = 0.0
+    sd = 0.0
     n = len(data)
-    mu = sum(data) / n
-    var = sum((x - mu) ** 2 for x in data) / n
-    return mu, math.sqrt(var)
+    if n:
+        mu = sum(data) / n
+        var = sum((x - mu) ** 2 for x in data) / n
+        sd = math.sqrt(var)
+    return mu, sd
 
 
 def markov_predict(transitions, start, steps):
@@ -193,12 +211,11 @@ def central_limit_demo(size=30, samples=1000):
 
 
 def entropy(probs):
-    """Энтропия Шеннона (в битах)."""
-    return -sum(p * math.log2(p) for p in probs if p > 0)
-
-
-def expected_with_interest(p):  # небольшой помощник — нет, заменю ниже
-    pass
+    """Энтропия Шеннона (в битах). Пустой список → 0. Один return: float."""
+    result = 0.0
+    if probs:
+        result = -sum(p * math.log2(p) for p in probs if p > 0)
+    return result
 
 
 if __name__ == "__main__":
