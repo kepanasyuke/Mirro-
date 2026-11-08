@@ -24,16 +24,23 @@ REFLECTED = MIRRO / "data" / "reflection_log.jsonl"
 
 _STOP = set(("и", "в", "на", "с", "по", "за", "от", "до", "из", "у", "для", "о",
              "не", "ни", "что", "как", "это", "то", "про", "мне", "меня", "ты",
-             "я", "расскажи", "напиши", "какой", "какая", "какие", "такое", "объясни"))
+             "я", "расскажи", "напиши", "какой", "какая", "какие", "такое", "объясни",
+             "который", "которая", "можно", "нужно", "все", "очень", "теперь", "где",
+             "когда", "почему", "есть", "быть", "будет", "через", "между", "при"))
 
 
 def _words(text):
-    return [w for w in re.findall(r"[а-яёa-z]{3,}", (text or "").lower()) if w not in _STOP]
+    """Очищенные ключевые слова вопроса (дефисные термины склеиваем в одно).
+    Один return: list[str]."""
+    return [w for w in re.findall(r"[а-яёa-z]{3,}", re.sub(r"-", "", (text or "").lower()))
+            if w not in _STOP]
 
 
 def _last_failures(limit=200):
-    """Собирает последние провалы из лога. Один return: list dict."""
+    """Собирает последние провалы из лога, дедуплицируя одинаковые вопросы
+    и отбрасывая слишком короткие (менее 3 ключевых слов). Один return: list dict."""
     fails = []
+    seen = set()
     try:
         lines = FAILURES.read_text("utf-8").splitlines()
         for line in lines[-limit:]:
@@ -42,7 +49,14 @@ def _last_failures(limit=200):
             except Exception:
                 continue
             for f in rec.get("fails", [])[:10]:
-                fails.append({"question": f.get("q", ""), "note": f.get("note", ""),
+                q = f.get("q", "")
+                if not q or len(_words(q)) < 3:
+                    continue
+                key = _words(q)
+                if tuple(key) in seen:
+                    continue
+                seen.add(tuple(key))
+                fails.append({"question": q, "note": f.get("note", ""),
                               "answer": f.get("answer", "")})
     except Exception:
         fails = []
@@ -59,7 +73,17 @@ def _reinforce_graph(fail):
         from knowledge_graph import kg
         words = _words(fail.get("question", ""))
         if len(words) >= 2:
-            a, b = words[0], words[1]
+            # выбираем самую сильную существующую пару, иначе первую
+            best_pair = None
+            for i in range(len(words) - 1):
+                a, b = words[i], words[i + 1]
+                if a in kg.nodes and b in kg.nodes and kg.edge_weight(a, b) > 0:
+                    best_pair = (a, b)
+                    break
+            if best_pair is None:
+                a, b = words[0], words[1]
+            else:
+                a, b = best_pair
             # если узел есть и связь есть — усиливаем (рефлексия: «это важно»)
             if a in kg.nodes and b in kg.nodes and kg.edge_weight(a, b) > 0:
                 n = kg.reward(a, b, amount=0.15)
@@ -73,11 +97,13 @@ def _reinforce_graph(fail):
                 note = f"тема «{a}/{b}» вне графа — кандидат на пополнение"
         else:
             note = "мало ключевых слов для рефлексии"
-        # персистентность: сохраняем изменения графа тихо
-        try:
-            kg.save(MIRRO / "models" / "knowledge_graph.pkl")
-        except Exception:
-            pass
+        # персистентность: сохраняем изменения графа тихо, но только если
+        # реально укрепляли связь (не тратим I/O на сухие прогоны)
+        if note.startswith(("усилил", "связал")):
+            try:
+                kg.save(MIRRO / "models" / "knowledge_graph.pkl")
+            except Exception:
+                pass
     except Exception as e:
         note = f"ошибка рефлексии: {e}"
     return note
@@ -91,6 +117,9 @@ def run(limit=200):
         REFLECTED.parent.mkdir(parents=True, exist_ok=True)
         for f in fails:
             f["note"] = _reinforce_graph(f)
+            # считаем только реально выполненные правки графа
+            if f["note"].startswith(("усилил", "связал")):
+                done += 1
             try:
                 with open(REFLECTED, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -98,7 +127,6 @@ def run(limit=200):
                                          "result": f["note"]}, ensure_ascii=False) + "\n")
             except Exception:
                 pass
-            done += 1
     return done
 
 
