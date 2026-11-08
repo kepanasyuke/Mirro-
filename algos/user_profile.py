@@ -20,8 +20,8 @@ _VERBOSE_MARKERS = ("подробнее", "подробно", "разверни"
                     "деталь", "короче говоря", "простым", "простыми словами")
 _BRIEF_MARKERS = ("коротко", "кратко", "покороче", "кратенько", "в двух словах")
 
-# маркеры «меня зовут X»
-_NAME_RE = _re.compile(r"(?:меня\s+зовут|мо[её]\s+имя|я\s+—|я\s+это)\s+([а-яёa-z]+)", _re.I)
+# маркеры «меня зовут X» (имя может быть составным через дефис: Анна-Мария)
+_NAME_RE = _re.compile(r"(?:меня\s+зовут|мо[её]\s+имя|я\s+—|я\s+это)\s+([а-яёa-z-]{2,})", _re.I)
 
 _TOPIC_EXTRACT_STOP = {"что", "такое", "как", "это", "про", "расскажи", "объясни",
                        "мне", "меня", "хочу", "знать", "люблю", "нравится", "помоги",
@@ -108,8 +108,8 @@ def _extract_name(query):
     return name
 
 
-def _extract_topic(query, prof):
-    """Пытается вытащить тему интереса из фразы «(мень, расскажи) про X» /
+def _extract_topic(query):
+    """Пытается вытащить тему интереса из фразы «(мне, расскажи) про X» /
     «люблю X» / «интересуюсь X». Один return: str или None."""
     q = (query or "").strip().lower()
     topic = None
@@ -127,11 +127,9 @@ def _extract_topic(query, prof):
             if words:
                 topic = " ".join(words).capitalize()
                 break
-    if not topic:
-        m = _re.search(r"(?:расскажи|про)\s+про\s+([а-яёa-z\s]{2,40})", q)
-        if not m:
-            m = _re.search(r"\bпро\s+([а-яёa-z]{4,})", q)
-        if m:
+    # «расскажи про X» или просто «про X» — тема после «про»
+    m = _re.search(r"\bпро\s+([а-яёa-z]{4,})", q)
+    if m:
             cand = m.group(1).strip()
             first = cand.split()[0]
             if first not in _TOPIC_EXTRACT_STOP and len(first) >= 4:
@@ -153,9 +151,12 @@ def learn_from_message(prof, message):
     name = _extract_name(msg)
     if name and prof.get("name") != name:
         prof["name"] = name
-        prof["remarks"].append(f"познакомились: {name}")
+        note = f"познакомились: {name}"
+        if note not in prof.get("remarks", []):
+            prof["remarks"].append(note)
+            prof["remarks"] = prof["remarks"][-30:]
         changed += 1
-    topic = _extract_topic(msg, prof)
+    topic = _extract_topic(msg)
     if topic:
         topics = list(prof.get("topics", []))
         if topic not in topics:
