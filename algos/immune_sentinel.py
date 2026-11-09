@@ -16,8 +16,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     """Сканирует граф и подавляет аномальные веса / петлевые роу-ссылки.
-    Пустой граф, некорректные параметры или нет рёбер → (graph, []).
-    Рёбра с не-трёхэлементным ключом пропускаются; веса клампятся в ±50.
+    Пустой граф, некорректные параметры, не-dict edges → (graph, []).
+    Рёбра с не-трёхэлементным ключом пропускаются; веса клампятся в ±50;
+    симметрия подавления не роняет основной цикл при сбое.
     Возвращает (graph, quarantined_edges). Один return: tuple."""
     quarantined = []
     try:
@@ -25,6 +26,8 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     except Exception:
         max_allowed_weight = 5.0
     if graph is None or not hasattr(graph, "edges") or max_allowed_weight <= 0:
+        return graph, quarantined
+    if not isinstance(graph.edges, dict):
         return graph, quarantined
     if not graph.edges:
         # нет рёбер — нечего сканировать (всё равно чистим мета-петли ниже)
@@ -48,8 +51,11 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
             nw = max(-50.0, min(50.0, w * suppression))
             graph.edges[key] = nw
             if hasattr(graph, "_set_adj_weight"):
-                graph._set_adj_weight(key[0], key[1], key[2], nw)
-                graph._set_adj_weight(key[2], key[1], key[0], nw)
+                try:
+                    graph._set_adj_weight(key[0], key[1], key[2], nw)
+                    graph._set_adj_weight(key[2], key[1], key[0], nw)
+                except Exception:
+                    pass
             quarantined.append(key)
     # 2. удаление авто-резонансных петель мета-графа (from_edge == to_edge)
     meta = getattr(graph, "meta_routes", None)
@@ -80,7 +86,13 @@ def scan_report(graph):
             n_high += 1
         if fw < 0:
             n_neg += 1
-    return f"рёбер {len(edges)}, аномальных >5: {n_high}, отрицательных: {n_neg}"
+    meta = getattr(graph, "meta_routes", None) or {}
+    loops = sum(
+        1 for k in meta
+        if isinstance(k, (tuple, list)) and len(k) >= 2 and k[0] == k[1]
+    )
+    return (f"рёбер {len(edges)}, аномальных >5: {n_high}, "
+            f"отрицательных: {n_neg}, мета-петель: {loops}")
 
 
 if __name__ == "__main__":
