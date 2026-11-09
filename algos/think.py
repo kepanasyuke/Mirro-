@@ -115,12 +115,12 @@ def classify(query):
 
 def _c_simple_math(q):
     """Простая арифметика: сколько будет / x+y, x-y, x*y, x/y.
-    Не путает с уравнениями (есть x) и новыми датами (год не считает).
-    Один return: tuple|None."""
+    Поддерживает длинные тире (–, —) как минус. Не путает с уравнениями
+    (есть x) и новыми датами (год не считает). Один return: tuple|None."""
     has_math_words = "умнож" in q or "плюс" in q or "минус" in q or "дели" in q or "раздел" in q
     out = None
     # не считаем одиночное число без операции (даты, телефоны, номера)
-    has_op = any(op in q for op in ("+", "-", "*", "/", "×"))
+    has_op = any(op in q for op in ("+", "-", "–", "—", "*", "/", "×"))
     if not has_op and not has_math_words:
         return out
     if "x" not in q and ("сколько будет" in q or re.search(r"\d+\s*[+\-*/×]\s*\d+", q) or has_math_words):
@@ -134,7 +134,7 @@ def _c_simple_math(q):
         elif ("+" in q or "плюс" in q) and len(nums) >= 2:
             out = ("математика", "01_stats", "sum_of", None,
                    f"{nums[0]:g} + {nums[1]:g} = {nums[0]+nums[1]:.6g}")
-        elif ("-" in q or "минус" in q) and len(nums) >= 2:
+        elif ("-" in q or "–" in q or "—" in q or "минус" in q) and len(nums) >= 2:
             out = ("математика", "01_stats", "diff_of", None,
                    f"{nums[0]:g} − {nums[1]:g} = {nums[0]-nums[1]:.6g}")
         elif ("/" in q or "дели" in q or "раздел" in q) and len(nums) >= 2 and nums[1] != 0:
@@ -300,6 +300,10 @@ def _comb(n, k):
 
 
 def _fact(n):
+    try:
+        n = int(n)
+    except Exception:
+        return 1
     r = 1
     for i in range(2, n + 1):
         r *= i
