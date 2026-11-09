@@ -394,7 +394,7 @@ def _match_by_topic(q):
         return None
     words = [_stem_ru(w) for w in _norm_q(q).split() if len(w) > 2]
     scored = []
-    for name, info in fk._by_name.items():
+    for name, info in (fk._by_name or {}).items():
         if not isinstance(info, dict):
             continue
         topic_tokens = {_stem_ru(t) for t in _norm_q(info.get("topic", "")).split()}
@@ -502,19 +502,23 @@ def try_definition(query):
     """Отвечает связным определением для ОБЩИХ ПОНЯТИЙ (нейросеть, ИИ, питон,
     граф, алгоритм и т.п.) своими словами — раньше сырого графа.
     Ищет понятие (ключ с префиксом «_») по совпадению термина в запросе.
-    Один return: str|None."""
+    Пустой запрос → None. Один return: str|None."""
     ans = None
-    q = (query or "").lower()
+    q = (query or "").lower().strip()
+    if not q:
+        return None
     # понятия — это ключи в _KNOWLEDGE, начинающиеся с «_»
     best = []
-    for key in fk._by_name:
+    for key in (fk._by_name or {}):
         if key.startswith("_"):
             info = fk._by_name[key]
+            if not isinstance(info, dict):
+                continue
             # матчим по первому слову topic, полному topic, явным tags
             # и по стему (чтобы распознавать падежи: «нейросетью», «граф_ом»)
-            terms = [info.get("topic", "").split()[0].lower()]
-            full = info.get("topic", "").lower()
-            tags = [t.lower() for t in info.get("tags", [])]
+            terms = [str(info.get("topic", "")).split()[0].lower()]
+            full = str(info.get("topic", "")).lower()
+            tags = [t.lower() for t in (info.get("tags") or [])]
             q_words = _norm_q(q).split()
             q_stems = {_stem_ru(w) for w in q_words if len(w) > 2}
             hit = None
@@ -537,7 +541,9 @@ def try_definition(query):
                 best.append((hit, info["topic"], info["what"], info["ex"]))
     if best:
         best.sort(key=lambda x: -x[0])
-        topic, what, ex = best[0][1], best[0][2], best[0][3]
+        _, topic, what, ex = best[0]
+        topic = topic or "это"
+        what = what or "некое понятие"
         ans = f"{topic[0].upper() + topic[1:]} — это {what}."
         # если примера нет — не печатаем «Например: пусто»
         if ex and str(ex).strip():
