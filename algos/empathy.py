@@ -52,7 +52,9 @@ def _detect_rad(message):
     """Определяет тональность и усталость реплики по словарям.
     Короткие основы («рад», «плох», «класс») засчитываем только как отдельные
     слова (словоформы), а не как часть «творад», «хлоплох» и т.п.
-    Один return: dict {'pos', 'neg', 'fatigue'}."""
+    Пустое/None-сообщение → нулевые счётчики. Один return: dict {'pos','neg','fatigue'}."""
+    if not (message or "").strip():
+        return {"pos": 0, "neg": 0, "fatigue": 0}
     m = (message or "").lower()
     pos = sum(1 for w in _RAD["positive"] if w in m)
     neg = sum(1 for w in _RAD["negative"] if w in m)
@@ -71,8 +73,10 @@ def _detect_rad(message):
 def observe(message):
     """Обновляет скользящее настроение по новой реплике.
     Разнозначные сигналы в одной реплике не раскачивают настроение (баланс).
-    Один return: dict."""
+    Пустое/None-сообщение → текущее состояние без изменений. Один return: dict."""
     global _emotion, _fatigue
+    if not (message or "").strip():
+        return {"emotion": _emotion, "fatigue": _fatigue}
     d = _detect_rad(message)
     net = (d["pos"] - d["neg"]) if d["pos"] == 0 or d["neg"] == 0 else 0
     delta = 0.15 * net
@@ -95,8 +99,9 @@ def current_tone():
 def empathy_lead(message):
     """Подбирает эмпатичную заставку к ответу под тон собеседника.
     Приоритет: усталость > сильный негатив > лёгкий негатив > позитив.
-    Если разговор нейтральный — возвращает None (заставка не нужна).
-    Один return: str или None."""
+    Пустое/нейтральное сообщение → None (заставка не нужна). Один return: str/None."""
+    if not (message or "").strip():
+        return None
     d = _detect_rad(message)
     lead = None
     if d["fatigue"]:
@@ -109,16 +114,20 @@ def empathy_lead(message):
 
 
 def _pick(options):
-    """Случайный элемент списка. Один return: str."""
+    """Случайный элемент списка. Пустой список → «». Один return: str."""
     import random
+    if not options:
+        return ""
     return random.choice(options)
 
 
 def apply_empathy(message, answer):
     """Оборачивает ответ эмпатичной заставкой под тон сообщения.
     Если ответ уже начинается с похожей заставки — не дублируем.
-    Один return: str."""
+    Пустой ответ → None исходное значение. Один return: str."""
     out = answer
+    if not (answer or ""):
+        return out
     lead = empathy_lead(message)
     if lead and answer:
         ans = answer if isinstance(answer, str) else str(answer or "")
