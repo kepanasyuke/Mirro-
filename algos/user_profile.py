@@ -64,14 +64,15 @@ def load_profile(user_id="default"):
     all_p = _load_all()
     prof = _default_profile()
     entry = all_p.get(str(user_id))
-    if entry:
-        prof["name"] = entry.get("name")
-        prof["topics"] = list(entry.get("topics", []))[:20]
+    if entry and isinstance(entry, dict):
+        name = entry.get("name")
+        prof["name"] = str(name) if name else None
+        prof["topics"] = [t for t in (entry.get("topics") or []) if isinstance(t, str)][:20]
         try:
             prof["verbosity"] = max(-1.0, min(1.0, float(entry.get("verbosity") or 0.0)))
         except Exception:
             prof["verbosity"] = 0.0
-        prof["remarks"] = list(entry.get("remarks", []))[:30]
+        prof["remarks"] = [r for r in (entry.get("remarks") or []) if isinstance(r, str)][:30]
     return prof
 
 
@@ -83,11 +84,12 @@ def save_profile(prof, user_id="default"):
         return False
     try:
         all_p = _load_all()
+        name = prof.get("name")
         all_p[str(user_id)] = {
-            "name": prof.get("name"),
-            "topics": prof.get("topics", [])[:20],
+            "name": str(name) if name else None,
+            "topics": [str(t) for t in (prof.get("topics") or []) if t][:20],
             "verbosity": prof.get("verbosity", 0.0),
-            "remarks": prof.get("remarks", [])[:30],
+            "remarks": [str(r) for r in (prof.get("remarks") or []) if r][:30],
         }
         tmp = str(_path()) + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -132,9 +134,10 @@ def _extract_topic(query):
             if words:
                 topic = " ".join(words).capitalize()
                 break
-    # «расскажи про X» или просто «про X» — тема после «про»
-    m = _re.search(r"\bпро\s+([а-яёa-z]{4,})", q)
-    if m:
+    if not topic:
+        # «расскажи про X» или просто «про X» — тема после «про»
+        m = _re.search(r"\bпро\s+([а-яёa-z]{4,})", q)
+        if m:
             cand = m.group(1).strip()
             first = cand.split()[0]
             if first not in _TOPIC_EXTRACT_STOP and len(first) >= 4:
@@ -246,7 +249,11 @@ def adapt_style(content, query):
     out = content if isinstance(content, str) else str(content or "")
     try:
         prof = load_profile()
-        v = prof.get("verbosity", 0.0)
+        try:
+            v = float(prof.get("verbosity", 0.0) or 0.0)
+        except Exception:
+            v = 0.0
+        v = max(-1.0, min(1.0, v))
         if v is None:
             return out
         # порог: при заметном предпочтении «кратко» (verbosity < -0.3)
