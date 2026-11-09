@@ -33,6 +33,24 @@ def _default_profile():
     return {"name": None, "topics": [], "verbosity": 0.0, "remarks": []}
 
 
+def reset_profile(user_id="default"):
+    """Сбрасывает профиль пользователя на пустой (удаляет запись).
+    Один return: bool."""
+    ok = False
+    try:
+        all_p = _load_all()
+        if str(user_id) in all_p:
+            del all_p[str(user_id)]
+        tmp = str(_path()) + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(all_p, fh, ensure_ascii=False)
+        os.replace(tmp, str(_path()))
+        ok = True
+    except Exception:
+        ok = False
+    return ok
+
+
 def _path():
     """Файл профиля (создаёт каталог при необходимости). Один return: str."""
     d = os.path.dirname(_PROF_FILE)
@@ -85,10 +103,14 @@ def save_profile(prof, user_id="default"):
     try:
         all_p = _load_all()
         name = prof.get("name")
+        try:
+            verbosity = max(-1.0, min(1.0, float(prof.get("verbosity") or 0.0)))
+        except Exception:
+            verbosity = 0.0
         all_p[str(user_id)] = {
             "name": str(name) if name else None,
             "topics": [str(t) for t in (prof.get("topics") or []) if t][:20],
-            "verbosity": prof.get("verbosity", 0.0),
+            "verbosity": verbosity,
             "remarks": [str(r) for r in (prof.get("remarks") or []) if r][:30],
         }
         tmp = str(_path()) + ".tmp"
@@ -132,7 +154,9 @@ def _extract_topic(query):
                     break
             words = [w for w in tail.split() if w and w not in _TOPIC_EXTRACT_STOP][:4]
             if words:
-                topic = " ".join(words).capitalize()
+                joined = " ".join(words)
+                # слишком длинные «темы» (>40 симв.) отбрасываем
+                topic = joined.capitalize() if len(joined) <= 40 else joined[:40].capitalize()
                 break
     if not topic:
         # «расскажи про X» или просто «про X» — тема после «про»
@@ -199,7 +223,7 @@ def _remember_text(prof, query):
 
 def _say_remember(prof, q):
     """Разговорная фраза «помнишь меня». Один return: str."""
-    if prof.get("name"):
+    if prof and prof.get("name"):
         return f"Конечно помню, {prof['name']}! " + _remember_text(prof, q)
     return _remember_text(prof, q)
 
@@ -227,8 +251,8 @@ def try_user_profile(query, user_id="default"):
 # обращение по имени: если знаем, подставляем в начало голосового ответа
 def greet_name(content, query):
     """Вставляет имя пользователя в начало ответа, если оно известно и ответ
-    не начинается с него. Длинные имена обрезаются до 40 символов.
-    Один return: str."""
+    не начинается с него. Пустой ответ → без изменений.
+    Длинные имена обрезаются до 40 символов. Один return: str."""
     out = content if isinstance(content, str) else str(content or "")
     try:
         prof = load_profile()
