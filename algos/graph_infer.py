@@ -31,8 +31,8 @@ def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     starts = []
     if isinstance(topic, str) and topic:
         starts.append(topic)
-    for name in kg.nodes:
-        if name and len(name) > 3 and name in q:
+    for name in (kg.nodes or []):
+        if isinstance(name, str) and name and len(name) > 3 and name in q:
             starts.append(name)
     # дедуп
     seen = set()
@@ -53,7 +53,7 @@ def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
 
 
 def _recurse(kg, node, trail, max_depth, results, seen_prefix):
-    """Обход в глубину с фиксацией путей."""
+    """Обход в глубину с фиксацией путей (не ходим в циклы повторно)."""
     if len(trail) >= max_depth:
         trail_with = trail + [node]
         if len(trail_with) >= 2:
@@ -64,6 +64,8 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
         if not isinstance(nb, (tuple, list)) or len(nb) < 2:
             continue
         pred, other = nb[0], nb[1]
+        if other in trail:
+            continue  # не зацикливаемся на уже посещённых узлах
         key = (node, pred, other)
         if key not in seen_prefix:
             seen_prefix.add(key)
@@ -217,14 +219,16 @@ def try_infer_unknown(graph, query):
 def _graph_topics_for_unknown(graph, query):
     """Когда в вопросе нет точных узлов графа, возвращает понятия, чья основа
     (стем-подобный 4-префикс) близка словам запроса. graph — KnowledgeGraph.
-    Один return: list."""
+    Не-граф/None → []. Один return: list."""
     import re as _re
+    if graph is None or not hasattr(graph, "nodes"):
+        return []
     graph = graph or kg
     q = (query or "").lower()
     words = [w for w in _re.findall(r"[а-яёa-z]{4,}", q) if w not in _TOPIC_STOP]
     scores = []
-    for n in graph.nodes:
-        if not n or len(n) < 4 or _is_junk_topic(n):
+    for n in (graph.nodes or []):
+        if not isinstance(n, str) or len(n) < 4 or _is_junk_topic(n):
             continue
         core = n.split()[0] if " " in n else n
         for w in words[:8]:
@@ -242,8 +246,17 @@ def _graph_topics_for_unknown(graph, query):
 #  (векторов активных весов), накопленных успешными эпохами.
 # ============================================================
 def _edge_pattern(graph):
-    """Латентный паттерн графа: вектор активных весов рёбер. Один return: list."""
-    return [float(w) for w in graph.edges.values()]
+    """Латентный паттерн графа: вектор активных весов рёбер. Не-граф → [].
+    Один return: list."""
+    if graph is None or not hasattr(graph, "edges"):
+        return []
+    out = []
+    for w in graph.edges.values():
+        try:
+            out.append(float(w))
+        except Exception:
+            out.append(0.0)
+    return out
 
 
 def try_get_memory_experience(graph, active_pattern, experience=None):
