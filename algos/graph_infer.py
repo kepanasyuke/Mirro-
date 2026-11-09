@@ -15,13 +15,14 @@ from knowledge_graph import KnowledgeGraph
 
 def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     """Пытается вывести цепочки от 'topic' или слов запроса по рёбрам графа.
-
-    Возвращает список строк-выводов, либо [].
+    Не-строка query/None-граф → []. Возвращает список строк-выводов, либо [].
     """
-    q = (query or "").lower()
+    q = (query or "").lower() if isinstance(query, str) else ""
+    if kg is None or not hasattr(kg, "nodes"):
+        return []
     # стартовые узлы: тема (если указана) + узлы графа, что встречаются в вопросе
     starts = []
-    if topic:
+    if isinstance(topic, str) and topic:
         starts.append(topic)
     for name in kg.nodes:
         if name and len(name) > 3 and name in q:
@@ -51,7 +52,8 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
         if len(trail_with) >= 2:
             results.append(trail_with)
         return
-    for pred, other, _w in kg.neighbors(node):
+    neighbors = kg.neighbors(node) if kg is not None else []
+    for pred, other, _w in (neighbors or []):
         key = (node, pred, other)
         if key not in seen_prefix:
             seen_prefix.add(key)
@@ -60,9 +62,10 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
 
 
 def format_path(path):
-    """path = ['a','b','c'] — соединяет узлы стрелками.
-    Один return: str."""
-    return " → ".join(path) if path else ""
+    """path = ['a','b','c'] — соединяет узлы стрелками. Один return: str."""
+    if not path:
+        return ""
+    return " → ".join(str(x) for x in path)
 
 
 def _chain_to_str(kg, chain):
