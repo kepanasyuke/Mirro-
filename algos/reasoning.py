@@ -94,11 +94,13 @@ def get_scheme(name):
     Пустой BLOCK_SCHEMES → пустая схема. Один return: dict."""
     if not BLOCK_SCHEMES:
         return {"name": "", "description": "", "steps": []}
-    scheme = BLOCK_SCHEMES.get(name) or BLOCK_SCHEMES["sledovanie"]
+    scheme = BLOCK_SCHEMES.get(name) or (BLOCK_SCHEMES.get("sledovanie") if isinstance(BLOCK_SCHEMES, dict) else None)
+    if not isinstance(scheme, dict):
+        return {"name": "", "description": "", "steps": []}
     return {
-        "name": scheme["name"],
-        "description": scheme["desc"],
-        "steps": scheme["schema"],
+        "name": scheme.get("name", ""),
+        "description": scheme.get("desc", ""),
+        "steps": scheme.get("schema", []),
     }
 
 
@@ -121,11 +123,14 @@ def think_about_thinking(query):
     Для пустого/служебного запроса возвращает базовую схему «Следование».
     Один return: tuple[str, list]. """
     q = (query or "").lower()
-    if BLOCK_SCHEMES and (not q.strip() or len(q.strip()) < 2):
-        return (BLOCK_SCHEMES["sledovanie"]["name"], BLOCK_SCHEMES["sledovanie"]["schema"])
+    base = BLOCK_SCHEMES.get("sledovanie") if isinstance(BLOCK_SCHEMES, dict) else None
     if not BLOCK_SCHEMES:
         return ("", [])
-    result = (BLOCK_SCHEMES["sledovanie"]["name"], BLOCK_SCHEMES["sledovanie"]["schema"])
+    if not base:
+        return (f'[{" / ".join(list_schemes())} — выберите схему]', [])
+    if not q.strip() or len(q.strip()) < 2:
+        return (base["name"], base["schema"])
+    result = (base["name"], base["schema"])
     if "не знаю чего хочу" in q or ("хочу" in q and "не знаю" in q):
         result = ("Таблица решений для 'не знаю, чего хочу'", [
             "ЕСЛИ хочу → ДЕЛАЮ",
