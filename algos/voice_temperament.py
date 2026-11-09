@@ -14,10 +14,11 @@ import re as _re
 
 
 def determine_voice_temperament(neuromodulators):
-    """Определяет психотип системы на основе уровней нейромедиаторов.
+    """Определяет психотип системы на основе уровней нейромедиаторов
+    (дофамин/серотонин, клампятся в [0,2]).
     Пустой/не-дикт/некорректные уровни → «сбалансированный».
-    Добавлены промежуточные психотипы при сильном дисбалансе.
-    Один return: str."""
+    Психотипы: воодушевлённый_лидер, хаотичный_холерик, флегматичный_философ,
+    уставший_меланхолик, спокойный_реалист. Один return: str."""
     if not isinstance(neuromodulators, dict) or not neuromodulators:
         return "сбалансированный"
     try:
@@ -26,12 +27,14 @@ def determine_voice_temperament(neuromodulators):
     except Exception:
         return "сбалансированный"
     temperament = "сбалансированный"
-    if dopamine > 0.4 and serotonin < 0.6:
+    if dopamine > 0.7 and serotonin > 0.8:
+        temperament = "воодушевлённый_лидер"
+    elif dopamine > 0.4 and serotonin < 0.6:
         temperament = "хаотичный_холерик"
     elif serotonin > 1.2:
         temperament = "флегматичный_философ"
-    elif dopamine < 0.2 and serotonin < 0.7:
-        temperament = "уставший_меланхолик"
+    elif dopamine < 0.2:
+        temperament = "уставший_меланхолик" if serotonin < 0.7 else "спокойный_реалист"
     return temperament
 
 
@@ -52,6 +55,9 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
     elif temperament == "флегматичный_философ":
         # Оставляем только весомые, длинные концептуальные токены
         processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) > min_len]
+    elif temperament == "уставший_меланхолик":
+        # Усталый: оставляем только короткие и средние токены
+        processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) <= max_len + 2]
     else:
         # прочие/неизвестные темпераменты не нарушают структуру
         processed = tokens
