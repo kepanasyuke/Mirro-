@@ -76,8 +76,9 @@ class MindStream:
             return t[:6]  # грубый корень для падежных вариантов
         if not isinstance(topic, str):
             return None
+        recent = [x for x in self.topics[-8:] if isinstance(x, tuple) and len(x) >= 2]
         if topic and len(topic.split()) <= 8 \
-                and not any(_root(t) == _root(topic) for t, _ in self.topics[-8:]):
+                and not any(_root(t) == _root(topic) for t, _ in recent):
             self.topics.append((topic, time.time()))
             # держим только недавнее, чтобы не расти бесконечно
             cutoff = time.time() - 12 * 3600
@@ -100,7 +101,7 @@ class MindStream:
         """Выбирает тему для самостоятельного размышления: свежую, новую, или
         тематический seed. Из недавних предпочитаем уникальную (не последнюю).
         Один return: str."""
-        topics = [t for t, _ in reversed(self.topics) if t]
+        topics = [t for t, _ in reversed(self.topics) if isinstance(t, str) and t]
         chosen = topics[0] if topics else ""
         if len(topics) > 1 and len({t[:6] for t in topics}) > 1:
             chosen = topics[1] if topics[1] != chosen else topics[0]
@@ -208,7 +209,7 @@ class MindStream:
     def meta_thought(self):
         """Мета-мысль о собственном состоянии. Пустой список тем → «пусто».
         Один return: dict."""
-        count = len(self.topics)
+        count = sum(1 for t in self.topics if isinstance(t, tuple) and len(t) >= 2)
         last = self.recent_thought()
         mood = "пусто" if count == 0 else ("спокойна" if count < 30 else "занята")
         return {"topics": count, "last_thought": last, "mood": mood}
