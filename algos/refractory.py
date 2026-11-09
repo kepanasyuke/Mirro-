@@ -43,8 +43,11 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
     Один return: RefractoryState."""
     if graph is None:
         return RefractoryState()
-    recovery_rate = max(0.0, min(1.0, recovery_rate))
-    fatigue_rate = max(0.0, min(1.0, fatigue_rate))
+    try:
+        recovery_rate = max(0.0, min(1.0, float(recovery_rate or 0.0)))
+        fatigue_rate = max(0.0, min(1.0, float(fatigue_rate or 0.25)))
+    except Exception:
+        recovery_rate, fatigue_rate = 0.1, 0.25
     if st is None:
         st = init_refractory_counters(graph)
     new_st = RefractoryState()
@@ -57,7 +60,10 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
             new_st.node_fatigue[name] = max(0.0, cur - recovery_rate)
     for key in graph.edges:
         cur = st.edge_exhaustion.get(key, 0.0)
-        w = abs(graph.edges.get(key, 0.0))
+        try:
+            w = abs(float(graph.edges.get(key, 0.0)))
+        except Exception:
+            continue
         if w > 0.5:
             new_st.edge_exhaustion[key] = min(1.0, cur + fatigue_rate * w)
         else:
@@ -68,14 +74,25 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
 def apply_fatigue_to_weights(graph, st, floor=0.2):
     """Временно депрессирует веса рёбер на основе их утомления.
     Если изначальный вес уже ниже floor — оставляем его как есть.
-    Пустой/некорректный граф или None-стейт → {}. Возвращает dict без
-    мутации графа. Один return: dict."""
+    Пустой/некорректный граф, None-стейт или floor<=0 → {}. Возвращает dict
+    без мутации графа. Один return: dict."""
     out = {}
-    if graph is None or not hasattr(graph, "edges") or st is None:
+    try:
+        floor = float(floor)
+    except Exception:
+        floor = 0.2
+    if graph is None or not hasattr(graph, "edges") or st is None or floor < 0:
         return out
     for key, w in graph.edges.items():
-        exhaustion = st.edge_exhaustion.get(key, 0.0)
-        retention = 1.0 - (0.8 * exhaustion)
+        try:
+            w = float(w)
+        except Exception:
+            continue
+        try:
+            exhaustion = float(st.edge_exhaustion.get(key, 0.0) or 0.0)
+        except Exception:
+            exhaustion = 0.0
+        retention = max(0.0, 1.0 - 0.8 * exhaustion)
         fatigued = w * retention
         # не завышаем исходно малые веса и не увеличиваем при утомлении
         out[key] = fatigued if (w >= floor and fatigued >= floor) else w
