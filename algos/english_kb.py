@@ -86,7 +86,10 @@ _TOPIC_TEST = [
 
 def _is_english_query(q):
     """Похож ли вопрос на английский. Минимальная длина латиницы — 6 символов
-    (чтобы одиночные «what?/hi» не срабатывали). Один return: bool."""
+    (чтобы одиночные «what?/hi» не срабатывали). Не-строка → False.
+    Один return: bool."""
+    if not isinstance(q, str):
+        return False
     q = (q or "").strip()
     if not q:
         return False
@@ -110,11 +113,17 @@ def try_english(query):
         return None
     q_low = (query or "").lower()
     answer = None
-    # поиск темы по ключевым словам
-    for topic, keys in _TOPIC_TEST:
+    # поиск темы по ключевым словам (пустой _TOPIC_TEST → нет темы)
+    for topic, keys in (_TOPIC_TEST or []):
         if any(k in q_low for k in keys):
             answer = _EN_KB.get(topic)
             break
+    # fallback: прямое вхождение ключа-темы как слова
+    if not answer:
+        for topic in _EN_KB:
+            if topic and topic in (" " + q_low + " "):
+                answer = _EN_KB.get(topic)
+                break
     if not answer and _EN_KB:
         answer = ("I understood your question. I'm mainly trained on Russian. "
                   "Tell me the topic and I'll answer in simple English if I can.")
