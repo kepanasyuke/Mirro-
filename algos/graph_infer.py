@@ -15,8 +15,15 @@ from knowledge_graph import KnowledgeGraph
 
 def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     """Пытается вывести цепочки от 'topic' или слов запроса по рёбрам графа.
-    Не-строка query/None-граф → []. Возвращает список строк-выводов, либо [].
+    Не-строка query/None-граф → [] ; max_depth<=0 → 2. Возвращает список
+    строк-выводов, либо [].
     """
+    try:
+        max_depth = int(max_depth)
+        if max_depth <= 0:
+            max_depth = 2
+    except Exception:
+        max_depth = 2
     q = (query or "").lower() if isinstance(query, str) else ""
     if kg is None or not hasattr(kg, "nodes"):
         return []
@@ -53,7 +60,10 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix):
             results.append(trail_with)
         return
     neighbors = kg.neighbors(node) if kg is not None else []
-    for pred, other, _w in (neighbors or []):
+    for nb in (neighbors or []):
+        if not isinstance(nb, (tuple, list)) or len(nb) < 2:
+            continue
+        pred, other = nb[0], nb[1]
         key = (node, pred, other)
         if key not in seen_prefix:
             seen_prefix.add(key)
