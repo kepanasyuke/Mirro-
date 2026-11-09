@@ -24,9 +24,9 @@ class RefractoryState:
 
 def init_refractory_counters(graph):
     """Инициализирует нулевые счётчики для всех узлов и рёбер.
-    Пустой граф → пустой стейт. Один return: RefractoryState."""
+    Пустой/некорректный граф → пустой стейт. Один return: RefractoryState."""
     st = RefractoryState()
-    if graph is None:
+    if graph is None or not hasattr(graph, "nodes") or not hasattr(graph, "edges"):
         return st
     for name in graph.nodes:
         st.node_fatigue[name] = 0.0
@@ -38,14 +38,17 @@ def init_refractory_counters(graph):
 def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
                              fatigue_rate=0.25):
     """Пересчитывает утомление узлов и рёбер за одну эпоху.
-    Ставки клампятся в [0,1] на входе. Возвращает новый RefractoryState.
+    Ставки клампятся в [0,1]; activated_nodes нормализуется в множество.
+    None-граф → пустой стейт. Возвращает новый RefractoryState.
     Один return: RefractoryState."""
+    if graph is None:
+        return RefractoryState()
     recovery_rate = max(0.0, min(1.0, recovery_rate))
     fatigue_rate = max(0.0, min(1.0, fatigue_rate))
     if st is None:
         st = init_refractory_counters(graph)
     new_st = RefractoryState()
-    act = set(activated_nodes or ())
+    act = set(activated_nodes) if activated_nodes else set()
     for name in graph.nodes:
         cur = st.node_fatigue.get(name, 0.0)
         if name in act:
@@ -65,10 +68,10 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
 def apply_fatigue_to_weights(graph, st, floor=0.2):
     """Временно депрессирует веса рёбер на основе их утомления.
     Если изначальный вес уже ниже floor — оставляем его как есть.
-    Пустой/некорректный граф → {}. Возвращает dict без мутации графа.
-    Один return: dict."""
+    Пустой/некорректный граф или None-стейт → {}. Возвращает dict без
+    мутации графа. Один return: dict."""
     out = {}
-    if graph is None or not hasattr(graph, "edges"):
+    if graph is None or not hasattr(graph, "edges") or st is None:
         return out
     for key, w in graph.edges.items():
         exhaustion = st.edge_exhaustion.get(key, 0.0)
