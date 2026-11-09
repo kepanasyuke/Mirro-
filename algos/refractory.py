@@ -51,15 +51,24 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
     if st is None:
         st = init_refractory_counters(graph)
     new_st = RefractoryState()
-    act = set(activated_nodes) if activated_nodes else set()
+    if isinstance(activated_nodes, (list, tuple, set)):
+        act = set(activated_nodes)
+    else:
+        act = set()
     for name in graph.nodes:
-        cur = st.node_fatigue.get(name, 0.0)
+        try:
+            cur = float(st.node_fatigue.get(name, 0.0) or 0.0)
+        except Exception:
+            cur = 0.0
         if name in act:
             new_st.node_fatigue[name] = min(1.0, cur + fatigue_rate)
         else:
             new_st.node_fatigue[name] = max(0.0, cur - recovery_rate)
     for key in graph.edges:
-        cur = st.edge_exhaustion.get(key, 0.0)
+        try:
+            cur = float(st.edge_exhaustion.get(key, 0.0) or 0.0)
+        except Exception:
+            continue
         try:
             w = abs(float(graph.edges.get(key, 0.0)))
         except Exception:
