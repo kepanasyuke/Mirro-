@@ -35,17 +35,25 @@ def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7)
         pulse = max(0.0, min(1.0, float(session_pulse or 0.0)))
     except Exception:
         pulse = 0.7
+    try:
+        base_fatigue = max(0.0, min(1.0, float(prof.get("user_fatigue", 0.0) or 0.0)))
+    except Exception:
+        base_fatigue = 0.0
     if len(tokens) < 3 and pulse > 0.8:
-        prof["user_fatigue"] = min(1.0, prof.get("user_fatigue", 0.0) + 0.2)
+        prof["user_fatigue"] = min(1.0, base_fatigue + 0.2)
     else:
-        prof["user_fatigue"] = max(0.0, prof.get("user_fatigue", 0.0) - 0.1)
+        prof["user_fatigue"] = max(0.0, base_fatigue - 0.1)
     art_keywords = {"искусство", "театр", "дизайн", "арт", "образ", "стиль", "творческ",
                 "музыка", "кино", "живопись", "литература"}
     query_set = {str(t).lower() for t in tokens}
+    try:
+        base_focus = max(0.0, min(1.0, float(prof.get("user_intent_focus", 1.0) or 1.0)))
+    except Exception:
+        base_focus = 1.0
     if query_set & art_keywords:
-        prof["user_intent_focus"] = max(0.0, prof.get("user_intent_focus", 1.0) - 0.4)
+        prof["user_intent_focus"] = max(0.0, base_focus - 0.4)
     else:
-        prof["user_intent_focus"] = min(1.0, prof.get("user_intent_focus", 1.0) + 0.1)
+        prof["user_intent_focus"] = min(1.0, base_focus + 0.1)
     prof["idle_updates"] = min(100000, int(prof.get("idle_updates", 0) or 0) + 1)
     return prof
 
@@ -54,7 +62,7 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
     """Модулирует проводимости рёбер по зеркальному профилю.
     Пустой граф/None-профиль → {}. Значения fatigue/focus нормализуются.
     Возвращает НОВЫЙ dict (не мутирует граф). Один return: dict."""
-    if graph is None or mirror_profile is None or not getattr(graph, "edges", None):
+    if graph is None or not isinstance(mirror_profile, dict) or not getattr(graph, "edges", None):
         return {}
     try:
         fatigue = max(0.0, min(1.0, float(mirror_profile.get("user_fatigue", 0.0) or 0.0)))
@@ -69,12 +77,12 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
             nw = float(w)
         except Exception:
             continue
-        combined = (key[0] + " " + key[1] + " " + key[2]).lower()
+        combined = " ".join(str(x) for x in key[:3]).lower()
         if ("хаос" in combined) or ("юмор" in combined or "шутк" in combined):
             nw *= focus                      # строгий ИТ-фокус гасит юмор/хаос
         if fatigue > 0.5:
             nw *= (1.0 - 0.4 * fatigue)      # усталый пользователь -> лаконично
-        out[key] = nw
+        out[key] = max(0.0, nw)
     return out
 
 
