@@ -21,8 +21,8 @@ def determine_voice_temperament(neuromodulators):
     if not neuromodulators:
         return "сбалансированный"
     try:
-        dopamine = float(neuromodulators.get("dopamine", 0.0) or 0.0)
-        serotonin = float(neuromodulators.get("serotonin", 1.0) or 1.0)
+        dopamine = max(0.0, min(2.0, float(neuromodulators.get("dopamine", 0.0) or 0.0)))
+        serotonin = max(0.0, min(2.0, float(neuromodulators.get("serotonin", 1.0) or 1.0)))
     except Exception:
         return "сбалансированный"
     temperament = "сбалансированный"
@@ -38,18 +38,20 @@ def determine_voice_temperament(neuromodulators):
 def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8):
     """Корректирует длину и структуру токенов ответа под выбранный темперамент.
     Пустые/неизвестный темперамент → исходный список без изменений.
-    Один return: list."""
+    Токены приводятся к str; min_len∈[0,50], max_len∈[1,50]. Один return: list."""
     processed = []
     if not text_tokens:
         return processed
-    tokens = list(text_tokens)
+    min_len = max(0, min(50, int(min_len or 0)))
+    max_len = max(1, min(50, int(max_len or 8)))
+    tokens = [str(t) for t in (text_tokens or [])]
     processed = tokens
     if temperament == "хаотичный_холерик":
         # Укорачиваем: оставляем только короткие, ёмкие токены (без вводных длинных)
-        processed = [t for t in tokens if len(_re.sub(r"\W", "", str(t))) < max_len]
+        processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) < max_len]
     elif temperament == "флегматичный_философ":
         # Оставляем только весомые, длинные концептуальные токены
-        processed = [t for t in tokens if len(_re.sub(r"\W", "", str(t))) > min_len]
+        processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) > min_len]
     else:
         # прочие/неизвестные темпераменты не нарушают структуру
         processed = tokens
@@ -58,11 +60,13 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
 
 def apply_temperament_to_text(text, temperament, min_len=4, max_len=8):
     """Применяет темперамент-фильтр к целому тексту: разбивает на слова,
-    фильтрует по длине и возвращает текст. Пустой/None → «».
+    фильтрует по длине и возвращает текст. Пустой/None → «»; non-str → текст.
     Один return: str."""
     if not text:
         return ""
-    words = _re.findall(r"[а-яёa-z0-9]+", str(text).lower())
+    if not isinstance(text, str):
+        text = str(text)
+    words = _re.findall(r"[а-яёa-z0-9]+", text.lower())
     kept = try_apply_temperament_filters(words, temperament, min_len, max_len)
     return " ".join(kept)
 
