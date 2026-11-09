@@ -68,10 +68,12 @@ class MindStream:
 
     # ---------- инициатива ----------
     def _remember_topic(self, topic):
-        """Фиксирует тему с меткой времени (дедуп по недавней и по корню)."""
+        """Фиксирует тему с меткой времени (дедуп по недавней и по корню).
+        Пустая/очень короткая тема игнорируется. Один return: None."""
         def _root(t):
             return t[:6]  # грубый корень для падежных вариантов
-        if topic and not any(_root(t) == _root(topic) for t, _ in self.topics[-8:]):
+        if topic and len(topic.split()) <= 8 \
+                and not any(_root(t) == _root(topic) for t, _ in self.topics[-8:]):
             self.topics.append((topic, time.time()))
             # держим только недавнее, чтобы не расти бесконечно
             cutoff = time.time() - 12 * 3600
@@ -83,7 +85,8 @@ class MindStream:
     def observe(self, user_text):
         """Смотрит на вопрос пользователя и запоминает тему. Один return: str."""
         t = self.extract_topic(user_text)
-        self._remember_topic(t)
+        if t:
+            self._remember_topic(t)
         return t
 
     def pick_topic(self):
@@ -144,7 +147,7 @@ class MindStream:
             if self.thoughts and self.thoughts[-1][0] == thought:
                 thought = ""
             if thought:
-                written = self._persist(topic, thought)
+                written = self._persist(topic or "внутренняя_тема", thought)
                 self.thoughts.append((thought, time.time()))
                 if len(self.thoughts) > self.max_thought:
                     self.thoughts = self.thoughts[-self.max_thought:]
@@ -152,8 +155,10 @@ class MindStream:
 
     def _persist(self, topic, thought):
         """Дописывает мысль в поток (data/mindstream/thoughts.jsonl).
-        Один return: bool."""
+        Пустая мысль не записывается. Один return: bool."""
         ok = False
+        if not (thought or "").strip():
+            return False
         try:
             MS_LOG.parent.mkdir(parents=True, exist_ok=True)
             rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "topic": topic,
@@ -304,8 +309,10 @@ mind = MindStream()
 def try_metacognition(query):
     """Отвечает на вопросы о собственном «сознании»/состоянии Mirro:
     «что ты думаешь», «над чем думаешь», «осознаёшь ли себя».
-    Один return: str|None."""
+    Пустой запрос → None. Один return: str|None."""
     ans = None
+    if not (query or "").strip():
+        return None
     q = (query or "").lower()
     # более специфичные вопросы про МЕХАНИКУ мышления — обрабатываем раньше
     if ("как ты думаешь" in q or "как это работает внутри тебя" in q
