@@ -83,8 +83,11 @@ class MindStream:
         return None
 
     def observe(self, user_text):
-        """Смотрит на вопрос пользователя и запоминает тему. Один return: str."""
-        t = self.extract_topic(user_text)
+        """Смотрит на вопрос пользователя и запоминает тему.
+        Не-строковый вход нормализуется. Один return: str."""
+        if user_text is None:
+            return ""
+        t = self.extract_topic(str(user_text))
         if t:
             self._remember_topic(t)
         return t
@@ -95,10 +98,11 @@ class MindStream:
         Один return: str."""
         topics = [t for t, _ in reversed(self.topics) if t]
         chosen = topics[0] if topics else ""
-        if len(topics) > 1 and len(set(map(lambda t: t[:6], topics))) > 1:
+        if len(topics) > 1 and len({t[:6] for t in topics}) > 1:
             chosen = topics[1] if topics[1] != chosen else topics[0]
         if not chosen and _SEED_TOPICS:
             chosen = random.choice(_SEED_TOPICS)
+            self._remember_topic(chosen)  # seed запоминаем, чтобы был чем мыслить
         return chosen
 
     def _definition_hint(self, topic):
@@ -155,13 +159,15 @@ class MindStream:
 
     def _persist(self, topic, thought):
         """Дописывает мысль в поток (data/mindstream/thoughts.jsonl).
-        Пустая мысль не записывается. Один return: bool."""
+        Пустая мысль не записывается; topic обрезается до 120 символов.
+        Один return: bool."""
         ok = False
         if not (thought or "").strip():
             return False
         try:
             MS_LOG.parent.mkdir(parents=True, exist_ok=True)
-            rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "topic": topic,
+            rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                   "topic": (topic or "")[:120],
                    "thought": thought}
             with open(MS_LOG, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -171,8 +177,15 @@ class MindStream:
         return ok
 
     def recent_thought(self):
-        """Последняя мысль (для ответа «над чем думаешь»). Один return: str."""
-        return self.thoughts[-1][0] if self.thoughts else ""
+        """Последняя мысль (для ответа «над чем думаешь»).
+        Защита от битого формата записи. Один return: str."""
+        if not self.thoughts:
+            return ""
+        last = self.thoughts[-1]
+        try:
+            return last[0] if isinstance(last, (tuple, list)) else str(last)
+        except Exception:
+            return ""
 
     # ---------- рассуждение перед ответом ----------
     @staticmethod
@@ -189,10 +202,11 @@ class MindStream:
 
     # ---------- метапознание ----------
     def meta_thought(self):
-        """Мета-мысль о собственном состоянии. Один return: dict."""
+        """Мета-мысль о собственном состоянии. Пустой список тем → «пусто».
+        Один return: dict."""
         count = len(self.topics)
         last = self.recent_thought()
-        mood = "спокойна" if count < 30 else "занята"
+        mood = "пусто" if count == 0 else ("спокойна" if count < 30 else "занята")
         return {"topics": count, "last_thought": last, "mood": mood}
 
     # ---------- накопление в self_learned ----------
