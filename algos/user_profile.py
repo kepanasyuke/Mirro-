@@ -67,15 +67,20 @@ def load_profile(user_id="default"):
     if entry:
         prof["name"] = entry.get("name")
         prof["topics"] = list(entry.get("topics", []))[:20]
-        prof["verbosity"] = float(entry.get("verbosity", 0.0))
+        try:
+            prof["verbosity"] = max(-1.0, min(1.0, float(entry.get("verbosity") or 0.0)))
+        except Exception:
+            prof["verbosity"] = 0.0
         prof["remarks"] = list(entry.get("remarks", []))[:30]
     return prof
 
 
 def save_profile(prof, user_id="default"):
     """Атомарно сохраняет профиль пользователя (мультипрофиль: по ключу user_id).
-    Один return: bool."""
+    Пустой/None-профиль не сохраняется. Один return: bool."""
     ok = False
+    if not isinstance(prof, dict):
+        return False
     try:
         all_p = _load_all()
         all_p[str(user_id)] = {
@@ -96,13 +101,13 @@ def save_profile(prof, user_id="default"):
 
 def _extract_name(query):
     """Достаёт имя из фразы «меня зовут X / моё имя X / я — X».
-    Один return: str или None."""
+    Слишком длинные «имена» (>30 симв.) отбрасываются. Один return: str|None."""
     name = None
     m = _NAME_RE.search((query or "").strip())
     if m:
         cand = m.group(1).strip(" ,.!?")
         # имя — отдельное слово (не «Мария Петрова», берём первое)
-        cand = cand.split()[0]
+        cand = cand.split()[0][:30]
         if len(cand) >= 2 and not _re.match(r"^\W+$", cand):
             name = cand.capitalize()
     return name
@@ -178,7 +183,7 @@ def learn_from_message(prof, message):
 def _remember_text(prof, query):
     """Ответ для «как меня зовут / что ты обо мне знаешь». Один return: str."""
     name = prof.get("name")
-    topics = prof.get("topics", [])
+    topics = [t for t in prof.get("topics", []) if t]
     if name or topics:
         parts = []
         if name:
@@ -219,11 +224,12 @@ def try_user_profile(query, user_id="default"):
 # обращение по имени: если знаем, подставляем в начало голосового ответа
 def greet_name(content, query):
     """Вставляет имя пользователя в начало ответа, если оно известно и ответ
-    не начинается с него. Один return: str."""
+    не начинается с него. Длинные имена обрезаются до 40 символов.
+    Один return: str."""
     out = content if isinstance(content, str) else str(content or "")
     try:
         prof = load_profile()
-        name = prof.get("name")
+        name = str(prof.get("name") or "")[:40]
         if name and out and out.lower()[:len(name) + 1] != name.lower() + " ":
             head = out[:200]
             if not any(w in head.lower() for w in ("переформулируй", "не нашла", "ошибк")):
