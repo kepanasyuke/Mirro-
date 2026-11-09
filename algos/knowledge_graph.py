@@ -102,7 +102,7 @@ class KnowledgeGraph:
 
     @staticmethod
     def _norm(name):
-        return _re.sub(r"\s+", " ", name or "").strip().lower().rstrip(".!?;")
+        return _re.sub(r"\s+", " ", str(name or "")).strip().lower().rstrip(".!?;")
 
     def prune_noise(self, noise_preds=None, max_phrase_words=4):
         """Убирает мусор: рёбра с шумовыми предикатами («это», «есть», «если»)
@@ -457,6 +457,8 @@ class KnowledgeGraph:
         Один return: list строк."""
         name = self._norm(name)
         lines = []
+        if not name:
+            return lines
         if name in self.nodes:
             node = self.nodes[name]
             if node.facts:
@@ -467,8 +469,10 @@ class KnowledgeGraph:
 
     def similarity(self, a, b):
         """Насколько понятия связаны: число общих соседей / общий путь,
-        с мягким бонусом за прямое ребро. Один return: float 0..1."""
+        с мягким бонусом за прямое ребро. Пустые узлы → 0. Один return: float 0..1."""
         a, b = self._norm(a), self._norm(b)
+        if not a or not b:
+            return 0.0
         result = 0.0
         if a in self.nodes and b in self.nodes:
             na = {row[1] for row in self._adj.get(a, [])}
@@ -626,13 +630,15 @@ class KnowledgeGraph:
 
     def reward(self, a, b, amount=0.3):
         """Положительный отклик: усилить связь между a и b (Хебб).
-        Один return: int — сколько связей усилено."""
+        amount<=0 игнорируется. Один return: int — сколько связей усилено."""
+        if amount <= 0:
+            return 0
         return self.hebbian_learn(a, b, amount)
 
     def reward_sign(self, a, b, feedback_sign=1.0, amount=0.05):
         """Хебб-обновление связи по знаку отклика через reward/punish.
-        Малый знак (≈0) — нейтрально, почти ничего не меняем. Один return: int."""
-        if abs(feedback_sign) < 1e-9:
+        Малый знак (≈0) или amount<=0 — нейтрально. Один return: int."""
+        if abs(feedback_sign) < 1e-9 or amount <= 0:
             return 0
         changed = 0
         if feedback_sign >= 0:
