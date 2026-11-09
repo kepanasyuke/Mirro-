@@ -40,7 +40,9 @@ _STOP = set(("и","или","а","но","то","как","что","это","мне
 
 
 def _keywords(text):
-    words = _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())
+    if not isinstance(text, str):
+        return []
+    words = _re.findall(r"[а-яёa-z]{3,}", text.lower())
     return [w for w in words if w not in _STOP]
 
 
@@ -120,9 +122,11 @@ class DialogueMemory:
 
     def remember(self, user_text, bot_reply=""):
         """Фиксирует реплику: тему + тональность + контекст + резюме-накопление.
-        Пустой вход не фиксируется. Один return: list (ключевые слова)."""
-        if not (user_text or "").strip():
+        Пустой/не-строковый вход не фиксируется. Один return: list (ключевые слова)."""
+        if not isinstance(user_text, str) or not user_text.strip():
             return []
+        if not isinstance(bot_reply, str):
+            bot_reply = str(bot_reply or "")
         kw = _keywords(user_text)
         if kw:
             t = tuple(kw[:4])
@@ -164,11 +168,11 @@ class DialogueMemory:
         return " ; ".join(self.summary)
 
     def last_topic(self):
-        """Свежая тема последней реплики. Один return: str или None."""
+        """Свежая тема последней реплики. Пусто → None. Один return: str|None."""
         result = None
         for t in reversed(self.topics):
-            if t:
-                result = " ".join(t)
+            if isinstance(t, (list, tuple)) and t:
+                result = " ".join(str(x) for x in t)
                 break
         return result
 
