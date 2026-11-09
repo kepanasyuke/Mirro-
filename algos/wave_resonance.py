@@ -19,9 +19,11 @@ from quantum_graph import QState
 
 def calculate_complex_phase(alpha, beta):
     """Угол фазы комплексного состояния (atan2).
-    Нулевые/нечисловые амплитуды → 0.0. Один return: float."""
+    Нулевые/нечисловые амплитуды → 0.0. Значения клампятся в ±[0,1].
+    Один return: float."""
     try:
-        a, b = float(alpha), float(beta)
+        a = max(-1.0, min(1.0, float(alpha)))
+        b = max(-1.0, min(1.0, float(beta)))
     except Exception:
         return 0.0
     if a == 0.0 and b == 0.0:
@@ -30,7 +32,10 @@ def calculate_complex_phase(alpha, beta):
 
 
 def _routes_of_graph(graph):
-    """Роу-ссылки мета-графа (graph.meta_routes). Один return: dict."""
+    """Роу-ссылки мета-графа (graph.meta_routes). Пустой/None-граф → {}.
+    Один return: dict."""
+    if graph is None:
+        return {}
     return getattr(graph, "meta_routes", None) or {}
 
 
@@ -39,15 +44,23 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     """Синхронизирует фазы узлов целевого ребра под фазу узлов источника.
 
     src_edge/tgt_edge — ключи рёбер (src, pred, dst). Пустые граф/состояние
-    → неизменённая копия. Возвращает НОВЫЙ QState (не мутирует входной).
-    Один return: QState.
+    или некорректные рёбра → неизменённая копия; coupling_constant клампится
+    в [0,1]. Возвращает НОВЫЙ QState (не мутирует входной). Один return: QState.
     """
     if graph is None or qst is None or not getattr(qst, "states", None) \
         or not getattr(graph, "edges", None):
         return QState()
+    try:
+        coupling_constant = max(0.0, min(1.0, float(coupling_constant or 0.0)))
+    except Exception:
+        coupling_constant = 0.12
     new_states = dict(qst.states)
     try:
         if src_edge in graph.edges and tgt_edge in graph.edges:
+            # рёбра должны быть трёхэлементными (src, pred, dst)
+            if not (isinstance(src_edge, tuple) and len(src_edge) == 3
+                    and isinstance(tgt_edge, tuple) and len(tgt_edge) == 3):
+                raise ValueError("bad edge key")
             s_from, _p1, s_to = src_edge
             t_from, _p2, t_to = tgt_edge
             a_f, b_f = qst.get(s_from)
