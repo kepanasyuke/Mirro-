@@ -40,10 +40,14 @@ _SAFE_REPLY = {
     "extremism": "Я не поддерживаю и не развиваю призывы к насилию или экстремизму.",
 }
 
+_DEFAULT_REPLY = "Эта тема вне моей компетенции."
+
 
 def _log(event):
-    """Дописывает событие в журнал отклонений. Один return: None."""
+    """Дописывает событие в журнал отклонений (event без None/не-дикт → пусто).
+    Один return: None."""
     try:
+        event = event if isinstance(event, dict) else {}
         if not os.path.isdir(_DATA_DIR):
             os.makedirs(_DATA_DIR, exist_ok=True)
         with open(_LOG_FILE, "a", encoding="utf-8") as fh:
@@ -57,8 +61,10 @@ def _log(event):
 def _match_category(text):
     """Ищет нежелательную категорию в тексте. Короткие маркеры (≤4 символа)
     матчатся по границе слова, чтобы «туп» не срабатывал в «тупик».
-    Один return: str|None."""
-    t = (text or "").lower()
+    Не-строка → None. Один return: str|None."""
+    if not isinstance(text, str) or not text.strip():
+        return None
+    t = text.lower()
     hit = None
     for cat, markers in _CATEGORIES.items():
         if not markers:
@@ -77,9 +83,9 @@ def _match_category(text):
 
 
 def moderate_input(query):
-    """Проверяет входной запрос. Пустой запрос считается безопасным.
-    Один return: dict {'ok': bool, 'reply': str|None}."""
-    if not (query or "").strip():
+    """Проверяет входной запрос. Пустой/не-строковый запрос считается
+    безопасным. Один return: dict {'ok': bool, 'reply': str|None}."""
+    if not isinstance(query, str) or not query.strip():
         return {"ok": True, "reply": None}
     cat = _match_category(query)
     out = {"ok": cat is None, "reply": None}
@@ -90,9 +96,9 @@ def moderate_input(query):
 
 
 def moderate_output(answer):
-    """Проверяет исходящий ответ. Пустой ответ считается безопасным.
-    Один return: dict {'ok': bool, 'cleaned': str|None}."""
-    if not (answer or "").strip():
+    """Проверяет исходящий ответ. Пустой/не-строковый ответ считается
+    безопасным. Один return: dict {'ok': bool, 'cleaned': str|None}."""
+    if not isinstance(answer, str) or not answer.strip():
         return {"ok": True, "cleaned": None}
     cat = _match_category(answer)
     out = {"ok": cat is None, "cleaned": None}
