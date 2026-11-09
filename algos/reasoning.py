@@ -111,7 +111,7 @@ def list_schemes():
 
 def render_scheme_steps(name):
     """Компактное текстовое представление шагов схемы для чата.
-    Один return: str."""
+    Пустая схема → «». Один return: str."""
     scheme = get_scheme(name)
     return "\n".join(scheme["steps"]) or scheme["name"]
 
@@ -121,8 +121,10 @@ def think_about_thinking(query):
     Для пустого/служебного запроса возвращает базовую схему «Следование».
     Один return: tuple[str, list]. """
     q = (query or "").lower()
-    if not q.strip() or len(q.strip()) < 2:
+    if BLOCK_SCHEMES and (not q.strip() or len(q.strip()) < 2):
         return (BLOCK_SCHEMES["sledovanie"]["name"], BLOCK_SCHEMES["sledovanie"]["schema"])
+    if not BLOCK_SCHEMES:
+        return ("", [])
     result = (BLOCK_SCHEMES["sledovanie"]["name"], BLOCK_SCHEMES["sledovanie"]["schema"])
     if "не знаю чего хочу" in q or ("хочу" in q and "не знаю" in q):
         result = ("Таблица решений для 'не знаю, чего хочу'", [
@@ -159,6 +161,13 @@ def think_about_thinking(query):
             "ВЫБРАТЬ: самый уверенный вариант ответа",
             "ВЫВЕСТИ: ответ пользователю",
         ])
+    elif "устал" in q or "нет сил" in q or "вымотан" in q:
+        result = ("Алгоритм восстановления сил", [
+            "ВВОД: уровень усталости",
+            "ЕСЛИ сил нет → ОТДОХНИ",
+            "ИНАЧЕ → ПРОДОЛЖАЙ, но с перерывами",
+            "КОНЕЦ: вернись свежим",
+        ])
     elif "решить задачу" in q or "решение задачи" in q or "как решить" in q:
         result = ("Алгоритм решения задачи", [
             "ВВОД: условие задачи",
@@ -176,11 +185,13 @@ _last_citata = None  # последняя цитата (анти-повтор п
 
 def citata_bosovy():
     """Вернуть случайную цитату Босовой, не повторяющую предыдущую подряд.
-    Пустой список → «». Один return: tuple[str, str]."""
+    Пустой список → («», «»). Один return: tuple[str, str]."""
     global _last_citata
     if not BOSOVA_CITATY:
         return ("", "")
-    cands = [c for c in BOSOVA_CITATY if c != _last_citata] or BOSOVA_CITATY
+    # отфильтруем некорректные кортежи (не 2 элемента)
+    valid = [c for c in BOSOVA_CITATY if isinstance(c, (tuple, list)) and len(c) >= 2]
+    cands = [c for c in valid if c != _last_citata] or valid or BOSOVA_CITATY
     pick = random.choice(cands)
     _last_citata = pick
     return pick
