@@ -176,11 +176,14 @@ def _extract_topic(query):
         m = _re.search(r"\bпро\s+([а-яёa-z]{4,})", q)
         if m:
             cand = m.group(1).strip()
-            first = cand.split()[0]
+            first = cand.split()[0].strip(" ,.!?;:—")
             if first not in _TOPIC_EXTRACT_STOP and len(first) >= 4:
-                topic = first.capitalize()
+                topic = first[:40].capitalize()
     # не копим служебное в качестве темы
     if topic and topic.lower() in ("расскажи", "про", "подробнее", "меня", "мне"):
+        topic = None
+    # чисто числовые «темы» («про 2026») темой не считаем: нужна хоть одна буква
+    if topic and not _re.search(r"[а-яёa-z]", topic):
         topic = None
     return topic
 
@@ -204,7 +207,7 @@ def learn_from_message(prof, message):
     topic = _extract_topic(msg)
     if topic:
         topics = list(prof.get("topics", []))
-        if topic not in topics:
+        if not any(isinstance(t, str) and t.lower() == topic.lower() for t in topics):
             topics.append(topic)
             prof["topics"] = topics[-20:]
             prof["remarks"].append(f"интерес: {topic}")
@@ -293,8 +296,6 @@ def adapt_style(content, query):
         except Exception:
             v = 0.0
         v = max(-1.0, min(1.0, v))
-        if v is None:
-            return out
         # порог: при заметном предпочтении «кратко» (verbosity < -0.3)
         if v < -0.3 and len(out) > 600:
             import re as _re_a
