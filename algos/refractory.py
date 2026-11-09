@@ -39,9 +39,9 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
                              fatigue_rate=0.25):
     """Пересчитывает утомление узлов и рёбер за одну эпоху.
     Ставки клампятся в [0,1]; activated_nodes нормализуется в множество.
-    None-граф → пустой стейт. Возвращает новый RefractoryState.
-    Один return: RefractoryState."""
-    if graph is None:
+    None-граф или граф без edges → пустой стейт. Возвращает новый
+    RefractoryState. Один return: RefractoryState."""
+    if graph is None or not hasattr(graph, "edges") or graph.edges is None:
         return RefractoryState()
     try:
         recovery_rate = max(0.0, min(1.0, float(recovery_rate or 0.0)))
@@ -83,8 +83,9 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
 def apply_fatigue_to_weights(graph, st, floor=0.2):
     """Временно депрессирует веса рёбер на основе их утомления.
     Если изначальный вес уже ниже floor — оставляем его как есть.
-    Пустой/некорректный граф, None-стейт или floor<=0 → {}. Возвращает dict
-    без мутации графа. Один return: dict."""
+    Пустой/некорректный граф, None-стейт или floor<0 → {}; веса рёбер и
+    exhaustion коерсируются в float. Возвращает dict без мутации графа.
+    Один return: dict."""
     out = {}
     try:
         floor = float(floor)
