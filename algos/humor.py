@@ -52,8 +52,11 @@ _last_shutka = None  # последняя случайная шутка (ант�
 def shutka(tema=None):
     """Вернуть шутку по теме или случайную.
     По теме выбирает ту, у которой больше совпадающих слов с запросом.
-    Случайную — не повторяющую предыдущую подряд. Один return: str."""
+    Пустой SHUTKI → «». Случайную — не повторяющую предыдущую подряд.
+    Один return: str."""
     global _last_shutka
+    if not SHUTKI:
+        return ""
     answer = None
     if tema:
         tema_lower = (tema or "").lower()
@@ -76,8 +79,10 @@ _last_sarkazm = None  # последний ироничный ответ (ант
 
 def sarkazm():
     """Вернуть ироничный ответ, не повторяющий предыдущий подряд.
-    Один return: str."""
+    Пустой SARCASM → «». Один return: str."""
     global _last_sarkazm
+    if not SARCASM:
+        return ""
     cands = [s for s in SARCASM if s != _last_sarkazm] or SARCASM
     pick = random.choice(cands)
     _last_sarkazm = pick
@@ -102,6 +107,8 @@ def ya_ne_znau_chto_khotet():
         "Если ХОЧУ, то делаю. Если НЕ ХОЧУ — не делаю. Если ХОЧУ НЕ ЗНАЮ ЧТО — запускаю алгоритм ничегонеделания.",
         "Босова учит: ЕСЛИ <условие> ТО <действие> ИНАЧЕ <действие>. Твоё условие: 'хочу/не хочу'. Твоё действие: 'реши сам(а)'.",
     ]
+    if not variants:
+        return ""
     return random.choice(variants)
 
 
@@ -110,8 +117,11 @@ _last_luck = None  # последняя фраза про удачу (анти-�
 
 def o_udache_i_uspehe():
     """Заводская настройка: без веры в успех, но с верой в удачу.
+    Пустой LUCK_NOT_SUCCESS → «».
     Не повторяем одну фразу дважды подряд. Один return: str."""
     global _last_luck
+    if not LUCK_NOT_SUCCESS:
+        return ""
     cands = [x for x in LUCK_NOT_SUCCESS if x != _last_luck] or LUCK_NOT_SUCCESS
     pick = random.choice(cands)
     _last_luck = pick
