@@ -15,7 +15,8 @@ from collections import deque
 
 _STOP = set(("и","или","что","как","это","то","для","про","мне","меня","ты","я",
              "не","на","в","по","с","из","расскажи","объясни","почему","зачем",
-             "который","которая","можно","нужно","есть","быть","очень","вообще"))
+             "который","которая","можно","нужно","есть","быть","очень","вообще","ещё",
+             "уже","только","чтобы","потому","поэтому","даже","какие","какая","такое"))
 
 
 class Novelty:
@@ -26,11 +27,14 @@ class Novelty:
 
     @staticmethod
     def _kw(text):
+        if not (text or "").strip():
+            return set()
         words = _re.findall(r"[а-яёa-z]{4,}", (text or "").lower())
         return set(w for w in words if w not in _STOP)
 
     def feed(self, user_text, known=True):
-        """Учит: вопрос известен (known=True) или нет (False)."""
+        """Учит: вопрос известен (known=True) или нет (False).
+        Пустой вход → пустое множество. Один return: set."""
         kw = self._kw(user_text)
         if known:
             self.seen.update(kw)
@@ -58,7 +62,10 @@ class Novelty:
         return novel
 
     def _just_seen_novel(self, kw):
-        """Была ли эта тема недавно помечена как НОВАЯ. Один return: bool."""
+        """Была ли эта тема недавно помечена как НОВАЯ. Пустой kw → False.
+        Один return: bool."""
+        if not kw:
+            return False
         for rkw, known in reversed(self.recent):
             if rkw and set(rkw) & kw:
                 return not known
