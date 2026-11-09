@@ -51,13 +51,17 @@ _EN_KB = {
     "light": ("Light is electromagnetic radiation that travels in waves. It can be "
               "described as photons. Light carries energy and lets us see; its speed "
               "in vacuum is fixed."),
+    "psychology": ("Psychology studies the mind and behaviour: how we think, feel "
+                   "and act. It covers perception, learning, emotion, memory and "
+                   "social interaction. It uses observation and experiments."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
 _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are",
               "the", "a", "an", "of", "in", "on", "to", "for", "i", "you", "explain",
               "tell", "about", "that", "do", "does", "can", "please", "me", "my",
-              "than", "there", "your", "it", "also", "not")
+              "than", "there", "your", "it", "also", "not", "could", "would",
+              "should", "know", "want", "what's", "how's", "define", "mean")
 
 # тема -> ключевые англ. слова (основа)
 _TOPIC_TEST = [
@@ -76,6 +80,7 @@ _TOPIC_TEST = [
     ("robot", ("robot", "machine", "automation", "automaton", "mechatronic")),
     ("bacteria", ("bacteria", "microbe", "microorganism", "germ", "single-celled")),
     ("light", ("light", "photon", "electromagnetic radiation", "optics", "wavelength")),
+    ("psychology", ("psychology", "mind", "behavior", "behaviour", "brain", "cognition")),
 ]
 
 
@@ -87,16 +92,19 @@ def _is_english_query(q):
         return False
     latin = sum(1 for c in q if 'a' <= c.lower() <= 'z')
     cyr = sum(1 for c in q if '\u0400' <= c <= '\u04FF')
-    # англ-вопрос: заметная доля латиницы (>=6), нет кириллицы, есть англ. маркер
-    enough_latin = latin >= 6
+    words = q.split()
+    # англ-вопрос: заметная доля латиницы (>=6), нет кириллицы, есть англ. маркер.
+    # Одиночное «what?/hi» игнорируются (нет латинских слов повсюду ≥4)
+    has_full_word = any(len(w) >= 4 for w in words if w.isalpha())
+    enough_latin = latin >= 6 and has_full_word
     return (enough_latin and cyr == 0 and any(w in q.lower() for w in _EN_COMMON))
 
 
 def try_english(query):
     """Точка входа: отвечает по-английски, если вопрос английский.
-    Пустой запрос → None. Один return: str или None. None = вопрос не англ.
-    (нужно другое)."""
-    if not (query or "").strip():
+    Пустой/не-строковый запрос → None. Один return: str или None.
+    None = вопрос не англ. (нужно другое)."""
+    if not isinstance(query, str) or not query.strip():
         return None
     if not _is_english_query(query):
         return None
