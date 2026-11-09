@@ -34,9 +34,10 @@ def calculate_complex_phase(alpha, beta):
 def _routes_of_graph(graph):
     """Роу-ссылки мета-графа (graph.meta_routes). Пустой/None-граф → {}.
     Один return: dict."""
-    if graph is None:
+    if graph is None or not isinstance(getattr(graph, "meta_routes", None), dict):
         return {}
-    return getattr(graph, "meta_routes", None) or {}
+    meta = graph.meta_routes
+    return dict(meta)
 
 
 def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
@@ -44,28 +45,33 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     """Синхронизирует фазы узлов целевого ребра под фазу узлов источника.
 
     src_edge/tgt_edge — ключи рёбер (src, pred, dst). Пустые граф/состояние
-    или некорректные рёбра → неизменённая копия; coupling_constant клампится
-    в [0,1]. Возвращает НОВЫЙ QState (не мутирует входной). Один return: QState.
+    или некорректные рёбра → неизменённая копия; coupling_constant и mod
+    клампятся в [0,1]. Возвращает НОВЫЙ QState (не мутирует входной).
+    Один return: QState.
     """
     if graph is None or qst is None or not getattr(qst, "states", None) \
         or not getattr(graph, "edges", None):
         return QState()
     try:
         coupling_constant = max(0.0, min(1.0, float(coupling_constant or 0.0)))
+        mod = max(0.0, min(1.0, float(mod or 1.0)))
     except Exception:
         coupling_constant = 0.12
+        mod = 1.0
     new_states = dict(qst.states)
     try:
         if src_edge in graph.edges and tgt_edge in graph.edges:
-            # рёбра должны быть трёхэлементными (src, pred, dst)
-            if not (isinstance(src_edge, tuple) and len(src_edge) == 3
-                    and isinstance(tgt_edge, tuple) and len(tgt_edge) == 3):
+            # рёбра должны быть индексируемыми тройками (src, pred, dst)
+            try:
+                if len(src_edge) < 3 or len(tgt_edge) < 3:
+                    raise ValueError("bad edge key")
+            except TypeError:
                 raise ValueError("bad edge key")
-            s_from, _p1, s_to = src_edge
-            t_from, _p2, t_to = tgt_edge
+            s_from = src_edge[0]
+            t_from = tgt_edge[0]
             a_f, b_f = qst.get(s_from)
             phase_a = calculate_complex_phase(a_f, b_f)
-            for node in (t_from, t_to):
+            for node in (t_from, tgt_edge[2]):
                 a, b = qst.get(node)
                 phase_b = calculate_complex_phase(a, b)
                 new_phase_b = phase_b + coupling_constant * (phase_a - phase_b) * mod
