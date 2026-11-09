@@ -395,8 +395,10 @@ def _match_by_topic(q):
     words = [_stem_ru(w) for w in _norm_q(q).split() if len(w) > 2]
     scored = []
     for name, info in fk._by_name.items():
-        topic_tokens = {_stem_ru(t) for t in _norm_q(info["topic"]).split()}
-        what_tokens = {_stem_ru(t) for t in _norm_q(info["what"]).split()}
+        if not isinstance(info, dict):
+            continue
+        topic_tokens = {_stem_ru(t) for t in _norm_q(info.get("topic", "")).split()}
+        what_tokens = {_stem_ru(t) for t in _norm_q(info.get("what", "")).split()}
         name_norm = _norm_q(name)
         hit_words = 0
         quality = 0.0
@@ -409,7 +411,7 @@ def _match_by_topic(q):
                 quality += 0.7
             elif w in name_norm:
                 quality += 0.4
-            elif w in _norm_q(info["topic"]) or w in _norm_q(info["what"]):
+            elif w in _norm_q(info.get("topic", "")) or w in _norm_q(info.get("what", "")):
                 quality += 0.2
         if hit_words or quality >= 0.4:
             # полное совпадение по теме — сильный признак
@@ -439,7 +441,8 @@ def _has_function_term(q):
                                   "про алгоритм", "какой алгоритм", "какая функция",
                                   "напиши ", "как реализовать", "что значит",
                                   "в чём суть", "зачем нужен", "зачем нужна",
-                                  "опиши"))
+                                  "опиши", "как устроен", "принцип работы",
+                                  "какой принцип", "в чём идея"))
     term = any(w in q for w in ("сортировк", "граф", "алгоритм", "функци", "модул",
                                 "сложност", "бинар", "пузырьк", "ейлер", "быстр",
                                 "степанове", "связ", "подграф", "поиск", "стек",
@@ -461,7 +464,7 @@ def try_function_knowledge(query):
         # инвентарь функций — раньше подбора по словам («сколько функций» не должно
         # перехватывать «функция Эйлера: сколько чисел...»)
         if _is_inventory_q(q) and ("функци" in q or "алгоритм" in q or "модул" in q):
-            mods = sorted(fk._by_module)
+            mods = sorted(getattr(fk, "_by_module", {}) or {})
             lines = [f"Знаний по функциям: {fk.count()}."]
             for m in mods:
                 lines.append(f"{m}: {', '.join(fk.module_names(m))}")
@@ -472,8 +475,8 @@ def try_function_knowledge(query):
             q_names = _norm_q(q).split()
             q_stems = {_stem_ru(w) for w in q_names if len(w) > 2}
             best = []
-            for name in fk._by_name:
-                if not name or len(name) <= 2:
+            for name in fk._by_name or {}:
+                if not isinstance(name, str) or len(name) <= 2:
                     continue
                 if name in (" " + q + " . , ? ! ()"):
                     best.append((2, len(name), name))
