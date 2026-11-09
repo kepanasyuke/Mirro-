@@ -24,6 +24,7 @@ def try_apply_decoherence_decay(graph, qst, decoherence_rate=0.08, floor=0.01):
     out = QState()
     if graph is None or qst is None or not getattr(qst, "states", None):
         return out
+    _ = graph  # параметр для совместимости сигнатуры; сам граф не меняем
     try:
         rate = max(0.0, min(1.0, float(decoherence_rate or 0.0)))
     except Exception:
@@ -34,17 +35,20 @@ def try_apply_decoherence_decay(graph, qst, decoherence_rate=0.08, floor=0.01):
         floor = 0.01
     for name, pair in list(qst.states.items()):
         try:
-            a, b = pair
-            nb = abs(b) * (1.0 - rate)
-            if nb < floor:
-                nb = 0.0
-            mag = math.hypot(a, nb)
-            if mag < 1e-12:
-                out.states[name] = (1.0, 0.0)
+            if not (isinstance(pair, (tuple, list)) and len(pair) >= 2):
                 continue
-            out.states[name] = (a / mag, nb / mag)
+            a = float(pair[0])
+            nb0 = abs(float(pair[1]))
         except Exception:
             continue
+        nb = nb0 * (1.0 - rate)
+        if nb < floor:
+            nb = 0.0
+        mag = math.hypot(a, nb)
+        if mag < 1e-12:
+            out.states[name] = (1.0, 0.0)
+            continue
+        out.states[name] = (a / mag, nb / mag)
     return out
 
 
@@ -58,7 +62,10 @@ def check_phase_synchrony(qst, name_a, name_b):
         return 0.0
     a1, b1 = qst.get(name_a)
     a2, b2 = qst.get(name_b)
-    return a1 * a2 + b1 * b2
+    try:
+        return float(a1) * float(a2) + float(b1) * float(b2)
+    except Exception:
+        return 0.0
 
 
 if __name__ == "__main__":
