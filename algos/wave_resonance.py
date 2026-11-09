@@ -45,10 +45,10 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
                              coupling_constant=0.12):
     """Синхронизирует фазы узлов целевого ребра под фазу узлов источника.
 
-    src_edge/tgt_edge — ключи рёбер (src, pred, dst). Пустые граф/состояние
-    или некорректные рёбра → неизменённая копия; coupling_constant и mod
-    клампятся в [0,1]. Возвращает НОВЫЙ QState (не мутирует входной).
-    Один return: QState.
+    src_edge/tgt_edge — ключи рёбер (src, pred, dst). Пустые граф/состояние,
+    некорректные рёбра или битые пары состояний → неизменённая копия;
+    coupling_constant и mod клампятся в [0,1]. Возвращает НОВЫЙ QState
+    (не мутирует входной). Один return: QState.
     """
     if graph is None or qst is None or not getattr(qst, "states", None) \
         or not getattr(graph, "edges", None):
@@ -75,11 +75,14 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
                 raise ValueError("bad edge key")
             s_from = src_edge[0]
             t_from = tgt_edge[0]
-            a_f, b_f = qst.get(s_from)
+            src_pair = qst.get(s_from)
+            if src_pair is None or not isinstance(src_pair, (tuple, list)) or len(src_pair) < 2:
+                return QState()
+            a_f, b_f = src_pair
             phase_a = calculate_complex_phase(a_f, b_f)
             for node in (t_from, tgt_edge[2]):
                 pair = qst.get(node)
-                if pair is None:
+                if pair is None or not isinstance(pair, (tuple, list)) or len(pair) < 2:
                     continue
                 a, b = pair
                 phase_b = calculate_complex_phase(a, b)
@@ -88,7 +91,7 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     except Exception:
         new_states = dict(qst.states)
     out = QState()
-    out.states = new_states
+    out.states = dict(new_states) if isinstance(new_states, dict) else dict(qst.states)
     return out
 
 
