@@ -42,6 +42,15 @@ _EN_KB = {
     "database": ("A database stores data in an organized way and lets you retrieve "
                  "it quickly. Tables hold records; SQL queries read and update them. "
                  "Indexes speed up searches."),
+    "robot": ("A robot is a machine that follows programmed instructions to perform "
+              "tasks, often in physical space. Robots combine sensors, motors and "
+              "control logic. They help in industry, medicine and daily life."),
+    "bacteria": ("Bacteria are tiny single-celled organisms. Many are harmless or "
+                 "helpful (digestion, fermentation), while some cause disease. They "
+                 "reproduce by dividing."),
+    "light": ("Light is electromagnetic radiation that travels in waves. It can be "
+              "described as photons. Light carries energy and lets us see; its speed "
+              "in vacuum is fixed."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -64,28 +73,31 @@ _TOPIC_TEST = [
     ("internet", ("internet", "web", "http", "network", "protocol")),
     ("energy", ("energy", "work", "kinetic", "potential", "electric", "power")),
     ("database", ("database", "table", "sql", "query", "record", "index")),
+    ("robot", ("robot", "machine", "automation", "automaton", "mechatronic")),
+    ("bacteria", ("bacteria", "microbe", "microorganism", "germ", "single-celled")),
+    ("light", ("light", "photon", "electromagnetic radiation", "optics", "wavelength")),
 ]
 
 
 def _is_english_query(q):
-    """Похож ли вопрос на английский. Один return: bool."""
+    """Похож ли вопрос на английский. Минимальная длина латиницы — 6 символов
+    (чтобы одиночные «what?/hi» не срабатывали). Один return: bool."""
     q = (q or "").strip()
     if not q:
         return False
     latin = sum(1 for c in q if 'a' <= c.lower() <= 'z')
     cyr = sum(1 for c in q if '\u0400' <= c <= '\u04FF')
-    words = q.split()
-    has_word = bool(words and len(words) > 1)
-    # англ-вопрос: заметная доля латиницы, нет кириллицы, есть англ. маркер
-    # для вопросов из 2+ слов порог 6 латинских символов остаётся,
-    # для одиночного «what?» допускаем меньше
-    enough_latin = latin > 6 or (has_word and latin >= 4)
+    # англ-вопрос: заметная доля латиницы (>=6), нет кириллицы, есть англ. маркер
+    enough_latin = latin >= 6
     return (enough_latin and cyr == 0 and any(w in q.lower() for w in _EN_COMMON))
 
 
 def try_english(query):
     """Точка входа: отвечает по-английски, если вопрос английский.
-    Один return: str или None. None = вопрос не английский (нужно другое)."""
+    Пустой запрос → None. Один return: str или None. None = вопрос не англ.
+    (нужно другое)."""
+    if not (query or "").strip():
+        return None
     if not _is_english_query(query):
         return None
     q_low = (query or "").lower()
@@ -95,7 +107,7 @@ def try_english(query):
         if any(k in q_low for k in keys):
             answer = _EN_KB.get(topic)
             break
-    if not answer:
+    if not answer and _EN_KB:
         answer = ("I understood your question. I'm mainly trained on Russian. "
                   "Tell me the topic and I'll answer in simple English if I can.")
     return answer if answer else None
