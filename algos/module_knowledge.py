@@ -354,8 +354,10 @@ fk = FunctionKnowledge()
 
 
 def _norm_q(q):
-    """Нормализует строку для поиска по теме. Один return: str."""
-    return _re.sub(r"[^а-яёa-z0-9]+", " ", (q or "").lower()).strip()
+    """Нормализует строку для поиска по теме. Не-строка → «». Один return: str."""
+    if not isinstance(q, str):
+        return ""
+    return _re.sub(r"[^а-яёa-z0-9]+", " ", q.lower()).strip()
 
 
 _RU_SUFFIXES = ("оты", "оте", "ие", "ый", "ое", "ый", "ов", "ев", "ий", "ые",
@@ -373,7 +375,9 @@ _STEM_EXC = {
 
 def _stem_ru(word):
     """Грубый русский стеммер для сравнения словоформ (с исключениями-основами).
-    Один return: str."""
+    Не-строка → «». Один return: str."""
+    if not isinstance(word, str):
+        return ""
     w = word.lower()
     stem = _STEM_EXC.get(w)
     if stem is None:
@@ -426,7 +430,9 @@ def _match_by_topic(q):
 
 
 def _is_inventory_q(q):
-    """Запрос про «сколько/список функций»? Один return: bool."""
+    """Запрос про «сколько/список функций»? Не-строка → False. Один return: bool."""
+    if not isinstance(q, str):
+        return False
     return any(w in q for w in ("сколько", "список", "все функции", "какие",
                                 "перечисли", "каталог", "перечень"))
 
@@ -435,7 +441,9 @@ def _has_function_term(q):
     """Есть ли в запросе явный термин, про который стоит рассказывать про
     функцию (сигнальный глагол вопроса о функции/алгоритме). Пустые бытовые
     реплики («можно тебя спросить», «как дела») не считаются функциональными.
-    Один return: bool."""
+    Не-строка → False. Один return: bool."""
+    if not isinstance(q, str):
+        return False
     signal = any(w in q for w in ("что такое", "что делает", "расскажи про",
                                   "как работает", "объясни", "что за", "про функцию",
                                   "про алгоритм", "какой алгоритм", "какая функция",
