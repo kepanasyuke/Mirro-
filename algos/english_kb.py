@@ -54,6 +54,12 @@ _EN_KB = {
     "genetics": ("Genetics is the study of heredity and how traits pass from parents "
                  "to offspring through genes. DNA carries the instructions; mutations "
                  "and inheritance shape variation."),
+    "stem cell": ("Stem cells are unspecialized cells that can develop into different "
+                  "cell types. They help repair tissues and are studied for potential "
+                  "regenerative therapies."),
+    "illness": ("Illnesses are conditions that disrupt normal body function. They can "
+                "be infectious (caused by pathogens) or non-infectious (like allergies). "
+                "Prevention, hygiene and medicine help manage them."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -82,6 +88,8 @@ _TOPIC_TEST = [
     ("light", ("light", "photon", "electromagnetic radiation", "optics", "wavelength")),
     ("psychology", ("psychology", "mind", "behavior", "behaviour", "brain", "cognition")),
     ("genetics", ("genetics", "gene", "heredity", "dna", "inheritance", "chromosome")),
+    ("stem cell", ("stem cell", "stem cells", "regenerative", "unspecialized")),
+    ("illness", ("illness", "disease", "infection", "disorder", "allergy")),
 ]
 
 
