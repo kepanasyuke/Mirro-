@@ -44,7 +44,8 @@ def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7)
     else:
         prof["user_fatigue"] = max(0.0, base_fatigue - 0.1)
     art_keywords = {"искусство", "театр", "дизайн", "арт", "образ", "стиль", "творческ",
-                "музыка", "кино", "живопись", "литература"}
+                "музыка", "кино", "живопись", "литература", "поэзия", "сценар",
+                "фото", "архитектур"}
     query_set = {str(t).lower() for t in tokens}
     try:
         base_focus = max(0.0, min(1.0, float(prof.get("user_intent_focus", 1.0) or 1.0)))
@@ -59,10 +60,11 @@ def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7)
 
 
 def apply_mirror_modulation_to_graph(graph, mirror_profile):
-    """Модулирует проводимости рёбер по зеркальному профилю.
-    Пустой граф/None-профиль → {}. Значения fatigue/focus нормализуются.
-    Возвращает НОВЫЙ dict (не мутирует граф). Один return: dict."""
-    if graph is None or not isinstance(mirror_profile, dict) or not getattr(graph, "edges", None):
+    """Модулирует проводимости рёбер по зеркальному профилю (усталость/фокус).
+    Пустой граф или пустой-не-профиль → {}; fatigue/focus нормализуются в [0,1];
+    веса не опускаются ниже 0. Возвращает НОВЫЙ dict (не мутирует граф)."""
+    if graph is None or not isinstance(mirror_profile, dict) or not mirror_profile \
+        or not getattr(graph, "edges", None):
         return {}
     try:
         fatigue = max(0.0, min(1.0, float(mirror_profile.get("user_fatigue", 0.0) or 0.0)))
@@ -78,8 +80,9 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
         except Exception:
             continue
         combined = " ".join(str(x) for x in key[:3]).lower()
-        if ("хаос" in combined) or ("юмор" in combined or "шутк" in combined):
-            nw *= focus                      # строгий ИТ-фокус гасит юмор/хаос
+        if ("хаос" in combined) or ("юмор" in combined or "шутк" in combined
+                            or "ирония" in combined or "сарказм" in combined):
+            nw *= focus                      # строгий ИТ-фокус гасит юмор/хаос/иронию
         if fatigue > 0.5:
             nw *= (1.0 - 0.4 * fatigue)      # усталый пользователь -> лаконично
         out[key] = max(0.0, nw)
