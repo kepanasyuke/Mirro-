@@ -45,7 +45,7 @@ def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7)
         prof["user_fatigue"] = max(0.0, base_fatigue - 0.1)
     art_keywords = {"искусство", "театр", "дизайн", "арт", "образ", "стиль", "творческ",
                 "музыка", "кино", "живопись", "литература", "поэзия", "сценар",
-                "фото", "архитектур"}
+                "фото", "архитектур", "балет", "опера", "скульптур", "графика"}
     query_set = {str(t).lower() for t in tokens}
     try:
         base_focus = max(0.0, min(1.0, float(prof.get("user_intent_focus", 1.0) or 1.0)))
@@ -55,14 +55,15 @@ def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7)
         prof["user_intent_focus"] = max(0.0, base_focus - 0.4)
     else:
         prof["user_intent_focus"] = min(1.0, base_focus + 0.1)
-    prof["idle_updates"] = min(100000, int(prof.get("idle_updates", 0) or 0) + 1)
+    prof["idle_updates"] = min(100000, max(0, int(prof.get("idle_updates") or 0)) + 1)
     return prof
 
 
 def apply_mirror_modulation_to_graph(graph, mirror_profile):
     """Модулирует проводимости рёбер по зеркальному профилю (усталость/фокус).
     Пустой граф или пустой-не-профиль → {}; fatigue/focus нормализуются в [0,1];
-    веса не опускаются ниже 0. Возвращает НОВЫЙ dict (не мутирует граф)."""
+    веса не опускаются ниже 0. Возвращает НОВЫЙ dict (не мутирует граф).
+    Один return: dict."""
     if graph is None or not isinstance(mirror_profile, dict) or not mirror_profile \
         or not getattr(graph, "edges", None):
         return {}
