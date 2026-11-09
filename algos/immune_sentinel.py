@@ -20,9 +20,17 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     Рёбра с не-трёхэлементным ключом пропускаются.
     Возвращает (graph, quarantined_edges). Один return: tuple."""
     quarantined = []
-    if graph is None or max_allowed_weight <= 0:
+    try:
+        max_allowed_weight = float(max_allowed_weight)
+    except Exception:
+        max_allowed_weight = 5.0
+    if graph is None or not hasattr(graph, "edges") or max_allowed_weight <= 0:
         return graph, quarantined
     # suppression 0..1 — «сила антитела»; вне диапазона берём по умолчанию
+    try:
+        suppression = float(suppression)
+    except Exception:
+        suppression = 0.1
     if not (0 < suppression <= 1):
         suppression = 0.1
     # 1. иммунное подавление аномально разогнанных рёбер
@@ -30,6 +38,7 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
         try:
             if len(key) < 3:
                 continue
+            w = float(w)
         except Exception:
             continue
         if abs(w) > max_allowed_weight:
@@ -56,7 +65,13 @@ def scan_report(graph):
     if graph is None:
         return "нет графа"
     edges = getattr(graph, "edges", {})
-    n_high = sum(1 for w in edges.values() if abs(w) > 5.0)
+    n_high = 0
+    for w in edges.values():
+        try:
+            if abs(float(w)) > 5.0:
+                n_high += 1
+        except Exception:
+            continue
     return f"рёбер {len(edges)}, аномальных >5: {n_high}"
 
 
