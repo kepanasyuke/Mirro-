@@ -194,7 +194,11 @@ class MirroEvolver:
 
     def _fitness(self, genome, A, X, energy_cost=0.2):
         """Оценка: качество ответа + физичность − метабол. энергия.
-        Один return: float."""
+        energy_cost клампится в [0,1]. Один return: float."""
+        try:
+            energy_cost = max(0.0, min(1.0, float(energy_cost or 0.2)))
+        except Exception:
+            energy_cost = 0.2
         out = genome.forward(A, X)
         phys = self._physics_loss(out["energy"])
         # физичность: чем меньше отклонение от физики, тем лучше
@@ -205,12 +209,22 @@ class MirroEvolver:
 
     def evolve_step(self, A, X, mutation=0.3, elite=2):
         """Один шаг эволюции: оценить, отобрать, скрестить, смутировать.
-        Один return: dict (статистика поколения)."""
+        mutation клампится в [0,1]. Один return: dict (статистика поколения)."""
+        try:
+            mutation = max(0.0, min(1.0, float(mutation or 0.3)))
+        except Exception:
+            mutation = 0.3
         scored = []
         for g in self.population:
             fit = self._fitness(g, A, X)
             scored.append((fit, g))
         scored.sort(key=lambda x: -x[0])
+        if not scored:
+            # пустая популяция — нет данных для эволюции
+            return {"generation": self.generation, "best_fit": 0.0, "avg_fit": 0.0,
+                    "best_dopamine": None, "best_serotonin": None,
+                    "experience": len(self.experience_base),
+                    "history": list(self.fitness_history[-30:])}
         # запомнить глобально лучшего
         if scored[0][0] > self._best_fitness:
             self._best_fitness = scored[0][0]
@@ -221,7 +235,7 @@ class MirroEvolver:
                 emb = g.forward(A, X)["embedding"]
                 self.save_experience(emb)
         # элита проходит дальше без изменений (минимум 1, чтобы не опустеть)
-        elite = max(1, elite)
+        elite = max(1, min(int(elite or 1), len(scored)))
         new_pop = [g for _fit, g in scored[:elite]]
         # остальные — скрещивание лучших + мутация
         while len(new_pop) < self.pop_size:
@@ -247,7 +261,10 @@ class MirroEvolver:
         }
 
     def save_experience(self, embedding):
-        """Фиксирует стабильный паттерн в базу опыта. Один return: None."""
+        """Фиксирует стабильный паттерн в базу опыта.
+        Пустой/None-эмбеддинг пропускается. Один return: None."""
+        if not embedding:
+            return None
         if len(self.experience_base) >= self.max_experience:
             self.experience_base.pop(0)
         self.experience_base.append(list(embedding))
