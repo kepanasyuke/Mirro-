@@ -54,7 +54,10 @@ class KnowledgeGraph:
         self._set_adj_weight(d, pred, s, self.edges[key])
 
     def _set_adj_weight(self, from_node, pred, to_node, weight):
-        """Обновляет вес связи в _adj для направления from_node->to_node. Один return: None."""
+        """Обновляет вес связи в _adj для направления from_node->to_node.
+        Пустые узлы игнорируются. Один return: None."""
+        if not from_node or not to_node:
+            return None
         rows = self._adj.get(from_node, [])
         found = False
         for i, row in enumerate(rows):
@@ -71,7 +74,14 @@ class KnowledgeGraph:
         """Синаптическая пластичность: если два узла активировались вместе —
         связь между ними усиливается (Хебб). Если depth>0, попутно усиливаются
         соседи первого хопа (рост размерности/связности активированного блока).
-        Один return: int — число укреплённых рёбер."""
+        amount<=0 или пустые узлы игнорируются. Один return: int — число
+        укреплённых рёбер."""
+        try:
+            amount = float(amount)
+        except Exception:
+            amount = 0.0
+        if amount <= 0 or not node_a or not node_b:
+            return 0
         a, b = self._norm(node_a), self._norm(node_b)
         strengthened = 0
         targets = [b]
@@ -91,9 +101,21 @@ class KnowledgeGraph:
 
     def synapse_decay(self, amount=0.01, floor=0.2):
         """Все связи медленно слабеют (редко используемые «атрофируются»),
-        как забывание. Один return: int — число изменённых связей."""
+        как забывание. amount<0/floor<0 игнорируются, веса коерсируются в float.
+        Один return: int — число изменённых связей."""
+        try:
+            amount = float(amount)
+            floor = float(floor)
+        except Exception:
+            amount, floor = 0.01, 0.2
+        if amount < 0 or floor < 0:
+            return 0
         changed = 0
         for key, w in list(self.edges.items()):
+            try:
+                w = float(w)
+            except Exception:
+                continue
             nw = max(floor, w - amount)
             if nw != w:
                 self.edges[key] = nw
@@ -102,7 +124,7 @@ class KnowledgeGraph:
 
     @staticmethod
     def _norm(name):
-        return _re.sub(r"\s+", " ", str(name or "")).strip().lower().rstrip(".!?;")
+        return _re.sub(r"\s+", " ", str(name or "")).strip().lower().rstrip(".!?;")[:200]
 
     def prune_noise(self, noise_preds=None, max_phrase_words=4):
         """Убирает мусор: рёбра с шумовыми предикатами («это», «есть», «если»)
@@ -111,6 +133,10 @@ class KnowledgeGraph:
         removed = 0
         if noise_preds is None:
             noise_preds = {"это", "есть", "если", "является", "и", "или", ",", ".", "-"}
+        elif isinstance(noise_preds, str):
+            noise_preds = {noise_preds}
+        elif not isinstance(noise_preds, (set, list, tuple)):
+            noise_preds = set()
         # 1) рёбра с шумовыми предикатами
         dead_edges = [k for k in self.edges if self._norm(k[1]) in noise_preds]
         for k in dead_edges:
