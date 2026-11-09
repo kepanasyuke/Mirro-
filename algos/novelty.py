@@ -28,9 +28,9 @@ class Novelty:
 
     @staticmethod
     def _kw(text):
-        if not (text or "").strip():
+        if not isinstance(text, str) or not text.strip():
             return set()
-        words = _re.findall(r"[а-яёa-z]{4,}", (text or "").lower())
+        words = _re.findall(r"[а-яёa-z]{4,}", text.lower())
         return set(w for w in words if w not in _STOP)
 
     def feed(self, user_text, known=True):
@@ -45,13 +45,20 @@ class Novelty:
     def _known_via(self, kw, known_kw):
         """Совпадает ли запрос с известными темами. Один return: bool."""
         known_in_seen = bool(kw & self.seen)
-        known_in_passed = bool(known_kw is not None and (kw & set(known_kw)))
+        known_in_passed = False
+        if known_kw is not None:
+            try:
+                known_in_passed = bool(kw & set(known_kw))
+            except Exception:
+                known_in_passed = False
         return known_in_seen or known_in_passed
 
     def is_novel(self, user_text, known_kw=None):
         """True, если вопрос выглядит новым. Тема, уже отмеченная недавно как
-        новая и запрошенная повторно повторно, — считается менее новой (ответ
-        не зацикливается). Один return: bool."""
+        новая и запрошенная повторно, — считается менее новой (ответ не
+        зацикливается). Не-строка/пустой вход → False. Один return: bool."""
+        if not isinstance(user_text, str) or not user_text.strip():
+            return False
         kw = self._kw(user_text)
         novel = True
         if not kw:
@@ -89,17 +96,18 @@ novelty = Novelty()
 
 
 def _novelty_msg(topic):
-    """Строка ответа про новизну. Пустой topic → «этой темы». Один return: str."""
-    label = topic or "этой темы"
+    """Строка ответа про новизну. Пустой topic → «этой темы», тема обрезается
+    до 60 символов. Один return: str."""
+    label = (topic or "этой темы")[:60]
     return (f"Это новое для меня — «{label}» я ещё не изучала."
             f" Я запомню и постараюсь освоить. Сейчас могу ответить на то, что уже в моих знаниях.")
 
 
 def try_novelty(query, known_kw=None):
-    """Отвечает, только если вопрос действительно новый. Пустой запрос → None.
-    Один return: str|None."""
+    """Отвечает, только если вопрос действительно новый. Пустой/не-строковый
+    запрос → None. Один return: str|None."""
     ans = None
-    if not (query or "").strip():
+    if not isinstance(query, str) or not query.strip():
         return None
     try:
         if novelty.is_novel(query, known_kw):
