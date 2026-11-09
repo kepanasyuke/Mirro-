@@ -76,7 +76,7 @@ def observe(message):
     Разнозначные сигналы в одной реплике не раскачивают настроение (баланс).
     Пустое/None-сообщение → текущее состояние без изменений. Один return: dict."""
     global _emotion, _fatigue
-    if not (message or "").strip():
+    if not isinstance(message, str) or not message.strip():
         return {"emotion": _emotion, "fatigue": _fatigue}
     d = _detect_rad(message)
     net = (d["pos"] - d["neg"]) if d["pos"] == 0 or d["neg"] == 0 else 0
@@ -93,15 +93,16 @@ def observe(message):
 
 
 def current_tone():
-    """Текущее настроение разговора. Один return: dict."""
+    """Текущее настроение разговора (копия — не мутирует состояние).
+    Один return: dict."""
     return {"emotion": _emotion, "fatigue": _fatigue}
 
 
 def empathy_lead(message):
     """Подбирает эмпатичную заставку к ответу под тон собеседника.
     Приоритет: усталость > сильный негатив > лёгкий негатив > позитив.
-    Пустое/нейтральное сообщение → None (заставка не нужна). Один return: str/None."""
-    if not (message or "").strip():
+    Пустое/не-строка/нейтральное → None (заставка не нужна). Один return: str/None."""
+    if not isinstance(message, str) or not message.strip():
         return None
     d = _detect_rad(message)
     lead = None
@@ -136,7 +137,7 @@ def apply_empathy(message, answer):
         if ans[:24].lower().startswith(lead[:12].lower()):
             return ans
         # не дублируем, если пользователь просто спросил настроение/самочувствие
-        low = (message or "").lower()
+        low = (message or "").lower() if isinstance(message, str) else ""
         if not any(w in low for w in ("как ты себя", "как настроение", "как дела")):
             first = ans[0].lower() if ans else ""
             out = lead + first + ans[1:] if ans else lead
