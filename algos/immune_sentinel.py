@@ -16,8 +16,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     """Сканирует граф и подавляет аномальные веса / петлевые роу-ссылки.
-    Пустой граф или некорректные параметры → (graph, []).
-    Рёбра с не-трёхэлементным ключом пропускаются.
+    Пустой граф, некорректные параметры или нет рёбер → (graph, []).
+    Рёбра с не-трёхэлементным ключом пропускаются; веса клампятся в ±50.
     Возвращает (graph, quarantined_edges). Один return: tuple."""
     quarantined = []
     try:
@@ -26,6 +26,9 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
         max_allowed_weight = 5.0
     if graph is None or not hasattr(graph, "edges") or max_allowed_weight <= 0:
         return graph, quarantined
+    if not graph.edges:
+        # нет рёбер — нечего сканировать (всё равно чистим мета-петли ниже)
+        pass
     # suppression 0..1 — «сила антитела»; вне диапазона берём по умолчанию
     try:
         suppression = float(suppression)
@@ -42,10 +45,11 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
         except Exception:
             continue
         if abs(w) > max_allowed_weight:
-            graph.edges[key] = w * suppression
+            nw = max(-50.0, min(50.0, w * suppression))
+            graph.edges[key] = nw
             if hasattr(graph, "_set_adj_weight"):
-                graph._set_adj_weight(key[0], key[1], key[2], w * suppression)
-                graph._set_adj_weight(key[2], key[1], key[0], w * suppression)
+                graph._set_adj_weight(key[0], key[1], key[2], nw)
+                graph._set_adj_weight(key[2], key[1], key[0], nw)
             quarantined.append(key)
     # 2. удаление авто-резонансных петель мета-графа (from_edge == to_edge)
     meta = getattr(graph, "meta_routes", None)
@@ -61,18 +65,22 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
 
 def scan_report(graph):
     """Краткий отчёт о состоянии графа после сканирования (для логирования).
-    Один return: str."""
-    if graph is None:
+    Не-граф → «нет графа». Один return: str."""
+    if graph is None or not hasattr(graph, "edges"):
         return "нет графа"
     edges = getattr(graph, "edges", {})
     n_high = 0
+    n_neg = 0
     for w in edges.values():
         try:
-            if abs(float(w)) > 5.0:
-                n_high += 1
+            fw = float(w)
         except Exception:
             continue
-    return f"рёбер {len(edges)}, аномальных >5: {n_high}"
+        if abs(fw) > 5.0:
+            n_high += 1
+        if fw < 0:
+            n_neg += 1
+    return f"рёбер {len(edges)}, аномальных >5: {n_high}, отрицательных: {n_neg}"
 
 
 if __name__ == "__main__":
