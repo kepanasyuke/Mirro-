@@ -49,11 +49,12 @@ def all_loaded():
 
 
 def list_available():
-    """Список всех доступных функции во всех модулях (полный реестр)."""
+    """Список всех доступных функции во всех модулях (полный реестр).
+    Один return: list."""
     registry = []
     for f in sorted(ALGO_DIR.glob("*.py")):
         name = f.stem
-        if not name.startswith("_"):
+        if not name.startswith("_") and name != "think":
             mod = load_module(name)
             if mod:
                 funcs = [x for x in dir(mod) if not x.startswith("_") and callable(getattr(mod, x))]
@@ -83,8 +84,11 @@ def classify(query):
     """
     Возвращает (категория, модуль, функция, аргументы, объяснение) или None.
     Распознаёт типовые задачи вузов/ссузов/олимпиад.
+    Пустой/None-запрос → None.
     """
-    q = query.lower().strip()
+    if query is None or not str(query).strip():
+        return None
+    q = str(query).lower().strip()
     result = None
     if result is None:
         result = _c_simple_math(q)
@@ -204,7 +208,11 @@ def _c_combinatorics(q):
                f"C({nums[0]},{nums[1]}) = {_comb(nums[0],nums[1])}")
     elif ("перестанов" in q or "факториал" in q) and _int_numbers(q):
         n = _int_numbers(q)[0]
-        out = ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
+        if n > 1000:
+            out = ("комбинаторика", "10_combinatorics", "factorial", (n,),
+                   f"{n}! — слишком большое значение")
+        else:
+            out = ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
     return out
 
 
@@ -244,10 +252,15 @@ def _c_geometry(q):
                f"гипотенуза = {math.hypot(a,b):.4g}")
     elif ("герон" in q or "площадь треугольн" in q) and len(_numbers(q)) >= 3:
         a, b, c = _numbers(q)[:3]
-        s = (a+b+c)/2
-        area = math.sqrt(max(0, s*(s-a)*(s-b)*(s-c)))
-        out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
-               f"площадь = {area:.4g}")
+        # неравенство треугольника: стороны должны образовывать треугольник
+        if a + b <= c or a + c <= b or b + c <= a:
+            out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
+                   "не треугольник: нарушено неравенство треугольника")
+        else:
+            s = (a + b + c) / 2
+            area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+            out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
+                   f"площадь = {area:.4g}")
     return out
 
 
