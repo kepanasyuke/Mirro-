@@ -17,8 +17,8 @@ import math
 
 def try_apply_decoherence_decay(graph, qst, decoherence_rate=0.08, floor=0.01):
     """Подавляет мнимую составляющую всех состояний QState (шум среды).
-    Пустой граф/состояние или некорректная ставка → пустой QState.
-    Возвращает НОВЫЙ QState с нормированными Борн-векторами. Один return: QState.
+    Пустой граф/состояние или некорректная ставка/floor → нормированный QState
+    (вырожденные векторы → |0>). Возвращает НОВЫЙ QState. Один return: QState.
     """
     from quantum_graph import QState
     out = QState()
@@ -28,13 +28,20 @@ def try_apply_decoherence_decay(graph, qst, decoherence_rate=0.08, floor=0.01):
         rate = max(0.0, min(1.0, float(decoherence_rate or 0.0)))
     except Exception:
         rate = 0.08
+    try:
+        floor = max(0.0, float(floor or 0.0))
+    except Exception:
+        floor = 0.01
     for name, pair in list(qst.states.items()):
         try:
             a, b = pair
             nb = abs(b) * (1.0 - rate)
             if nb < floor:
                 nb = 0.0
-            mag = math.hypot(a, nb) or 1.0
+            mag = math.hypot(a, nb)
+            if mag < 1e-12:
+                out.states[name] = (1.0, 0.0)
+                continue
             out.states[name] = (a / mag, nb / mag)
         except Exception:
             continue
@@ -43,9 +50,11 @@ def try_apply_decoherence_decay(graph, qst, decoherence_rate=0.08, floor=0.01):
 
 def check_phase_synchrony(qst, name_a, name_b):
     """Интерференционный член (скалярное произведение) состояний двух узлов.
-    Для узлов отсутствующих в QState β=α=0 или при None-qst вклад 0.
+    Для узлов отсутствующих в QState β=α=0, при None-qst или пустых узлах вклад 0.
     Один return: float."""
     if qst is None or not getattr(qst, "states", None):
+        return 0.0
+    if not name_a or not name_b:
         return 0.0
     a1, b1 = qst.get(name_a)
     a2, b2 = qst.get(name_b)
