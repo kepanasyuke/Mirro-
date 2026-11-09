@@ -59,9 +59,10 @@ class DialogueMemory:
     # ----- персистентность между сессиями -----
     def set_persist_path(self, path):
         """Задаёт файл сохранения (по умолчанию data/dialogue_memory.json).
-        Один return: str."""
-        self._persist_path = path
-        return path
+        Пустой путь игнорируется. Один return: str."""
+        if path:
+            self._persist_path = path
+        return self._persist_path or _default_mem_path()
 
     def _path(self):
         """Файл персистентной памяти. Один return: str."""
@@ -77,11 +78,14 @@ class DialogueMemory:
             if os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                self.topics = deque(data.get("topics", [])[-(self.topics.maxlen or 8):],
+                self.topics = deque([t for t in (data.get("topics") or []) if isinstance(t, (list, tuple))][-(self.topics.maxlen or 8):],
                                     maxlen=self.topics.maxlen)
-                self.context = deque(data.get("context", [])[-(self.context.maxlen or 30):],
+                self.context = deque([c for c in (data.get("context") or []) if isinstance(c, (list, tuple))][-(self.context.maxlen or 30):],
                                      maxlen=self.context.maxlen)
-                self.emotion = float(data.get("emotion", 0.0))
+                try:
+                    self.emotion = max(-1.0, min(1.0, float(data.get("emotion") or 0.0)))
+                except Exception:
+                    self.emotion = 0.0
                 self.summary = list(data.get("summary", []))
                 ok = True
         except Exception:
@@ -197,6 +201,7 @@ class DialogueMemory:
         return phrase
 
     def summarize(self):
+        """Краткая сводка состояния памяти. Один return: str."""
         return f"тем: {len(self.topics)}, реплик в памяти: {len(self.context)}, тон: {self.emotion:+.2f}"
 
 
@@ -231,8 +236,11 @@ def _has_trigger(q, triggers):
 
 
 def try_dialogue_memory(query):
-    """Возвращает ответ строкой, если вопрос про память/историю, иначе None."""
-    q = (query or "").strip().lower()
+    """Возвращает ответ строкой, если вопрос про память/историю, иначе None.
+    Пустой запрос → None. Один return: str|None."""
+    if not isinstance(query, str) or not query.strip():
+        return None
+    q = query.strip().lower()
     ans = None
     if _has_trigger(q, _SAY_TOPIC_TRIGGERS):
         ans = _answer_topic(q)
