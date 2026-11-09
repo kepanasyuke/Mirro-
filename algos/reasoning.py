@@ -90,8 +90,11 @@ BOSOVA_CITATY = [
 
 
 def get_scheme(name):
-    """Вернуть схему мышления по имени."""
-    scheme = BLOCK_SCHEMES.get(name, BLOCK_SCHEMES["sledovanie"])
+    """Вернуть схему мышления по имени (неизвестное имя → «Следование»).
+    Пустой BLOCK_SCHEMES → пустая схема. Один return: dict."""
+    if not BLOCK_SCHEMES:
+        return {"name": "", "description": "", "steps": []}
+    scheme = BLOCK_SCHEMES.get(name) or BLOCK_SCHEMES["sledovanie"]
     return {
         "name": scheme["name"],
         "description": scheme["desc"],
@@ -101,6 +104,8 @@ def get_scheme(name):
 
 def list_schemes():
     """Список всех схем мышления. Один return: dict."""
+    if not BLOCK_SCHEMES:
+        return {}
     return {k: v["name"] for k, v in BLOCK_SCHEMES.items()}
 
 
@@ -154,6 +159,15 @@ def think_about_thinking(query):
             "ВЫБРАТЬ: самый уверенный вариант ответа",
             "ВЫВЕСТИ: ответ пользователю",
         ])
+    elif "решить задачу" in q or "решение задачи" in q or "как решить" in q:
+        result = ("Алгоритм решения задачи", [
+            "ВВОД: условие задачи",
+            "НАЙТИ: что дано и что нужно найти",
+            "ВЫБРАТЬ: подходящий метод/алгоритм",
+            "ВЫПОЛНИТЬ: шаги решения",
+            "ПРОВЕРИТЬ: ответ имеет смысл?",
+            "ВЫВЕСТИ: решение",
+        ])
     return result
 
 
@@ -162,8 +176,10 @@ _last_citata = None  # последняя цитата (анти-повтор п
 
 def citata_bosovy():
     """Вернуть случайную цитату Босовой, не повторяющую предыдущую подряд.
-    Один return: tuple[str, str]."""
+    Пустой список → «». Один return: tuple[str, str]."""
     global _last_citata
+    if not BOSOVA_CITATY:
+        return ("", "")
     cands = [c for c in BOSOVA_CITATY if c != _last_citata] or BOSOVA_CITATY
     pick = random.choice(cands)
     _last_citata = pick
