@@ -15,10 +15,10 @@ import re as _re
 
 def determine_voice_temperament(neuromodulators):
     """Определяет психотип системы на основе уровней нейромедиаторов.
-    Пустые/некорректные уровни → «сбалансированный».
+    Пустой/не-дикт/некорректные уровни → «сбалансированный».
     Добавлены промежуточные психотипы при сильном дисбалансе.
     Один return: str."""
-    if not neuromodulators:
+    if not isinstance(neuromodulators, dict) or not neuromodulators:
         return "сбалансированный"
     try:
         dopamine = max(0.0, min(2.0, float(neuromodulators.get("dopamine", 0.0) or 0.0)))
@@ -40,11 +40,11 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
     Пустые/неизвестный темперамент → исходный список без изменений.
     Токены приводятся к str; min_len∈[0,50], max_len∈[1,50]. Один return: list."""
     processed = []
-    if not text_tokens:
+    if not isinstance(text_tokens, (list, tuple, set)) or not text_tokens:
         return processed
     min_len = max(0, min(50, int(min_len or 0)))
     max_len = max(1, min(50, int(max_len or 8)))
-    tokens = [str(t) for t in (text_tokens or [])]
+    tokens = [str(t) for t in text_tokens]
     processed = tokens
     if temperament == "хаотичный_холерик":
         # Укорачиваем: оставляем только короткие, ёмкие токены (без вводных длинных)
@@ -55,7 +55,7 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
     else:
         # прочие/неизвестные темпераменты не нарушают структуру
         processed = tokens
-    return processed
+    return processed[:200]
 
 
 def apply_temperament_to_text(text, temperament, min_len=4, max_len=8):
@@ -68,7 +68,7 @@ def apply_temperament_to_text(text, temperament, min_len=4, max_len=8):
         text = str(text)
     words = _re.findall(r"[а-яёa-z0-9]+", text.lower())
     kept = try_apply_temperament_filters(words, temperament, min_len, max_len)
-    return " ".join(kept)
+    return " ".join(kept)[:4000]
 
 
 if __name__ == "__main__":
