@@ -45,15 +45,15 @@ _EN_KB = {
     "robot": ("A robot is a machine that follows programmed instructions to perform "
               "tasks, often in physical space. Robots combine sensors, motors and "
               "control logic. They help in industry, medicine and daily life."),
-    "bacteria": ("Bacteria are tiny single-celled organisms. Many are harmless or "
+"bacteria": ("Bacteria are tiny single-celled organisms. Many are harmless or "
                  "helpful (digestion, fermentation), while some cause disease. They "
                  "reproduce by dividing."),
     "light": ("Light is electromagnetic radiation that travels in waves. It can be "
               "described as photons. Light carries energy and lets us see; its speed "
               "in vacuum is fixed."),
-    "psychology": ("Psychology studies the mind and behaviour: how we think, feel "
-                   "and act. It covers perception, learning, emotion, memory and "
-                   "social interaction. It uses observation and experiments."),
+    "genetics": ("Genetics is the study of heredity and how traits pass from parents "
+                 "to offspring through genes. DNA carries the instructions; mutations "
+                 "and inheritance shape variation."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -81,6 +81,7 @@ _TOPIC_TEST = [
     ("bacteria", ("bacteria", "microbe", "microorganism", "germ", "single-celled")),
     ("light", ("light", "photon", "electromagnetic radiation", "optics", "wavelength")),
     ("psychology", ("psychology", "mind", "behavior", "behaviour", "brain", "cognition")),
+    ("genetics", ("genetics", "gene", "heredity", "dna", "inheritance", "chromosome")),
 ]
 
 
@@ -100,14 +101,16 @@ def _is_english_query(q):
     # Одиночное «what?/hi» игнорируются (нет латинских слов повсюду ≥4)
     has_full_word = any(len(w) >= 4 for w in words if w.isalpha())
     enough_latin = latin >= 6 and has_full_word
-    return (enough_latin and cyr == 0 and any(w in q.lower() for w in _EN_COMMON))
+    # англ. маркер должен быть отдельным словом, а не частью большего
+    has_marker = any(w in q.lower().split() for w in _EN_COMMON)
+    return (enough_latin and cyr == 0 and has_marker)
 
 
 def try_english(query):
     """Точка входа: отвечает по-английски, если вопрос английский.
-    Пустой/не-строковый запрос → None. Один return: str или None.
+    Пустой/не-строковый/слишком короткий запрос → None. Один return: str/None.
     None = вопрос не англ. (нужно другое)."""
-    if not isinstance(query, str) or not query.strip():
+    if not isinstance(query, str) or len(query.strip()) < 6:
         return None
     if not _is_english_query(query):
         return None
