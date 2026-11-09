@@ -61,17 +61,21 @@ class MindStream:
     @staticmethod
     def extract_topic(text):
         """Ядро темы из строки: содержательные слова, кроме стоп-слов.
-        Один return: str (может быть пустой)."""
-        words = _re.findall(r"[а-яёa-z]{4,}", (text or "").lower())
+        Не-строковый вход → пусто. Один return: str (может быть пустой)."""
+        if text is None or not isinstance(text, str):
+            return ""
+        words = _re.findall(r"[а-яёa-z]{4,}", text.lower())
         keep = [w for w in words if w not in _STOP]
         return " ".join(keep)
 
     # ---------- инициатива ----------
     def _remember_topic(self, topic):
         """Фиксирует тему с меткой времени (дедуп по недавней и по корню).
-        Пустая/очень короткая тема игнорируется. Один return: None."""
+        Пустая/очень короткая/не-строковая тема игнорируется. Один return: None."""
         def _root(t):
             return t[:6]  # грубый корень для падежных вариантов
+        if not isinstance(topic, str):
+            return None
         if topic and len(topic.split()) <= 8 \
                 and not any(_root(t) == _root(topic) for t, _ in self.topics[-8:]):
             self.topics.append((topic, time.time()))
@@ -162,12 +166,12 @@ class MindStream:
         Пустая мысль не записывается; topic обрезается до 120 символов.
         Один return: bool."""
         ok = False
-        if not (thought or "").strip():
+        if not (thought or "").strip() or not isinstance(thought, str):
             return False
         try:
             MS_LOG.parent.mkdir(parents=True, exist_ok=True)
             rec = {"ts": time.strftime("%Y-%m-%dT%H:%M:%S"),
-                   "topic": (topic or "")[:120],
+                   "topic": str(topic or "")[:120],
                    "thought": thought}
             with open(MS_LOG, "a", encoding="utf-8") as fh:
                 fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -195,7 +199,7 @@ class MindStream:
                 "Ищу тему в своих знаниях и связях.",
                 "Подбираю ответ и проверяю, подходит ли он к вопросу."]
         tail = []
-        if topic:
+        if topic and isinstance(topic, str):
             tail = [f"Сопоставляю с понятием «{topic}».",
                     "Формулирую ответ простыми словами."]
         return base + tail
