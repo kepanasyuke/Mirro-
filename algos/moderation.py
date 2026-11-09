@@ -21,7 +21,8 @@ _LOG_FILE = os.path.join(_DATA_DIR, "moderation_log.jsonl")
 _CATEGORIES = {
     "harassment": ("оскорбл", "униз", "ненавиж", "убей себя", "иди ты на",
                    "туп", "дебил", "идиот", "дурак", "урод", "заткнись",
-                   "ты бесполезн", "ненавижу тебя"),
+                   "ты бесполезн", "ненавижу тебя", "псих", "мудак",
+                   "придурок", "сволочь", "мразь"),
     "danger_instr": ("как сделать бомб", "как изготовить взрывчат", "купить оружие без",
                      "сделай наркотик", "как взломать банк", "чейм и", "изготовить взрывчат",
                      "сделать оружие", "синтезировать яд", "добыть яд"),
@@ -44,14 +45,19 @@ _DEFAULT_REPLY = "Эта тема вне моей компетенции."
 
 
 def _log(event):
-    """Дописывает событие в журнал отклонений (event без None/не-дикт → пусто).
-    Один return: None."""
+    """Дописывает событие в журнал отклонений (event без None/не-дикт → пусто;
+    текстовые поля обрезаются до 120 символов). Один return: None."""
     try:
         event = event if isinstance(event, dict) else {}
+        safe = {}
+        for k, v in event.items():
+            if isinstance(v, str):
+                v = v[:120]
+            safe[k] = v
         if not os.path.isdir(_DATA_DIR):
             os.makedirs(_DATA_DIR, exist_ok=True)
         with open(_LOG_FILE, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), **event},
+            fh.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), **safe},
                                 ensure_ascii=False) + "\n")
     except Exception:
         pass
@@ -70,6 +76,8 @@ def _match_category(text):
         if not markers:
             continue
         for m in markers:
+            if not isinstance(m, str) or not m:
+                continue
             if len(m) <= 4:
                 if _re.search(r"(^|\W)" + _re.escape(m) + r"(\W|$)", t):
                     hit = cat
@@ -90,7 +98,7 @@ def moderate_input(query):
     cat = _match_category(query)
     out = {"ok": cat is None, "reply": None}
     if cat:
-        out["reply"] = _SAFE_REPLY.get(cat, "Эта тема вне моей компетенции.")
+        out["reply"] = _SAFE_REPLY.get(cat, _DEFAULT_REPLY)
         _log({"kind": "input", "category": cat, "text": (query or "")[:120]})
     return out
 
