@@ -70,7 +70,15 @@ def _load_all():
             with open(_path(), "r", encoding="utf-8") as f:
                 data = json.load(f)
             if isinstance(data, dict):
-                all_profiles = {str(k): v for k, v in data.items() if isinstance(v, dict)}
+                all_profiles = {}
+                for k, v in data.items():
+                    if isinstance(v, dict):
+                        all_profiles[str(k)] = {
+                            "name": v.get("name"),
+                            "topics": list(v.get("topics") or [])[:20],
+                            "verbosity": v.get("verbosity", 0.0),
+                            "remarks": list(v.get("remarks") or [])[:30],
+                        }
     except Exception:
         all_profiles = {}
     return all_profiles
@@ -125,9 +133,12 @@ def save_profile(prof, user_id="default"):
 
 def _extract_name(query):
     """Достаёт имя из фразы «меня зовут X / моё имя X / я — X».
-    Слишком длинные «имена» (>30 симв.) отбрасываются. Один return: str|None."""
+    Слишком длинные «имена» (>30 симв.) отбрасываются. Не-строка → None.
+    Один return: str|None."""
     name = None
-    m = _NAME_RE.search((query or "").strip())
+    if not isinstance(query, str):
+        return None
+    m = _NAME_RE.search(query.strip())
     if m:
         cand = m.group(1).strip(" ,.!?")
         # имя — отдельное слово (не «Мария Петрова», берём первое)
@@ -139,8 +150,10 @@ def _extract_name(query):
 
 def _extract_topic(query):
     """Пытается вытащить тему интереса из фразы «(мне, расскажи) про X» /
-    «люблю X» / «интересуюсь X». Один return: str или None."""
-    q = (query or "").strip().lower()
+    «люблю X» / «интересуюсь X». Не-строка → None. Один return: str|None."""
+    if not isinstance(query, str):
+        return None
+    q = query.strip().lower()
     topic = None
     for marker in ("интересуюсь", "люблю", "нравится", "увлекаюсь", "хочу знать про"):
         if marker in q:
@@ -232,8 +245,10 @@ def try_user_profile(query, user_id="default"):
     """Точка входа для try_директ: отвечает на вопросы о знании пользователя,
     а также молча запоминает имя/темы/длину и отвечает None (не перебивает).
     Многопользовательский режим: user_id выбирает профиль.
-    q — вопрос. Один return: str или None."""
-    q = (query or "").strip().lower()
+    Пустой/не-строковый запрос → None. Один return: str или None."""
+    if not isinstance(query, str) or not query.strip():
+        return None
+    q = query.strip().lower()
     ans = None
     prof = load_profile(user_id)
     if any(w in q for w in ("как меня зовут", "как зовут", "помнишь меня",
