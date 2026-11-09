@@ -25,37 +25,42 @@ def init_mirror_profile():
 
 def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7):
     """Обновляет зеркальный слепок по реплике пользователя.
-    Пустые/None токены → профиль без правок. Один return: dict (новый профиль)."""
-    prof = dict(current_profile or init_mirror_profile())
+    Пустые/None токены → профиль без правок. Некорректный профиль → новый.
+    Один return: dict (новый профиль)."""
+    prof = dict(current_profile) if isinstance(current_profile, dict) else init_mirror_profile()
     tokens = user_query_tokens or []
     if not isinstance(tokens, (list, tuple, set)):
         tokens = []
     try:
-        pulse = float(session_pulse or 0.0)
+        pulse = max(0.0, min(1.0, float(session_pulse or 0.0)))
     except Exception:
         pulse = 0.7
     if len(tokens) < 3 and pulse > 0.8:
         prof["user_fatigue"] = min(1.0, prof.get("user_fatigue", 0.0) + 0.2)
     else:
         prof["user_fatigue"] = max(0.0, prof.get("user_fatigue", 0.0) - 0.1)
-    art_keywords = {"искусство", "театр", "дизайн", "арт", "образ", "стиль", "творческ"}
+    art_keywords = {"искусство", "театр", "дизайн", "арт", "образ", "стиль", "творческ",
+                "музыка", "кино", "живопись", "литература"}
     query_set = {str(t).lower() for t in tokens}
     if query_set & art_keywords:
         prof["user_intent_focus"] = max(0.0, prof.get("user_intent_focus", 1.0) - 0.4)
     else:
         prof["user_intent_focus"] = min(1.0, prof.get("user_intent_focus", 1.0) + 0.1)
-    prof["idle_updates"] = int(prof.get("idle_updates", 0) or 0) + 1
+    prof["idle_updates"] = min(100000, int(prof.get("idle_updates", 0) or 0) + 1)
     return prof
 
 
 def apply_mirror_modulation_to_graph(graph, mirror_profile):
     """Модулирует проводимости рёбер по зеркальному профилю.
-    Пустой граф/None-профиль → {}. Возвращает НОВЫЙ dict (не мутирует граф).
-    Один return: dict."""
+    Пустой граф/None-профиль → {}. Значения fatigue/focus нормализуются.
+    Возвращает НОВЫЙ dict (не мутирует граф). Один return: dict."""
     if graph is None or mirror_profile is None or not getattr(graph, "edges", None):
         return {}
-    fatigue = mirror_profile.get("user_fatigue", 0.0) or 0.0
-    focus = mirror_profile.get("user_intent_focus", 1.0) or 1.0
+    try:
+        fatigue = max(0.0, min(1.0, float(mirror_profile.get("user_fatigue", 0.0) or 0.0)))
+        focus = max(0.0, min(1.0, float(mirror_profile.get("user_intent_focus", 1.0) or 1.0)))
+    except Exception:
+        fatigue, focus = 0.0, 1.0
     out = {}
     for key, w in graph.edges.items():
         try:
