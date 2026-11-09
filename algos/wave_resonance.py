@@ -28,7 +28,8 @@ def calculate_complex_phase(alpha, beta):
         return 0.0
     if a == 0.0 and b == 0.0:
         return 0.0
-    return math.atan2(b, a)
+    result = math.atan2(b, a)
+    return result if result == result else 0.0
 
 
 def _routes_of_graph(graph):
@@ -58,6 +59,11 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     except Exception:
         coupling_constant = 0.12
         mod = 1.0
+    # NaN-защита: если получилось не-число — возвращаемся к дефолтам
+    if coupling_constant != coupling_constant:
+        coupling_constant = 0.12
+    if mod != mod:
+        mod = 1.0
     new_states = dict(qst.states)
     try:
         if src_edge in graph.edges and tgt_edge in graph.edges:
@@ -72,7 +78,10 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
             a_f, b_f = qst.get(s_from)
             phase_a = calculate_complex_phase(a_f, b_f)
             for node in (t_from, tgt_edge[2]):
-                a, b = qst.get(node)
+                pair = qst.get(node)
+                if pair is None:
+                    continue
+                a, b = pair
                 phase_b = calculate_complex_phase(a, b)
                 new_phase_b = phase_b + coupling_constant * (phase_a - phase_b) * mod
                 new_states[node] = (math.cos(new_phase_b), math.sin(new_phase_b))
