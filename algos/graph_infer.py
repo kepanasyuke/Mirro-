@@ -243,7 +243,7 @@ def _graph_topics_for_unknown(graph, query):
     if graph is None or not hasattr(graph, "nodes"):
         return []
     graph = graph or kg
-    q = (query or "").lower()
+    q = (query if isinstance(query, str) else "").lower()
     words = [w for w in _re.findall(r"[а-яёa-z]{4,}", q) if w not in _TOPIC_STOP]
     scores = []
     for n in (graph.nodes or []):
