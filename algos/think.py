@@ -394,7 +394,12 @@ def _percent_of(pct, base):
 
 
 def _solve_linear(a, b):
-    """ax + b = 0. Один return: list."""
+    """ax + b = 0. Не-числовые коэффициенты → []. Один return: list."""
+    try:
+        a = float(a)
+        b = float(b)
+    except Exception:
+        return []
     roots = []
     if a != 0:
         roots = [_solve_linear_root(a, b)]
