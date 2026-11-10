@@ -97,10 +97,13 @@ def get_scheme(name):
     scheme = BLOCK_SCHEMES.get(name) or (BLOCK_SCHEMES.get("sledovanie") if isinstance(BLOCK_SCHEMES, dict) else None)
     if not isinstance(scheme, dict):
         return {"name": "", "description": "", "steps": []}
+    steps = scheme.get("schema") or []
+    if not isinstance(steps, list):
+        steps = []
     return {
-        "name": scheme.get("name", ""),
-        "description": scheme.get("desc", ""),
-        "steps": scheme.get("schema", []),
+        "name": str(scheme.get("name", "") or ""),
+        "description": str(scheme.get("desc", "") or ""),
+        "steps": [s for s in steps if isinstance(s, str)],
     }
 
 
@@ -108,7 +111,11 @@ def list_schemes():
     """Список всех схем мышления. Один return: dict."""
     if not BLOCK_SCHEMES:
         return {}
-    return {k: v["name"] for k, v in BLOCK_SCHEMES.items()}
+    out = {}
+    for k, v in (BLOCK_SCHEMES or {}).items():
+        if isinstance(v, dict) and v.get("name"):
+            out[k] = v["name"]
+    return out
 
 
 def render_scheme_steps(name):
