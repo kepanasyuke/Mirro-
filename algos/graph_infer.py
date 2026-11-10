@@ -87,7 +87,7 @@ def _chain_to_str(kg, chain):
         return ""
     parts = []
     for i in range(len(chain) - 1):
-        rels = kg.relation(chain[i], chain[i + 1])
+        rels = kg.relation(chain[i], chain[i + 1]) if kg is not None else None
         pred = rels[0][0] if rels else "связан"
         parts.append(f"{chain[i]} —{pred}→ {chain[i+1]}")
     return " ; ".join(parts)
