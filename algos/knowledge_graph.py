@@ -453,8 +453,11 @@ class KnowledgeGraph:
             if d in self._adj:
                 del self._adj[d]
         if dead:
-            self.edges = {k: w for k, w in self.edges.items()
-                          if k[0] not in dead and k[2] not in dead}
+            self.edges = {
+                k: w for k, w in self.edges.items()
+                if not (isinstance(k, (tuple, list)) and len(k) >= 3
+                        and (k[0] in dead or k[2] in dead))
+            }
             self._rebuild_adj()
         removed += len(dead)
         return removed
