@@ -115,6 +115,8 @@ def apply_fatigue_to_weights(graph, st, floor=0.2):
             exhaustion = float(exhaust.get(key, 0.0) or 0.0)
         except Exception:
             exhaustion = 0.0
+        if exhaustion != exhaustion or exhaustion in (float("inf"), float("-inf")):
+            exhaustion = 0.0
         retention = max(0.0, 1.0 - 0.8 * exhaustion)
         fatigued = w * retention
         # не завышаем исходно малые веса и не увеличиваем при утомлении
