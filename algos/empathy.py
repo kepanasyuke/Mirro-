@@ -31,7 +31,8 @@ _RAD = {
                 "измотан", "выгорел", "перегруз", "утоми", "не выспал",
                 "вымотан", "сложный день", "усталост", "замучил", "невмоготу",
                 "изможд", "измуч", "выжа", "нет энергии", "сил нет",
-                "не спал", "сонн", "обессил", "выжат"},
+                "не спал", "сонн", "обессил", "выжат", "валюсь с ног",
+                "нет настроения", "выдохлась", "уставший", "уставшая"},
 }
 
 # скользящее настроение диалога (в памяти процесса)
@@ -67,12 +68,10 @@ def _detect_rad(message):
     neg = sum(1 for w in _RAD["negative"] if w in m)
     fatigue = sum(1 for w in _RAD["fatigue"] if w in m)
     for short in _SHORT_STRICT:
-        if short in _RAD["positive"] and short in m:
-            # считаем реальные вхождения как слова
-            real = len(_re.findall(r"(?<![а-яё])" + short, m))
-            if real == 0:
-                pos -= 1
-        elif short in _RAD["negative"] and short in m and not _re.search(r"(?<![а-яё])" + short, m):
+        at_word = _re.search(r"(?<![а-яё])" + short, m)
+        if short in _RAD["positive"] and short in m and not at_word:
+            pos -= 1
+        elif short in _RAD["negative"] and short in m and not at_word:
             neg -= 1
     return {"pos": max(0, pos), "neg": max(0, neg), "fatigue": max(0, fatigue)}
 
