@@ -58,6 +58,10 @@ class Genome:
     """Индивид: граф перцептронов + нейромедиаторы + веса межузловых связей.
     Мутация/скрещивание производят новые геномы."""
     def __init__(self, num_nodes, input_dim, hidden_dim, rng):
+        if num_nodes < 1:
+            num_nodes = 1
+        if hidden_dim < 1:
+            hidden_dim = 1
         self.num_nodes = num_nodes
         self.hidden_dim = hidden_dim
         self.nodes = [PerceptronNode(input_dim, hidden_dim, rng) for _ in range(num_nodes)]
