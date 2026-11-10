@@ -65,7 +65,8 @@ class Novelty:
         known_in_passed = False
         if known_kw is not None:
             try:
-                known_in_passed = bool(kw & set(known_kw))
+                known_kw_set = {str(x) for x in known_kw}
+                known_in_passed = bool(kw & known_kw_set)
             except Exception:
                 known_in_passed = False
         return known_in_seen or known_in_passed
