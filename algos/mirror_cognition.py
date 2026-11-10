@@ -88,8 +88,8 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
         if nw != nw or nw in (float("inf"), float("-inf")):
             continue
         combined = " ".join(str(x) for x in key[:3]).lower()
-        if ("хаос" in combined) or ("юмор" in combined or "шутк" in combined
-                            or "ирония" in combined or "сарказм" in combined):
+        if "хаос" in combined or "юмор" in combined or "шутк" in combined \
+                or "ирония" in combined or "сарказм" in combined:
             nw *= focus                      # строгий ИТ-фокус гасит юмор/хаос/иронию
         if fatigue > 0.5:
             nw *= (1.0 - 0.4 * fatigue)      # усталый пользователь -> лаконично
