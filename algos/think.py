@@ -326,6 +326,8 @@ def _fact(n):
         n = int(n)
     except Exception:
         return 1
+    if n < 0 or n > 10000:
+        return 1
     r = 1
     for i in range(2, n + 1):
         r *= i
