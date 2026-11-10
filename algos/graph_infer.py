@@ -210,7 +210,7 @@ def try_infer_unknown(graph, query):
     узлы графа из вопроса и строим цепочку рассуждений по сильным связям.
     graph — GRAPH объект (KnowledgeGraph), НЕ модуль kg.
     Пустой граф или запрос → None. Один return: str или None."""
-    if graph is None or not (query or "").strip():
+    if graph is None or not isinstance(query, str) or not query.strip():
         return None
     tokens = _graph_topics(graph, query)
     # если узлов в вопросе нет — используем понятия, схожие по основе словам запроса
