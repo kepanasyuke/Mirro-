@@ -293,6 +293,12 @@ def _c_strings_sorts(q):
 
 # --- хелперы без импорта модулей (для мгновенных объяснений) ---
 def _comb(n, k):
+    try:
+        n, k = int(n), int(k)
+    except Exception:
+        return 0
+    if n < 0 or k < 0 or k > n:
+        return 0
     k = min(k, n - k)
     r = 1
     for i in range(1, k + 1):
