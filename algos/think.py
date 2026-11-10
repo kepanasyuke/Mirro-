@@ -75,7 +75,8 @@ def _numbers(text):
 
 
 def _int_numbers(text):
-    return [int(x) for x in _numbers(text)]
+    """Целые числа из текста (только те, что без дробной части). Один return: list."""
+    return [int(x) for x in _numbers(text) if float(x).is_integer()]
 
 
 # ================== РАСПОЗНАВАНИЕ ВОПРОСА ==================
