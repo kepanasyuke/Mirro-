@@ -143,7 +143,11 @@ class KnowledgeGraph:
         elif not isinstance(noise_preds, (set, list, tuple)):
             noise_preds = set()
         # 1) рёбра с шумовыми предикатами
-        dead_edges = [k for k in self.edges if self._norm(k[1]) in noise_preds]
+        dead_edges = [
+            k for k in self.edges
+            if isinstance(k, (tuple, list)) and len(k) >= 2
+            and self._norm(k[1]) in noise_preds
+        ]
         for k in dead_edges:
             del self.edges[k]
         removed += len(dead_edges)
@@ -158,7 +162,11 @@ class KnowledgeGraph:
                 del self._adj[d]
         removed += len(dead_nodes)
         if dead_nodes:
-            self.edges = {k: w for k, w in self.edges.items() if k[0] not in dead_nodes and k[2] not in dead_nodes}
+            self.edges = {
+                k: w for k, w in self.edges.items()
+                if not (isinstance(k, (tuple, list)) and len(k) >= 3
+                        and (k[0] in dead_nodes or k[2] in dead_nodes))
+            }
             self._rebuild_adj()
         return removed
 
