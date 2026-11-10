@@ -84,6 +84,9 @@ _EN_KB = {
     "space": ("Space is the region beyond Earth's atmosphere. It holds stars, "
               "planets, galaxies and emptiness. Stars are born, live and die, "
               "and gravity shapes their motion."),
+    "history": ("History is the study of the human past through records and "
+                "artifacts. It examines events, civilizations and change over "
+                "time to understand how societies developed."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -126,7 +129,8 @@ _TOPIC_TEST = [
     ("wave", ("wave", "sound", "frequency", "amplitude", "wavelength")),
     ("biology", ("biology", "organism", "species", "ecosystem", "living")),
     ("weather", ("weather", "rain", "wind", "temperature", "forecast", "climate")),
-    ("space", ("space", "star", "galaxy", "planet", "universe", "orbit"))
+    ("space", ("space", "star", "galaxy", "planet", "universe", "orbit")),
+    ("history", ("history", "ancient", "civilization", "empire", "medieval", "era"))
 ]
 
 
