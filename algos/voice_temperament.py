@@ -22,10 +22,12 @@ def determine_voice_temperament(neuromodulators):
     if not isinstance(neuromodulators, dict) or not neuromodulators:
         return "сбалансированный"
     try:
-        dopamine = max(0.0, min(2.0, float(neuromodulators.get("dopamine", 0.0) or 0.0)))
-        serotonin = max(0.0, min(2.0, float(neuromodulators.get("serotonin", 1.0) or 1.0)))
+        dopamine = float(neuromodulators.get("dopamine", 0.0) or 0.0)
+        serotonin = float(neuromodulators.get("serotonin", 1.0) or 1.0)
     except Exception:
         return "сбалансированный"
+    dopamine = max(0.0, min(2.0, dopamine)) if dopamine == dopamine else 0.0
+    serotonin = max(0.0, min(2.0, serotonin)) if serotonin == serotonin else 1.0
     temperament = "сбалансированный"
     if dopamine > 0.7 and serotonin > 0.8:
         temperament = "воодушевлённый_лидер"
