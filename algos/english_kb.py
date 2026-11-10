@@ -117,6 +117,9 @@ _EN_KB = {
     "astronomy": ("Astronomy is the study of everything beyond Earth: stars, "
                   "planets, galaxies and the universe. It uses telescopes and "
                   "physics to understand how celestial objects move and evolve."),
+    "botany": ("Botany is the science of plants. It studies leaves, roots and "
+               "flowers, how plants grow and make food through photosynthesis, "
+               "and their role in ecosystems and food chains."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -172,6 +175,7 @@ _TOPIC_TEST = [
     ("health", ("health", "nutrition", "exercise", "sleep", "wellness", "immune")),
     ("economy", ("economy", "market", "money", "inflation", "trade", "budget", "price")),
     ("astronomy", ("astronomy", "planet", "star", "galaxy", "nebula", "telescope", "comet")),
+    ("botany", ("botany", "plant", "leaf", "root", "flower", "photosynthesis", "tree")),
 ]
 
 
