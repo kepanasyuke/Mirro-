@@ -114,7 +114,8 @@ _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are"
               "than", "there", "your", "it", "also", "not", "could", "would",
               "should", "know", "want", "what's", "how's", "define", "mean",
               "actually", "basically", "rather", "however", "maybe", "perhaps",
-              "still", "though", "well")
+              "still", "though", "well", "since", "because", "before", "after",
+              "always", "usually", "often", "sometimes", "many", "much")
 
 
 _EN_MARKER_SET = frozenset(_EN_COMMON)
