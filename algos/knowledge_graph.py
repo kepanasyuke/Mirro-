@@ -100,6 +100,8 @@ class KnowledgeGraph:
                     targets.append(other)
         for tgt in targets:
             for (s, p, d), w in list(self.edges.items()):
+                if not isinstance(s, (tuple, list)):
+                    continue
                 if (s == a and d == tgt) or (s == tgt and d == a):
                     nw = min(2.0, w + amount)
                     self.edges[(s, p, d)] = nw
