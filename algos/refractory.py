@@ -26,7 +26,8 @@ def init_refractory_counters(graph):
     """Инициализирует нулевые счётчики для всех узлов и рёбер.
     Пустой/некорректный граф → пустой стейт. Один return: RefractoryState."""
     st = RefractoryState()
-    if graph is None or not hasattr(graph, "nodes") or not hasattr(graph, "edges"):
+    if graph is None or not hasattr(graph, "nodes") or not hasattr(graph, "edges") \
+        or graph.nodes is None or graph.edges is None:
         return st
     for name in graph.nodes:
         st.node_fatigue[name] = 0.0
