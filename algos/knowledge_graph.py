@@ -544,7 +544,9 @@ class KnowledgeGraph:
             node = self.nodes[name]
             if node.facts:
                 lines.append(f"«{name}»: " + "; ".join(node.facts[:5]))
-            for p, other, w in sorted(self.neighbors(name), key=lambda r: -r[2])[:8]:
+            safe = [r for r in self.neighbors(name)
+                    if isinstance(r, (tuple, list)) and len(r) >= 3]
+            for p, other, w in sorted(safe, key=lambda r: -r[2])[:8]:
                 lines.append(f"{name} {p} {other} (вес {w:.2f})")
         return lines
 
