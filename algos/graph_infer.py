@@ -163,8 +163,11 @@ def _graph_topics(graph, query, limit=12):
     graph = graph or kg
     q = (query if isinstance(query, str) else "").lower()
     found = []
-    for n in graph.nodes:
-        if not n or len(n) < 4 or _is_junk_topic(n):
+    nodes = getattr(graph, "nodes", None) or {}
+    if not isinstance(nodes, dict):
+        nodes = {}
+    for n in nodes:
+        if not isinstance(n, str) or not n or len(n) < 4 or _is_junk_topic(n):
             continue
         core = n.split()[0] if " " in n else n
         if " " in n:
