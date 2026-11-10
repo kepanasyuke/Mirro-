@@ -69,10 +69,9 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     try:
         if src_edge in graph.edges and tgt_edge in graph.edges:
             # рёбра должны быть индексируемыми тройками (src, pred, dst)
-            try:
-                if len(src_edge) < 3 or len(tgt_edge) < 3:
-                    raise ValueError("bad edge key")
-            except TypeError:
+            if not (isinstance(src_edge, (tuple, list)) and isinstance(tgt_edge, (tuple, list))):
+                raise ValueError("bad edge key")
+            if len(src_edge) < 3 or len(tgt_edge) < 3:
                 raise ValueError("bad edge key")
             s_from = src_edge[0]
             t_from = tgt_edge[0]
