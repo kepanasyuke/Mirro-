@@ -89,7 +89,8 @@ class DialogueMemory:
                 except Exception:
                     self.emotion = 0.0
                 summ = data.get("summary", [])
-                self.summary = [s for s in (summ or []) if isinstance(s, str)][-20:] if isinstance(summ, list) else []
+                self.summary = ([s for s in summ if isinstance(s, str)][-20:]
+                                 if isinstance(summ, list) else [])
                 ok = True
         except Exception:
             ok = False
