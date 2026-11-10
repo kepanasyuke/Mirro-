@@ -294,8 +294,12 @@ def try_get_memory_experience(graph, active_pattern, experience=None):
         experience = getattr(graph, "experience", [])
     if not isinstance(experience, (list, tuple)):
         experience = []
-    best_match = [0.0] * len(active_pattern)
-    if experience:
+    try:
+        len_active = len(active_pattern)
+    except Exception:
+        len_active = 0
+    best_match = [0.0] * len_active
+    if experience and len_active:
         try:
             exp0 = list(experience[0])
         except Exception:
