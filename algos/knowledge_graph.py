@@ -43,11 +43,12 @@ class KnowledgeGraph:
 
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
-        if not s or not d or s == d:
+        p = self._norm(pred)
+        if not s or not d or s == d or not p:
             return
         self.add_node(s)
         self.add_node(d)
-        key = (s, self._norm(pred), d)
+        key = (s, p, d)
         self.edges[key] = max(self.edges.get(key, 0.0), weight)
         # синхронизируем вес в индексе соседей (двусторонне)
         self._set_adj_weight(s, pred, d, self.edges[key])
@@ -84,6 +85,10 @@ class KnowledgeGraph:
             return 0
         a, b = self._norm(node_a), self._norm(node_b)
         strengthened = 0
+        try:
+            depth = int(depth)
+        except Exception:
+            depth = 0
         targets = [b]
         if depth > 0:
             for p, other, _w in self._adj.get(a, [])[:depth]:
