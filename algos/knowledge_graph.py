@@ -366,8 +366,10 @@ class KnowledgeGraph:
                               "спросить", "скажи", "посмотрю", "сделаю", "можно", "тебя"}
             filtered = {}
             for o, (p, w) in candidates.items():
-                oclean = o.split()[0] if " " in o else o
-                if len(o) <= 24 and " " not in o.strip() and oclean not in junk_neighbors:
+                if not isinstance(o, str) or not o.strip() or " " in o.strip():
+                    continue
+                oclean = o.split()[0]
+                if len(o) <= 24 and oclean not in junk_neighbors:
                     filtered[o] = (p, w)
             ordered = sorted(filtered.items(), key=lambda kv: -kv[1][1])[:10]
             for other, (p, w) in ordered:
