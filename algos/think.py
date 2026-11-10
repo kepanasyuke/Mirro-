@@ -90,6 +90,9 @@ def classify(query):
     if query is None or not str(query).strip():
         return None
     q = str(query).lower().strip()
+    if len(q) > 2000:
+        # очень длинный «вопрос» — не задача, а текст; не разбираем регулярами
+        return None
     result = None
     if result is None:
         result = _c_simple_math(q)
