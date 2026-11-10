@@ -103,7 +103,10 @@ def sarkazm():
     global _last_sarkazm
     if not SARCASM:
         return ""
-    cands = [s for s in SARCASM if s != _last_sarkazm] or SARCASM
+    strs = [s for s in SARCASM if isinstance(s, str) and s]
+    if not strs:
+        return ""
+    cands = [s for s in strs if s != _last_sarkazm] or strs
     pick = random.choice(cands)
     _last_sarkazm = pick
     return pick
