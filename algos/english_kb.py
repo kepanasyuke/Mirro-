@@ -108,6 +108,9 @@ _EN_KB = {
     "philosophy": ("Philosophy is the study of fundamental questions about "
                    "existence, knowledge, values and reason. It uses careful "
                    "argument and reflection instead of experiment alone."),
+    "health": ("Health is the state of being physically and mentally well. "
+               "Good sleep, nutrition and exercise support it, while illness "
+               "and stress can weaken it."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -160,6 +163,7 @@ _TOPIC_TEST = [
     ("chess", ("chess", "checkmate", "rook", "queen", "knight", "pawn", "board")),
     ("geology", ("geology", "rock", "mineral", "mantle", "crust", "volcano", "erosion")),
     ("philosophy", ("philosophy", "ethics", "logic", "existence", "knowledge", "reason")),
+    ("health", ("health", "nutrition", "exercise", "sleep", "wellness", "immune")),
 ]
 
 
