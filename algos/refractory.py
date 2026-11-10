@@ -56,7 +56,7 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
         st = init_refractory_counters(graph)
     new_st = RefractoryState()
     if isinstance(activated_nodes, (list, tuple, set)):
-        act = set(activated_nodes)
+        act = {str(x) for x in activated_nodes}
     else:
         act = set()
     for name in graph.nodes:
