@@ -340,7 +340,7 @@ class FunctionKnowledge:
         return len(self._by_name)
 
     def _norm_key(self, name):
-        k = _re.sub(r"[^a-zа-яё0-9_]", "", (name or "").lower())
+        k = _re.sub(r"[^a-zа-яё0-9_]", "", str(name or "").lower())
         key = k
         if k in self._by_name:
             key = k
