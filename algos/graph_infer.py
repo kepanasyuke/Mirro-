@@ -126,7 +126,8 @@ def try_graph_infer(query):
     from knowledge_graph import kg
     answer = None
     q = (query if isinstance(query, str) else "").lower()
-    if kg.edges and len(kg.nodes) >= 3 and _looks_like_reasoning(q):
+    if hasattr(kg, "edges") and hasattr(kg, "nodes") \
+            and kg.edges and len(kg.nodes) >= 3 and _looks_like_reasoning(q):
         chains = infer_from_graph(kg, q, max_depth=2)
         if chains:
             answer = _join_chains(kg, chains)
