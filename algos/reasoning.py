@@ -200,11 +200,13 @@ def citata_bosovy():
     """Вернуть случайную цитату Босовой, не повторяющую предыдущую подряд.
     Пустой список → («», «»). Один return: tuple[str, str]."""
     global _last_citata
-    if not BOSOVA_CITATY:
+    if not isinstance(BOSOVA_CITATY, (list, tuple)) or not BOSOVA_CITATY:
         return ("", "")
     # отфильтруем некорректные кортежи (не 2 элемента)
     valid = [c for c in BOSOVA_CITATY if isinstance(c, (tuple, list)) and len(c) >= 2]
-    cands = [c for c in valid if c != _last_citata] or valid or BOSOVA_CITATY
+    if not valid:
+        return ("", "")
+    cands = [c for c in valid if c != _last_citata] or valid
     pick = random.choice(cands)
     _last_citata = pick
     return (str(pick[0]), str(pick[1] or ""))
