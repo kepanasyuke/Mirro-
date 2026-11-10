@@ -74,6 +74,8 @@ def evaluate_expr(expr, vars_map):
     Один return: bool."""
     result = False
     try:
+        if not isinstance(vars_map, dict):
+            vars_map = {}
         safe = set(vars_map or {})
         allowed = {k: bool(v) for k, v in (vars_map or {}).items()}
         # строим без eval: подставляем напрямую через and/or/not
