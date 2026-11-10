@@ -257,7 +257,7 @@ def _graph_topics_for_unknown(graph, query):
 def _edge_pattern(graph):
     """Латентный паттерн графа: вектор активных весов рёбер. Не-граф → [].
     Один return: list."""
-    if graph is None or not hasattr(graph, "edges"):
+    if graph is None or not isinstance(getattr(graph, "edges", None), dict):
         return []
     out = []
     for w in graph.edges.values():
