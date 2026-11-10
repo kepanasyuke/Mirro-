@@ -64,7 +64,7 @@ def _recurse(kg, node, trail, max_depth, results, seen_prefix, cap=8):
             results.append(trail_with)
         return
     try:
-        neighbors = kg.neighbors(node) if kg is not None else []
+        neighbors = kg.neighbors(node) if kg is not None and isinstance(node, str) else []
     except Exception:
         neighbors = []
     for nb in (neighbors or []):
