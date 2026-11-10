@@ -517,7 +517,8 @@ class KnowledgeGraph:
                 "таким", "образом", "всего", "даже", "уже", "если", "то", "не", "при"}
         added = 0
         for node in list(self.nodes):
-            if " " not in node or len(node.split()) > max_phrase_words:
+            if not isinstance(node, str) or " " not in node \
+                    or len(node.split()) > max_phrase_words:
                 continue
             tokens = [w for w in _re_n.findall(r"[а-яёa-z]{4,}", node.lower()) if w not in stop]
             if not tokens:
