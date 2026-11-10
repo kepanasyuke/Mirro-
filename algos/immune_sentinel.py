@@ -94,7 +94,8 @@ def scan_report(graph):
             n_high += 1
         if fw < 0:
             n_neg += 1
-    meta = getattr(graph, "meta_routes", None) or {}
+    meta = getattr(graph, "meta_routes", None)
+    meta = meta if isinstance(meta, dict) else {}
     loops = sum(
         1 for k in meta
         if isinstance(k, (tuple, list)) and len(k) >= 2 and k[0] == k[1]
