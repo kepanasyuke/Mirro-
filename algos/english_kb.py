@@ -81,6 +81,9 @@ _EN_KB = {
     "weather": ("Weather is the short-term state of the atmosphere: temperature, "
                 "rain, wind and clouds on a given day. It changes quickly, unlike "
                 "climate, which describes long-term trends."),
+    "space": ("Space is the region beyond Earth's atmosphere. It holds stars, "
+              "planets, galaxies and emptiness. Stars are born, live and die, "
+              "and gravity shapes their motion."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -122,7 +125,8 @@ _TOPIC_TEST = [
     ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions")),
     ("wave", ("wave", "sound", "frequency", "amplitude", "wavelength")),
     ("biology", ("biology", "organism", "species", "ecosystem", "living")),
-    ("weather", ("weather", "rain", "wind", "temperature", "forecast", "climate"))
+    ("weather", ("weather", "rain", "wind", "temperature", "forecast", "climate")),
+    ("space", ("space", "star", "galaxy", "planet", "universe", "orbit"))
 ]
 
 
