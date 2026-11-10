@@ -105,6 +105,9 @@ _EN_KB = {
     "geology": ("Geology is the science of the Earth: its rocks, minerals and "
                 "layers, and the forces like volcanoes and erosion that shape "
                 "its surface over long periods of time."),
+    "philosophy": ("Philosophy is the study of fundamental questions about "
+                   "existence, knowledge, values and reason. It uses careful "
+                   "argument and reflection instead of experiment alone."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -156,6 +159,7 @@ _TOPIC_TEST = [
     ("math", ("math", "algebra", "arithmetic", "geometry", "fraction", "equation")),
     ("chess", ("chess", "checkmate", "rook", "queen", "knight", "pawn", "board")),
     ("geology", ("geology", "rock", "mineral", "mantle", "crust", "volcano", "erosion")),
+    ("philosophy", ("philosophy", "ethics", "logic", "existence", "knowledge", "reason")),
 ]
 
 
