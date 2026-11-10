@@ -97,8 +97,8 @@ _EN_MARKER_SET = frozenset(_EN_COMMON)
 
 # тема -> ключевые англ. слова (основа)
 _TOPIC_TEST = [
-    ("neural", ("neural", "network", "perceptron", "machine learn", "deep learn")),
-    ("algorithm", ("algorithm", "sort", "complexity", "procedure", "bubble")),
+    ("neural", ("neural", "network", "perceptron", "machine learn", "deep learn", "neuron", "gradient", "backprop")),
+    ("algorithm", ("algorithm", "sort", "complexity", "procedure", "bubble", "search", "data structure")),
     ("memory", ("memory", "remember", "recall", "store info")),
     ("graph", ("graph", "node", "edge", "vertex", "connected")),
     ("dna", ("dna", "gene", "genetic", "heredit")),
@@ -118,8 +118,6 @@ _TOPIC_TEST = [
     ("illness", ("illness", "disease", "infection", "disorder", "allergy")),
     ("programming", ("programming", "code", "program", "python", "compiler", "source")),
     ("operating system", ("operating system", "os", "kernel", "linux", "windows", "files")),
-    ("neural", ("neural", "network", "neuron", "perceptron", "gradient", "backprop")),
-    ("algorithm", ("algorithm", "complexity", "sorting", "search", "data structure")),
     ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants")),
     ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions")),
     ("wave", ("wave", "sound", "frequency", "amplitude", "wavelength")),
