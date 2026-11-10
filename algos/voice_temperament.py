@@ -45,8 +45,14 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
     processed = []
     if not isinstance(text_tokens, (list, tuple, set)) or not text_tokens:
         return processed
-    min_len = max(0, min(50, int(min_len or 0)))
-    max_len = max(1, min(50, int(max_len or 8)))
+    try:
+        min_len = max(0, min(50, int(min_len or 0)))
+    except Exception:
+        min_len = 4
+    try:
+        max_len = max(1, min(50, int(max_len or 8)))
+    except Exception:
+        max_len = 8
     tokens = [str(t) for t in text_tokens]
     processed = tokens
     if temperament == "хаотичный_холерик":
@@ -74,7 +80,9 @@ def apply_temperament_to_text(text, temperament, min_len=4, max_len=8):
         text = str(text)
     words = _re.findall(r"[а-яёa-z0-9]+", text.lower())
     kept = try_apply_temperament_filters(words, temperament, min_len, max_len)
-    return " ".join(kept)[:4000]
+    out_words = [w for w in kept if isinstance(w, str)]
+    joined = " ".join(out_words)
+    return joined[:4000] if len(joined) <= 4000 else joined[:4000].rsplit(" ", 1)[0]
 
 
 if __name__ == "__main__":
