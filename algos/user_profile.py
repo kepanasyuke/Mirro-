@@ -197,9 +197,9 @@ def _extract_topic(query):
 
 
 def learn_from_message(prof, message):
-    """Обновляет профиль по реплике пользователя: имя, темы, длину ответа.
-    Возвращает (новый профиль, заметок). Один return: tuple."""
-    prof = dict(prof)
+    """"Обновляет профиль по реплике пользователя: имя, темы, длину ответа.
+    Некорректный профиль → новый пустой. Один return: tuple."""
+    prof = dict(prof) if isinstance(prof, dict) else _default_profile()
     msg = (message or "").strip()
     if not msg:
         return prof, 0
