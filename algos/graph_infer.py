@@ -320,7 +320,12 @@ def remember_pattern(graph, pattern, max_experience=50):
     """Записывает успешный латентный паттерн в память графа. Один return: int."""
     if graph is None:
         return 0
-    if not hasattr(graph, "experience"):
+    try:
+        max_experience = int(max_experience)
+        max_experience = max(1, min(1000, max_experience))
+    except Exception:
+        max_experience = 50
+    if not hasattr(graph, "experience") or not isinstance(graph.experience, list):
         graph.experience = []
     if len(graph.experience) >= max_experience:
         graph.experience.pop(0)
