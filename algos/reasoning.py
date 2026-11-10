@@ -206,7 +206,7 @@ def citata_bosovy():
     cands = [c for c in valid if c != _last_citata] or valid or BOSOVA_CITATY
     pick = random.choice(cands)
     _last_citata = pick
-    return pick
+    return (str(pick[0]), str(pick[1] or ""))
 
 
 if __name__ == "__main__":
