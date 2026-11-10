@@ -72,6 +72,9 @@ _EN_KB = {
     "climate change": ("Climate change is the long-term shift in global temperatures "
                        "and weather patterns. Human activity, mainly burning fossil "
                        "fuels, adds greenhouse gases that warm the planet."),
+    "wave": ("A wave is a disturbance that carries energy through a medium or space. "
+             "Sound and light travel as waves; their frequency and wavelength "
+             "determine pitch and color."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -112,7 +115,8 @@ _TOPIC_TEST = [
     ("neural", ("neural", "network", "neuron", "perceptron", "gradient", "backprop")),
     ("algorithm", ("algorithm", "complexity", "sorting", "search", "data structure")),
     ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants")),
-    ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions"))
+    ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions")),
+    ("wave", ("wave", "sound", "frequency", "amplitude", "wavelength")),
 ]
 
 
