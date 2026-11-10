@@ -387,7 +387,9 @@ def _stem_ru(word):
         stem = w
         for suf in _RU_SUFFIXES:
             if len(w) > len(suf) + 3 and w.endswith(suf):
-                stem = w[:-len(suf)]
+                cand = w[:-len(suf)]
+                if len(cand) >= 2:
+                    stem = cand
                 break
     return stem
 
