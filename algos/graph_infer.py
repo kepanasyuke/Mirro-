@@ -52,8 +52,11 @@ def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     return results[:8]
 
 
-def _recurse(kg, node, trail, max_depth, results, seen_prefix):
-    """Обход в глубину с фиксацией путей (не ходим в циклы повторно)."""
+def _recurse(kg, node, trail, max_depth, results, seen_prefix, cap=8):
+    """Обход в глубину с фиксацией путей (не ходим в циклы повторно).
+    Емкость results ограничена cap — защита от неограниченного роста."""
+    if len(results) >= cap:
+        return
     if len(trail) >= max_depth:
         trail_with = trail + [node]
         if len(trail_with) >= 2:
