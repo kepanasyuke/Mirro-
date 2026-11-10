@@ -22,14 +22,15 @@ def calculate_complex_phase(alpha, beta):
     Нулевые/нечисловые амплитуды → 0.0. Значения клампятся в ±[0,1].
     Один return: float."""
     try:
-        a = max(-1.0, min(1.0, float(alpha)))
-        b = max(-1.0, min(1.0, float(beta)))
+        a = float(alpha)
+        b = float(beta)
     except Exception:
         return 0.0
+    a = max(-1.0, min(1.0, a)) if a == a else 0.0
+    b = max(-1.0, min(1.0, b)) if b == b else 0.0
     if a == 0.0 and b == 0.0:
         return 0.0
-    result = math.atan2(b, a)
-    return result if result == result else 0.0
+    return math.atan2(b, a)
 
 
 def _routes_of_graph(graph):
