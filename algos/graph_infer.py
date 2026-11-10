@@ -273,11 +273,21 @@ def try_get_memory_experience(graph, active_pattern, experience=None):
     Если опыта нет — возвращает нулевой паттерн той же длины."""
     if experience is None:
         experience = getattr(graph, "experience", [])
+    if not isinstance(experience, (list, tuple)):
+        experience = []
     best_match = [0.0] * len(active_pattern)
     if experience:
-        best_match = experience[0]
+        try:
+            exp0 = list(experience[0])
+        except Exception:
+            exp0 = []
+        best_match = exp0 or best_match
         best_score = -1.0
         for exp in experience:
+            try:
+                exp = list(exp)
+            except Exception:
+                continue
             dot = sum(a * e for a, e in zip(active_pattern, exp))
             norm_a = (sum(a * a for a in active_pattern) ** 0.5) or 1.0
             norm_e = (sum(e * e for e in exp) ** 0.5) or 1.0
