@@ -330,8 +330,8 @@ def _lcm(a, b):
 
 def _isprime(n):
     """Простое ли число (только неотрицательные целые вне bool).
-    Не-целое/отрицательное → False. Один return: bool."""
-    if isinstance(n, bool) or not isinstance(n, int) or n < 0:
+    Не-целое/отрицательное/слишком большое (>2^31) → False. Один return: bool."""
+    if isinstance(n, bool) or not isinstance(n, int) or n < 0 or n > 2 ** 31:
         return False
     prime = True
     if n < 2:
