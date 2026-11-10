@@ -144,8 +144,10 @@ _JUNK_TOPIC_MARKERS = ("можно сказать", "попробовать", "�
 
 def _is_junk_topic(n):
     """Мусорное ли понятие-фраза (личные обращения, «вода» из корпуса).
-    Один return: bool."""
-    nlow = (n or "").lower()
+    Не-строка → True. Один return: bool."""
+    if not isinstance(n, str):
+        return True
+    nlow = n.lower()
     return any(m in nlow for m in _JUNK_TOPIC_MARKERS) or nlow in _TOPIC_STOP
 
 
