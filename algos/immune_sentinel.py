@@ -42,10 +42,12 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     # 1. иммунное подавление аномально разогнанных рёбер
     for key, w in list(graph.edges.items()):
         try:
-            if len(key) < 3:
+            if not isinstance(key, (tuple, list)) or len(key) < 3:
                 continue
             w = float(w)
         except Exception:
+            continue
+        if w != w or w in (float("inf"), float("-inf")):
             continue
         if abs(w) > max_allowed_weight:
             nw = max(-50.0, min(50.0, w * suppression))
@@ -81,6 +83,8 @@ def scan_report(graph):
         try:
             fw = float(w)
         except Exception:
+            continue
+        if fw != fw or fw in (float("inf"), float("-inf")):
             continue
         if abs(fw) > 5.0:
             n_high += 1
