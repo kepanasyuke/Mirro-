@@ -249,8 +249,11 @@ def _c_geometry(q):
     out = None
     if "пифагор" in q and len(_numbers(q)) >= 2:
         a, b = _numbers(q)[:2]
-        out = ("геометрия", "16_university", "right_triangle_sides", (a, b),
-               f"гипотенуза = {math.hypot(a,b):.4g}")
+        if a < 0 or b < 0:
+            out = None
+        else:
+            out = ("геометрия", "16_university", "right_triangle_sides", (a, b),
+                   f"гипотенуза = {math.hypot(a,b):.4g}")
     elif ("герон" in q or "площадь треугольн" in q) and len(_numbers(q)) >= 3:
         a, b, c = _numbers(q)[:3]
         # неравенство треугольника: стороны должны образовывать треугольник
