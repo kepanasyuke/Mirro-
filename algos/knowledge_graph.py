@@ -558,8 +558,10 @@ class KnowledgeGraph:
             return 0.0
         result = 0.0
         if a in self.nodes and b in self.nodes:
-            na = {row[1] for row in self._adj.get(a, [])}
-            nb = {row[1] for row in self._adj.get(b, [])}
+            na = {row[1] for row in self._adj.get(a, [])
+                  if isinstance(row, (tuple, list)) and len(row) >= 2}
+            nb = {row[1] for row in self._adj.get(b, [])
+                  if isinstance(row, (tuple, list)) and len(row) >= 2}
             inter = na & nb
             union = na | nb
             if not union:
