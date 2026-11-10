@@ -99,12 +99,13 @@ class KnowledgeGraph:
                 if other not in targets:
                     targets.append(other)
         for tgt in targets:
-            for (s, p, d), w in list(self.edges.items()):
-                if not isinstance(s, (tuple, list)):
+            for key, w in list(self.edges.items()):
+                if not (isinstance(key, (tuple, list)) and len(key) == 3):
                     continue
+                s, p, d = key
                 if (s == a and d == tgt) or (s == tgt and d == a):
                     nw = min(2.0, w + amount)
-                    self.edges[(s, p, d)] = nw
+                    self.edges[key] = nw
                     self._set_adj_weight(s, p, d, nw)
                     self._set_adj_weight(d, p, s, nw)
                     strengthened += 1
@@ -181,12 +182,19 @@ class KnowledgeGraph:
         и связанные с ними рёбра. Один return: int — число удалённых узлов."""
         removed = 0
         if stopwords:
-            dead = {n for n in self.nodes if n in stopwords or n.strip() in stopwords}
+            dead = {
+                n for n in self.nodes
+                if isinstance(n, str) and (n in stopwords or n.strip() in stopwords)
+            }
             for d in dead:
                 del self.nodes[d]
                 if d in self._adj:
                     del self._adj[d]
-            self.edges = {k: w for k, w in self.edges.items() if k[0] not in dead and k[2] not in dead}
+            self.edges = {
+                k: w for k, w in self.edges.items()
+                if not (isinstance(k, (tuple, list)) and len(k) >= 3
+                        and (k[0] in dead or k[2] in dead))
+            }
             # пересобрать индекс соседей
             self._rebuild_adj()
             removed = len(dead)
