@@ -376,6 +376,8 @@ def _solve_quadratic(a, b, c):
             roots = [_solve_linear_root(b, c)]
     else:
         D = b * b - 4 * a * c
+        if D != D or D in (float("inf"), float("-inf")):
+            return []
         if D < 0:
             roots = []
         elif D == 0:
