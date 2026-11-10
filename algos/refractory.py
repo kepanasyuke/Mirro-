@@ -42,7 +42,7 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
     Ставки клампятся в [0,1]; activated_nodes нормализуется в множество.
     None-граф или граф без edges → пустой стейт. Возвращает новый
     RefractoryState. Один return: RefractoryState."""
-    if graph is None or not hasattr(graph, "edges") or graph.edges is None \
+    if graph is None or not hasattr(graph, "edges") or not isinstance(graph.edges, dict) \
         or not hasattr(graph, "nodes"):
         return RefractoryState()
     try:
