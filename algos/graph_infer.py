@@ -312,6 +312,10 @@ def try_get_memory_experience(graph, active_pattern, experience=None):
 def generate_dynamic_inference(graph, W_decoder, blend=0.25):
     """Смешивает текущий паттерн активных весов с прошлым опытом (памятью)
     и пропускает через перцептрон-декодер. Один return: (signal, integrated)."""
+    try:
+        blend = max(0.0, min(1.0, float(blend)))
+    except Exception:
+        blend = 0.25
     current = _edge_pattern(graph)
     past = try_get_memory_experience(graph, current)
     n = max(len(current), len(past))
