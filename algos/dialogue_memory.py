@@ -88,7 +88,8 @@ class DialogueMemory:
                     self.emotion = max(-1.0, min(1.0, float(data.get("emotion") or 0.0)))
                 except Exception:
                     self.emotion = 0.0
-                self.summary = list(data.get("summary", []))
+                summ = data.get("summary", [])
+                self.summary = [s for s in (summ or []) if isinstance(s, str)][-20:] if isinstance(summ, list) else []
                 ok = True
         except Exception:
             ok = False
@@ -110,7 +111,7 @@ class DialogueMemory:
             data = {"topics": [[str(x) for x in list(t)] for t in (self.topics or [])],
                     "context": [[str(x) for x in list(c)] for c in (self.context or [])],
                     "emotion": float(self.emotion or 0.0),
-                    "summary": list(self.summary or [])}
+                    "summary": [s for s in (self.summary or []) if isinstance(s, str)]}
             tmp = str(path) + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False)
@@ -163,9 +164,10 @@ class DialogueMemory:
     # ----- интерфейс для try_* -----
     def get_summary(self):
         """Резюме-накопление длинного диалога. Один return: str."""
-        if not self.summary:
+        summary = [s for s in (self.summary or []) if isinstance(s, str)]
+        if not summary:
             return ""
-        return " ; ".join(self.summary)
+        return " ; ".join(summary)
 
     def last_topic(self):
         """Свежая тема последней реплики. Пусто → None. Один return: str|None."""
