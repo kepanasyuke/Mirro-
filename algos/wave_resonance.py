@@ -92,7 +92,8 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     except Exception:
         new_states = dict(qst.states) if isinstance(qst.states, dict) else {}
     out = QState()
-    out.states = dict(new_states) if isinstance(new_states, dict) else dict(qst.states)
+    base = qst.states if isinstance(qst.states, dict) else {}
+    out.states = dict(new_states) if isinstance(new_states, dict) else dict(base)
     return out
 
 
