@@ -46,7 +46,7 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
     None-граф или граф без edges → пустой стейт. Возвращает новый
     RefractoryState. Один return: RefractoryState."""
     if graph is None or not hasattr(graph, "edges") or not isinstance(graph.edges, dict) \
-        or not hasattr(graph, "nodes") or graph.nodes is None:
+        or not hasattr(graph, "nodes") or not isinstance(graph.nodes, (list, tuple, set, dict, frozenset)):
         return RefractoryState()
     try:
         recovery_rate = float(recovery_rate or 0.0)
