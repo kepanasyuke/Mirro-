@@ -99,6 +99,9 @@ _EN_KB = {
     "math": ("Math is the study of numbers, shapes and patterns. Arithmetic, "
              "algebra and geometry are its branches. It solves problems with "
              "logical steps and exact rules."),
+    "chess": ("Chess is a board game for two players. Each controls sixteen "
+              "pieces with different moves; the goal is to checkmate the "
+              "opponent's king through strategy and tactics."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -147,6 +150,7 @@ _TOPIC_TEST = [
     ("art", ("art", "painting", "sculpture", "music", "artist", "canvas", "color")),
     ("music", ("music", "melody", "harmony", "rhythm", "song", "instrument", "guitar")),
     ("math", ("math", "algebra", "arithmetic", "geometry", "fraction", "equation")),
+    ("chess", ("chess", "checkmate", "rook", "queen", "knight", "pawn", "board")),
 ]
 
 
