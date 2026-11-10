@@ -469,9 +469,10 @@ class KnowledgeGraph:
         сеть. Один return: int — число добавленных рёбер."""
         import re as _re_b
         connected = set()
-        for (s, p, d) in self.edges:
-            connected.add(s)
-            connected.add(d)
+        for key in self.edges:
+            if isinstance(key, (tuple, list)) and len(key) >= 3:
+                connected.add(key[0])
+                connected.add(key[2])
         isolated = [n for n in self.nodes if n not in connected]
         if sample_conn and len(connected) > sample_conn:
             import random as _rnd
