@@ -57,9 +57,12 @@ def reduced_compton_wavelength(m):
 
 def quantum_uncertainty(dx, dp):
     """Проверка соотношения неопределённостей: Δx·Δp ≥ ħ/2.
-    Отрицательные/мусорные входы → False. Один return: bool."""
+    Отрицательные/нулевые/мусорные входы → False. Один return: bool."""
     try:
-        return (float(dx) * float(dp)) >= H_BAR / 2
+        dx, dp = float(dx), float(dp)
+        if dx <= 0 or dp <= 0:
+            return False
+        return (dx * dp) >= H_BAR / 2
     except Exception:
         return False
 
