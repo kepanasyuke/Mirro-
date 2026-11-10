@@ -399,7 +399,8 @@ def _solve_quadratic(a, b, c):
     roots = []
     if a == 0:
         if b != 0:
-            roots = [_solve_linear_root(b, c)]
+            r = _solve_linear_root(b, c)
+            roots = [r] if r is not None else []
     else:
         D = b * b - 4 * a * c
         if D != D or D in (float("inf"), float("-inf")):
