@@ -324,8 +324,11 @@ class FunctionKnowledge:
         if info:
             mod = info.get("module", "")
             label = f" ({mod})" if mod else ""
-            text = (f"{name}{label} — {info['topic']}.\n"
-                    f"Что делает: {info['what']}.\nПример: {info['ex']}.")
+            topic = str(info.get("topic", "") or "")
+            what = str(info.get("what", "") or "")
+            ex = str(info.get("ex", "") or "")
+            text = (f"{name}{label} — {topic}.\n"
+                    f"Что делает: {what}.\nПример: {ex}.")
         return text
 
     def module_names(self, module):
@@ -546,7 +549,10 @@ def try_definition(query):
                     if t and _stem_ru(t) in q_stems:
                         hit = max(hit or 0, len(t))
             if hit:
-                best.append((hit, info["topic"], info["what"], info["ex"]))
+                best.append((hit,
+                             str(info.get("topic", "") or ""),
+                             str(info.get("what", "") or ""),
+                             str(info.get("ex", "") or "")))
     if best:
         best.sort(key=lambda x: -x[0])
         _, topic, what, ex = best[0]
