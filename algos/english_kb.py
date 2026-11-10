@@ -102,6 +102,9 @@ _EN_KB = {
     "chess": ("Chess is a board game for two players. Each controls sixteen "
               "pieces with different moves; the goal is to checkmate the "
               "opponent's king through strategy and tactics."),
+    "geology": ("Geology is the science of the Earth: its rocks, minerals and "
+                "layers, and the forces like volcanoes and erosion that shape "
+                "its surface over long periods of time."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -151,6 +154,7 @@ _TOPIC_TEST = [
     ("music", ("music", "melody", "harmony", "rhythm", "song", "instrument", "guitar")),
     ("math", ("math", "algebra", "arithmetic", "geometry", "fraction", "equation")),
     ("chess", ("chess", "checkmate", "rook", "queen", "knight", "pawn", "board")),
+    ("geology", ("geology", "rock", "mineral", "mantle", "crust", "volcano", "erosion")),
 ]
 
 
