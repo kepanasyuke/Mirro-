@@ -81,7 +81,8 @@ def shutka(tema=None):
         for q, a in SHUTKI:
             if not q:
                 continue
-            score = len(tema_words & set(q.split(" ")))
+            q_words = set(q.split())
+            score = len(tema_words & q_words)
             if score > best_score:
                 best_score = score
                 answer = f"— {q.capitalize()}?\n— {a}"
@@ -129,8 +130,6 @@ def ya_ne_znau_chto_khotet():
         "Босова учит: ЕСЛИ <условие> ТО <действие> ИНАЧЕ <действие>. Твоё условие: 'хочу/не хочу'. Твоё действие: 'реши сам(а)'.",
         "Иногда ответ 'не знаю, чего хочу' — это тоже ветвление: ЕСЛИ не знаешь ТО попробуй. ИНАЧЕ продолжай пробовать.",
     ]
-    if not variants:
-        return ""
     return random.choice(variants)
 
 
