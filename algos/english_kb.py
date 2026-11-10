@@ -87,6 +87,9 @@ _EN_KB = {
     "history": ("History is the study of the human past through records and "
                 "artifacts. It examines events, civilizations and change over "
                 "time to understand how societies developed."),
+    "literature": ("Literature is written artistic work such as novels, poetry "
+                   "and plays. It uses language to express ideas, emotions and "
+                   "stories, reflecting culture and imagination."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -130,7 +133,8 @@ _TOPIC_TEST = [
     ("biology", ("biology", "organism", "species", "ecosystem", "living")),
     ("weather", ("weather", "rain", "wind", "temperature", "forecast", "climate")),
     ("space", ("space", "star", "galaxy", "planet", "universe", "orbit")),
-    ("history", ("history", "ancient", "civilization", "empire", "medieval", "era"))
+    ("history", ("history", "ancient", "civilization", "empire", "medieval", "era")),
+    ("literature", ("literature", "novel", "poem", "poetry", "author", "genre")),
 ]
 
 
