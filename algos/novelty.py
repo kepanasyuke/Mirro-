@@ -43,6 +43,9 @@ class Novelty:
         kw = self._kw(user_text)
         if known:
             self.seen.update(kw)
+            if len(self.seen) > 5000:
+                # не даём памяти процесса разрастись неограниченно в долгой сессии
+                self.seen = set(list(self.seen)[-5000:])
         self.recent.append((frozenset(kw), bool(known)))
         return kw
 
