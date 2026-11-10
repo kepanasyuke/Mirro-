@@ -143,7 +143,9 @@ def apply_empathy(message, answer):
     if lead and answer:
         ans = answer
         # уже начали схожей заставкой — пропускаем (анти-дубль)
-        if ans[:24].lower().startswith(lead[:12].lower()):
+        lead_key = lead[:12].lower()
+        if ans[:24].lower().startswith(lead_key) or \
+                any(seg.strip().lower().startswith(lead_key) for seg in ans.split("\n\n")[:3]):
             return ans
         # не дублируем, если пользователь просто спросил настроение/самочувствие
         low = (message or "").lower() if isinstance(message, str) else ""
