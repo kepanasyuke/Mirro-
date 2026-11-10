@@ -55,8 +55,8 @@ class KnowledgeGraph:
         key = (s, p, d)
         self.edges[key] = max(self.edges.get(key, 0.0), weight)
         # синхронизируем вес в индексе соседей (двусторонне)
-        self._set_adj_weight(s, pred, d, self.edges[key])
-        self._set_adj_weight(d, pred, s, self.edges[key])
+        self._set_adj_weight(s, p, d, self.edges[key])
+        self._set_adj_weight(d, p, s, self.edges[key])
 
     def _set_adj_weight(self, from_node, pred, to_node, weight):
         """Обновляет вес связи в _adj для направления from_node->to_node.
