@@ -88,8 +88,10 @@ class Novelty:
         topic = None
         if kw:
             # предпочитаем более длинные/содержательные слова (не за 40 симв.)
-            cands = [w for w in kw if len(w) <= 40]
-            topic = sorted(cands or kw, key=lambda w: (-len(w), w))[0]
+            cands = [w for w in kw if isinstance(w, str) and len(w) <= 40]
+            topic = sorted(cands or [w for w in kw if isinstance(w, str)],
+                           key=lambda w: (-len(w), w))[0] if cands or any(
+                isinstance(w, str) for w in kw) else None
         return topic
 
 
@@ -100,7 +102,7 @@ novelty = Novelty()
 def _novelty_msg(topic):
     """Строка ответа про новизну. Пустой topic → «этой темы», тема обрезается
     до 60 символов. Один return: str."""
-    label = (topic or "этой темы")[:60]
+    label = (topic if isinstance(topic, str) else (str(topic) if topic else "этой темы"))[:60]
     return (f"Это новое для меня — «{label}» я ещё не изучала."
             f" Я запомню и постараюсь освоить. Сейчас могу ответить на то, что уже в моих знаниях.")
 
