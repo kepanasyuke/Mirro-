@@ -626,7 +626,10 @@ def prune_stopwords(self, stopwords):
             out["top_degree"] = list(hit["top_degree"])
             return out
         neigh = {}
-        for (s, p, d) in self.edges:
+        for key in self.edges:
+            if not isinstance(key, (tuple, list)) or len(key) < 3:
+                continue
+            s, p, d = key[0], key[1], key[2]
             neigh.setdefault(s, set()).add(d)
             neigh.setdefault(d, set()).add(s)
         visited = set()
