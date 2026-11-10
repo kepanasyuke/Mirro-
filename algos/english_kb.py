@@ -69,6 +69,9 @@ _EN_KB = {
     "photosynthesis": ("Photosynthesis is how green plants make food from sunlight. "
                        "They take in water and carbon dioxide and, using light energy, "
                        "produce glucose and oxygen."),
+    "climate change": ("Climate change is the long-term shift in global temperatures "
+                       "and weather patterns. Human activity, mainly burning fossil "
+                       "fuels, adds greenhouse gases that warm the planet."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -105,7 +108,8 @@ _TOPIC_TEST = [
     ("operating system", ("operating system", "os", "kernel", "linux", "windows", "files")),
     ("neural", ("neural", "network", "neuron", "perceptron", "gradient", "backprop")),
     ("algorithm", ("algorithm", "complexity", "sorting", "search", "data structure")),
-    ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants"))
+    ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants")),
+    ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions"))
 ]
 
 
