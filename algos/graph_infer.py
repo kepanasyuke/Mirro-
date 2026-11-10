@@ -185,10 +185,10 @@ def _infer_paragraph(kg_obj, start, max_depth=2):
     """Строит связное рассуждение от start по самым сильным рёбрам графа:
     собрать 2-шаговые цепочки и склеить в один абзац «вывода».
     Один return: str или None."""
-    if start not in kg_obj.nodes:
+    if start not in (kg_obj.nodes or {}):
         return None
     text = None
-    ranked = sorted(kg_obj.neighbors(start), key=lambda r: -r[2])
+    ranked = sorted(kg_obj.neighbors(start) or [], key=lambda r: -r[2])
     parts = []
     for p, other, w in ranked[:3]:
         nxt = sorted(kg_obj.neighbors(other), key=lambda r: -r[2])
