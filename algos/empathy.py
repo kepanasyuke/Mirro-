@@ -122,7 +122,7 @@ def empathy_lead(message):
         lead = _pick(_LEAD_RAD["negative_full"] if d["neg"] > 1 else _LEAD_RAD["negative_mild"])
     elif d["pos"] > 0 and d["pos"] > d["neg"]:
         lead = _pick(_LEAD_RAD["positive"])
-    return lead
+    return lead or None
 
 
 def _pick(options):
