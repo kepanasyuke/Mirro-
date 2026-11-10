@@ -41,7 +41,7 @@ class Novelty:
         kw = self._kw(user_text)
         if known:
             self.seen.update(kw)
-        self.recent.append((kw, bool(known)))
+        self.recent.append((frozenset(kw), bool(known)))
         return kw
 
     def _known_via(self, kw, known_kw):
