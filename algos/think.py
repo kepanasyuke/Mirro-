@@ -155,8 +155,11 @@ def _c_percent(q):
         r"(\d+[.,]?\d*)\s*(?:%|процент(?:ов|а|у|ом)?)\s*(от|из|от числа|числа)?\s*(\d+[.,]?\d*)?",
         q)
     if m and m.group(3):
-        pct = float(m.group(1).replace(",", "."))
-        base = float(m.group(3).replace(",", "."))
+        try:
+            pct = float(m.group(1).replace(",", "."))
+            base = float(m.group(3).replace(",", "."))
+        except Exception:
+            return None
         result = pct / 100 * base
         out = ("математика", "16_university", "percent_of", (pct, base),
                f"{pct:g}% от {base:g} = {result:.6g}")
