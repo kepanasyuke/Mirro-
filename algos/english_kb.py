@@ -90,6 +90,9 @@ _EN_KB = {
     "literature": ("Literature is written artistic work such as novels, poetry "
                    "and plays. It uses language to express ideas, emotions and "
                    "stories, reflecting culture and imagination."),
+    "art": ("Art is the expression of ideas and emotions through visual or "
+            "performing forms like painting, sculpture and music. It reflects "
+            "culture, creativity and the human experience."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -135,6 +138,7 @@ _TOPIC_TEST = [
     ("space", ("space", "star", "galaxy", "planet", "universe", "orbit")),
     ("history", ("history", "ancient", "civilization", "empire", "medieval", "era")),
     ("literature", ("literature", "novel", "poem", "poetry", "author", "genre")),
+    ("art", ("art", "painting", "sculpture", "music", "artist", "canvas", "color")),
 ]
 
 
