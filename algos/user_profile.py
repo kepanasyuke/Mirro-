@@ -115,11 +115,19 @@ def save_profile(prof, user_id="default"):
             verbosity = max(-1.0, min(1.0, float(prof.get("verbosity") or 0.0)))
         except Exception:
             verbosity = 0.0
+        topics = []
+        for t in (prof.get("topics") or []):
+            if isinstance(t, str) and t and t not in topics:
+                topics.append(t)
+        remarks = []
+        for r in (prof.get("remarks") or []):
+            if isinstance(r, str) and r not in remarks:
+                remarks.append(r)
         all_p[str(user_id)] = {
             "name": str(name) if name else None,
-            "topics": [str(t) for t in (prof.get("topics") or []) if t][:20],
+            "topics": topics[:20],
             "verbosity": verbosity,
-            "remarks": [str(r) for r in (prof.get("remarks") or []) if r][:30],
+            "remarks": remarks[:30],
         }
         tmp = str(_path()) + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
@@ -199,7 +207,7 @@ def learn_from_message(prof, message):
     name = _extract_name(msg)
     if name and prof.get("name") != name:
         prof["name"] = name
-        note = f"познакомились: {name}"
+        note = f"познакомились: {name}"[:120]
         if note not in prof.get("remarks", []):
             prof["remarks"].append(note)
             prof["remarks"] = prof["remarks"][-30:]
