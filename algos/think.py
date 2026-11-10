@@ -425,7 +425,7 @@ def think(query):
     explanation = None
     answer = None
     confidence = 0.0
-    if result:
+    if result and isinstance(result, (tuple, list)) and len(result) == 5:
         category, module, func_name, args, explanation = result
         # загружаем модуль и вызываем функцию
         mod = load_module(module)
