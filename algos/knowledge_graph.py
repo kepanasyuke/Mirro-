@@ -578,9 +578,11 @@ class KnowledgeGraph:
         Возвращает топ-список (понятие, степень) и среднюю степень.
         Один return: dict."""
         degree = {}
-        for (s, p, d) in self.edges:
-            degree[s] = degree.get(s, 0) + 1
-            degree[d] = degree.get(d, 0) + 1
+        for key in self.edges:
+            if isinstance(key, (tuple, list)) and len(key) >= 3:
+                s, d = key[0], key[2]
+                degree[s] = degree.get(s, 0) + 1
+                degree[d] = degree.get(d, 0) + 1
         junk = {"-", "понятно", "означает", "можно", "это", "что", "как", "там",
                 "надеюсь", "давай", "скажи", "слов", "простым", "о", "если",
                 "такой", "такие", "однако", "поэтому", "вот", "тут", "здесь",
