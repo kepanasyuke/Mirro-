@@ -78,11 +78,11 @@ def _match_category(text):
         for m in markers:
             if not isinstance(m, str) or not m:
                 continue
-            if len(m) <= 4:
-                if _re.search(r"(^|\W)" + _re.escape(m) + r"(\W|$)", t):
+            if " " in m or "  " in m:
+                if m in t:
                     hit = cat
                     break
-            elif m in t:
+            elif _re.search(r"(^|\W)" + _re.escape(m) + r"(\W|$)", t):
                 hit = cat
                 break
         if hit:
