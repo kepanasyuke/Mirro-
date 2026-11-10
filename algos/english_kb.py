@@ -96,6 +96,9 @@ _EN_KB = {
     "music": ("Music is organized sound made with voice or instruments. Melody, "
               "harmony and rhythm come together in songs and pieces that express "
               "emotion across cultures."),
+    "math": ("Math is the study of numbers, shapes and patterns. Arithmetic, "
+             "algebra and geometry are its branches. It solves problems with "
+             "logical steps and exact rules."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -143,6 +146,7 @@ _TOPIC_TEST = [
     ("literature", ("literature", "novel", "poem", "poetry", "author", "genre")),
     ("art", ("art", "painting", "sculpture", "music", "artist", "canvas", "color")),
     ("music", ("music", "melody", "harmony", "rhythm", "song", "instrument", "guitar")),
+    ("math", ("math", "algebra", "arithmetic", "geometry", "fraction", "equation")),
 ]
 
 
