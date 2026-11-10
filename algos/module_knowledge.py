@@ -322,12 +322,13 @@ class FunctionKnowledge:
         info = self.topic_of(name)
         text = None
         if info:
-            mod = info.get("module", "")
+            mod = str(info.get("module", "") or "")
             label = f" ({mod})" if mod else ""
+            name_s = str(name or "")
             topic = str(info.get("topic", "") or "")
             what = str(info.get("what", "") or "")
             ex = str(info.get("ex", "") or "")
-            text = (f"{name}{label} — {topic}.\n"
+            text = (f"{name_s}{label} — {topic}.\n"
                     f"Что делает: {what}.\nПример: {ex}.")
         return text
 
