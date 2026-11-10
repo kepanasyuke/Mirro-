@@ -133,7 +133,8 @@ def _c_simple_math(q):
         return out
     if "x" not in q and ("сколько будет" in q or re.search(r"\d+\s*[+\-*/×]\s*\d+", q) or has_math_words):
         nums = _numbers(q)
-        if ("*" in q.replace("×", "*") or "умнож" in q or "умножить" in q) and len(nums) >= 2:
+        is_mult = ("*" in q.replace("×", "*") or "умнож" in q or "умножить" in q)
+        if is_mult and len(nums) >= 2:
             if "×" in q or "*" in q or "умнож" in q or "умножить" in q:
                 out = ("математика", "01_stats", "product_of", None,
                        f"{nums[0]:g} × {nums[1]:g} = {nums[0]*nums[1]:.6g}")
