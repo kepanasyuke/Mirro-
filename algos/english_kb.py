@@ -120,6 +120,9 @@ _EN_KB = {
     "botany": ("Botany is the science of plants. It studies leaves, roots and "
                "flowers, how plants grow and make food through photosynthesis, "
                "and their role in ecosystems and food chains."),
+    "zoology": ("Zoology is the science of animals. It studies their bodies, "
+                "behavior and habitats, how they adapt and live in groups, "
+                "from tiny insects to large mammals."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -176,6 +179,7 @@ _TOPIC_TEST = [
     ("economy", ("economy", "market", "money", "inflation", "trade", "budget", "price")),
     ("astronomy", ("astronomy", "planet", "star", "galaxy", "nebula", "telescope", "comet")),
     ("botany", ("botany", "plant", "leaf", "root", "flower", "photosynthesis", "tree")),
+    ("zoology", ("zoology", "animal", "mammal", "insect", "bird", "habitat", "reptile")),
 ]
 
 
