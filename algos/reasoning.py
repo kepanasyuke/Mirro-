@@ -109,10 +109,10 @@ def get_scheme(name):
 
 def list_schemes():
     """Список всех схем мышления. Один return: dict."""
-    if not BLOCK_SCHEMES:
+    if not isinstance(BLOCK_SCHEMES, dict) or not BLOCK_SCHEMES:
         return {}
     out = {}
-    for k, v in (BLOCK_SCHEMES or {}).items():
+    for k, v in BLOCK_SCHEMES.items():
         if isinstance(v, dict) and v.get("name"):
             out[k] = v["name"]
     return out
