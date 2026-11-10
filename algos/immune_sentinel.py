@@ -64,7 +64,7 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
     if meta:
         for key in list(meta.keys()):
             try:
-                if len(key) >= 2 and key[0] == key[1]:
+                if isinstance(key, (tuple, list)) and len(key) >= 2 and key[0] == key[1]:
                     del meta[key]
             except Exception:
                 continue
@@ -77,6 +77,8 @@ def scan_report(graph):
     if graph is None or not hasattr(graph, "edges"):
         return "нет графа"
     edges = getattr(graph, "edges", {})
+    if not isinstance(edges, dict):
+        edges = {}
     n_high = 0
     n_neg = 0
     for w in edges.values():
