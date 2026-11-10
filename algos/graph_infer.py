@@ -188,14 +188,21 @@ def _infer_paragraph(kg_obj, start, max_depth=2):
     """Строит связное рассуждение от start по самым сильным рёбрам графа:
     собрать 2-шаговые цепочки и склеить в один абзац «вывода».
     Один return: str или None."""
-    if start not in (kg_obj.nodes or {}):
+    if not isinstance(kg_obj, object) or kg_obj is None or start not in (kg_obj.nodes or {}):
         return None
     text = None
-    ranked = sorted(kg_obj.neighbors(start) or [], key=lambda r: -r[2])
+    try:
+        nbrs = [n for n in (kg_obj.neighbors(start) or []) if isinstance(n, (tuple, list)) and len(n) >= 3]
+    except Exception:
+        return None
+    ranked = sorted(nbrs, key=lambda r: -r[2])
     parts = []
     for p, other, w in ranked[:3]:
-        nxt = sorted(kg_obj.neighbors(other), key=lambda r: -r[2])
-        for p2, other2, w2 in nxt[:2]:
+        try:
+            nxt = [n for n in (kg_obj.neighbors(other) or []) if isinstance(n, (tuple, list)) and len(n) >= 3]
+        except Exception:
+            continue
+        for p2, other2, w2 in sorted(nxt, key=lambda r: -r[2])[:2]:
             if other2 == start or other2 == other:
                 continue
             parts.append(f"{start} {p} {other}, а это {p2} {other2}")
