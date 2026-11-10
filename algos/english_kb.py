@@ -75,6 +75,9 @@ _EN_KB = {
     "wave": ("A wave is a disturbance that carries energy through a medium or space. "
              "Sound and light travel as waves; their frequency and wavelength "
              "determine pitch and color."),
+    "biology": ("Biology is the science of living things. It studies cells, "
+                "organisms, genetics and ecosystems, from tiny bacteria to "
+                "whole environments and how life changes over time."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -117,6 +120,7 @@ _TOPIC_TEST = [
     ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants")),
     ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions")),
     ("wave", ("wave", "sound", "frequency", "amplitude", "wavelength")),
+    ("biology", ("biology", "organism", "species", "ecosystem", "living"))
 ]
 
 
