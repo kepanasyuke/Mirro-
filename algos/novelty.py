@@ -30,6 +30,12 @@ _STOP = set(("и","или","что","как","это","то","для","про","
 class Novelty:
     def __init__(self, window=200):
         # коллектор известных тем/ключевых групп из прошедших вопросов
+        try:
+            window = int(window)
+        except Exception:
+            window = 200
+        if window < 1:
+            window = 200
         self.seen = set()
         self.recent = deque(maxlen=window)
 
