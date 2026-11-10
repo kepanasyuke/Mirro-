@@ -114,6 +114,9 @@ _EN_KB = {
     "economy": ("Economy is how people produce, trade and use goods and money. "
                 "Markets, prices, supply and demand, and national budgets shape "
                 "wealth and choices in society."),
+    "astronomy": ("Astronomy is the study of everything beyond Earth: stars, "
+                  "planets, galaxies and the universe. It uses telescopes and "
+                  "physics to understand how celestial objects move and evolve."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -168,6 +171,7 @@ _TOPIC_TEST = [
     ("philosophy", ("philosophy", "ethics", "logic", "existence", "knowledge", "reason")),
     ("health", ("health", "nutrition", "exercise", "sleep", "wellness", "immune")),
     ("economy", ("economy", "market", "money", "inflation", "trade", "budget", "price")),
+    ("astronomy", ("astronomy", "planet", "star", "galaxy", "nebula", "telescope", "comet")),
 ]
 
 
