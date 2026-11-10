@@ -55,10 +55,15 @@ def range_stat(xs):
 
 
 def midrange(xs):
-    """Середина размаха ((min + max)/2). 0 на пустом. Один return: float."""
+    """Середина размаха ((min + max)/2). 0 на пустом/нечисловом.
+    Один return: float."""
     result = 0.0
     if xs:
-        result = (min(xs) + max(xs)) / 2
+        try:
+            nums = [float(x) for x in xs]
+            result = (min(nums) + max(nums)) / 2
+        except Exception:
+            result = 0.0
     return result
 
 
