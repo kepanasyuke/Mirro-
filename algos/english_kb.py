@@ -83,6 +83,9 @@ _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are"
               "actually", "basically", "rather", "however", "maybe", "perhaps",
               "still", "though", "well")
 
+
+_EN_MARKER_SET = frozenset(_EN_COMMON)
+
 # тема -> ключевые англ. слова (основа)
 _TOPIC_TEST = [
     ("neural", ("neural", "network", "perceptron", "machine learn", "deep learn")),
@@ -132,7 +135,7 @@ def _is_english_query(q):
     # англ. маркер должен быть отдельным словом, а не частью большего
     # (снимаем хвостовую пунктуацию, чтобы «why?» матчилось как «why»)
     toks = {w.strip(".,!?;:'\"()") for w in q.lower().split()}
-    has_marker = bool(toks & set(_EN_COMMON))
+    has_marker = bool(toks & _EN_MARKER_SET)
     return (enough_latin and cyr == 0 and has_marker)
 
 
