@@ -108,7 +108,9 @@ _INFER_WORDS = ("как", "почему", "объясни", "что такое",
 
 
 def _looks_like_reasoning(q):
-    """Похож ли запрос на вопрос-вывод. Один return: bool."""
+    """Похож ли запрос на вопрос-вывод. Не-строка → False. Один return: bool."""
+    if not isinstance(q, str):
+        return False
     return any(w in q for w in _INFER_WORDS)
 
 
