@@ -60,6 +60,12 @@ _EN_KB = {
     "illness": ("Illnesses are conditions that disrupt normal body function. They can "
                 "be infectious (caused by pathogens) or non-infectious (like allergies). "
                 "Prevention, hygiene and medicine help manage them."),
+    "programming": ("Programming means writing instructions that a computer runs. "
+                    "Code in languages like Python is translated so the machine can "
+                    "execute it step by step to solve tasks."),
+    "operating system": ("An operating system (OS) manages hardware and programs. "
+                         "It handles files, memory and processes. Examples are Linux "
+                         "and Windows."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -90,6 +96,8 @@ _TOPIC_TEST = [
     ("genetics", ("genetics", "gene", "heredity", "dna", "inheritance", "chromosome")),
     ("stem cell", ("stem cell", "stem cells", "regenerative", "unspecialized")),
     ("illness", ("illness", "disease", "infection", "disorder", "allergy")),
+    ("programming", ("programming", "code", "program", "python", "compiler", "source")),
+    ("operating system", ("operating system", "os", "kernel", "linux", "windows", "files"))
 ]
 
 
