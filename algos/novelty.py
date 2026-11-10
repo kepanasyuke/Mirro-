@@ -88,11 +88,10 @@ class Novelty:
         kw = self._kw(user_text)
         topic = None
         if kw:
-            # предпочитаем более длинные/содержательные слова (не за 40 симв.)
-            cands = [w for w in kw if isinstance(w, str) and len(w) <= 40]
-            topic = sorted(cands or [w for w in kw if isinstance(w, str)],
-                           key=lambda w: (-len(w), w))[0] if cands or any(
-                isinstance(w, str) for w in kw) else None
+            strs = [w for w in kw if isinstance(w, str)]
+            if strs:
+                cands = [w for w in strs if len(w) <= 40] or strs
+                topic = sorted(cands, key=lambda w: (-len(w), w))[0]
         return topic
 
 
