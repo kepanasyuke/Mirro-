@@ -311,13 +311,20 @@ def _fact(n):
 
 
 def _gcd(a, b):
-    a, b = abs(a), abs(b)
+    try:
+        a, b = abs(int(a)), abs(int(b))
+    except Exception:
+        return 0
     while b:
         a, b = b, a % b
     return a
 
 
 def _lcm(a, b):
+    try:
+        a, b = int(a), int(b)
+    except Exception:
+        return 0
     return abs(a * b) // _gcd(a, b) if a and b else 0
 
 
