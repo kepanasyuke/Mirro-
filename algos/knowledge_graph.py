@@ -216,11 +216,17 @@ class KnowledgeGraph:
         a, b = self._norm(a), self._norm(b)
         seen = set()
         rels = []
-        for p, other, w in self._adj.get(a, []):
+        for row in self._adj.get(a, []):
+            if not (isinstance(row, (tuple, list)) and len(row) >= 3):
+                continue
+            p, other, w = row
             if other == b and (p, w) not in seen:
                 seen.add((p, w))
                 rels.append((p, w))
-        for p, other, w in self._adj.get(b, []):
+        for row in self._adj.get(b, []):
+            if not (isinstance(row, (tuple, list)) and len(row) >= 3):
+                continue
+            p, other, w = row
             if other == a and (p, w) not in seen:
                 seen.add((p, w))
                 rels.append((p, w))
