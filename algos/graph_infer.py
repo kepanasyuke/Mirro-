@@ -291,7 +291,8 @@ def try_get_memory_experience(graph, active_pattern, experience=None):
             dot = sum(a * e for a, e in zip(active_pattern, exp))
             norm_a = (sum(a * a for a in active_pattern) ** 0.5) or 1.0
             norm_e = (sum(e * e for e in exp) ** 0.5) or 1.0
-            score = dot / (norm_a * norm_e)
+            denom = norm_a * norm_e
+            score = dot / denom if denom else 0.0
             if score > best_score:
                 best_score = score
                 best_match = exp
