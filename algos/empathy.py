@@ -142,6 +142,8 @@ def apply_empathy(message, answer):
     lead = empathy_lead(message)
     if lead and answer:
         ans = answer
+        if not isinstance(lead, str):
+            lead = str(lead)
         # уже начали схожей заставкой — пропускаем (анти-дубль)
         lead_key = lead[:12].lower()
         if ans[:24].lower().startswith(lead_key) or \
