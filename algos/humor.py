@@ -86,6 +86,8 @@ def shutka(tema=None):
             if score > best_score:
                 best_score = score
                 answer = f"— {q.capitalize()}?\n— {a}"
+    if best_score == 0:
+        answer = None
     if answer is None:
         cands = [a for q, a in SHUTKI if isinstance(a, str) and a and a != _last_shutka] \
             or [a for q, a in SHUTKI if isinstance(a, str) and a]
