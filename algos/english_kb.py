@@ -163,7 +163,7 @@ def try_english(query):
     if not answer:
         q_toks = {t.strip(".,!?;:'\"()") for t in q_low.split()}
         for topic in _EN_KB:
-            if topic and topic in q_toks:
+            if isinstance(topic, str) and topic and topic in q_toks:
                 answer = _EN_KB.get(topic)
                 break
     if not answer and _EN_KB:
