@@ -111,6 +111,9 @@ _EN_KB = {
     "health": ("Health is the state of being physically and mentally well. "
                "Good sleep, nutrition and exercise support it, while illness "
                "and stress can weaken it."),
+    "economy": ("Economy is how people produce, trade and use goods and money. "
+                "Markets, prices, supply and demand, and national budgets shape "
+                "wealth and choices in society."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -164,6 +167,7 @@ _TOPIC_TEST = [
     ("geology", ("geology", "rock", "mineral", "mantle", "crust", "volcano", "erosion")),
     ("philosophy", ("philosophy", "ethics", "logic", "existence", "knowledge", "reason")),
     ("health", ("health", "nutrition", "exercise", "sleep", "wellness", "immune")),
+    ("economy", ("economy", "market", "money", "inflation", "trade", "budget", "price")),
 ]
 
 
