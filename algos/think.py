@@ -387,7 +387,10 @@ def _solve_quadratic(a, b, c):
 
 
 def _percent_of(pct, base):
-    return pct / 100 * base
+    try:
+        return float(pct) / 100.0 * float(base)
+    except Exception:
+        return 0.0
 
 
 def _solve_linear(a, b):
