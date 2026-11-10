@@ -45,7 +45,8 @@ def update_mirror_profile(current_profile, user_query_tokens, session_pulse=0.7)
         prof["user_fatigue"] = max(0.0, base_fatigue - 0.1)
     art_keywords = {"искусство", "театр", "дизайн", "арт", "образ", "стиль", "творческ",
                 "музыка", "кино", "живопись", "литература", "поэзия", "сценар",
-                "фото", "архитектур", "балет", "опера", "скульптур", "графика"}
+                "фото", "архитектур", "балет", "опера", "скульптур", "графика",
+                "рассказ", "стих", "роман", "песн", "мод", "эстетик", "интерьер"}
     query_set = {str(t).lower() for t in tokens}
     try:
         base_focus = max(0.0, min(1.0, float(prof.get("user_intent_focus", 1.0) or 1.0)))
@@ -75,7 +76,7 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
     out = {}
     for key, w in graph.edges.items():
         try:
-            if len(key) < 3:
+            if not isinstance(key, (tuple, list)) or len(key) < 3:
                 continue
             nw = float(w)
         except Exception:
