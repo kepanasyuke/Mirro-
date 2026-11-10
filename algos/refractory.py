@@ -100,13 +100,16 @@ def apply_fatigue_to_weights(graph, st, floor=0.2):
     if graph is None or not hasattr(graph, "edges") or not isinstance(graph.edges, dict) \
         or st is None or floor < 0:
         return out
+    exhaust = getattr(st, "edge_exhaustion", None)
+    if not isinstance(exhaust, dict):
+        exhaust = {}
     for key, w in graph.edges.items():
         try:
             w = float(w)
         except Exception:
             continue
         try:
-            exhaustion = float(st.edge_exhaustion.get(key, 0.0) or 0.0)
+            exhaustion = float(exhaust.get(key, 0.0) or 0.0)
         except Exception:
             exhaustion = 0.0
         retention = max(0.0, 1.0 - 0.8 * exhaustion)
