@@ -54,7 +54,8 @@ def bm25(query, docs, k1=1.5, b=0.75):
         tf = Counter(t)
         for w in q:
             if w in tf:
-                idf = math.log((N - df.get(w, 0) + 0.5) / (df.get(w, 0) + 0.5) + 1)
+                dw = df.get(w, 0)
+                idf = math.log((N - dw + 0.5) / (dw + 0.5) + 1)
                 f = tf[w]
                 score += idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * len(t) / avgdl))
         scores.append((i, score))
