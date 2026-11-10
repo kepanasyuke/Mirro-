@@ -31,7 +31,8 @@ def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     starts = []
     if isinstance(topic, str) and topic:
         starts.append(topic)
-    for name in (kg.nodes or []):
+    kg_nodes = kg.nodes if isinstance(kg.nodes, dict) else {}
+    for name in kg_nodes:
         if isinstance(name, str) and name and len(name) > 3 and name in q:
             starts.append(name)
     # дедуп
