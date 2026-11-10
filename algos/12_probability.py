@@ -36,8 +36,11 @@ def prob_union(p_a, p_b, p_intersect=0.0):
 
 
 def prob_intersect_independent(p_a, p_b):
-    """Пересечение независимых событий."""
-    return p_a * p_b
+    """Пересечение независимых событий. Некорректные входы → 0. Один return: float."""
+    try:
+        return float(p_a) * float(p_b)
+    except Exception:
+        return 0.0
 
 
 def prob_conditional(p_a_and_b, p_b):
