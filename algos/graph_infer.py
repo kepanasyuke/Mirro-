@@ -121,7 +121,7 @@ def try_graph_infer(query):
     Один return: str или None."""
     from knowledge_graph import kg
     answer = None
-    q = (query or "").lower()
+    q = (query if isinstance(query, str) else "").lower()
     if kg.edges and len(kg.nodes) >= 3 and _looks_like_reasoning(q):
         chains = infer_from_graph(kg, q, max_depth=2)
         if chains:
