@@ -240,7 +240,10 @@ class KnowledgeGraph:
         found = None
         if frontier:
             frontier = frontier[:max_fanout]  # не раздувать фронт без конца
-        for cur, trail in frontier:
+        for entry in frontier:
+            if not (isinstance(entry, (tuple, list)) and len(entry) >= 2):
+                continue
+            cur, trail = entry[0], entry[1]
             for p, other, w in self.neighbors(cur):
                 if other == b:
                     found = trail + [(cur, p, b, w)]
