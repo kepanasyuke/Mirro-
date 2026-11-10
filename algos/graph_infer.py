@@ -303,8 +303,15 @@ def generate_dynamic_inference(graph, W_decoder, blend=0.25):
     и пропускает через перцептрон-декодер. Один return: (signal, integrated)."""
     current = _edge_pattern(graph)
     past = try_get_memory_experience(graph, current)
-    integrated = [0.75 * c + 0.25 * p for c, p in zip(current, past)]
-    signal = sum(i * w for i, w in zip(integrated, W_decoder))
+    n = max(len(current), len(past))
+    current = list(current) + [0.0] * (n - len(current))
+    past = list(past) + [0.0] * (n - len(past))
+    integrated = [(1 - blend) * c + blend * p for c, p in zip(current, past)]
+    try:
+        W = list(W_decoder)
+    except Exception:
+        W = []
+    signal = sum(i * w for i, w in zip(integrated, W))
     return signal, integrated
 
 
