@@ -77,7 +77,7 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
             t_from = tgt_edge[0]
             src_pair = qst.get(s_from)
             if src_pair is None or not isinstance(src_pair, (tuple, list)) or len(src_pair) < 2:
-                return QState()
+                return qst
             a_f, b_f = src_pair
             phase_a = calculate_complex_phase(a_f, b_f)
             for node in (t_from, tgt_edge[2]):
@@ -89,7 +89,7 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
                 new_phase_b = phase_b + coupling_constant * (phase_a - phase_b) * mod
                 new_states[node] = (math.cos(new_phase_b), math.sin(new_phase_b))
     except Exception:
-        new_states = dict(qst.states)
+        new_states = dict(qst.states) if isinstance(qst.states, dict) else {}
     out = QState()
     out.states = dict(new_states) if isinstance(new_states, dict) else dict(qst.states)
     return out
