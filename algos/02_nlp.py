@@ -53,7 +53,9 @@ def _apply_stem_rule(word):
 
 
 def russian_stem(word):
-    """Лёгкий стеммер русского (Porter-lite). Один return: str."""
+    """Лёгкий стеммер русского (Porter-lite). Не-строка → пусто. Один return: str."""
+    if not isinstance(word, str):
+        return ""
     base = word
     if len(word) >= 5:
         base = _apply_stem_rule(word)
