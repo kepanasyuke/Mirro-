@@ -266,8 +266,10 @@ def _c_geometry(q):
                    f"гипотенуза = {math.hypot(a,b):.4g}")
     elif ("герон" in q or "площадь треугольн" in q) and len(_numbers(q)) >= 3:
         a, b, c = _numbers(q)[:3]
+        if a <= 0 or b <= 0 or c <= 0:
+            out = None
         # неравенство треугольника: стороны должны образовывать треугольник
-        if a + b <= c or a + c <= b or b + c <= a:
+        elif a + b <= c or a + c <= b or b + c <= a:
             out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
                    "не треугольник: нарушено неравенство треугольника")
         else:
