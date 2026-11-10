@@ -255,7 +255,8 @@ def _graph_topics_for_unknown(graph, query):
     q = (query if isinstance(query, str) else "").lower()
     words = [w for w in _re.findall(r"[а-яёa-z]{4,}", q) if w not in _TOPIC_STOP]
     scores = []
-    for n in (graph.nodes or []):
+    nodes = graph.nodes if isinstance(graph.nodes, dict) else {}
+    for n in nodes:
         if not isinstance(n, str) or len(n) < 4 or _is_junk_topic(n):
             continue
         core = n.split()[0] if " " in n else n
