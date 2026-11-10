@@ -25,6 +25,8 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
         max_allowed_weight = float(max_allowed_weight)
     except Exception:
         max_allowed_weight = 5.0
+    if max_allowed_weight != max_allowed_weight or max_allowed_weight in (float("inf"), float("-inf")):
+        max_allowed_weight = 5.0
     if graph is None or not hasattr(graph, "edges") or max_allowed_weight <= 0:
         return graph, quarantined
     if not isinstance(graph.edges, dict):
