@@ -39,8 +39,14 @@ def escape_velocity(m, r):
 
 
 def kinetic_energy(m, v):
-    """Кинетическая энергия. Один return: float."""
-    return 0.5 * m * v * v
+    """Кинетическая энергия. Некорректные входы → 0. Один return: float."""
+    try:
+        m, v = float(m), float(v)
+        if m < 0 or v < 0:
+            return 0.0
+        return 0.5 * m * v * v
+    except Exception:
+        return 0.0
 
 
 def potential_energy_grav(m1, m2, r):
