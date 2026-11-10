@@ -78,7 +78,7 @@ def _match_category(text):
         for m in markers:
             if not isinstance(m, str) or not m:
                 continue
-            if " " in m or "  " in m:
+            if " " in m:
                 if m in t:
                     hit = cat
                     break
