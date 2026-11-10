@@ -97,7 +97,9 @@ _TOPIC_TEST = [
     ("stem cell", ("stem cell", "stem cells", "regenerative", "unspecialized")),
     ("illness", ("illness", "disease", "infection", "disorder", "allergy")),
     ("programming", ("programming", "code", "program", "python", "compiler", "source")),
-    ("operating system", ("operating system", "os", "kernel", "linux", "windows", "files"))
+    ("operating system", ("operating system", "os", "kernel", "linux", "windows", "files")),
+    ("neural", ("neural", "network", "neuron", "perceptron", "gradient", "backprop")),
+    ("algorithm", ("algorithm", "complexity", "sorting", "search", "data structure")),
 ]
 
 
