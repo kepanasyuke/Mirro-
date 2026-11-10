@@ -89,7 +89,7 @@ class Novelty:
         kw = self._kw(user_text)
         topic = None
         if kw:
-            strs = [w for w in kw if isinstance(w, str)]
+            strs = [w for w in kw if isinstance(w, str) and w not in _STOP]
             if strs:
                 cands = [w for w in strs if len(w) <= 40] or strs
                 topic = sorted(cands, key=lambda w: (-len(w), w))[0]
