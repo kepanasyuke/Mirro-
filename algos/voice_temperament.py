@@ -78,6 +78,8 @@ def apply_temperament_to_text(text, temperament, min_len=4, max_len=8):
         return ""
     if not isinstance(text, str):
         text = str(text)
+    if not isinstance(temperament, str):
+        temperament = ""
     words = _re.findall(r"[а-яёa-z0-9]+", text.lower())
     kept = try_apply_temperament_filters(words, temperament, min_len, max_len)
     out_words = [w for w in kept if isinstance(w, str)]
