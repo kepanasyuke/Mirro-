@@ -63,9 +63,9 @@ def _detect_rad(message):
     Короткие основы («рад», «плох», «класс») засчитываем только как отдельные
     слова (словоформы), а не как часть «творад», «хлоплох» и т.п.
     Пустое/None-сообщение → нулевые счётчики. Один return: dict {'pos','neg','fatigue'}."""
-    if not (message or "").strip():
+    if not isinstance(message, str) or not message.strip():
         return {"pos": 0, "neg": 0, "fatigue": 0}
-    m = (message or "").lower()
+    m = message.lower()
     pos = sum(1 for w in _RAD["positive"] if w in m)
     neg = sum(1 for w in _RAD["negative"] if w in m)
     fatigue = sum(1 for w in _RAD["fatigue"] if w in m)
