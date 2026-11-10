@@ -417,6 +417,9 @@ def think(query):
     """
     t0 = time.time()
     result = classify(query)
+    valid_result = isinstance(result, (tuple, list)) and len(result) == 5
+    if not valid_result:
+        result = None
 
     category = None
     module = None
@@ -425,7 +428,7 @@ def think(query):
     explanation = None
     answer = None
     confidence = 0.0
-    if result and isinstance(result, (tuple, list)) and len(result) == 5:
+    if result:
         category, module, func_name, args, explanation = result
         # загружаем модуль и вызываем функцию
         mod = load_module(module)
