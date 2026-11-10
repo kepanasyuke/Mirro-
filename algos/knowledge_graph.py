@@ -482,12 +482,16 @@ class KnowledgeGraph:
         # для быстрого поиска: слово -> связные узлы, содержащие его (по одному на слово)
         word_index = {}
         for c in connected:
+            if not isinstance(c, str):
+                continue
             for w in set(_re_b.findall(r"[а-яёa-z]{4,}", c.lower())):
                 if w not in stop and w not in word_index:
                     word_index[w] = c
         for node in isolated:
             if added >= max_edges:
                 break
+            if not isinstance(node, str):
+                continue
             words = set(_re_b.findall(r"[а-яёa-z]{4,}", node.lower())) - stop
             target = None
             for w in words:
