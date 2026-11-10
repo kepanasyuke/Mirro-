@@ -413,13 +413,16 @@ class KnowledgeGraph:
             dups = [v for v in variants if v != canon]
             for d in dups:
                 # перенаправляем рёбра с узла-дубля на канонический
-                for (s, p, t), w in list(self.edges.items()):
+                for key, w in list(self.edges.items()):
+                    if not (isinstance(key, (tuple, list)) and len(key) == 3):
+                        continue
+                    s, p, t = key
                     if s == d:
                         self.edges[(canon, p, t)] = w if (canon, p, t) not in self.edges else max(w, self.edges[(canon, p, t)])
-                        del self.edges[(s, p, t)]
+                        del self.edges[key]
                     elif t == d:
                         self.edges[(s, p, canon)] = w if (s, p, canon) not in self.edges else max(w, self.edges[(s, p, canon)])
-                        del self.edges[(s, p, t)]
+                        del self.edges[key]
                 if d in self.nodes:
                     del self.nodes[d]
                 if d in self._adj:
