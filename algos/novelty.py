@@ -82,7 +82,7 @@ class Novelty:
         if not kw:
             return False
         for rkw, known in reversed(self.recent):
-            if rkw and set(rkw) & kw:
+            if rkw and rkw & kw:
                 return not known
         return False
 
