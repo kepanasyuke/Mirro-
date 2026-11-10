@@ -76,7 +76,9 @@ _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are"
               "the", "a", "an", "of", "in", "on", "to", "for", "i", "you", "explain",
               "tell", "about", "that", "do", "does", "can", "please", "me", "my",
               "than", "there", "your", "it", "also", "not", "could", "would",
-              "should", "know", "want", "what's", "how's", "define", "mean")
+              "should", "know", "want", "what's", "how's", "define", "mean",
+              "actually", "basically", "rather", "however", "maybe", "perhaps",
+              "still", "though", "well")
 
 # тема -> ключевые англ. слова (основа)
 _TOPIC_TEST = [
