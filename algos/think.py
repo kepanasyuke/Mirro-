@@ -357,7 +357,7 @@ def _solve_linear_root(a, b):
         b = float(b)
     except Exception:
         return None
-    if a == 0:
+    if a == 0 or a != a or b != b:
         return None
     return (0 - b) / a
 
