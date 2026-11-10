@@ -140,6 +140,8 @@ def try_english(query):
         return None
     if not _is_english_query(query):
         return None
+    if not isinstance(_EN_KB, dict):
+        return None
     q_low = (query or "").lower()
     answer = None
     # поиск темы по ключевым словам; при нескольких совпадениях выбираем тему с
