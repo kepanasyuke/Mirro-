@@ -78,30 +78,33 @@ def scan_report(graph):
     Не-граф → «нет графа». Один return: str."""
     if graph is None or not hasattr(graph, "edges"):
         return "нет графа"
-    edges = getattr(graph, "edges", {})
-    if not isinstance(edges, dict):
-        edges = {}
-    n_high = 0
-    n_neg = 0
-    for w in edges.values():
-        try:
-            fw = float(w)
-        except Exception:
-            continue
-        if fw != fw or fw in (float("inf"), float("-inf")):
-            continue
-        if abs(fw) > 5.0:
-            n_high += 1
-        if fw < 0:
-            n_neg += 1
-    meta = getattr(graph, "meta_routes", None)
-    meta = meta if isinstance(meta, dict) else {}
-    loops = sum(
-        1 for k in meta
-        if isinstance(k, (tuple, list)) and len(k) >= 2 and k[0] == k[1]
-    )
-    return (f"рёбер {len(edges)}, аномальных >5: {n_high}, "
-            f"отрицательных: {n_neg}, мета-петель: {loops}")
+    try:
+        edges = getattr(graph, "edges", {})
+        if not isinstance(edges, dict):
+            edges = {}
+        n_high = 0
+        n_neg = 0
+        for w in edges.values():
+            try:
+                fw = float(w)
+            except Exception:
+                continue
+            if fw != fw or fw in (float("inf"), float("-inf")):
+                continue
+            if abs(fw) > 5.0:
+                n_high += 1
+            if fw < 0:
+                n_neg += 1
+        meta = getattr(graph, "meta_routes", None)
+        meta = meta if isinstance(meta, dict) else {}
+        loops = sum(
+            1 for k in meta
+            if isinstance(k, (tuple, list)) and len(k) >= 2 and k[0] == k[1]
+        )
+        return (f"рёбер {len(edges)}, аномальных >5: {n_high}, "
+                f"отрицательных: {n_neg}, мета-петель: {loops}")
+    except Exception:
+        return "ошибка формирования отчёта"
 
 
 if __name__ == "__main__":
