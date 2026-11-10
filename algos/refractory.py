@@ -29,10 +29,13 @@ def init_refractory_counters(graph):
     if graph is None or not hasattr(graph, "nodes") or not hasattr(graph, "edges") \
         or graph.nodes is None or graph.edges is None:
         return st
-    for name in graph.nodes:
-        st.node_fatigue[name] = 0.0
-    for key in graph.edges:
-        st.edge_exhaustion[key] = 0.0
+    try:
+        for name in graph.nodes:
+            st.node_fatigue[name] = 0.0
+        for key in graph.edges:
+            st.edge_exhaustion[key] = 0.0
+    except Exception:
+        return RefractoryState()
     return st
 
 
