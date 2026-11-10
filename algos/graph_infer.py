@@ -158,7 +158,7 @@ def _graph_topics(graph, query, limit=12):
     префикс узла входит в текст). graph — KnowledgeGraph. Один return: list."""
     import re as _re
     graph = graph or kg
-    q = (query or "").lower()
+    q = (query if isinstance(query, str) else "").lower()
     found = []
     for n in graph.nodes:
         if not n or len(n) < 4 or _is_junk_topic(n):
