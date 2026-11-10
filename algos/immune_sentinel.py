@@ -63,7 +63,7 @@ def run_graph_immune_scan(graph, max_allowed_weight=5.0, suppression=0.1):
             quarantined.append(key)
     # 2. удаление авто-резонансных петель мета-графа (from_edge == to_edge)
     meta = getattr(graph, "meta_routes", None)
-    if meta:
+    if isinstance(meta, dict) and meta:
         for key in list(meta.keys()):
             try:
                 if isinstance(key, (tuple, list)) and len(key) >= 2 and key[0] == key[1]:
