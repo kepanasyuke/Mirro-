@@ -157,8 +157,9 @@ def try_english(query):
     answer = None
     # поиск темы по ключевым словам; при нескольких совпадениях выбираем тему с
 # самым длинным совпавшим ключом (чтобы «stem cell» не съедала «cell»)
+    topics_test = _TOPIC_TEST if isinstance(_TOPIC_TEST, (list, tuple)) else []
     best_len = -1
-    for topic, keys in (_TOPIC_TEST or []):
+    for topic, keys in topics_test:
         for k in (keys or []):
             if isinstance(k, str) and k and k in q_low and len(k) > best_len:
                 best_len = len(k)
