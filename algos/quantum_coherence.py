@@ -63,7 +63,11 @@ def check_phase_synchrony(qst, name_a, name_b):
     a1, b1 = qst.get(name_a)
     a2, b2 = qst.get(name_b)
     try:
-        return float(a1) * float(a2) + float(b1) * float(b2)
+        a1 = float(a1) if a1 is not None else 0.0
+        b1 = float(b1) if b1 is not None else 0.0
+        a2 = float(a2) if a2 is not None else 0.0
+        b2 = float(b2) if b2 is not None else 0.0
+        return a1 * a2 + b1 * b2
     except Exception:
         return 0.0
 
