@@ -66,6 +66,9 @@ _EN_KB = {
     "operating system": ("An operating system (OS) manages hardware and programs. "
                          "It handles files, memory and processes. Examples are Linux "
                          "and Windows."),
+    "photosynthesis": ("Photosynthesis is how green plants make food from sunlight. "
+                       "They take in water and carbon dioxide and, using light energy, "
+                       "produce glucose and oxygen."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -100,6 +103,7 @@ _TOPIC_TEST = [
     ("operating system", ("operating system", "os", "kernel", "linux", "windows", "files")),
     ("neural", ("neural", "network", "neuron", "perceptron", "gradient", "backprop")),
     ("algorithm", ("algorithm", "complexity", "sorting", "search", "data structure")),
+    ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants"))
 ]
 
 
