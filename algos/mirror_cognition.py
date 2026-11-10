@@ -73,6 +73,10 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
         focus = max(0.0, min(1.0, float(mirror_profile.get("user_intent_focus", 1.0) or 1.0)))
     except Exception:
         fatigue, focus = 0.0, 1.0
+    if fatigue != fatigue or fatigue in (float("inf"), float("-inf")):
+        fatigue = 0.0
+    if focus != focus or focus in (float("inf"), float("-inf")):
+        focus = 1.0
     out = {}
     for key, w in graph.edges.items():
         try:
@@ -80,6 +84,8 @@ def apply_mirror_modulation_to_graph(graph, mirror_profile):
                 continue
             nw = float(w)
         except Exception:
+            continue
+        if nw != nw or nw in (float("inf"), float("-inf")):
             continue
         combined = " ".join(str(x) for x in key[:3]).lower()
         if ("хаос" in combined) or ("юмор" in combined or "шутк" in combined
