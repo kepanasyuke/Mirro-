@@ -146,9 +146,9 @@ def try_english(query):
                 answer = _EN_KB.get(topic)
     # fallback: прямое вхождение ключа-темы как отдельного слова
     if not answer:
-        q_toks = set(q_low.split())
+        q_toks = {t.strip(".,!?;:'\"()") for t in q_low.split()}
         for topic in _EN_KB:
-            if topic and any(t == topic for t in q_toks):
+            if topic and topic in q_toks:
                 answer = _EN_KB.get(topic)
                 break
     if not answer and _EN_KB:
