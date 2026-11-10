@@ -92,7 +92,8 @@ def apply_fatigue_to_weights(graph, st, floor=0.2):
         floor = float(floor)
     except Exception:
         floor = 0.2
-    if graph is None or not hasattr(graph, "edges") or st is None or floor < 0:
+    if graph is None or not hasattr(graph, "edges") or not isinstance(graph.edges, dict) \
+        or st is None or floor < 0:
         return out
     for key, w in graph.edges.items():
         try:
