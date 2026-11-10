@@ -92,9 +92,9 @@ BOSOVA_CITATY = [
 def get_scheme(name):
     """Вернуть схему мышления по имени (неизвестное имя → «Следование»).
     Пустой BLOCK_SCHEMES → пустая схема. Один return: dict."""
-    if not BLOCK_SCHEMES:
+    if not isinstance(BLOCK_SCHEMES, dict) or not BLOCK_SCHEMES:
         return {"name": "", "description": "", "steps": []}
-    scheme = BLOCK_SCHEMES.get(name) or (BLOCK_SCHEMES.get("sledovanie") if isinstance(BLOCK_SCHEMES, dict) else None)
+    scheme = BLOCK_SCHEMES.get(name) or BLOCK_SCHEMES.get("sledovanie")
     if not isinstance(scheme, dict):
         return {"name": "", "description": "", "steps": []}
     steps = scheme.get("schema") or []
