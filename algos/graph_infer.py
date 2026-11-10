@@ -162,6 +162,10 @@ def _graph_topics(graph, query, limit=12):
     """Узлы графа, встреченные в запросе (также по словоформе: 4-буквенный
     префикс узла входит в текст). graph — KnowledgeGraph. Один return: list."""
     import re as _re
+    try:
+        limit = max(0, min(50, int(limit)))
+    except Exception:
+        limit = 12
     graph = graph or kg
     q = (query if isinstance(query, str) else "").lower()
     found = []
