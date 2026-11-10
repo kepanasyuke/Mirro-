@@ -52,7 +52,7 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
     (не мутирует входной). Один return: QState.
     """
     if graph is None or qst is None or not getattr(qst, "states", None) \
-        or not getattr(graph, "edges", None):
+        or not isinstance(getattr(graph, "edges", None), dict):
         return QState()
     try:
         coupling_constant = max(0.0, min(1.0, float(coupling_constant or 0.0)))
