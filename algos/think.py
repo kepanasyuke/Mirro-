@@ -465,7 +465,7 @@ def think(query):
 
 def answer_question(query):
     """Обёртка: строка-ответ для чата. Пустой запрос → подсказка. Один return: str."""
-    if not (query or "").strip():
+    if not isinstance(query, str) or not query.strip():
         return "[unknown] Сформулируй вопрос, и я посчитаю или объясню."
     r = think(query)
     head = f"[{r['category']}] "
