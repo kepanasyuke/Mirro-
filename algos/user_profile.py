@@ -92,7 +92,7 @@ def load_profile(user_id="default"):
     entry = all_p.get(str(user_id))
     if entry and isinstance(entry, dict):
         name = entry.get("name")
-        prof["name"] = str(name) if name else None
+        prof["name"] = str(name) if isinstance(name, str) else None
         prof["topics"] = [t for t in (entry.get("topics") or []) if isinstance(t, str)][:20]
         try:
             prof["verbosity"] = max(-1.0, min(1.0, float(entry.get("verbosity") or 0.0)))
