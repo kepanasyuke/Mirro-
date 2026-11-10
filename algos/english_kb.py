@@ -156,7 +156,7 @@ def try_english(query):
     best_len = -1
     for topic, keys in (_TOPIC_TEST or []):
         for k in (keys or []):
-            if k and k in q_low and len(k) > best_len:
+            if isinstance(k, str) and k and k in q_low and len(k) > best_len:
                 best_len = len(k)
                 answer = _EN_KB.get(topic)
     # fallback: прямое вхождение ключа-темы как отдельного слова
