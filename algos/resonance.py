@@ -48,11 +48,12 @@ def try_bridge_resonant_edges(graph, resonance_threshold=0.15):
     created = 0
     if len(edges_keys) < 2:
         return 0
+    conduct = {k: _edge_conductance(graph, k) for k in edges_keys}
     pairs = []
     for i in range(len(edges_keys)):
         for j in range(i + 1, len(edges_keys)):
-            a = _edge_conductance(graph, edges_keys[i])
-            b = _edge_conductance(graph, edges_keys[j])
+            a = conduct[edges_keys[i]]
+            b = conduct[edges_keys[j]]
             if abs(a - b) < resonance_threshold:
                 pairs.append((edges_keys[i], edges_keys[j]))
     for ea, eb in pairs:
