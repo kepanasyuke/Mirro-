@@ -41,14 +41,15 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
     Ставки клампятся в [0,1]; activated_nodes нормализуется в множество.
     None-граф или граф без edges → пустой стейт. Возвращает новый
     RefractoryState. Один return: RefractoryState."""
-    if graph is None or not hasattr(graph, "edges") or graph.edges is None:
+    if graph is None or not hasattr(graph, "edges") or graph.edges is None \
+        or not hasattr(graph, "nodes"):
         return RefractoryState()
     try:
         recovery_rate = max(0.0, min(1.0, float(recovery_rate or 0.0)))
         fatigue_rate = max(0.0, min(1.0, float(fatigue_rate or 0.25)))
     except Exception:
         recovery_rate, fatigue_rate = 0.1, 0.25
-    if st is None:
+    if st is None or not isinstance(st, RefractoryState):
         st = init_refractory_counters(graph)
     new_st = RefractoryState()
     if isinstance(activated_nodes, (list, tuple, set)):
