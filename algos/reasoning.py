@@ -129,7 +129,7 @@ def think_about_thinking(query):
     """Как Mirro обдумывает вопрос — показать схему мышления.
     Для пустого/служебного запроса возвращает базовую схему «Следование».
     Один return: tuple[str, list]. """
-    q = (query or "").lower()
+    q = (query if isinstance(query, str) else "").lower()
     base = BLOCK_SCHEMES.get("sledovanie") if isinstance(BLOCK_SCHEMES, dict) else None
     if not BLOCK_SCHEMES:
         return ("", [])
