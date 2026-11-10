@@ -58,16 +58,17 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
     except Exception:
         max_len = 8
     tokens = [str(t) for t in text_tokens]
+    lens = [len(_re.sub(r"\W", "", t)) for t in tokens]
     processed = tokens
     if temperament == "хаотичный_холерик":
         # Укорачиваем: оставляем только короткие, ёмкие токены (без вводных длинных)
-        processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) < max_len]
+        processed = [t for t, tl in zip(tokens, lens) if tl < max_len]
     elif temperament == "флегматичный_философ":
         # Оставляем только весомые, длинные концептуальные токены
-        processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) > min_len]
+        processed = [t for t, tl in zip(tokens, lens) if tl > min_len]
     elif temperament == "уставший_меланхолик":
         # Усталый: оставляем только короткие и средние токены
-        processed = [t for t in tokens if len(_re.sub(r"\W", "", t)) <= max_len + 2]
+        processed = [t for t, tl in zip(tokens, lens) if tl <= max_len + 2]
     else:
         # прочие/неизвестные темпераменты не нарушают структуру
         processed = tokens
