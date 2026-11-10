@@ -290,6 +290,8 @@ def _c_strings_sorts(q):
         out = ("строки", "06_strings", "is_palindrome", (q,), None)
     elif "сортир" in q and _int_numbers(q):
         arr = _int_numbers(q)
+        if len(arr) > 1000:
+            arr = arr[:1000]
         out = ("алгоритмы", "05_sorts", "quick_sort", (arr,), f"сортировка: {sorted(arr)}")
     return out
 
