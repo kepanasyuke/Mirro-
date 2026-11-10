@@ -35,7 +35,8 @@ class Novelty:
     def _kw(text):
         if not isinstance(text, str) or not text.strip():
             return set()
-        words = _re.findall(r"[а-яёa-z]{4,}", text.lower())
+        t = text.lower().replace("-", " ").replace("_", " ")
+        words = _re.findall(r"[а-яёa-z]{4,}", t)
         return set(w for w in words if w not in _STOP)
 
     def feed(self, user_text, known=True):
