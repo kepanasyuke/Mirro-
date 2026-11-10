@@ -65,7 +65,7 @@ def try_align_quantum_phases(graph, qst, src_edge, tgt_edge, mod=1.0,
         coupling_constant = 0.12
     if mod != mod:
         mod = 1.0
-    new_states = dict(qst.states)
+    new_states = dict(qst.states) if isinstance(qst.states, dict) else {}
     try:
         if src_edge in graph.edges and tgt_edge in graph.edges:
             # рёбра должны быть индексируемыми тройками (src, pred, dst)
