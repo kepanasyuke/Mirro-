@@ -322,7 +322,10 @@ def _lcm(a, b):
 
 
 def _isprime(n):
-    """Простое ли число. Один return: bool."""
+    """Простое ли число (только неотрицательные целые вне bool).
+    Не-целое/отрицательное → False. Один return: bool."""
+    if isinstance(n, bool) or not isinstance(n, int) or n < 0:
+        return False
     prime = True
     if n < 2:
         prime = False
@@ -341,13 +344,25 @@ def _isprime(n):
 
 
 def _solve_linear_root(a, b):
-    """Корень линейного ax+b=0 (a!=0). Один return: float."""
+    """Корень линейного ax+b=0 (a!=0; a==0 → None). Один return: float|None."""
+    try:
+        a = float(a)
+        b = float(b)
+    except Exception:
+        return None
+    if a == 0:
+        return None
     return (0 - b) / a
 
 
 def _solve_quadratic(a, b, c):
-    """Находит корни квадратного уравнения. Один return: list корней."""
+    """Находит корни квадратного уравнения. Не-числовые коэффициенты → [].
+    Один return: list корней."""
     import math as _m
+    try:
+        a, b, c = float(a), float(b), float(c)
+    except Exception:
+        return []
     roots = []
     if a == 0:
         if b != 0:
