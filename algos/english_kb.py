@@ -124,11 +124,14 @@ def try_english(query):
         return None
     q_low = (query or "").lower()
     answer = None
-    # поиск темы по ключевым словам (пустой _TOPIC_TEST → нет темы)
+    # поиск темы по ключевым словам; при нескольких совпадениях выбираем тему с
+# самым длинным совпавшим ключом (чтобы «stem cell» не съедала «cell»)
+    best_len = -1
     for topic, keys in (_TOPIC_TEST or []):
-        if any(k in q_low for k in keys):
-            answer = _EN_KB.get(topic)
-            break
+        for k in (keys or []):
+            if k and k in q_low and len(k) > best_len:
+                best_len = len(k)
+                answer = _EN_KB.get(topic)
     # fallback: прямое вхождение ключа-темы как слова
     if not answer:
         for topic in _EN_KB:
@@ -138,7 +141,7 @@ def try_english(query):
     if not answer and _EN_KB:
         answer = ("I understood your question. I'm mainly trained on Russian. "
                   "Tell me the topic and I'll answer in simple English if I can.")
-    return answer if answer else None
+    return (answer if isinstance(answer, str) and answer else None)
 
 
 if __name__ == "__main__":
