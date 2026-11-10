@@ -46,6 +46,10 @@ class KnowledgeGraph:
         p = self._norm(pred)
         if not s or not d or s == d or not p:
             return
+        try:
+            weight = float(weight)
+        except Exception:
+            weight = 1.0
         self.add_node(s)
         self.add_node(d)
         key = (s, p, d)
