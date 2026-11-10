@@ -300,6 +300,8 @@ def generate_dynamic_inference(graph, W_decoder, blend=0.25):
 
 def remember_pattern(graph, pattern, max_experience=50):
     """Записывает успешный латентный паттерн в память графа. Один return: int."""
+    if graph is None:
+        return 0
     if not hasattr(graph, "experience"):
         graph.experience = []
     if len(graph.experience) >= max_experience:
