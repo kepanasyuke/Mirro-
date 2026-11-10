@@ -136,8 +136,9 @@ def think_about_thinking(query):
     if not base:
         return (f'[{" / ".join(list_schemes())} — выберите схему]', [])
     if not q.strip() or len(q.strip()) < 2:
-        return (base["name"], base["schema"])
-    result = (base["name"], base["schema"])
+        steps = base["schema"] if isinstance(base["schema"], list) else []
+        return (base["name"], steps)
+    result = (base["name"], base["schema"] if isinstance(base["schema"], list) else [])
     if "не знаю чего хочу" in q or ("хочу" in q and "не знаю" in q):
         result = ("Таблица решений для 'не знаю, чего хочу'", [
             "ЕСЛИ хочу → ДЕЛАЮ",
