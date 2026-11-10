@@ -46,10 +46,12 @@ def update_refractory_states(graph, st, activated_nodes=(), recovery_rate=0.1,
         or not hasattr(graph, "nodes"):
         return RefractoryState()
     try:
-        recovery_rate = max(0.0, min(1.0, float(recovery_rate or 0.0)))
-        fatigue_rate = max(0.0, min(1.0, float(fatigue_rate or 0.25)))
+        recovery_rate = float(recovery_rate or 0.0)
+        fatigue_rate = float(fatigue_rate or 0.25)
     except Exception:
         recovery_rate, fatigue_rate = 0.1, 0.25
+    recovery_rate = max(0.0, min(1.0, recovery_rate)) if recovery_rate == recovery_rate else 0.1
+    fatigue_rate = max(0.0, min(1.0, fatigue_rate)) if fatigue_rate == fatigue_rate else 0.25
     if st is None or not isinstance(st, RefractoryState):
         st = init_refractory_counters(graph)
     new_st = RefractoryState()
