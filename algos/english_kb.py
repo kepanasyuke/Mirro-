@@ -166,7 +166,11 @@ def try_english(query):
                 answer = _EN_KB.get(topic)
     # fallback: прямое вхождение ключа-темы как отдельного слова
     if not answer:
-        q_toks = {t.strip(".,!?;:'\"()") for t in q_low.split()}
+        q_toks = set()
+        for t in q_low.replace("-", " ").split():
+            w = t.strip(".,!?;:'\"()")
+            if w:
+                q_toks.add(w)
         for topic in _EN_KB:
             if isinstance(topic, str) and topic and topic in q_toks:
                 answer = _EN_KB.get(topic)
