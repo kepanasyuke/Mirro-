@@ -110,7 +110,9 @@ def _is_english_query(q):
     has_full_word = any(len(w) >= 4 for w in words if w.isalpha())
     enough_latin = latin >= 6 and has_full_word
     # англ. маркер должен быть отдельным словом, а не частью большего
-    has_marker = any(w in q.lower().split() for w in _EN_COMMON)
+    # (снимаем хвостовую пунктуацию, чтобы «why?» матчилось как «why»)
+    toks = {w.strip(".,!?;:'\"()") for w in q.lower().split()}
+    has_marker = bool(toks & set(_EN_COMMON))
     return (enough_latin and cyr == 0 and has_marker)
 
 
