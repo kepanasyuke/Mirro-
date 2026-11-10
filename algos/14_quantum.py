@@ -57,6 +57,10 @@ def qubit_pauli_z(q):
 
 def qubit_phase(q, theta):
     """Фазовый гейт: β → β·e^{iθ} (вещественная аппроксимация)."""
+    try:
+        theta = float(theta)
+    except Exception:
+        theta = 0.0
     return Qubit(q.alpha, q.beta * math.cos(theta))
 
 
