@@ -78,6 +78,9 @@ _EN_KB = {
     "biology": ("Biology is the science of living things. It studies cells, "
                 "organisms, genetics and ecosystems, from tiny bacteria to "
                 "whole environments and how life changes over time."),
+    "weather": ("Weather is the short-term state of the atmosphere: temperature, "
+                "rain, wind and clouds on a given day. It changes quickly, unlike "
+                "climate, which describes long-term trends."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -120,7 +123,8 @@ _TOPIC_TEST = [
     ("photosynthesis", ("photosynthesis", "chlorophyll", "glucose", "oxygen", "plants")),
     ("climate change", ("climate change", "global warming", "greenhouse", "carbon dioxide", "emissions")),
     ("wave", ("wave", "sound", "frequency", "amplitude", "wavelength")),
-    ("biology", ("biology", "organism", "species", "ecosystem", "living"))
+    ("biology", ("biology", "organism", "species", "ecosystem", "living")),
+    ("weather", ("weather", "rain", "wind", "temperature", "forecast", "climate"))
 ]
 
 
