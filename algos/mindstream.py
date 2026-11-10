@@ -64,6 +64,8 @@ class MindStream:
         Не-строковый вход → пусто. Один return: str (может быть пустой)."""
         if text is None or not isinstance(text, str):
             return ""
+        if len(text) > 2000:
+            text = text[:2000]  # не выделять тему из гигантских сообщений
         words = _re.findall(r"[а-яёa-z]{4,}", text.lower())
         keep = [w for w in words if w not in _STOP]
         return " ".join(keep)
