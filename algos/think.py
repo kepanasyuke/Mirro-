@@ -222,8 +222,9 @@ def _c_probability(q):
     out = None
     if "вероятн" in q and len(_numbers(q)) >= 2:
         nums = _numbers(q)[:2]
-        out = ("вероятность", "12_probability", "classical_probability", (nums[0], nums[1]),
-               f"P = {nums[0]:g}/{nums[1]:g} = {nums[0]/nums[1]:.4f}")
+        if nums[1] != 0:
+            out = ("вероятность", "12_probability", "classical_probability", (nums[0], nums[1]),
+                   f"P = {nums[0]:g}/{nums[1]:g} = {nums[0]/nums[1]:.4f}")
     return out
 
 
