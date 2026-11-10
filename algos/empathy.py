@@ -128,11 +128,12 @@ def empathy_lead(message):
 
 
 def _pick(options):
-    """Случайный элемент списка. Пустой список → «». Один return: str."""
+    """Случайный элемент списка. Пустой список / нет строк → «». Один return: str."""
     import random
-    if not options:
+    strs = [o for o in (options or []) if isinstance(o, str) and o.strip()]
+    if not strs:
         return ""
-    return random.choice(options)
+    return random.choice(strs)
 
 
 def apply_empathy(message, answer):
