@@ -66,7 +66,11 @@ def _numbers(text):
     """Все числа из текста (float). Некорректные пропускаются.
     Один return: list."""
     out = []
-    for x in re.findall(r"-?\d+[.,]?\d*", text or ""):
+    try:
+        src = str(text or "")
+    except Exception:
+        src = ""
+    for x in re.findall(r"-?\d+[.,]?\d*", src):
         try:
             out.append(float(x.replace(",", ".")))
         except Exception:
