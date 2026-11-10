@@ -71,6 +71,11 @@ def atbash(s):
 
 
 def caesar(s, shift=3):
+    try:
+        s = str(s or "")
+        shift = int(shift) % 26 if not isinstance(shift, bool) else 0
+    except Exception:
+        return ""
     out = []
     for ch in s:
         if ch.islower() and "а" <= ch <= "я":
