@@ -428,8 +428,9 @@ def _match_by_topic(q):
             scored.append((hit_words, quality, exact_topic, name))
     best_name = None
     if scored:
-        # сперва точное попадание по теме, затем покрытие и качество
-        scored.sort(key=lambda x: (-x[2], -x[0], -x[1]))
+        # сперва точное попадание по теме, затем покрытие и качество;
+        # при равенстве — лексикографически первое имя (детерминизм)
+        scored.sort(key=lambda x: (-x[2], -x[0], -x[1], x[3]))
         best_name = scored[0][3]
     return best_name
 
