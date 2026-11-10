@@ -50,7 +50,7 @@ def try_apply_temperament_filters(text_tokens, temperament, min_len=4, max_len=8
     if not isinstance(temperament, str):
         return [str(t) for t in text_tokens]
     try:
-        min_len = max(0, min(50, int(min_len or 0)))
+        min_len = max(2, min(50, int(min_len or 0)))
     except Exception:
         min_len = 4
     try:
