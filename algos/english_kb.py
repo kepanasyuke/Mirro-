@@ -93,6 +93,9 @@ _EN_KB = {
     "art": ("Art is the expression of ideas and emotions through visual or "
             "performing forms like painting, sculpture and music. It reflects "
             "culture, creativity and the human experience."),
+    "music": ("Music is organized sound made with voice or instruments. Melody, "
+              "harmony and rhythm come together in songs and pieces that express "
+              "emotion across cultures."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -139,6 +142,7 @@ _TOPIC_TEST = [
     ("history", ("history", "ancient", "civilization", "empire", "medieval", "era")),
     ("literature", ("literature", "novel", "poem", "poetry", "author", "genre")),
     ("art", ("art", "painting", "sculpture", "music", "artist", "canvas", "color")),
+    ("music", ("music", "melody", "harmony", "rhythm", "song", "instrument", "guitar")),
 ]
 
 
