@@ -81,6 +81,9 @@ _EN_KB = {
     "wave": ("A wave is a disturbance that carries energy through a medium or space. "
              "Sound and light travel as waves; their frequency and wavelength "
              "determine pitch and color."),
+    "time": ("Time is the continuous progression of events from past to future. "
+             "We measure it in seconds, minutes and hours; clocks and calendars "
+             "help us organize and compare durations."),
     "biology": ("Biology is the science of living things. It studies cells, "
                 "organisms, genetics and ecosystems, from tiny bacteria to "
                 "whole environments and how life changes over time."),
