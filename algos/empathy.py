@@ -158,7 +158,8 @@ def apply_empathy(message, answer):
         if not isinstance(lead, str):
             lead = str(lead)
         # уже начали схожей заставкой — пропускаем (анти-дубль)
-        lead_key = lead[:12].lower()
+        lead_str = lead.strip().lower()
+        lead_key = lead_str[:12]
         if ans[:24].lower().startswith(lead_key) or \
                 any(seg.strip().lower().startswith(lead_key) for seg in ans.split("\n\n")[:3]):
             return ans
