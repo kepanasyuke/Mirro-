@@ -25,12 +25,13 @@ def infer_from_graph(kg: KnowledgeGraph, query, topic="", max_depth=2):
     except Exception:
         max_depth = 2
     q = (query or "").lower() if isinstance(query, str) else ""
+    topic_s = topic if isinstance(topic, str) else ""
     if kg is None or not hasattr(kg, "nodes"):
         return []
     # стартовые узлы: тема (если указана) + узлы графа, что встречаются в вопросе
     starts = []
-    if isinstance(topic, str) and topic:
-        starts.append(topic)
+    if topic_s:
+        starts.append(topic_s)
     kg_nodes = kg.nodes if isinstance(kg.nodes, dict) else {}
     q_s = q if isinstance(q, str) else ""
     for name in kg_nodes:
