@@ -249,6 +249,9 @@ _EN_KB = {
     "machinery": ("Machinery is a set of machines that do work using power. "
                   "It can include engines, tools and equipment in factories or "
                   "farms. Machines multiply human strength and speed up tasks."),
+    "orbit": ("An orbit is the curved path an object takes around another in space. "
+              "Planets orbit stars and moons orbit planets, held by gravity. "
+              "Orbits can be round or oval and take different amounts of time."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
