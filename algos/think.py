@@ -233,11 +233,11 @@ def _c_combinatorics(q):
                    f"C({n},{k}) = {_comb(n,k)}")
     elif ("перестанов" in q or "факториал" in q) and _int_numbers(q):
         n = _int_numbers(q)[0]
-        if n > 1000:
+        if 0 <= n <= 1000:
+            out = ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
+        else:
             out = ("комбинаторика", "10_combinatorics", "factorial", (n,),
                    f"{n}! — слишком большое значение")
-        else:
-            out = ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
     return out
 
 
