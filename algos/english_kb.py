@@ -318,6 +318,9 @@ _EN_KB = {
     "breeze": ("A breeze is a gentle wind, softer than a gale. It moves leaves, "
                "spreads smells and cools the air on warm days. Breezes can be "
                "steady and light or come in short gusts."),
+    "storm": ("A storm is a violent weather event with strong winds, rain, snow "
+              "or thunder. It can bring lightning and flooding. Storms form when "
+              "warm and cold air meet; they vary from mild to severe."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
