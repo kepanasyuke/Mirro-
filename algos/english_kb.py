@@ -258,6 +258,9 @@ _EN_KB = {
     "process": ("A process is a series of steps that turn inputs into a result. "
                 "Workflows, chemical reactions and learning are all processes. "
                 "Understanding each step helps improve speed and quality."),
+    "packet": ("A packet is a unit of data sent over a network. Messages are "
+               "split into packets that travel through routers and are reordered "
+               "at the destination. This makes transfer reliable and efficient."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
