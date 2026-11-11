@@ -73,6 +73,7 @@ _SHORT_STRICT = ("рад", "плох", "класс", "ошиб", "лучш", "к
 
 _POS_SET = frozenset(_RAD["positive"])
 _NEG_SET = frozenset(_RAD["negative"])
+_FATIGUE_SET = frozenset(_RAD["fatigue"])
 _REST_KW = ("выспался", "выспалась", "отдохнул", "отдохнула", "появились силы",
             "отоспался", "отоспалась", "приободрился", "приободрилась")
 
@@ -87,7 +88,7 @@ def _detect_rad(message):
     m = message.lower()
     pos = sum(1 for w in _POS_SET if w in m)
     neg = sum(1 for w in _NEG_SET if w in m)
-    fatigue = sum(1 for w in _RAD["fatigue"] if w in m)
+    fatigue = sum(1 for w in _FATIGUE_SET if w in m)
     for short in _SHORT_STRICT:
         at_word = _re.search(r"(?<![а-яё])" + short, m)
         if short in _POS_SET and short in m and not at_word:
