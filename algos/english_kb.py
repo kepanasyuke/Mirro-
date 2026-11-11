@@ -274,6 +274,10 @@ _EN_KB = {
                    "can apply to writing, data, behavior or a course of action. "
                    "Making corrections improves accuracy and helps prevent future "
                    "errors."),
+    "perception": ("Perception is how we take in and interpret the world through "
+                   "the senses. Sight, hearing and touch give signals that the "
+                   "brain turns into meaning; you can be active literal or "
+                   "shaped by experience."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
