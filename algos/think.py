@@ -320,7 +320,8 @@ def _c_strings_sorts(q):
         arr = _int_numbers(q)
         if len(arr) > 1000:
             arr = arr[:1000]
-        out = ("алгоритмы", "05_sorts", "quick_sort", (arr,), f"сортировка: {sorted(arr)}")
+        if arr:
+            out = ("алгоритмы", "05_sorts", "quick_sort", (arr,), f"сортировка: {sorted(arr)}")
     return out
 
 
