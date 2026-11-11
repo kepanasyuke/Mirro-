@@ -306,6 +306,9 @@ _EN_KB = {
     "manual": ("A manual is a book or guide that explains how to use or fix "
                "something. It gives step-by-step instructions, warnings and "
                "tips. Manuals help both beginners and experts work correctly."),
+    "echo": ("An echo is a reflected sound that returns after hitting a surface. "
+             "Hearing it depends on distance and time; echoes help ships measure "
+             "depth and bats navigate in the dark. They reveal the shape around us."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
