@@ -94,6 +94,7 @@ def get_scheme(name):
     Пустой BLOCK_SCHEMES → пустая схема. Один return: dict."""
     if not isinstance(BLOCK_SCHEMES, dict) or not BLOCK_SCHEMES:
         return {"name": "", "description": "", "steps": []}
+    name = str(name or "") if not isinstance(name, str) else name
     scheme = BLOCK_SCHEMES.get(name) or BLOCK_SCHEMES.get("sledovanie")
     if not isinstance(scheme, dict):
         return {"name": "", "description": "", "steps": []}
