@@ -407,6 +407,8 @@ def _solve_quadratic(a, b, c):
         a, b, c = float(a), float(b), float(c)
     except Exception:
         return []
+    if a != a or b != b or c != c or abs(a) > 1e12 or abs(b) > 1e12 or abs(c) > 1e12:
+        return []
     roots = []
     if a == 0:
         if b != 0:
