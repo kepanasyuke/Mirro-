@@ -281,6 +281,9 @@ _EN_KB = {
     "universe": ("The universe is everything that exists: all matter, energy, "
                  "space and time. It holds galaxies, stars and planets and has "
                  "been expanding since the Big Bang about 14 billion years ago."),
+    "skill": ("A skill is an ability to do something well, learned through "
+              "practice and experience. It can be practical, social or mental. "
+              "Skills grow with training and open doors to new tasks and jobs."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
