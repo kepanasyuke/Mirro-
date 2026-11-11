@@ -66,7 +66,8 @@ class KnowledgeGraph:
         rows = self._adj.get(from_node, [])
         found = False
         for i, row in enumerate(rows):
-            if row[0] == pred and row[1] == to_node:
+            if isinstance(row, (tuple, list)) and len(row) >= 2 \
+                    and row[0] == pred and row[1] == to_node:
                 self._adj[from_node][i] = (pred, to_node, weight)
                 found = True
                 break
