@@ -198,6 +198,9 @@ _EN_KB = {
     "plan": ("A plan is an organized set of steps toward a goal. It lists what "
              "to do, when, and how. Good plans are flexible and are updated as "
              "situations change or new information appears."),
+    "routine": ("A routine is a regular, repeated way of doing something. Daily "
+                "habits like waking, eating and studying form a routine that "
+                "saves time and brings stability to life."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
