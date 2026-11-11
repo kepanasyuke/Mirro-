@@ -73,6 +73,8 @@ _SHORT_STRICT = ("рад", "плох", "класс", "ошиб", "лучш", "к
 
 _POS_SET = frozenset(_RAD["positive"])
 _NEG_SET = frozenset(_RAD["negative"])
+_REST_KW = ("выспался", "выспалась", "отдохнул", "отдохнула", "появились силы",
+            "отоспался", "отоспалась", "приободрился", "приободрилась")
 
 
 def _detect_rad(message):
@@ -109,9 +111,7 @@ def observe(message):
         # нейтральная реплика мягко тянет к нулю
         delta = -0.02 * _emotion
     _emotion = max(-1.0, min(1.0, _emotion + delta))
-    rest_kw = ("выспался", "выспалась", "отдохнул", "отдохнула", "появились силы",
-               "отоспался", "отоспалась", "приободрился", "приободрилась")
-    if any(w in m for w in rest_kw):
+    if any(w in m for w in _REST_KW):
         _fatigue = max(0.0, _fatigue - 0.35)
     elif d["fatigue"]:
         _fatigue = min(1.0, _fatigue + 0.25)
