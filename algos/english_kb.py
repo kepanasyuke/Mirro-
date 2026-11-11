@@ -315,6 +315,9 @@ _EN_KB = {
     "recipe": ("A recipe is a set of instructions for preparing a dish or drink. "
                "It lists ingredients, amounts and steps in order. Following a "
                "recipe carefully helps get a consistent, tasty result."),
+    "breeze": ("A breeze is a gentle wind, softer than a gale. It moves leaves, "
+               "spreads smells and cools the air on warm days. Breezes can be "
+               "steady and light or come in short gusts."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
