@@ -210,6 +210,9 @@ _EN_KB = {
     "society": ("A society is a group of people living together and sharing "
                 "rules, culture and institutions. People cooperate through "
                 "laws, work and trade to meet common needs and goals."),
+    "souvenir": ("A souvenir is an object kept to remember a place, event or "
+                 "person. People buy them while traveling as a reminder of "
+                 "experiences or to give as small gifts."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
