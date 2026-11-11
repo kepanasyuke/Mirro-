@@ -159,7 +159,7 @@ def _c_percent(q):
     m = re.search(
         r"(\d+[.,]?\d*)\s*(?:%|процент(?:ов|а|у|ом)?)\s*(от|из|от числа|числа)?\s*(\d+[.,]?\d*)?",
         q)
-    if m and m.group(3):
+    if m and m.group(3) and m.group(1):
         try:
             pct = float(m.group(1).replace(",", "."))
             base = float(m.group(3).replace(",", "."))
