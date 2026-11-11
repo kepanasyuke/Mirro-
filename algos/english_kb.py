@@ -299,6 +299,10 @@ _EN_KB = {
     "torque": ("Torque is a rotational force that makes an object spin. It equals "
                "force multiplied by the distance from the pivot. Torque turns "
                "wheels, tightens bolts and powers many machines."),
+    "questionnaire": ("A questionnaire is a set of written questions used to "
+                      "collect information from people. It can be on paper or "
+                      "online, with closed or open answers. Analysis of replies "
+                      "helps research and decision-making."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
