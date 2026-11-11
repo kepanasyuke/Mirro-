@@ -138,6 +138,9 @@ _EN_KB = {
     "botany": ("Botany is the science of plants. It studies leaves, roots and "
                "flowers, how plants grow and make food through photosynthesis, "
                "and their role in ecosystems and food chains."),
+    "city": ("A city is a large, densely populated settlement with homes, "
+             "businesses and services. People live close together and share "
+             "transport, schools, shops and public infrastructure."),
     "zoology": ("Zoology is the science of animals. It studies their bodies, "
                 "behavior and habitats, how they adapt and live in groups, "
                 "from tiny insects to large mammals."),
