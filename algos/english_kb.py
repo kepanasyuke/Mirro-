@@ -174,6 +174,9 @@ _EN_KB = {
     "wheat": ("Wheat is a cereal crop grown for its grain, which is milled into "
               "flour for bread, pasta and many foods. It is one of the most "
               "important crops in the world."),
+    "forest": ("A forest is a large area covered with trees and other plants. "
+               "It gives oxygen, shelters wildlife and cools the climate. Many "
+               "animals and people depend on forests for food and shelter."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
