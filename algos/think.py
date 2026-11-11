@@ -140,12 +140,13 @@ def _c_simple_math(q):
                        f"{nums[0]:g} × {nums[1]:g} = {nums[0]*nums[1]:.6g}")
             else:
                 out = ("математика", "01_stats", "product_of", None, str(nums[0] * nums[1]))
-        elif ("+" in q or "плюс" in q) and len(nums) >= 2:
-            out = ("математика", "01_stats", "sum_of", None,
-                   f"{nums[0]:g} + {nums[1]:g} = {nums[0]+nums[1]:.6g}")
-        elif ("-" in q or "–" in q or "—" in q or "минус" in q) and len(nums) >= 2:
-            out = ("математика", "01_stats", "diff_of", None,
-                   f"{nums[0]:g} − {nums[1]:g} = {nums[0]-nums[1]:.6g}")
+        elif ("+" in q or "плюс" in q or "минус" in q or "–" in q or "—" in q) and len(nums) >= 2:
+            if "+" in q or "плюс" in q:
+                out = ("математика", "01_stats", "sum_of", None,
+                       f"{nums[0]:g} + {nums[1]:g} = {nums[0]+nums[1]:.6g}")
+            else:
+                out = ("математика", "01_stats", "diff_of", None,
+                       f"{nums[0]:g} − {nums[1]:g} = {nums[0]-nums[1]:.6g}")
         elif ("/" in q or "дели" in q or "раздел" in q) and len(nums) >= 2 and nums[1] != 0:
             out = ("математика", "01_stats", "div_of", None,
                    f"{nums[0]:g} / {nums[1]:g} = {nums[0]/nums[1]:.6g}")
