@@ -202,9 +202,9 @@ def _c_linear(q):
             a = 1.0 if m.group(1) in (None, "", "+", "-") else float(m.group(1))
             b_lin = float(m.group(2)) if m.group(2) else 0.0
             rhs = float(m.group(3)) if m.group(3) else 0.0
-            root = (rhs - b_lin) / a if a else None
-            out = ("математика", "16_university", "solve_linear", (a, rhs - b_lin),
-                   f"x = {(rhs - b_lin) / a:.6g}" if a else "нет решения")
+            if a != 0:
+                out = ("математика", "16_university", "solve_linear", (a, rhs - b_lin),
+                       f"x = {(rhs - b_lin) / a:.6g}")
     return out
 
 
