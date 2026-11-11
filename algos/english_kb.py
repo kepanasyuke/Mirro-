@@ -189,6 +189,9 @@ _EN_KB = {
     "meteor": ("A meteor is a streak of light in the sky caused by a small space "
                "rock burning up in Earth's atmosphere. If a piece survives and "
                "lands, it is called a meteorite."),
+    "comet": ("A comet is a small icy body from the outer solar system. Near the "
+              "Sun, heat turns its ice into gas and dust, forming a bright head "
+              "and a long glowing tail."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
