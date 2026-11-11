@@ -752,7 +752,10 @@ def prune_stopwords(self, stopwords):
             return 0
         a, b = self._norm(a), self._norm(b)
         punished = 0
-        for (s, p, d), w in list(self.edges.items()):
+        for key, w in list(self.edges.items()):
+            if not isinstance(key, (tuple, list)) or len(key) < 3:
+                continue
+            s, p, d = key[0], key[1], key[2]
             if (s == a and d == b) or (s == b and d == a):
                 nw = max(floor, w - amount)
                 self.edges[(s, p, d)] = nw
