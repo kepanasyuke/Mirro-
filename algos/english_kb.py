@@ -296,6 +296,9 @@ _EN_KB = {
     "contrast": ("Contrast is the difference between two things, ideas or colors. "
                  "It makes them easier to tell apart and highlights their features. "
                  "Contrast is used in design, in writing and in comparing choices."),
+    "torque": ("Torque is a rotational force that makes an object spin. It equals "
+               "force multiplied by the distance from the pivot. Torque turns "
+               "wheels, tightens bolts and powers many machines."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
