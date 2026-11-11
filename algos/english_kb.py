@@ -153,6 +153,9 @@ _EN_KB = {
     "magnet": ("A magnet attracts iron and other magnets. It has two poles, "
                "north and south; opposite poles pull together and like poles "
                "push apart. Magnetism powers motors and compasses."),
+    "volcano": ("A volcano is an opening in Earth's crust that lets magma, ash "
+                "and gases escape. When it erupts, lava flows out and builds new "
+                "land; some volcanoes are active, others dormant or extinct."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
