@@ -141,9 +141,12 @@ _EN_KB = {
     "city": ("A city is a large, densely populated settlement with homes, "
              "businesses and services. People live close together and share "
              "transport, schools, shops and public infrastructure."),
-    "zoology": ("Zoology is the science of animals. It studies their bodies, "
-                "behavior and habitats, how they adapt and live in groups, "
-                "from tiny insects to large mammals."),
+"zoology": ("Zoology is the science of animals. It studies their bodies, "
+                 "behavior and habitats, how they adapt and live in groups, "
+                 "from tiny insects to large mammals."),
+    "moon": ("The Moon is Earth's natural satellite. It orbits Earth and its "
+             "gravity causes tides. Sunlight reflects from it, giving us "
+             "phases from new moon to full moon."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
