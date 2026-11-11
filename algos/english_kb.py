@@ -261,6 +261,9 @@ _EN_KB = {
     "packet": ("A packet is a unit of data sent over a network. Messages are "
                "split into packets that travel through routers and are reordered "
                "at the destination. This makes transfer reliable and efficient."),
+    "evidence": ("Evidence is information that supports a claim or conclusion. "
+                 "It can be facts, data, observations or documents. Strong "
+                 "evidence helps people judge what is true and decide wisely."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
