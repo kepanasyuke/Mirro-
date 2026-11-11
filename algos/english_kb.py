@@ -240,6 +240,9 @@ _EN_KB = {
     "treasure": ("Treasure is a collection of valuable things, such as gold, gems "
                  "or precious objects. It can be buried, found or inherited, and "
                  "it holds worth to both its owners and historians."),
+    "motion": ("Motion is the change in position of an object over time. Speed "
+               "and direction describe it; acceleration changes motion. Forces "
+               "like gravity and push cause objects to start, stop or turn."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
