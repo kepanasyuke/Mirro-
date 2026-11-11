@@ -312,6 +312,9 @@ _EN_KB = {
     "fermentation": ("Fermentation is a natural process where microorganisms break "
                      "down sugars into alcohol, gases or acids. It preserves food, "
                      "adds flavor and is used to make bread, yogurt and beer."),
+    "recipe": ("A recipe is a set of instructions for preparing a dish or drink. "
+               "It lists ingredients, amounts and steps in order. Following a "
+               "recipe carefully helps get a consistent, tasty result."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
