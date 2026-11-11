@@ -204,6 +204,9 @@ _EN_KB = {
     "upbringing": ("Upbringing is how a child is raised and guided by family. "
                    "It includes values, habits and education learned at home, "
                    "shaping character and how a person deals with the world."),
+    "memory": ("Memory is the ability to store and recall information. Working "
+               "memory holds what we use now; long-term memory keeps facts and "
+               "skills over time. Repetition and rest help strengthen it."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
