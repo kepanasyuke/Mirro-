@@ -216,6 +216,9 @@ _EN_KB = {
     "possibility": ("A possibility is something that may happen or be true. "
                     "It is an option or chance among several outcomes. We weigh "
                     "probabilities to decide how likely a possibility is."),
+    "dialogue": ("A dialogue is a conversation between two or more people. "
+                 "Speakers take turns sharing ideas and questions. Good "
+                 "dialogue builds understanding and resolves disagreements."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
