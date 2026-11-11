@@ -219,8 +219,13 @@ def _c_combinatorics(q):
                f"C({n},{k}) = {_comb(n,k)}")
     elif ("сочет" in q or "c(" in q.lower()) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
-        out = ("комбинаторика", "10_combinatorics", "combinations_count", (nums[0], nums[1]),
-               f"C({nums[0]},{nums[1]}) = {_comb(nums[0],nums[1])}")
+        n, k = nums[0], nums[1]
+        if n > 2000 or k > n:
+            out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
+                   f"C({n},{k}) — некорректное значение")
+        else:
+            out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
+                   f"C({n},{k}) = {_comb(n,k)}")
     elif ("перестанов" in q or "факториал" in q) and _int_numbers(q):
         n = _int_numbers(q)[0]
         if n > 1000:
