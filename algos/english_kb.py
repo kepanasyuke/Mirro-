@@ -225,6 +225,9 @@ _EN_KB = {
     "character": ("A character is the set of qualities that define how a person "
                   "thinks, feels and acts. Honesty, patience and courage are "
                   "parts of it; character is shaped by choices and experience."),
+    "priority": ("A priority is what matters most and should be done first. "
+                 "When resources or time are limited, priority helps decide "
+                 "the order of tasks and where to focus attention."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
