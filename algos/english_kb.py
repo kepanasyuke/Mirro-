@@ -162,6 +162,9 @@ _EN_KB = {
     "skyscraper": ("A skyscraper is a very tall building with many floors. "
                    "Steel frames and elevators let towers rise high in cities, "
                    "packing offices and homes into a small footprint."),
+    "desert": ("A desert is a dry region that gets very little rain. It can be "
+               "hot or cold, with sand, rock or ice. Plants and animals there "
+               "adapt to save water and survive extreme heat or cold."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
