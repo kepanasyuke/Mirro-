@@ -255,6 +255,9 @@ _EN_KB = {
     "repair": ("A repair is the act of fixing something that is broken or worn. "
                "It may be done by replacing parts, joining pieces or tuning "
                "settings. Repairing saves resources and extends what we use."),
+    "process": ("A process is a series of steps that turn inputs into a result. "
+                "Workflows, chemical reactions and learning are all processes. "
+                "Understanding each step helps improve speed and quality."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
