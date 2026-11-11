@@ -150,6 +150,9 @@ _EN_KB = {
     "moon": ("The Moon is Earth's natural satellite. It orbits Earth and its "
              "gravity causes tides. Sunlight reflects from it, giving us "
              "phases from new moon to full moon."),
+    "magnet": ("A magnet attracts iron and other magnets. It has two poles, "
+               "north and south; opposite poles pull together and like poles "
+               "push apart. Magnetism powers motors and compasses."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
