@@ -166,6 +166,8 @@ def _c_percent(q):
             base = float(m.group(3).replace(",", "."))
         except Exception:
             return None
+        if pct < 0 or base < 0:
+            return None
         result = pct / 100 * base
         out = ("математика", "16_university", "percent_of", (pct, base),
                f"{pct:g}% от {base:g} = {result:.6g}")
