@@ -247,8 +247,9 @@ def _c_physics(q):
     out = None
     if "энерги" in q and "связ" in q and _numbers(q):
         d = _numbers(q)[0]
-        out = ("физика", "16_university", "binding_energy", (d,),
-               f"E = {d:g}·931.5 МэВ = {d*931.5:.3g} МэВ")
+        if d > 0:
+            out = ("физика", "16_university", "binding_energy", (d,),
+                   f"E = {d:g}·931.5 МэВ = {d*931.5:.3g} МэВ")
     elif "полураспад" in q and len(_numbers(q)) >= 3:
         n0, t, th = _numbers(q)[:3]
         # защита от деления на ноль (период полураспада не может быть 0)
