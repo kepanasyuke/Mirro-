@@ -177,31 +177,31 @@ class KnowledgeGraph:
             self._rebuild_adj()
         return removed
 
-def prune_stopwords(self, stopwords):
-    """Удаляет узлы-связки (мусорные слова типа «однако», «затем») из графа
-    и связанные с ними рёбра. Один return: int — число удалённых узлов."""
-    removed = 0
-    if not isinstance(stopwords, (list, tuple, set, frozenset, dict)):
-        return 0
-    stopwords = set(stopwords)
-    if stopwords:
-        dead = {
-            n for n in self.nodes
-            if isinstance(n, str) and (n in stopwords or n.strip() in stopwords)
-        }
-        for d in dead:
-            del self.nodes[d]
-            if d in self._adj:
-                del self._adj[d]
-        self.edges = {
-            k: w for k, w in self.edges.items()
-            if not (isinstance(k, (tuple, list)) and len(k) >= 3
-                    and (k[0] in dead or k[2] in dead))
-        }
-        # пересобрать индекс соседей
-        self._rebuild_adj()
-        removed = len(dead)
-    return removed
+    def prune_stopwords(self, stopwords):
+        """Удаляет узлы-связки (мусорные слова типа «однако», «затем») из графа
+        и связанные с ними рёбра. Один return: int — число удалённых узлов."""
+        removed = 0
+        if not isinstance(stopwords, (list, tuple, set, frozenset, dict)):
+            return 0
+        stopwords = set(stopwords)
+        if stopwords:
+            dead = {
+                n for n in self.nodes
+                if isinstance(n, str) and (n in stopwords or n.strip() in stopwords)
+            }
+            for d in dead:
+                del self.nodes[d]
+                if d in self._adj:
+                    del self._adj[d]
+            self.edges = {
+                k: w for k, w in self.edges.items()
+                if not (isinstance(k, (tuple, list)) and len(k) >= 3
+                        and (k[0] in dead or k[2] in dead))
+            }
+            # пересобрать индекс соседей
+            self._rebuild_adj()
+            removed = len(dead)
+        return removed
 
     # ---------- вопросы ----------
     def _forward_links(self, name):
