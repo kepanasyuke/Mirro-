@@ -264,6 +264,9 @@ _EN_KB = {
     "evidence": ("Evidence is information that supports a claim or conclusion. "
                  "It can be facts, data, observations or documents. Strong "
                  "evidence helps people judge what is true and decide wisely."),
+    "complaint": ("A complaint is when someone says they are unhappy with a "
+                  "product, service or situation. It raises a problem so it can "
+                  "be examined and fixed. Fair complaints lead to improvements."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
