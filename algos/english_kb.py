@@ -234,6 +234,9 @@ _EN_KB = {
     "horizon": ("The horizon is the line where the sky seems to meet the ground "
                 "or sea. It is an apparent edge created by the curvature of the "
                 "Earth, and it shifts as the viewer moves or height changes."),
+    "scales": ("Scales are tools or systems for measuring or weighing. A balance "
+               "compares masses; rating scales order opinions or sizes. In music "
+               "and in charts, scales set the steps between values."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
