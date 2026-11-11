@@ -108,6 +108,9 @@ _EN_KB = {
     "music": ("Music is organized sound made with voice or instruments. Melody, "
               "harmony and rhythm come together in songs and pieces that express "
               "emotion across cultures."),
+    "election": ("An election is the process by which people choose a leader or "
+                 "representative. Voters cast ballots, results are counted, and "
+                 "the candidate with the most support wins the role."),
     "math": ("Math is the study of numbers, shapes and patterns. Arithmetic, "
              "algebra and geometry are its branches. It solves problems with "
              "logical steps and exact rules."),
