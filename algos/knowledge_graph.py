@@ -50,6 +50,8 @@ class KnowledgeGraph:
             weight = float(weight)
         except Exception:
             weight = 1.0
+        if weight != weight or weight in (float("inf"), float("-inf")):
+            weight = 1.0
         self.add_node(s)
         self.add_node(d)
         key = (s, p, d)
