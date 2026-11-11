@@ -309,6 +309,9 @@ _EN_KB = {
     "echo": ("An echo is a reflected sound that returns after hitting a surface. "
              "Hearing it depends on distance and time; echoes help ships measure "
              "depth and bats navigate in the dark. They reveal the shape around us."),
+    "fermentation": ("Fermentation is a natural process where microorganisms break "
+                     "down sugars into alcohol, gases or acids. It preserves food, "
+                     "adds flavor and is used to make bread, yogurt and beer."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
