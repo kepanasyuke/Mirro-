@@ -270,6 +270,10 @@ _EN_KB = {
     "comfort": ("Comfort is a pleasant feeling of ease and well-being. It comes "
                 "from cozy places, kind words or safety. Comfort helps people "
                 "relax, recover and feel at home in a situation."),
+    "correction": ("A correction is a change that fixes a mistake or error. It "
+                   "can apply to writing, data, behavior or a course of action. "
+                   "Making corrections improves accuracy and helps prevent future "
+                   "errors."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
