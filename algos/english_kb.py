@@ -195,6 +195,9 @@ _EN_KB = {
     "glacier": ("A glacier is a slow-moving mass of ice formed where snow piles "
                 "up and compresses over many years. It flows downhill, carving "
                 "valleys and reshaping the landscape as it melts."),
+    "plan": ("A plan is an organized set of steps toward a goal. It lists what "
+             "to do, when, and how. Good plans are flexible and are updated as "
+             "situations change or new information appears."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
