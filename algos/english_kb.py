@@ -159,6 +159,9 @@ _EN_KB = {
     "island": ("An island is a piece of land surrounded by water. It can be big "
                "or small, formed by volcanoes, reefs or rising land. Islands "
                "have unique plants and animals."),
+    "skyscraper": ("A skyscraper is a very tall building with many floors. "
+                   "Steel frames and elevators let towers rise high in cities, "
+                   "packing offices and homes into a small footprint."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
