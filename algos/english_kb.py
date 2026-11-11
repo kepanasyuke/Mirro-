@@ -252,6 +252,9 @@ _EN_KB = {
     "orbit": ("An orbit is the curved path an object takes around another in space. "
               "Planets orbit stars and moons orbit planets, held by gravity. "
               "Orbits can be round or oval and take different amounts of time."),
+    "repair": ("A repair is the act of fixing something that is broken or worn. "
+               "It may be done by replacing parts, joining pieces or tuning "
+               "settings. Repairing saves resources and extends what we use."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
