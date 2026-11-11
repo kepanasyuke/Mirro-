@@ -290,6 +290,9 @@ _EN_KB = {
     "belonging": ("Belonging is the feeling of being accepted and connected to a "
                   "group, place or community. It comes from shared identity and "
                   "trust, and it gives people a sense of security and purpose."),
+    "balance": ("Balance is the state of being steady and even. A scale balances "
+                "weights, and our bodies balance while we walk. In life, balance "
+                "means giving time and energy to different needs fairly."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
