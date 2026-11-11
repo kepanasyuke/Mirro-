@@ -171,6 +171,9 @@ _EN_KB = {
     "river": ("A river is a natural stream of water flowing toward a sea, lake "
               "or another river. It shapes valleys, carries nutrients and "
               "supplies water that people and wildlife depend on."),
+    "wheat": ("Wheat is a cereal crop grown for its grain, which is milled into "
+              "flour for bread, pasta and many foods. It is one of the most "
+              "important crops in the world."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
