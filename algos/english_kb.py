@@ -219,6 +219,9 @@ _EN_KB = {
     "dialogue": ("A dialogue is a conversation between two or more people. "
                  "Speakers take turns sharing ideas and questions. Good "
                  "dialogue builds understanding and resolves disagreements."),
+    "achievement": ("An achievement is something accomplished through effort or "
+                    "skill, like finishing a goal or passing a test. It brings "
+                    "a sense of progress and is often recognized by others."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
