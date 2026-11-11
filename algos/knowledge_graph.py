@@ -805,6 +805,11 @@ class KnowledgeGraph:
         узлы, которые соединяют несколько кластеров между собой.
 
         Один return: dict {'clusters': [...], 'bridges': [...], 'edges': ...}."""
+        try:
+            max_clusters = max(1, min(50, int(max_clusters)))
+            max_nodes = max(1, min(1000, int(max_nodes)))
+        except Exception:
+            max_clusters, max_nodes = 6, 60
         cache_key = ("clusters", len(self.edges))
         hit = self._cache.get(cache_key)
         if hit is not None:
