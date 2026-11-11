@@ -98,7 +98,10 @@ def _chain_to_str(kg, chain):
         a = str(chain[i])
         b = str(chain[i + 1])
         rels = kg.relation(a, b) if kg is not None else None
-        pred = rels[0][0] if rels else "связан"
+        pred = "связан"
+        if isinstance(rels, (list, tuple)) and rels and isinstance(rels[0], (list, tuple)) \
+                and len(rels[0]) >= 1 and rels[0][0]:
+            pred = str(rels[0][0])
         parts.append(f"{a} —{pred}→ {b}")
     return " ; ".join(parts)
 
