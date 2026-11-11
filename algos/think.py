@@ -216,8 +216,9 @@ def _c_combinatorics(q):
     m_c = re.match(r"c\s*\(?(\d+)\s*[;,]\s*(\d+)\)?", q)
     if m_c:
         n, k = int(m_c.group(1)), int(m_c.group(2))
-        out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
-               f"C({n},{k}) = {_comb(n,k)}")
+        if k <= n and n <= 2000:
+            out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
+                   f"C({n},{k}) = {_comb(n,k)}")
     elif ("сочет" in q or "c(" in q.lower()) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
         n, k = nums[0], nums[1]
