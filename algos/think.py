@@ -281,6 +281,8 @@ def _c_geometry(q):
         a, b, c = _numbers(q)[:3]
         if a <= 0 or b <= 0 or c <= 0:
             out = None
+        elif max(a, b, c) > 1e9:
+            out = None
         # неравенство треугольника: стороны должны образовывать треугольник
         elif a + b <= c or a + c <= b or b + c <= a:
             out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
