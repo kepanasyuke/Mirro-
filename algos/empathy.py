@@ -81,11 +81,13 @@ def _detect_rad(message):
     pos = sum(1 for w in _RAD["positive"] if w in m)
     neg = sum(1 for w in _RAD["negative"] if w in m)
     fatigue = sum(1 for w in _RAD["fatigue"] if w in m)
+    pos_markers = set(_RAD["positive"])
+    neg_markers = set(_RAD["negative"])
     for short in _SHORT_STRICT:
         at_word = _re.search(r"(?<![а-яё])" + short, m)
-        if short in _RAD["positive"] and short in m and not at_word:
+        if short in pos_markers and short in m and not at_word:
             pos -= 1
-        elif short in _RAD["negative"] and short in m and not at_word:
+        elif short in neg_markers and short in m and not at_word:
             neg -= 1
     return {"pos": max(0, pos), "neg": max(0, neg), "fatigue": max(0, fatigue)}
 
