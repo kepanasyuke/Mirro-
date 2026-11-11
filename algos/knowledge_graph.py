@@ -606,8 +606,10 @@ class KnowledgeGraph:
         for key in self.edges:
             if isinstance(key, (tuple, list)) and len(key) >= 3:
                 s, d = key[0], key[2]
-                degree[s] = degree.get(s, 0) + 1
-                degree[d] = degree.get(d, 0) + 1
+                if isinstance(s, str):
+                    degree[s] = degree.get(s, 0) + 1
+                if isinstance(d, str):
+                    degree[d] = degree.get(d, 0) + 1
         junk = {"-", "понятно", "означает", "можно", "это", "что", "как", "там",
                 "надеюсь", "давай", "скажи", "слов", "простым", "о", "если",
                 "такой", "такие", "однако", "поэтому", "вот", "тут", "здесь",
