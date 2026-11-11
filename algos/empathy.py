@@ -70,6 +70,7 @@ _LEAD_RAD = {
 
 
 _SHORT_STRICT = ("рад", "плох", "класс", "ошиб", "лучш", "крут", "гнев", "супер")
+_RE_AT_WORD_PATTERNS = {s: _re.compile(r"(?<![а-яё])" + s) for s in _SHORT_STRICT}
 
 _POS_SET = frozenset(_RAD["positive"])
 _NEG_SET = frozenset(_RAD["negative"])
@@ -91,10 +92,10 @@ def _detect_rad(message):
     neg = sum(1 for w in _NEG_SET if w in m)
     fatigue = sum(1 for w in _FATIGUE_SET if w in m)
     for short in _SHORT_STRICT:
-        at_word = _re.search(r"(?<![а-яё])" + short, m)
-        if short in _POS_SET and short in m and not at_word:
+        at_word = _RE_AT_WORD_PATTERNS[short] if short in _RE_AT_WORD_PATTERNS else None
+        if short in _POS_SET and short in m and (at_word is None or not at_word.search(m)):
             pos -= 1
-        elif short in _NEG_SET and short in m and not at_word:
+        elif short in _NEG_SET and short in m and (at_word is None or not at_word.search(m)):
             neg -= 1
     return {"pos": max(0, pos), "neg": max(0, neg), "fatigue": max(0, fatigue)}
 
