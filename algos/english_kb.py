@@ -213,6 +213,9 @@ _EN_KB = {
     "souvenir": ("A souvenir is an object kept to remember a place, event or "
                  "person. People buy them while traveling as a reminder of "
                  "experiences or to give as small gifts."),
+    "possibility": ("A possibility is something that may happen or be true. "
+                    "It is an option or chance among several outcomes. We weigh "
+                    "probabilities to decide how likely a possibility is."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
