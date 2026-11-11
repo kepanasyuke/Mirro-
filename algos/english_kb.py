@@ -186,6 +186,9 @@ _EN_KB = {
     "coal": ("Coal is a black, burnable rock formed from ancient plants under "
              "heat and pressure. For centuries it has fuelled power plants and "
              "industry, though it releases carbon dioxide when burned."),
+    "meteor": ("A meteor is a streak of light in the sky caused by a small space "
+               "rock burning up in Earth's atmosphere. If a piece survives and "
+               "lands, it is called a meteorite."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
