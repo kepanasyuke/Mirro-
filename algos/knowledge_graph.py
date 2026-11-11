@@ -154,7 +154,7 @@ class KnowledgeGraph:
         dead_edges = [
             k for k in self.edges
             if isinstance(k, (tuple, list)) and len(k) >= 2
-            and self._norm(k[1]) in noise_preds
+            and isinstance(k[1], str) and self._norm(k[1]) in noise_preds
         ]
         for k in dead_edges:
             del self.edges[k]
