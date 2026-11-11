@@ -717,12 +717,12 @@ def prune_stopwords(self, stopwords):
     def edge_weight(self, a, b):
         """Текущий активный вес связи (проводимость) между a и b. Один return: float.
         Идёт по индексу соседей; берём максимальную связь между узлами."""
-        if not a or not b:
+        if not isinstance(a, str) or not isinstance(b, str) or not a or not b:
             return 0.0
         a, b = self._norm(a), self._norm(b)
         best = 0.0
         for p, other, w in self._adj.get(a, []):
-            if other == b and w > best:
+            if isinstance(other, str) and other == b and w > best:
                 best = w
         return best
 
