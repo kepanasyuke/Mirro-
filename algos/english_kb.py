@@ -287,6 +287,9 @@ _EN_KB = {
     "migration": ("Migration is the movement of people or animals from one place "
                   "to another. People migrate for work, safety or family; birds "
                   "and fish migrate with seasons to find food and climate."),
+    "belonging": ("Belonging is the feeling of being accepted and connected to a "
+                  "group, place or community. It comes from shared identity and "
+                  "trust, and it gives people a sense of security and purpose."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
