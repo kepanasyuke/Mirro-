@@ -267,6 +267,10 @@ def prune_stopwords(self, stopwords):
         Один return: list-путь или None."""
         a, b = self._norm(a), self._norm(b)
         result = None
+        try:
+            max_depth = max(1, min(20, int(max_depth)))
+        except Exception:
+            max_depth = 3
         if a in self.nodes and b in self.nodes:
             frontier = [(a, [(a, None, None, 1.0)])]
             visited = {a}
