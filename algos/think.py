@@ -414,7 +414,7 @@ def _solve_linear_root(a, b):
         return None
     if abs(a) < 1e-15:
         return None
-    return (0 - b) / a
+    return -b / a
 
 
 def _solve_quadratic(a, b, c):
