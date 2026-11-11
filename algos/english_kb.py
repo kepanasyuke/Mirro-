@@ -165,6 +165,9 @@ _EN_KB = {
     "desert": ("A desert is a dry region that gets very little rain. It can be "
                "hot or cold, with sand, rock or ice. Plants and animals there "
                "adapt to save water and survive extreme heat or cold."),
+    "journey": ("A journey is travel from one place to another. People travel "
+                "for work, family or discovery, by foot, road, sea or air. "
+                "Journeys can be short trips or long adventures."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
