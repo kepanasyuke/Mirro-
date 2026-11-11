@@ -685,7 +685,8 @@ def prune_stopwords(self, stopwords):
         if hit is not None:
             return list(hit)
         if a in self.nodes:
-            na = {row[1] for row in self._adj.get(a, [])}
+            na = {row[1] for row in self._adj.get(a, [])
+                  if isinstance(row, (tuple, list)) and len(row) >= 2}
             junk = {"займет", "работать", "относительно", "хоть", "петабайты",
                     "нашел", "нашла", "сделать", "скажи", "можно", "давай", "это",
                     "что", "как", "чтобы", "также", "который", "там", "туда"}
