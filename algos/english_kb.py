@@ -207,6 +207,9 @@ _EN_KB = {
     "memory": ("Memory is the ability to store and recall information. Working "
                "memory holds what we use now; long-term memory keeps facts and "
                "skills over time. Repetition and rest help strengthen it."),
+    "society": ("A society is a group of people living together and sharing "
+                "rules, culture and institutions. People cooperate through "
+                "laws, work and trade to meet common needs and goals."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
