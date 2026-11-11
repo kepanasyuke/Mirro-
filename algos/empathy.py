@@ -71,6 +71,9 @@ _LEAD_RAD = {
 
 _SHORT_STRICT = ("рад", "плох", "класс", "ошиб", "лучш", "крут", "гнев", "супер")
 
+_POS_SET = frozenset(_RAD["positive"])
+_NEG_SET = frozenset(_RAD["negative"])
+
 
 def _detect_rad(message):
     """Определяет тональность и усталость реплики по словарям.
@@ -80,16 +83,14 @@ def _detect_rad(message):
     if not isinstance(message, str) or not message.strip():
         return {"pos": 0, "neg": 0, "fatigue": 0}
     m = message.lower()
-    pos = sum(1 for w in _RAD["positive"] if w in m)
-    neg = sum(1 for w in _RAD["negative"] if w in m)
+    pos = sum(1 for w in _POS_SET if w in m)
+    neg = sum(1 for w in _NEG_SET if w in m)
     fatigue = sum(1 for w in _RAD["fatigue"] if w in m)
-    pos_markers = set(_RAD["positive"])
-    neg_markers = set(_RAD["negative"])
     for short in _SHORT_STRICT:
         at_word = _re.search(r"(?<![а-яё])" + short, m)
-        if short in pos_markers and short in m and not at_word:
+        if short in _POS_SET and short in m and not at_word:
             pos -= 1
-        elif short in neg_markers and short in m and not at_word:
+        elif short in _NEG_SET and short in m and not at_word:
             neg -= 1
     return {"pos": max(0, pos), "neg": max(0, neg), "fatigue": max(0, fatigue)}
 
