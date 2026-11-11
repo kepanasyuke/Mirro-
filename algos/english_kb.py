@@ -284,6 +284,9 @@ _EN_KB = {
     "skill": ("A skill is an ability to do something well, learned through "
               "practice and experience. It can be practical, social or mental. "
               "Skills grow with training and open doors to new tasks and jobs."),
+    "migration": ("Migration is the movement of people or animals from one place "
+                  "to another. People migrate for work, safety or family; birds "
+                  "and fish migrate with seasons to find food and climate."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
