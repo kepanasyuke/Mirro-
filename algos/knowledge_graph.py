@@ -780,6 +780,10 @@ class KnowledgeGraph:
         for key, w in list(self.edges.items()):
             if not isinstance(key, (tuple, list)) or len(key) < 3:
                 continue
+            try:
+                w = float(w)
+            except Exception:
+                continue
             s, p, d = key[0], key[1], key[2]
             if (s == a and d == b) or (s == b and d == a):
                 nw = max(floor, w - amount)
