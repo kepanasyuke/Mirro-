@@ -178,13 +178,13 @@ def _c_quadratic(q):
     is_quad = ("квадратн" in q or "x²" in q or "x^2" in q or "x**2" in q) and "=" in q
     if is_quad:
         expr = q.replace("×", "").replace(" ", "")
-        m = re.search(r"([+-]?\d*\.?\d*)?x(?:\^2|\u00b2)?\s*([+-]\d*\.?\d*)?x\s*([+-]\d+\.?\d*)?\s*=\s*0", expr)
+        m = re.search(r"([+-]?\d*\.?\d*)?x(?:\^2|\u00b2)?\s*([+-]?\d*\.?\d*)?x\s*([+-]\d*\.?\d*)?\s*=\s*0", expr)
         if m:
             try:
                 a_s, b_s, c_s = m.group(1), m.group(2), m.group(3)
                 a = 1.0 if a_s in ("+", "-") else (float(a_s) if a_s else 1.0)
                 b = 1.0 if b_s in ("+", "-") else (float(b_s) if b_s else 0.0)
-                c = float(c_s) if c_s else 0.0
+                c = 1.0 if c_s in ("+", "-") else (float(c_s) if c_s else 0.0)
             except Exception:
                 return None
             roots = _solve_quadratic(a, b, c)
