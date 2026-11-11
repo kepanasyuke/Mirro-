@@ -125,7 +125,10 @@ def observe(message):
 def current_tone():
     """Текущее настроение разговора (копия, значения округлены до 3 знаков —
     не мутирует состояние). Один return: dict."""
-    return {"emotion": round(_emotion, 3), "fatigue": round(_fatigue, 3)}
+    def _safe(v):
+        v = float(v)
+        return 0.0 if v != v else v
+    return {"emotion": round(_safe(_emotion), 3), "fatigue": round(_safe(_fatigue), 3)}
 
 
 def empathy_lead(message):
