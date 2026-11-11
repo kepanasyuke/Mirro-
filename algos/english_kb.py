@@ -156,6 +156,9 @@ _EN_KB = {
     "volcano": ("A volcano is an opening in Earth's crust that lets magma, ash "
                 "and gases escape. When it erupts, lava flows out and builds new "
                 "land; some volcanoes are active, others dormant or extinct."),
+    "island": ("An island is a piece of land surrounded by water. It can be big "
+               "or small, formed by volcanoes, reefs or rising land. Islands "
+               "have unique plants and animals."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
