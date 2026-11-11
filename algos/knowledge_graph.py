@@ -217,7 +217,10 @@ class KnowledgeGraph:
     def neighbors(self, name):
         """Все прямые связи узла по индексу. Один return: list."""
         name = self._norm(name)
-        return [row for row in self._adj.get(name, [])]
+        rows = self._adj.get(name, [])
+        if not isinstance(rows, (list, tuple)):
+            rows = []
+        return [row for row in rows if isinstance(row, (tuple, list)) and len(row) >= 2]
 
     def relation(self, a, b):
         """Прямые отношения между a и b (по индексу, без дублей). Один return: list."""
