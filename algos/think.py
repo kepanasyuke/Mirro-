@@ -462,6 +462,8 @@ def _solve_linear(a, b):
         b = float(b)
     except Exception:
         return []
+    if a != a or b != b:
+        return []
     roots = []
     if a != 0:
         roots = [_solve_linear_root(a, b)]
