@@ -102,7 +102,7 @@ def observe(message):
     if not isinstance(message, str) or not message.strip():
         return {"emotion": _emotion, "fatigue": _fatigue}
     d = _detect_rad(message)
-    net = (d["pos"] - d["neg"]) if d["pos"] == 0 or d["neg"] == 0 else 0
+    net = (d["pos"] - d["neg"]) if d["pos"] == 0 or d["neg"] == 0 else (d["pos"] - d["neg"]) * 0.5
     delta = 0.15 * max(-2, min(2, net))
     if d["pos"] == 0 and d["neg"] == 0:
         # нейтральная реплика мягко тянет к нулю
