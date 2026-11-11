@@ -201,6 +201,9 @@ _EN_KB = {
     "routine": ("A routine is a regular, repeated way of doing something. Daily "
                 "habits like waking, eating and studying form a routine that "
                 "saves time and brings stability to life."),
+    "upbringing": ("Upbringing is how a child is raised and guided by family. "
+                   "It includes values, habits and education learned at home, "
+                   "shaping character and how a person deals with the world."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
