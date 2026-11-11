@@ -243,6 +243,9 @@ _EN_KB = {
     "motion": ("Motion is the change in position of an object over time. Speed "
                "and direction describe it; acceleration changes motion. Forces "
                "like gravity and push cause objects to start, stop or turn."),
+    "task": ("A task is a piece of work to be done, with a clear goal or outcome. "
+             "Tasks can be small or large, personal or shared. Breaking work "
+             "into tasks makes big jobs easier to manage."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
