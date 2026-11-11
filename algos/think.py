@@ -344,6 +344,8 @@ def _comb(n, k):
     if n > 2000:
         return 0  # не считаем гигантские сочетания (предотвращает переполнение)
     k = min(k, n - k)
+    if k == 0:
+        return 1
     r = 1
     for i in range(1, k + 1):
         r = r * (n - k + i) // i
