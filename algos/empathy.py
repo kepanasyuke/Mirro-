@@ -92,7 +92,7 @@ def _detect_rad(message):
     neg = sum(1 for w in _NEG_SET if w in m)
     fatigue = sum(1 for w in _FATIGUE_SET if w in m)
     for short in _SHORT_STRICT:
-        at_word = _RE_AT_WORD_PATTERNS[short] if short in _RE_AT_WORD_PATTERNS else None
+        at_word = _RE_AT_WORD_PATTERNS.get(short)
         if short in _POS_SET and short in m and (at_word is None or not at_word.search(m)):
             pos -= 1
         elif short in _NEG_SET and short in m and (at_word is None or not at_word.search(m)):
