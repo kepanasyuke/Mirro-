@@ -305,7 +305,7 @@ def _c_gcd_lcm_prime(q):
             out = ("математика", "08_math", "gcd", (a, b), f"НОД({a},{b}) = {_gcd(a, b)}")
     elif ("нок" in q or "наименьшее общее" in q or "lcm" in q) and len(_int_numbers(q)) >= 2:
         a, b = _int_numbers(q)[:2]
-        if a != 0 and b != 0:
+        if a != 0 and b != 0 and abs(a) * abs(b) <= 10**12:
             out = ("математика", "08_math", "lcm", (a, b), f"НОК({a},{b}) = {_lcm(a, b)}")
     elif "прост" in q and _int_numbers(q):
         n = _int_numbers(q)[0]
