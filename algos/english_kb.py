@@ -192,6 +192,9 @@ _EN_KB = {
     "comet": ("A comet is a small icy body from the outer solar system. Near the "
               "Sun, heat turns its ice into gas and dust, forming a bright head "
               "and a long glowing tail."),
+    "glacier": ("A glacier is a slow-moving mass of ice formed where snow piles "
+                "up and compresses over many years. It flows downhill, carving "
+                "valleys and reshaping the landscape as it melts."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
