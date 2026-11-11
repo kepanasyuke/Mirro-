@@ -168,6 +168,9 @@ _EN_KB = {
     "journey": ("A journey is travel from one place to another. People travel "
                 "for work, family or discovery, by foot, road, sea or air. "
                 "Journeys can be short trips or long adventures."),
+    "river": ("A river is a natural stream of water flowing toward a sea, lake "
+              "or another river. It shapes valleys, carries nutrients and "
+              "supplies water that people and wildlife depend on."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
