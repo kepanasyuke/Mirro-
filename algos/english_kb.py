@@ -123,6 +123,9 @@ _EN_KB = {
     "philosophy": ("Philosophy is the study of fundamental questions about "
                    "existence, knowledge, values and reason. It uses careful "
                    "argument and reflection instead of experiment alone."),
+    "sum": ("A sum is the result of adding numbers together. For 3 + 5 the sum "
+            "is 8; order does not change it. Sums appear in counting, totals "
+            "and averages all across math."),
     "health": ("Health is the state of being physically and mentally well. "
                "Good sleep, nutrition and exercise support it, while illness "
                "and stress can weaken it."),
