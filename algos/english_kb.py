@@ -66,6 +66,9 @@ _EN_KB = {
     "programming": ("Programming means writing instructions that a computer runs. "
                     "Code in languages like Python is translated so the machine can "
                     "execute it step by step to solve tasks."),
+    "voting": ("Voting is how a group makes a decision by letting each member "
+               "choose an option. It can be by ballot, show of hands or online; "
+               "the most chosen outcome usually wins."),
     "operating system": ("An operating system (OS) manages hardware and programs. "
                          "It handles files, memory and processes. Examples are Linux "
                          "and Windows."),
