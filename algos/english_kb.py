@@ -48,6 +48,9 @@ _EN_KB = {
 "bacteria": ("Bacteria are tiny single-celled organisms. Many are harmless or "
                  "helpful (digestion, fermentation), while some cause disease. They "
                  "reproduce by dividing."),
+    "ocean": ("The ocean is the vast body of salt water covering most of Earth. "
+              "It has currents, tides and layers, and hosts huge marine ecosystems "
+              "from coral reefs to deep trenches."),
     "light": ("Light is electromagnetic radiation that travels in waves. It can be "
               "described as photons. Light carries energy and lets us see; its speed "
               "in vacuum is fixed."),
