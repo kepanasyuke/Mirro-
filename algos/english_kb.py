@@ -177,6 +177,9 @@ _EN_KB = {
     "forest": ("A forest is a large area covered with trees and other plants. "
                "It gives oxygen, shelters wildlife and cools the climate. Many "
                "animals and people depend on forests for food and shelter."),
+    "lake": ("A lake is a large body of water surrounded by land. It can be "
+             "fresh or salty, fed by rivers and rain. Lakes store water, "
+             "support wildlife and are used for fishing and recreation."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
