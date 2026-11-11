@@ -278,6 +278,9 @@ _EN_KB = {
                    "the senses. Sight, hearing and touch give signals that the "
                    "brain turns into meaning; you can be active literal or "
                    "shaped by experience."),
+    "universe": ("The universe is everything that exists: all matter, energy, "
+                 "space and time. It holds galaxies, stars and planets and has "
+                 "been expanding since the Big Bang about 14 billion years ago."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
