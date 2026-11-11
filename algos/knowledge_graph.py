@@ -255,7 +255,10 @@ class KnowledgeGraph:
             if not (isinstance(entry, (tuple, list)) and len(entry) >= 2):
                 continue
             cur, trail = entry[0], entry[1]
-            for p, other, w in self.neighbors(cur):
+            for nbr in self.neighbors(cur):
+                if not (isinstance(nbr, (tuple, list)) and len(nbr) >= 3):
+                    continue
+                p, other, w = nbr
                 if other == b:
                     found = trail + [(cur, p, b, w)]
                     break
