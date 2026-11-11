@@ -819,7 +819,10 @@ class KnowledgeGraph:
                 "смысл", "простыми", "словами", "просто", "работает", "функция",
                 "вывод", "затем", "далее", "рассмотрим", "скажем", "допустим"}
         degree = {}
-        for (s, p, d) in self.edges:
+        for key in self.edges:
+            if not (isinstance(key, (tuple, list)) and len(key) >= 3):
+                continue
+            s, p, d = key[0], key[1], key[2]
             degree[s] = degree.get(s, 0) + 1
             degree[d] = degree.get(d, 0) + 1
         # структурный фильтр: исключаем узлы, чьи связи почти все через мусорный
@@ -827,7 +830,10 @@ class KnowledgeGraph:
         good_pred_share = {}
         edge_totals = {}
         noisy_preds = {"связано_с", "связано"}
-        for (s, p, d) in self.edges:
+        for key in self.edges:
+            if not (isinstance(key, (tuple, list)) and len(key) >= 3):
+                continue
+            s, p, d = key[0], key[1], key[2]
             edge_totals[s] = edge_totals.get(s, 0) + 1
             edge_totals[d] = edge_totals.get(d, 0) + 1
             if p not in noisy_preds:
