@@ -261,8 +261,9 @@ def _c_physics(q):
         # защита от деления на ноль (период полураспада не может быть 0)
         if th == 0:
             th = 1.0
-        out = ("физика", "16_university", "half_life_remaining", (n0, t, th),
-               f"N = {n0:g}·2^(-{t:g}/{th:g}) = {n0*2**(-t/th):.4g}")
+        if n0 >= 0:
+            out = ("физика", "16_university", "half_life_remaining", (n0, t, th),
+                   f"N = {n0:g}·2^(-{t:g}/{th:g}) = {n0*2**(-t/th):.4g}")
     return out
 
 
