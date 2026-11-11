@@ -180,6 +180,9 @@ _EN_KB = {
     "lake": ("A lake is a large body of water surrounded by land. It can be "
              "fresh or salty, fed by rivers and rain. Lakes store water, "
              "support wildlife and are used for fishing and recreation."),
+    "hill": ("A hill is a raised area of land, lower and gentler than a mountain. "
+             "Hills are formed by erosion, glaciers or volcanoes. They give good "
+             "views and are common in rolling countryside."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
