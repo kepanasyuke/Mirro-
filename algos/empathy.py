@@ -114,6 +114,8 @@ def observe(message):
         # нейтральная реплика мягко тянет к нулю
         delta = -0.02 * _emotion
     _emotion = max(-1.0, min(1.0, _emotion + delta))
+    if _emotion != _emotion:
+        _emotion = 0.0
     if any(w in m for w in _REST_KW):
         _fatigue = max(0.0, _fatigue - 0.35)
     elif d["fatigue"]:
