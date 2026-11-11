@@ -557,7 +557,7 @@ def prune_stopwords(self, stopwords):
         """Насколько понятия связаны: число общих соседей / общий путь,
         с мягким бонусом за прямое ребро. Пустые узлы → 0. Один return: float 0..1."""
         a, b = self._norm(a), self._norm(b)
-        if not a or not b:
+        if not isinstance(a, str) or not isinstance(b, str) or not a or not b:
             return 0.0
         result = 0.0
         if a in self.nodes and b in self.nodes:
