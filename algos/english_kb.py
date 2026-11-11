@@ -144,6 +144,9 @@ _EN_KB = {
 "zoology": ("Zoology is the science of animals. It studies their bodies, "
                  "behavior and habitats, how they adapt and live in groups, "
                  "from tiny insects to large mammals."),
+    "country": ("A country is a land with its own government, borders and laws. "
+                "People share a common history and culture within it. Countries "
+                "trade, cooperate and sometimes compete with each other."),
     "moon": ("The Moon is Earth's natural satellite. It orbits Earth and its "
              "gravity causes tides. Sunlight reflects from it, giving us "
              "phases from new moon to full moon."),
