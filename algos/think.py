@@ -448,7 +448,9 @@ def _solve_quadratic(a, b, c):
 
 def _percent_of(pct, base):
     try:
-        return float(pct) / 100.0 * float(base)
+        pct = float(pct)
+        base = float(base)
+        return pct / 100.0 * base
     except Exception:
         return 0.0
 
