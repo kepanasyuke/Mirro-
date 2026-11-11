@@ -183,6 +183,9 @@ _EN_KB = {
     "hill": ("A hill is a raised area of land, lower and gentler than a mountain. "
              "Hills are formed by erosion, glaciers or volcanoes. They give good "
              "views and are common in rolling countryside."),
+    "coal": ("Coal is a black, burnable rock formed from ancient plants under "
+             "heat and pressure. For centuries it has fuelled power plants and "
+             "industry, though it releases carbon dioxide when burned."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
