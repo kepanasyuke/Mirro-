@@ -99,6 +99,9 @@ _EN_KB = {
     "literature": ("Literature is written artistic work such as novels, poetry "
                    "and plays. It uses language to express ideas, emotions and "
                    "stories, reflecting culture and imagination."),
+    "trade": ("Trade is the exchange of goods and services between people or "
+              "countries. It relies on money, transport and markets, and lets "
+              "regions specialize in what they produce best."),
     "art": ("Art is the expression of ideas and emotions through visual or "
             "performing forms like painting, sculpture and music. It reflects "
             "culture, creativity and the human experience."),
