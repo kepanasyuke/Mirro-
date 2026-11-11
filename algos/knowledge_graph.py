@@ -212,7 +212,10 @@ class KnowledgeGraph:
     def _forward_links(self, name):
         """Исходящие связи узла (p, other, w). Один return: list."""
         name = self._norm(name)
-        return [row for row in self._adj.get(name, [])]
+        rows = self._adj.get(name, [])
+        if not isinstance(rows, (list, tuple)):
+            rows = []
+        return [row for row in rows if isinstance(row, (tuple, list)) and len(row) >= 2]
 
     def neighbors(self, name):
         """Все прямые связи узла по индексу. Один return: list."""
