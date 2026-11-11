@@ -246,6 +246,9 @@ _EN_KB = {
     "task": ("A task is a piece of work to be done, with a clear goal or outcome. "
              "Tasks can be small or large, personal or shared. Breaking work "
              "into tasks makes big jobs easier to manage."),
+    "machinery": ("Machinery is a set of machines that do work using power. "
+                  "It can include engines, tools and equipment in factories or "
+                  "farms. Machines multiply human strength and speed up tasks."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
