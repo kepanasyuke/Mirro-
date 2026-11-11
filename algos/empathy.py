@@ -11,6 +11,7 @@
 Чистый Python, атомарные функции (один return), по LINTER.md.
 """
 import os
+import random as _rnd
 import re as _re
 
 # расширенные словари тональности (словоформы за счёт -о/-а/суффиксов не нужны —
@@ -143,11 +144,10 @@ def empathy_lead(message):
 
 def _pick(options):
     """Случайный элемент списка. Пустой список / нет строк → «». Один return: str."""
-    import random
     strs = [o for o in (options or []) if isinstance(o, str) and o.strip()]
     if not strs:
         return ""
-    return random.choice(strs)
+    return _rnd.choice(strs)
 
 
 def apply_empathy(message, answer):
