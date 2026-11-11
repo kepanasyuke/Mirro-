@@ -293,6 +293,9 @@ _EN_KB = {
     "balance": ("Balance is the state of being steady and even. A scale balances "
                 "weights, and our bodies balance while we walk. In life, balance "
                 "means giving time and energy to different needs fairly."),
+    "contrast": ("Contrast is the difference between two things, ideas or colors. "
+                 "It makes them easier to tell apart and highlights their features. "
+                 "Contrast is used in design, in writing and in comparing choices."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
