@@ -228,6 +228,9 @@ _EN_KB = {
     "priority": ("A priority is what matters most and should be done first. "
                  "When resources or time are limited, priority helps decide "
                  "the order of tasks and where to focus attention."),
+    "reaction": ("A reaction is a response to an event, word or change. In "
+                 "chemistry it is a process where substances change into others. "
+                 "In life, a reaction shows how someone feels or acts."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
