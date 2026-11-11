@@ -303,6 +303,9 @@ _EN_KB = {
                       "collect information from people. It can be on paper or "
                       "online, with closed or open answers. Analysis of replies "
                       "helps research and decision-making."),
+    "manual": ("A manual is a book or guide that explains how to use or fix "
+               "something. It gives step-by-step instructions, warnings and "
+               "tips. Manuals help both beginners and experts work correctly."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
