@@ -736,6 +736,11 @@ def prune_stopwords(self, stopwords):
     def reward_sign(self, a, b, feedback_sign=1.0, amount=0.05):
         """Хебб-обновление связи по знаку отклика через reward/punish.
         Малый знак (≈0) или amount<=0 — нейтрально. Один return: int."""
+        try:
+            feedback_sign = float(feedback_sign)
+            amount = float(amount)
+        except Exception:
+            return 0
         if abs(feedback_sign) < 1e-9 or amount <= 0:
             return 0
         changed = 0
