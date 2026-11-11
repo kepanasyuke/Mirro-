@@ -321,6 +321,9 @@ _EN_KB = {
     "storm": ("A storm is a violent weather event with strong winds, rain, snow "
               "or thunder. It can bring lightning and flooding. Storms form when "
               "warm and cold air meet; they vary from mild to severe."),
+    "cactus": ("A cactus is a plant adapted to dry deserts. Its thick stem stores "
+               "water, and spines reduce water loss and guard it from animals. "
+               "Cacti flower and some live for many decades."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
