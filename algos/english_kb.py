@@ -237,6 +237,9 @@ _EN_KB = {
     "scales": ("Scales are tools or systems for measuring or weighing. A balance "
                "compares masses; rating scales order opinions or sizes. In music "
                "and in charts, scales set the steps between values."),
+    "treasure": ("Treasure is a collection of valuable things, such as gold, gems "
+                 "or precious objects. It can be buried, found or inherited, and "
+                 "it holds worth to both its owners and historians."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
