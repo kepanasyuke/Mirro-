@@ -222,6 +222,9 @@ _EN_KB = {
     "achievement": ("An achievement is something accomplished through effort or "
                     "skill, like finishing a goal or passing a test. It brings "
                     "a sense of progress and is often recognized by others."),
+    "character": ("A character is the set of qualities that define how a person "
+                  "thinks, feels and acts. Honesty, patience and courage are "
+                  "parts of it; character is shaped by choices and experience."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
