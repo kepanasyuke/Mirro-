@@ -125,6 +125,8 @@ class KnowledgeGraph:
             return 0
         changed = 0
         for key, w in list(self.edges.items()):
+            if not (isinstance(key, (tuple, list)) and len(key) == 3):
+                continue
             try:
                 w = float(w)
             except Exception:
@@ -132,6 +134,8 @@ class KnowledgeGraph:
             nw = max(floor, w - amount)
             if nw != w:
                 self.edges[key] = nw
+                s, p, d = key
+                self._set_adj_weight(s, p, d, nw)
                 changed += 1
         return changed
 
