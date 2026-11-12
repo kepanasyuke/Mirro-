@@ -517,6 +517,10 @@ _EN_KB = {
                   "person. Healthy sentiment enriches life, while unchecked sentiment can "
                   "cloud judgment, so wisdom seeks a fair balance between the heart and "
                   "the head."),
+    "chivalry": ("Chivalry is the medieval code of honor that expected knights to be "
+                 "brave, courteous and loyal and to defend the weak. In a broader sense, "
+                 "it means generous and polite behavior, especially toward those in need. "
+                 "True chivalry pairs strength with gentleness and duty with honor."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
