@@ -474,6 +474,9 @@ _EN_KB = {
     "hope": ("Hope is the belief that a desired outcome is possible in the future. "
              "It lets people endure hardship and keep striving despite difficulties. "
              "Hope fuels motivation and opens the door to real change."),
+    "fortitude": ("Fortitude is mental and emotional strength in facing difficulty "
+                  "or adversity. It is the courage to endure pain without complaint. "
+                  "Fortitude helps people carry on when everything else is heavy."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
