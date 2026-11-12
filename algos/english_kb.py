@@ -563,6 +563,10 @@ _EN_KB = {
                   "overwhelms the senses and lifts the spirit. It is found in great natural views, "
                   "in profound art and in acts of extraordinary courage. Encountering the sublime "
                   "reminds us how small we are, but also how much greatness we are capable of."),
+    "heroism": ("Heroism is the display of exceptional courage and selflessness in the face of "
+                "danger or adversity. It is measured not by strength alone but by acting for the "
+                "good of others at personal risk. Heroes rise to occasions that demand more than "
+                "self-interest, and their deeds inspire courage in those who witness them."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
