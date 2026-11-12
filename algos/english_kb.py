@@ -633,6 +633,10 @@ _EN_KB = {
                   "both to an outer condition of silence and to an inner state of calm and stillness. "
                   "A quiet mind is better able to think clearly, listen deeply and act with intention. "
                   "In a noisy world, cultivating quietness is a strength that fosters focus and peace."),
+    "hardihood": ("Hardihood is the quality of being bold and fearless in daring undertakings, combined "
+                  "with enough strength to endure hardship. It is a blend of audacity and endurance — the "
+                  "courage to attempt difficult things and the toughness to see them through. Hardiness of "
+                  "spirit lets a person step beyond comfort to attempt what others would not dare."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
