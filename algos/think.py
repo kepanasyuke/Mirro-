@@ -329,6 +329,8 @@ def _c_strings_sorts(q):
     """Палиндром / сортировка. Один return: tuple|None."""
     out = None
     if "палиндром" in q:
+        if len(q) > 5000:
+            q = q[:5000]
         out = ("строки", "06_strings", "is_palindrome", (q,), None)
     elif "сортир" in q:
         arr = _int_numbers(q)
