@@ -783,6 +783,10 @@ _EN_KB = {
                      "is one who can be relied upon completely, in good times and in bad, without wavering. The word conjures the image of "
                      "a robust and resolute figure who stands firm against the storm. Stalwartness is the quality of the friend who never "
                      "deserts you, the employee who stays loyal through adversity, and the soldier who holds the line when it matters most."),
+    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom — the ability to think about how and why one "
+                  "should act in order to achieve a good life. Unlike theoretical knowledge, phronesis is concerned with action "
+                  "in particular situations and with what is good and bad for humans. It is the wisdom of the experienced "
+                  "statesman, the skilled artisan and the mature counselor, embodying good judgment in everyday decision-making."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
