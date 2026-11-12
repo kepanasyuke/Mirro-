@@ -424,6 +424,9 @@ _EN_KB = {
     "bravery": ("Bravery is the courage to face danger, pain or fear without giving "
                 "up. It is not the absence of fear but acting despite it. Brave "
                 "deeds protect others and grow inner strength."),
+    "compassion": ("Compassion is awareness of others' suffering together with the "
+                   "wish to relieve it. It moves a person from feeling to action. "
+                   "Compassion connects people and eases pain in the world."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
