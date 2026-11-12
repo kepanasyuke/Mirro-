@@ -822,8 +822,14 @@ class KnowledgeGraph:
         a, b = self._norm(a), self._norm(b)
         best = 0.0
         for p, other, w in self._adj.get(a, []):
-            if isinstance(other, str) and other == b and w > best:
-                best = w
+            if isinstance(other, str) and other == b:
+                try:
+                    w = float(w)
+                except (TypeError, ValueError):
+                    continue
+                if w != w or w > best:
+                    if w == w:
+                        best = w
         return best
 
     def reward(self, a, b, amount=0.3):
