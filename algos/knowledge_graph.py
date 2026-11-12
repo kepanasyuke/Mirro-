@@ -88,6 +88,16 @@ class KnowledgeGraph:
                 if isinstance(row, (tuple, list)) and len(row) >= 2
                 and isinstance(row[1], str)]
 
+    def edge_sources(self, pred):
+        """Все узлы-источники для заданного предиката. Не-строковый/пустой
+        предикат → []. Один return: list."""
+        p = self._norm(pred) if isinstance(pred, str) else ""
+        if not p:
+            return []
+        return sorted({k[0] for k in self.edges
+                       if isinstance(k, (tuple, list)) and len(k) >= 2
+                       and k[1] == p and isinstance(k[0], str)})
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
