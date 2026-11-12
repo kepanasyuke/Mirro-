@@ -58,6 +58,8 @@ class KnowledgeGraph:
             weight = 1.0
         if weight != weight or weight in (float("inf"), float("-inf")):
             weight = 1.0
+        if weight > 1e6 or weight < -1e6:
+            weight = max(-1e6, min(1e6, weight)) if weight == weight else 1.0
         self.add_node(s)
         self.add_node(d)
         key = (s, p, d)
