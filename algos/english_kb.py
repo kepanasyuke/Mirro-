@@ -718,6 +718,7 @@ _TOPIC_TEST = [
     ("confidence", ("confidence", "self-assured", "assertive", "certain of oneself", "self-belief", "trust in abilities")),
     ("mirth", ("mirth", "cheerfulness", "jovial", "lighthearted", "merry", "joyful laughter")),
     ("sincerity", ("sincerity", "genuine", "open-heart", "honest feeling", "unforced truth", "unaffected")),
+    ("zeal", ("zeal", "passionate energy", "eager enthusiasm", "burning ardor", "fervent application", "devoted energy")),
 ]
 
 
