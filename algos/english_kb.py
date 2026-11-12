@@ -542,6 +542,8 @@ _TOPIC_TEST = [
     ("diligence", ("diligence", "careful", "earnest", "thorough", "persistent")),
     ("kindness", ("kindness", "gentle", "friendly", "considerate", "warm")),
     ("honesty", ("honesty", "truth", "truthful", "sincere", "candid", "upright")),
+    ("hope", ("hope", "faith", "optimism", "expectation", "positive")),
+    ("fortitude", ("fortitude", "strength", "endurance", "courage under", "brave heart")),
 ]
 
 
