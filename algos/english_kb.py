@@ -421,6 +421,9 @@ _EN_KB = {
     "forgiveness": ("Forgiveness is the act of letting go of anger and resentment "
                     "toward someone who wronged you. It heals both sides and frees "
                     "the forgiver from a heavy emotional burden."),
+    "bravery": ("Bravery is the courage to face danger, pain or fear without giving "
+                "up. It is not the absence of fear but acting despite it. Brave "
+                "deeds protect others and grow inner strength."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
