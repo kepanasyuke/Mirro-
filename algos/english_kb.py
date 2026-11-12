@@ -944,6 +944,7 @@ _TOPIC_TEST = [
     ("kindred spirit", ("kindred spirit", "soul mate", "fellow traveler", "like-minded companion", "twin soul", "auspicious affinity")),
     ("phronesis", ("phronesis", "practical wisdom", "sage counsel", "good judgment", "discerning prudence", "shrewd deliberation")),
     ("peaceableness", ("peaceableness", "amicable disposition", "exeamic harmony", "nonviolent nature", "tranquil spirit", "concordant temperament")),
+    ("harmony", ("harmony", "concordant agreement", "melodious accord", "balanced co-existence", "sympathetic consonance", "communal harmony")),
 ]
 
 
