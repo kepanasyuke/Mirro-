@@ -418,6 +418,9 @@ _EN_KB = {
     "courtesy": ("Courtesy is polite and considerate behavior toward other people. "
                  "It is shown in small gestures like greeting, thanking and waiting "
                  "your turn. Courtesy makes daily life smoother and kinder."),
+    "forgiveness": ("Forgiveness is the act of letting go of anger and resentment "
+                    "toward someone who wronged you. It heals both sides and frees "
+                    "the forgiver from a heavy emotional burden."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
