@@ -327,6 +327,9 @@ _EN_KB = {
     "dawn": ("Dawn is the time of day when the sky grows light before sunrise. "
              "It comes with soft colors and quiet calm. Dawn marks the beginning "
              "of a new day and the start of daily routines."),
+    "contradiction": ("A contradiction happens when two statements cannot both be "
+                      "true at the same time. Spotting contradictions helps find "
+                      "errors in logic and forces us to rethink ideas."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
