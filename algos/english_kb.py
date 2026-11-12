@@ -950,6 +950,7 @@ _TOPIC_TEST = [
     ("phronesis", ("phronesis", "practical wisdom", "sage counsel", "good judgment", "discerning prudence", "shrewd deliberation")),
     ("peaceableness", ("peaceableness", "amicable disposition", "exeamic harmony", "nonviolent nature", "tranquil spirit", "concordant temperament")),
     ("harmony", ("harmony", "concordant agreement", "melodious accord", "balanced co-existence", "sympathetic consonance", "communal harmony")),
+    ("comity", ("comity", "mutual courtesy", "interstate goodwill", "reciprocal respect", "polite regard", "friendly courtesy between nations")),
 ]
 
 
