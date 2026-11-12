@@ -972,7 +972,7 @@ class KnowledgeGraph:
             if total > 0 and good / total < 0.2:
                 continue
             ranked.append((dd, n))
-        ranked.sort(key=lambda x: -x[0])
+        ranked.sort(key=lambda x: -x[0] if isinstance(x[0], (int, float)) else 0)
         centers = [n for _d, n in ranked[:capacity]]
         used = set()
         clusters = []
