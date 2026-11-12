@@ -297,6 +297,15 @@ class KnowledgeGraph:
             return []
         return list(node.facts or [])
 
+    def tag_counts(self):
+        """Количество узлов по тэгам. Один return: dict (tag -> count)."""
+        counts = {}
+        for node in self.nodes.values():
+            tag = getattr(node, "tag", None)
+            if isinstance(tag, str) and tag:
+                counts[tag] = counts.get(tag, 0) + 1
+        return counts
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
