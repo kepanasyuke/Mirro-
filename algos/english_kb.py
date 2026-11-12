@@ -704,6 +704,11 @@ _EN_KB = {
             "more than the ability to tell jokes; it is a way of thinking — agile and associative — that sees "
             "unexpected connections others miss. In the right hands, wit disarms hostility, eases tension and makes "
             "company delightful."),
+    "charisma": ("Charisma is an attractive quality in a person that inspires devotion, trust and enthusiasm in "
+                 "others. It is a magnetic charm that draws people in and makes them willing to follow. Charisma is "
+                 "not mere physical attractiveness or celebrity; it is a blend of presence, confidence, warmth and a "
+                 "genuine interest in other people. Those who possess it can move others to great achievement, but it "
+                 "carries an ethical responsibility to use that power wisely."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
