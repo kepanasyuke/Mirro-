@@ -276,15 +276,16 @@ def _c_physics(q):
 def _c_geometry(q):
     """Геометрия: Пифагор / Герон. Один return: tuple|None."""
     out = None
-    if "пифагор" in q and len(_numbers(q)) >= 2:
-        a, b = _numbers(q)[:2]
+    nums = _numbers(q)
+    if "пифагор" in q and len(nums) >= 2:
+        a, b = nums[:2]
         if a < 0 or b < 0 or (a == 0 and b == 0) or max(abs(a), abs(b)) > 1e12:
             out = None
         else:
             out = ("геометрия", "16_university", "right_triangle_sides", (a, b),
                    f"гипотенуза = {math.hypot(a,b):.4g}")
-    elif ("герон" in q or "площадь треугольн" in q) and len(_numbers(q)) >= 3:
-        a, b, c = _numbers(q)[:3]
+    elif ("герон" in q or "площадь треугольн" in q) and len(nums) >= 3:
+        a, b, c = nums[:3]
         if a <= 0 or b <= 0 or c <= 0:
             out = None
         elif max(a, b, c) > 1e9:
