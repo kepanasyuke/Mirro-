@@ -787,6 +787,11 @@ _EN_KB = {
                   "should act in order to achieve a good life. Unlike theoretical knowledge, phronesis is concerned with action "
                   "in particular situations and with what is good and bad for humans. It is the wisdom of the experienced "
                   "statesman, the skilled artisan and the mature counselor, embodying good judgment in everyday decision-making."),
+    "peaceableness": ("Peaceableness is the disposition to live in harmony with others and to avoid quarrels, conflict and "
+                      "violence whenever possible. A peaceable person is not necessarily passive; they are simply wiser in "
+                      "choosing their battles and more skilled at resolving differences through words rather than force. Peacefulness "
+                      "at the personal level makes homes happier, and at the national level it is what makes diplomacy and lasting "
+                      "agreements possible between peoples."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
