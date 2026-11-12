@@ -769,6 +769,11 @@ _EN_KB = {
                  "Goodness is not a single act but a consistent pattern of seeing the best in others, telling the truth and lending a "
                  "helping hand. In its simplest form, goodness is the desire to make things better and the daily commitment to act on "
                  "that desire."),
+    "kindred spirit": ("A kindred spirit is a person whose nature, tastes or sensibilities are very similar to your own, so that "
+                       "understanding between you is immediate and deep. Meeting a kindred spirit is rare enough to feel like a small "
+                       "miracle — someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
+                       "the same truths. Such connections are the heart of friendship, offering the comfort of being truly known and the "
+                       "rare joy of finding a companion for the road of life."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
