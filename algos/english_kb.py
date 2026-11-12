@@ -445,6 +445,10 @@ _EN_KB = {
     "equanimity": ("Equanimity is calmness and composure, especially in difficult "
                    "situations. It means keeping a steady mind whether you win or "
                    "lose. Equanimity protects wisdom from being swept by emotion."),
+    "conscientiousness": ("Conscientiousness is the trait of being careful, thorough "
+                          "and responsible in your duties. It means doing things well "
+                          "and on time, not just quickly. Conscientious people are "
+                          "dependable and take pride in their work."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
