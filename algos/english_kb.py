@@ -433,6 +433,9 @@ _EN_KB = {
     "tact": ("Tact is the skill of saying the right thing at the right time so as "
              "not to offend. It blends honesty with kindness and awareness. Tactful "
              "people give feedback that helps instead of hurting."),
+    "forbearance": ("Forbearance is patient self-control in the face of annoyance "
+                    "or provocation. It means holding back anger and giving second "
+                    "chances. Forbearing people keep peace and stay fair under stress."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
