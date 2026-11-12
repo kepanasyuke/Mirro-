@@ -70,7 +70,7 @@ def _numbers(text):
         src = str(text or "")
     except Exception:
         src = ""
-    for x in re.findall(r"-?\d+[.,]?\d*", src):
+    for x in re.findall(r"-?\d+[.,]?\d*", src.replace("\u2212", "-")):
         try:
             out.append(float(x.replace(",", ".")))
         except Exception:
