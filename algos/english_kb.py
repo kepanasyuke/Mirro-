@@ -521,6 +521,10 @@ _EN_KB = {
                  "brave, courteous and loyal and to defend the weak. In a broader sense, "
                  "it means generous and polite behavior, especially toward those in need. "
                  "True chivalry pairs strength with gentleness and duty with honor."),
+    "savvy": ("Savvy is practical intelligence and shrewd understanding of how to get "
+              "things done, especially in business or daily dealings. It is street-smart "
+              "know-how rather than book learning alone. Savvy people read situations "
+              "quickly and find workable solutions where others are stuck."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
