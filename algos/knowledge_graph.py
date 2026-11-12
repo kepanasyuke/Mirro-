@@ -146,6 +146,14 @@ class KnowledgeGraph:
             self._rebuild_adj()
         return removed
 
+    def count_nodes(self):
+        """Число узлов в графе. Один return: int."""
+        return len(self.nodes)
+
+    def count_edges(self):
+        """Число рёбер в графе. Один return: int."""
+        return len(self.edges)
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
