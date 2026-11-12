@@ -909,9 +909,15 @@ _EN_KB = {
 "unaffectedness": ("Unaffectedness is the quality of being genuine and spontaneous in manner, without artificiality or contrivance. An unaffected person does not put on airs, does not perform for others, "
                        "and does not try to be what they are not, but acts with a natural ease that is free of self-consciousness. It is a rare and refreshing quality in a world of carefully cultivated images, "
                        "and it is the simplest road to authenticity in personal relationships, for it lets others see the true person behind the social mask."),
-    "veracity": ("Veracity is habitual truthfulness and the disposition to always tell the truth, even when a lie would be easier or more convenient. It is the daily practice of accuracy in reporting facts "
+"veracity": ("Veracity is habitual truthfulness and the disposition to always tell the truth, even when a lie would be easier or more convenient. It is the daily practice of accuracy in reporting facts "
                  "and the refusal to distort, exaggerate or withhold what is known to be true. Veracity is the bedrock of all reliability and the foundation of credibility, for a person's word is only as good "
                  "as the truth it carries. In law, in journalism and in daily life, veracity is what makes testimony trustworthy, reports reliable and relationships honest."),
+    "comprehensiveness": ("Comprehensiveness is the quality of including, involving or dealing with all or nearly all elements, aspects or possibilities of something. A comprehensive study, plan or treatment covers "
+                         "all of the relevant ground and leaves no important part unconsidered. It is the opposite of narrowness and partial treatment, which look at only one facet of a many-sided matter. "
+                         "Comprehensiveness requires both breadth of knowledge and thoroughness of method, and it is the quality that distinguishes the considered overview from the hasty partial glance."),
+    "thoroughness": ("Thoroughness is the quality of doing something carefully and completely, leaving no detail unchecked and no stone unturned. A thorough worker does not rush through a task, but takes the time "
+                     "to do it fully and correctly the first time, attending to details that others might overlook. It is the practical side of conscientiousness, the disciplined follow-through that converts good intentions "
+                     "into finished and reliable results. Thoroughness is what separates the excellent craftsman from the careless one, and it is essential in any field where accuracy and completeness matter more than speed."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
