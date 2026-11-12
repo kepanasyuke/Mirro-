@@ -110,6 +110,20 @@ class KnowledgeGraph:
             self._rebuild_adj()
         return len(self_loops)
 
+    def count_edges_between(self, a, b):
+        """Число прямых связей между двумя узлами (в любом направлении).
+        Некорректные аргументы → 0. Один return: int."""
+        if not a or not b:
+            return 0
+        a, b = self._norm(a), self._norm(b)
+        count = 0
+        for k in self.edges:
+            if not (isinstance(k, (tuple, list)) and len(k) >= 2):
+                continue
+            if (k[0] == a and k[2] == b) or (k[0] == b and k[2] == a):
+                count += 1
+        return count
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
