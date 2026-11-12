@@ -504,6 +504,10 @@ _EN_KB = {
     "sagacity": ("Sagacity is the quality of being wise, keen and judicious in judgment. "
                  "It comes from experience, learning and a sharp perception of detail. "
                  "Sagacious people see through appearances to the heart of a matter."),
+    "resolution": ("Resolution is the firmness and steadfastness of intent to see a thing "
+                    "through. It is the inner decision that turns a wish into a vow to act. "
+                    "People of resolution do not abandon their aim at the first obstacle; "
+                    "they carry their purpose to completion."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
