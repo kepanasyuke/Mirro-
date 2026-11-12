@@ -1025,6 +1025,9 @@ _TOPIC_TEST = [
     ("genuineness", ("genuineness", "authentic reality", "unaffected sincerity", "true-hearted candor", "honest openness", "unfeigned nature")),
     ("righteousness", ("righteousness", "moral uprightness", "just dealing", "virtuous conduct", "blameless integrity", "God-fearing honesty")),
     ("equanimity", ("equanimity", "composed balance", "imperturbable calm", "serene poise", "unvarying temper", "steadied composure")),
+    ("philanthropy", ("philanthropy", "generous giving", "benevolent charity", "humanitarian aid", "philanthropic concern", "public-spirited kindness")),
+    ("bereavement", ("bereavement", "personal grief", "sorrowing loss", "mourning the departed", "grieving heart", "internal affliction")),
+    ("yearning", ("yearning", "ardent desire", "intense longing", "soulful craving", "longing after", "wistful aspiration")),
 ]
 
 
