@@ -533,10 +533,14 @@ _EN_KB = {
                     "especially in the face of difficulty or opposition. It is a steadfast "
                     "allegiance to a person, cause or belief that does not waver easily. "
                     "Staunch friends and allies remain true when it is costly to do so."),
-    "acumen": ("Acumen is the ability to make good judgments and quick, accurate decisions, "
-               "especially in practical or business matters. It is refined through experience "
-               "and observation rather than formal study alone. Those with acumen spot "
-               "opportunities and pitfalls that others overlook, and act on them decisively."),
+"acumen": ("Acumen is the ability to make good judgments and quick, accurate decisions, "
+              "especially in practical or business matters. It is refined through experience "
+              "and observation rather than formal study alone. Those with acumen spot "
+              "opportunities and pitfalls that others overlook, and act on them decisively."),
+    "merit": ("Merit is the quality of being deserving reward or praise based on one's "
+              "actions, skills or achievements. It is what makes a person worthy of "
+              "recognition, promotion or reward. A system that honors merit encourages "
+              "effort, talent and honest work over favoritism or chance."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
