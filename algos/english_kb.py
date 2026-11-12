@@ -686,6 +686,11 @@ _EN_KB = {
                "It is the human glow that makes people feel at ease, accepted and valued in your presence. "
                "Warmth is often underestimated because it is quiet, yet it is one of the most powerful forces "
                "for connection — it melts reserve, softens conflict and opens the door to trust."),
+    "magnificence": ("Magnificence is the quality of being grand in scale, impressive in beauty or generous in "
+                     "display, without sacrificing dignity. It is seen in architecture, ceremony and the works "
+                     "of art or nature that leave people in awe. True magnificence is not empty ostentation; it "
+                     "combines noble ambition with impeccable taste, so that grandeur serves beauty rather than "
+                     "garish display."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
