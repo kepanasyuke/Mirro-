@@ -73,6 +73,10 @@ class KnowledgeGraph:
             return 0
         return len(self._adj.get(name, []))
 
+    def all_tags(self):
+        """Множество всех тегов узлов. Один return: set."""
+        return {n.tag for n in self.nodes.values() if hasattr(n, "tag")}
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
