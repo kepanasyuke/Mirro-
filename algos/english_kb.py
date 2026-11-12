@@ -852,6 +852,19 @@ _EN_KB = {
                   "and clear whether they face triumph or disaster. The practice of equanimity does not mean being indifferent to what happens, but instead means "
                   "not being ruled by fleeting passions and shocks. It allows one to view situations with wisdom and to act with sobriety, and it is a quality prized "
                   "by philosophers and warriors alike as a mark of true poise and inner strength."),
+    "philanthropy": ("Philanthropy is the love of humankind, expressed through practical acts of goodwill toward one's fellow beings. It is the desire and practice of "
+                     "promoting the welfare of others, often through charitable gifts of money, time or effort to those in need. Philanthropy is distinguished from mere "
+                     "charity by its breadth and purpose: it seeks not merely to relieve immediate suffering but to address the causes of that suffering and to improve the "
+                     "human condition on a larger scale. In its grandest form, it is the engine of hospitals, universities and libraries; in its simplest form, it is one "
+                     "stranger helping another."),
+    "bereavement": ("Bereavement is the state of deep loss felt when death takes someone dear, and the process of grief that follows. It is one of the heaviest and most "
+                    "universal human experiences, affecting people in body, mind and spirit. Though painful, bereavement is not a sign of weakness; it is the natural "
+                    "response of a heart that has loved deeply. Supporting someone through it, or enduring it with dignity ourselves, requires patience, compassion and time, "
+                    "and often brings a renewed sense of the value of life and the ties that bind us."),
+    "yearning": ("Yearning is a strong, persistent longing or desire for something deeply felt but not yet possessed. It can reach toward a far place, a lost love, a better "
+                 "self or a distant goal. Yearning is more intense than wishing; it has the ache of absence in it and the hope of fulfillment pushing against it. Though it "
+                 "can cause restless dissatisfaction, yearnings are not to be dismissed, for they reveal what the heart truly values and give direction to a life. When "
+                 "rightly directed, they become the fuel of passionate accomplishment."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
