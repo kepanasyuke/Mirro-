@@ -351,6 +351,9 @@ _EN_KB = {
     "diligence": ("Diligence is steady and careful effort in work or study. It "
                   "means paying attention to details and not giving up easily. "
                   "Diligent people build trust and often reach results with care."),
+    "symmetry": ("Symmetry is balance in shape or structure, where parts mirror "
+                 "each other around a line or point. It appears in nature, art "
+                 "and geometry, and often makes things look balanced and orderly."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
