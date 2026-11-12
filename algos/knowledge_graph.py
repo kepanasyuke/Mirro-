@@ -57,6 +57,14 @@ class KnowledgeGraph:
             return None
         return self.nodes.get(self._norm(name))
 
+    def has_edge(self, src, pred, dst):
+        """Есть ли прямая связь между src и dst по предикату pred.
+        Некорректные аргументы → False. Один return: bool."""
+        if not src or not pred or not dst:
+            return False
+        s, p, d = self._norm(src), self._norm(pred), self._norm(dst)
+        return (s, p, d) in self.edges
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
