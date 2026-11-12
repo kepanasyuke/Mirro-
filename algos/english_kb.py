@@ -719,6 +719,11 @@ _EN_KB = {
               "own principles and the outward reputation that follows. In its deepest sense, honor is not about praise or "
               "elevated titles but about keeping faith with what one has promised and respecting the dignity of others. A "
               "person of honor would rather suffer loss than betray their word."),
+    "decorum": ("Decorum is behavior in keeping with good taste, propriety and the accepted standards of polite "
+                "society. It is the outward expression of an inward respect for others and for oneself. Acting with "
+                "decorum means knowing what is appropriate in any situation — when to speak, when to be silent, when to "
+                "act and when to hold back. Far from being mere etiquette, decorum is a form of kindness that makes people "
+                "around one comfortable and respected."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
