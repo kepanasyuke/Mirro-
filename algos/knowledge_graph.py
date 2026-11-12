@@ -186,6 +186,36 @@ class KnowledgeGraph:
                 if isinstance(k, (tuple, list)) and len(k) >= 2
                 and k[0] in keep and k[2] in keep]
 
+    def merge_nodes(self, target, alias):
+        """Сливает узел alias в узел target: переносит все рёбра alias на target.
+        Возвращает число перенесённых связей. Неизвестные узлы → 0. Один return: int."""
+        target, alias = self._norm(target), self._norm(alias)
+        if target == alias or not target or not alias:
+            return 0
+        if alias not in self.nodes:
+            return 0
+        moved = 0
+        for k in list(self.edges):
+            if not (isinstance(k, (tuple, list)) and len(k) >= 3):
+                continue
+            s, p, d = k
+            if s == alias:
+                nk = (target, p, d)
+                self.edges[nk] = max(self.edges.get(nk, 0.0), self.edges[k])
+                del self.edges[k]
+                moved += 1
+            elif d == alias:
+                nk = (s, p, target)
+                self.edges[nk] = max(self.edges.get(nk, 0.0), self.edges[k])
+                del self.edges[k]
+                moved += 1
+        del self.nodes[alias]
+        if alias in self._adj:
+            del self._adj[alias]
+        if moved:
+            self._rebuild_adj()
+        return moved
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
