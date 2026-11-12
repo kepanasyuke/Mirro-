@@ -367,6 +367,9 @@ _EN_KB = {
                    "especially in wealth or well-being. It comes from growth, "
                    "opportunity and good health. Prosperity can be personal or "
                    "shared across a whole society."),
+    "resilience": ("Resilience is the ability to recover quickly from hard times "
+                   "or setbacks. It involves staying flexible and positive under "
+                   "pressure. Resilient people adapt, learn and keep going."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
