@@ -870,6 +870,7 @@ _TOPIC_TEST = [
     ("decorum", ("decorum", "propriety", "proper behavior", "social grace", "polite formality", "appropriate conduct")),
     ("finesse", ("finesse", "subtle skill", "delicate handling", "fine touch", "exquisite craft", "polished art")),
     ("invention", ("invention", "new creation", "innovative device", "novel idea", "ingenious contrivance", "clever construction")),
+    ("guilelessness", ("guilelessness", "candid openness", "artless honesty", "unworldly simplicity", "innocent frankness", "transparent plainness")),
 ]
 
 
