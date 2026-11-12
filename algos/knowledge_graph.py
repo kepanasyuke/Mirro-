@@ -304,6 +304,8 @@ class KnowledgeGraph:
         result = None
         try:
             max_depth = max(1, min(20, int(max_depth)))
+            max_fanout = max(1, int(max_fanout))
+            max_visited = max(1, int(max_visited))
         except Exception:
             max_depth = 3
         if a in self.nodes and b in self.nodes:
