@@ -487,6 +487,9 @@ _EN_KB = {
     "lenity": ("Lenity is the quality of being gentle and merciful in judgment. It is "
                "the mildness that avoids harsh punishment when it is not needed. Lenity "
                "corrects with care and tempering, without cruelty."),
+    "tenacity": ("Tenacity is the quality of holding firmly to a course of action or "
+                 "belief. It means refusing to give up even when success seems slow or "
+                 "far away. Tenacious people keep trying long after others have stopped."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
