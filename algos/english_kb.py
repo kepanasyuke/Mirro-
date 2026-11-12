@@ -468,6 +468,9 @@ _EN_KB = {
     "mettle": ("Mettle is strength of character and the courage to keep going under "
                "pressure. It is what is revealed when a person is tested by hardship. "
                "Mettle shows true character in difficult circumstances."),
+    "vigilance": ("Vigilance is careful watchfulness for possible dangers or errors. "
+                  "It means staying alert and attentive over long periods. Vigilant "
+                  "people notice problems early and prevent small issues from growing."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
