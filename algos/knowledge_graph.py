@@ -301,6 +301,10 @@ class KnowledgeGraph:
         name = self._norm(name)
         n = self.nodes.get(name)
         text = None
+        try:
+            depth = max(1, min(6, int(depth)))
+        except Exception:
+            depth = 1
         if n:
             lines = [f"«{name}» — {n.tag}"]
             if n.facts:
