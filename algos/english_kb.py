@@ -541,6 +541,10 @@ _EN_KB = {
               "actions, skills or achievements. It is what makes a person worthy of "
               "recognition, promotion or reward. A system that honors merit encourages "
               "effort, talent and honest work over favoritism or chance."),
+    "sapience": ("Sapience is the quality of being wise, with deep understanding and good "
+                 "judgment applied to real life. Whereas knowledge is information, sapience "
+                 "is the wisdom that knows how to use it well. A sapient person grasps the "
+                 "bigger picture and offers counsel that stands the test of time."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
