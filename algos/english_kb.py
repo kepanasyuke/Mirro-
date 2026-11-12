@@ -430,6 +430,9 @@ _EN_KB = {
     "altruism": ("Altruism is selfless concern for the welfare of others. It is "
                  "acting to help someone without expecting anything in return. "
                  "Altruistic deeds make society more humane and connected."),
+    "tact": ("Tact is the skill of saying the right thing at the right time so as "
+             "not to offend. It blends honesty with kindness and awareness. Tactful "
+             "people give feedback that helps instead of hurting."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
