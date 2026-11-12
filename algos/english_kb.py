@@ -666,6 +666,10 @@ _EN_KB = {
                  "society, making it possible for strangers to cooperate and for opponents to disagree without "
                  "disrespect. Civility is not weakness or the absence of conviction; it is the willingness to "
                  "treat every person with basic dignity."),
+    "moderation": ("Moderation is the avoidance of excess and the practice of keeping everything in its proper "
+                   "measure. It is the golden mean between deficiency and excess that guides sound living in all "
+                   "things — eating, working, speaking, spending and even in showing emotion. Moderation is not "
+                   "timidity or mediocrity; it is the disciplined wisdom that gives a person balance and self-control."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
