@@ -759,6 +759,11 @@ _EN_KB = {
                  "true, a soldier loyal to their country, and a translator faithful to the original text. Fidelity is the binding "
                  "thread of every lasting trust, for it assures others that your word is dependable and your promises will be kept "
                  "even at a cost to yourself."),
+    "probity": ("Probity is the quality of having strong moral principles and complete honesty in dealing with money, power or "
+                "public office. It is integrity in its most practical form, where a person can be trusted absolutely because their "
+                "handling of resources is beyond reproach. Probity is the foundation of professional reputation and the attribute "
+                "that most makes people willing to entrust their interests to you. It is what keeps judges impartial, auditors reliable "
+                "and leaders honest."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
