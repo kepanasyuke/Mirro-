@@ -779,6 +779,7 @@ _TOPIC_TEST = [
     ("nobility", ("nobility", "high character", "moral excellence", "noble-mindedness", "princely valor", "elevated soul")),
     ("virtue", ("virtue", "moral excellence", "righteousness", "goodness", "uprightness", "right living")),
     ("benevolence", ("benevolence", "kind disposition", "goodwill", "charitable heart", "beneficent action", "well-wishing")),
+    ("largess", ("largess", "lavish giving", "liberal gifts", "bountiful bestowal", "munificent grant", "generous endowment")),
 ]
 
 
