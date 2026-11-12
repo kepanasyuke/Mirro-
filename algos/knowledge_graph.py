@@ -772,6 +772,12 @@ class KnowledgeGraph:
             top_n = max(1, int(top_n))
         except Exception:
             top_n = 5
+        try:
+            min_sim = float(min_sim)
+        except Exception:
+            min_sim = 0.02
+        if min_sim != min_sim or min_sim < 0 or min_sim >= 1:
+            min_sim = 0.02
         a = self._norm(name)
         out = []
         cache_key = ("close", a, top_n, min_sim, len(self.edges))
