@@ -739,6 +739,7 @@ _TOPIC_TEST = [
     ("assiduousness", ("assiduousness", "diligent attention", "unremitting care", "thorough application", "steady hard work", "constant effort")),
     ("discernment", ("discernment", "fine judgment", "perceptive insight", "discerning eye", "good taste", "clear-sighted choice")),
     ("stamina", ("stamina", "enduring energy", "prolonged effort", "physical endurance", "sustained patience", "tireless energy")),
+    ("gentleness", ("gentleness", "mild temperament", "tender spirit", "soft-spoken kindness", "meekness", "gentle nature")),
 ]
 
 
