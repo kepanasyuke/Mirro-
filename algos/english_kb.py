@@ -379,6 +379,9 @@ _EN_KB = {
     "curiosity": ("Curiosity is a strong desire to learn or know more about "
                   "the world. It drives questions, exploration and discovery. "
                   "Curious minds stay open to new ideas and grow faster."),
+    "patience": ("Patience is the capacity to stay calm while waiting or dealing "
+                 "with delay and difficulty. It helps keep focus and avoid rash "
+                 "reactions. Patient people persevere and reach long-term goals."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
