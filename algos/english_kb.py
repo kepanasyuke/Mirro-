@@ -865,6 +865,14 @@ _EN_KB = {
                  "self or a distant goal. Yearning is more intense than wishing; it has the ache of absence in it and the hope of fulfillment pushing against it. Though it "
                  "can cause restless dissatisfaction, yearnings are not to be dismissed, for they reveal what the heart truly values and give direction to a life. When "
                  "rightly directed, they become the fuel of passionate accomplishment."),
+    "unselfishness": ("Unselfishness is the quality of putting the needs and interests of others before one's own comfort or gain. An unselfish person gives freely of time, "
+                      "energy or possessions without expecting anything in return, finding joy in the happiness they bring to others. It is the practical opposite of selfishness "
+                      "and a mark of a mature heart, for it reflects an understanding that we are not isolated selves but members of families, communities and a common humanity. "
+                      "The truly unselfish do not merely sacrifice; they give from a place of fullness, and their generosity of spirit has a way of coming back to bless them."),
+    "foresight": ("Foresight is the ability to anticipate what will happen or what is likely to be needed in the future. It is the forewarned caution that allows a person to plan "
+                  "ahead, avoid hazards and seize opportunities before they are obvious to others. Foresight is a mark of wisdom, for it joins a realistic understanding of the present "
+                  "with a shrewd guess about the morrow. It is what saves a business from an unwise venture, what keeps a family from financial ruin, and what allows a leader to see "
+                  "the shape of coming events."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
