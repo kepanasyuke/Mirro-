@@ -774,6 +774,7 @@ _TOPIC_TEST = [
     ("gallantry", ("gallantry", "chivalrous courtesy", "brave conduct", "heroic courtesy", "gentlemanly valor", "courtly bravery")),
     ("nobility", ("nobility", "high character", "moral excellence", "noble-mindedness", "princely valor", "elevated soul")),
     ("virtue", ("virtue", "moral excellence", "righteousness", "goodness", "uprightness", "right living")),
+    ("benevolence", ("benevolence", "kind disposition", "goodwill", "charitable heart", "beneficent action", "well-wishing")),
 ]
 
 
