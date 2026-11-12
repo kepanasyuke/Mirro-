@@ -714,6 +714,11 @@ _EN_KB = {
                     "irony. It is the opposite of flippancy and half-heartedness. Earnestness gives weight to words and "
                     "actions, so that promises mean something and efforts are not wasted on pretense. It is the fuel of "
                     "conviction and the mark of a trustworthy heart."),
+    "honor": ("Honor is a code of personal integrity that compels a person to do what is right, even when no one is "
+              "watching and even when it is costly. It is the inner sense of worth that comes from living up to one's "
+              "own principles and the outward reputation that follows. In its deepest sense, honor is not about praise or "
+              "elevated titles but about keeping faith with what one has promised and respecting the dignity of others. A "
+              "person of honor would rather suffer loss than betray their word."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
