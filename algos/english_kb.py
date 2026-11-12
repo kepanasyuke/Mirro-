@@ -699,6 +699,11 @@ _EN_KB = {
                   "that move the emotions, sharpen the mind and stir the will of the listener. Eloquence is not mere "
                   "verbal trickery; at its best it is truth expressed with such power and beauty that it can change a "
                   "person's mind or move a crowd to action. It is the crowning skill of the capable communicator."),
+    "wit": ("Wit is the quick, clever humor that springs from intelligence and sharp perception. A witty remark "
+            "joins amusing ideas in a surprising way, delighting the listener with its truth and timing. Wit is "
+            "more than the ability to tell jokes; it is a way of thinking — agile and associative — that sees "
+            "unexpected connections others miss. In the right hands, wit disarms hostility, eases tension and makes "
+            "company delightful."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
