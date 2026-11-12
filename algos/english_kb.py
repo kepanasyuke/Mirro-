@@ -525,6 +525,10 @@ _EN_KB = {
               "things done, especially in business or daily dealings. It is street-smart "
               "know-how rather than book learning alone. Savvy people read situations "
               "quickly and find workable solutions where others are stuck."),
+    "equity": ("Equity is the quality of being fair and impartial, giving everyone what "
+               "is justly their due rather than treating everyone exactly the same. It "
+               "recognizes that different situations may need different treatment to reach "
+               "an equal outcome. Equity anchors society in justice and mutual respect."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
