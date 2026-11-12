@@ -317,7 +317,11 @@ def _c_geometry(q):
         else:
             s = (a + b + c) / 2
             radic = s * (s - a) * (s - b) * (s - c)
+            if radic != radic:
+                radic = 0.0
             if radic < 0:
+                radic = 0.0
+            if radic > 1e18:
                 radic = 0.0
             area = math.sqrt(radic)
             out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
