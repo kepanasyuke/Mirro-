@@ -957,6 +957,9 @@ _EN_KB = {
 "certitude": ("Certitude is the state of being completely certain about the truth of a matter, free from doubt or hesitation. It is more than mere confidence, which can rest on feeling alone; certitude is grounded in knowledge, evidence or "
                    "conviction that leaves no room for equivocation. It brings with it a settled peace of mind and a clear direction for action. Certitude must be distinguished from its counterfeit, certitude without grounds, which is dogmatism, and "
                    "be held with the humility that no human certainty is immune to revision before new evidence."),
+    "devotement": ("Devotement is the state of being deeply devoted, the whole-hearted giving of oneself over to a person, a purpose or a cause. It is stronger than mere liking or mild interest, for it implies a settled and unwavering turning of the "
+                   "heart and mind toward its object, whether that object be a loved one, a faith, a craft or a calling. Devotement carries with it constancy and sacrifice, for the devoted give up alternatives and endure difficulty gladly. It is the "
+                   "bond that holds friendships firm across years, the fuel of the serious artist and the foundation of every long and faithful commitment in human life."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -1141,6 +1144,7 @@ _TOPIC_TEST = [
     ("wakefulness", ("wakefulness", "alert vigilance", "waking awareness", "sleepless watch", "lucid alertness", "unremitting attention")),
     ("watchfulness", ("watchfulness", "vigilant guard", "sentry duty", "alert lookout", "circumspect observation", "continuous surveillance")),
     ("surveillance", ("surveillance", "close watch", "systematic monitoring", "electronic oversight", "careful observation", "continuous tracking")),
+    ("devotement", ("devotement", "whole-hearted giving", "deep devotion", "faithful dedication", "self-surrendering love", "steadfast commitment")),
 ]
 
 
