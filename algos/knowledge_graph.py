@@ -306,6 +306,35 @@ class KnowledgeGraph:
                 counts[tag] = counts.get(tag, 0) + 1
         return counts
 
+    def connected_components(self):
+        """Список компонент связности графа (каждая — список узлов).
+        Один return: list of lists."""
+        nbrs = {}
+        for k in self.edges:
+            if not (isinstance(k, (tuple, list)) and len(k) >= 2):
+                continue
+            s, d = k[0], k[2]
+            if isinstance(s, str) and isinstance(d, str):
+                nbrs.setdefault(s, set()).add(d)
+                nbrs.setdefault(d, set()).add(s)
+        seen = set()
+        comps = []
+        for node in self.nodes:
+            if node in seen:
+                continue
+            stack = [node]
+            seen.add(node)
+            comp = []
+            while stack:
+                cur = stack.pop()
+                comp.append(cur)
+                for nxt in nbrs.get(cur, ()):
+                    if nxt not in seen:
+                        seen.add(nxt)
+                        stack.append(nxt)
+            comps.append(comp)
+        return comps
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
