@@ -548,6 +548,7 @@ _TOPIC_TEST = [
     ("honesty", ("honesty", "truth", "truthful", "sincere", "candid", "upright")),
     ("hope", ("hope", "faith", "optimism", "expectation", "positive")),
     ("fortitude", ("fortitude", "strength", "endurance", "courage under", "brave heart")),
+    ("magnanimity", ("magnanimity", "generous spirit", "noble", "forgiving", "high-minded")),
 ]
 
 
