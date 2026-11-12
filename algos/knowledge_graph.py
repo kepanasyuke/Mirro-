@@ -289,6 +289,14 @@ class KnowledgeGraph:
               if isinstance(row, (tuple, list)) and len(row) >= 2 and isinstance(row[0], str)}
         return sorted(na & nb)
 
+    def get_node_facts(self, name):
+        """Список фактов, связанных с узлом. Неизвестный узел → [].
+        Один return: list."""
+        node = self.get_node(name)
+        if node is None:
+            return []
+        return list(node.facts or [])
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
