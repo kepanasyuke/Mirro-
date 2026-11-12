@@ -409,6 +409,9 @@ _EN_KB = {
     "generosity": ("Generosity is the willingness to give time, money or kindness "
                    "freely. It grows out of caring for others, not obligation. "
                    "Giving generously builds connection and shared joy."),
+    "grit": ("Grit is the mix of passion and perseverance toward long-term goals. "
+             "It is about steady effort over months and years, not just talent. "
+             "Gritty people finish what they start and improve over time."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
