@@ -739,6 +739,11 @@ _EN_KB = {
                        "in a time of need, and the quiet watchfulness that keeps a community safe. Neighborliness turns a mere "
                        "collection of private houses into a real neighborhood where people know each other and look out for "
                        "one another."),
+    "affability": ("Affability is the quality of being easy to approach and pleasant to talk with. An affable person is "
+                   "genuinely friendly, courteous and interested in others, so that people feel comfortable in their company. "
+                   "It is a social warmth that lowers barriers and builds rapport quickly. Affability differs from mere good "
+                   "manners in its sincerity; it is a natural warmth of disposition that makes strangers feel at ease and turns "
+                   "casual acquaintances into lasting friends."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
