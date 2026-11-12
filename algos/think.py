@@ -383,6 +383,9 @@ def _c_strings_sorts(q):
             shown = sorted(arr)[:20]
             out = ("алгоритмы", "05_sorts", "quick_sort", (arr,),
                    f"сортировка: {shown}")
+        else:
+            out = ("алгоритмы", "05_sorts", "quick_sort", (arr,),
+                   "нечего сортировать: числа не найдены")
     return out
 
 
