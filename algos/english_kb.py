@@ -512,6 +512,11 @@ _EN_KB = {
                 "Keeping a promise builds trust and shows that your word can be relied "
                 "upon. Broken promises, by contrast, break relationships and reputations. "
                 "The keeping of promises is the foundation of honor and accountability."),
+    "sentiment": ("Sentiment is a view or attitude shaped by emotion rather than reason "
+                  "alone. It is the feeling that colors how a person sees a situation or "
+                  "person. Healthy sentiment enriches life, while unchecked sentiment can "
+                  "cloud judgment, so wisdom seeks a fair balance between the heart and "
+                  "the head."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
