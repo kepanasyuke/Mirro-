@@ -960,6 +960,9 @@ _EN_KB = {
     "devotement": ("Devotement is the state of being deeply devoted, the whole-hearted giving of oneself over to a person, a purpose or a cause. It is stronger than mere liking or mild interest, for it implies a settled and unwavering turning of the "
                    "heart and mind toward its object, whether that object be a loved one, a faith, a craft or a calling. Devotement carries with it constancy and sacrifice, for the devoted give up alternatives and endure difficulty gladly. It is the "
                    "bond that holds friendships firm across years, the fuel of the serious artist and the foundation of every long and faithful commitment in human life."),
+    "resoluteness": ("Resoluteness is the determined firmness with which one pursues a decision or a course of action, refusing to be swayed, discouraged or turned aside. A resolute person has settled what must be done and intends to see it through, "
+                     "meeting obstacles as tests rather than as reasons to retreat. It is the backbone of courage, the steadiness behind every long campaign, and the quality that lets good intentions harden into actual achievement. Resoluteness differs "
+                     "from stubbornness in that it aims at a considered goal and adapts its means, while holding its chosen direction with unwavering fixity."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -1145,6 +1148,7 @@ _TOPIC_TEST = [
     ("watchfulness", ("watchfulness", "vigilant guard", "sentry duty", "alert lookout", "circumspect observation", "continuous surveillance")),
     ("surveillance", ("surveillance", "close watch", "systematic monitoring", "electronic oversight", "careful observation", "continuous tracking")),
     ("devotement", ("devotement", "whole-hearted giving", "deep devotion", "faithful dedication", "self-surrendering love", "steadfast commitment")),
+    ("resoluteness", ("resoluteness", "determined firmness", "unwavering purpose", "settled decision", "fixed resolve", "unshakable determination")),
 ]
 
 
