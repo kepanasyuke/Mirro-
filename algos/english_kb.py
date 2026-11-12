@@ -625,6 +625,10 @@ _EN_KB = {
                 "hardship. It is the durable energy that lets an athlete finish a marathon or a worker "
                 "persist through a long task without flagging. More broadly, stamina refers to the inner "
                 "reserve that carries someone through difficulty when would-be competitors have given up."),
+    "gentleness": ("Gentleness is the quality of being mild in temperament and soft in manner, showing "
+                   "kindness rather than force. A gentle person is tender toward others' feelings and "
+                   "avoid violence or harshness even when provoked. Far from weakness, true gentleness "
+                   "requires great strength and self-control, and it can calm the most heated conflicts."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
