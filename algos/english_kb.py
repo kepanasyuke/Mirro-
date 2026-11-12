@@ -812,11 +812,16 @@ _EN_KB = {
                         "It is closeness kin to compassion and brotherly love, expressed both in warm words and in tangible acts of help. "
                         "What distinguishes the warmhearted is the readiness of their affection — they do not wait to be asked, but reach out "
                         "freely, making the lonely feel remembered and the hurting feel cared for."),
-    "perspicacity": ("Perspicacity is the quality of showing keen mental discernment and penetrating insight into things. A perspicacious "
-                     "person sees quickly and clearly to the heart of a matter, catching implications and possibilities that escape slower or "
-                     "more superficial observers. It is the intellectual sharpness that lets one judge situations accurately at first glance and "
-                     "make wise decisions on the basis of partial information. Allied with good sense, perspicacity becomes one of the most powerful "
-                     "tools of the successful strategist, investor or detective."),
+"perspicacity": ("Perspicacity is the quality of showing keen mental discernment and penetrating insight into things. A perspicacious "
+                    "person sees quickly and clearly to the heart of a matter, catching implications and possibilities that escape slower or "
+                    "more superficial observers. It is the intellectual sharpness that lets one judge situations accurately at first glance and "
+                    "make wise decisions on the basis of partial information. Allied with good sense, perspicacity becomes one of the most powerful "
+                    "tools of the successful strategist, investor or detective."),
+    "conviviality": ("Conviviality is the quality of being festive, sociable and filled with the warmth of good company. A convivial person "
+                     "is one who enjoys and creates joyful social gatherings, making others feel welcome and at ease in their presence. The word "
+                     "encourages an atmosphere of cheerfulness and shared enjoyment, as when friends gather over a meal or neighbors celebrate a happy "
+                     "occasion together. Cultivating conviviality enriches life, for it is in such shared moments of laughter and fellowship that "
+                     "the deepest bonds of friendship are formed."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
