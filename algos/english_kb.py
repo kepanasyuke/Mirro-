@@ -857,6 +857,7 @@ _TOPIC_TEST = [
     ("charisma", ("charisma", "magnetic presence", "personal magnetism", "compelling charm", "force of personality", "winning charm")),
     ("earnestness", ("earnestness", "sincere seriousness", "wholehearted purpose", "deep conviction", "unfeigned warmth", "grave sincerity")),
     ("honor", ("honor", "uprightness", "integrity of spirit", "faith in one's word", "principle above profit", "stainless reputation")),
+    ("decorum", ("decorum", "propriety", "proper behavior", "social grace", "polite formality", "appropriate conduct")),
 ]
 
 
