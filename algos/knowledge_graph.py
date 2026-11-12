@@ -176,6 +176,16 @@ class KnowledgeGraph:
             pairs[pair_key] = max(pairs.get(pair_key, 0.0), w)
         return [(s, d, w) for (s, d), w in sorted(pairs.items())]
 
+    def subgraph(self, node_names):
+        """Подграф, содержащий только указанные узлы (и рёбра между ними).
+        Не-строковые элементы списка игнорируются. Один return: list of edges."""
+        if not isinstance(node_names, (list, tuple, set)):
+            return []
+        keep = {self._norm(n) for n in node_names if isinstance(n, str)}
+        return [(k, w) for k, w in self.edges.items()
+                if isinstance(k, (tuple, list)) and len(k) >= 2
+                and k[0] in keep and k[2] in keep]
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
