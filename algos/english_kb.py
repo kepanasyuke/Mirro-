@@ -600,6 +600,10 @@ _EN_KB = {
                    "from that trust. It is not arrogance, which dismisses others, but a calm self-assurance "
                    "that comes from competence and preparation. Confident people try new things, speak their "
                    "mind and recover quickly from failure, because they believe in themselves and their goals."),
+    "mirth": ("Mirth is the cheerful and jolly happiness expressed in laughing and fun. "
+              "It is the light, spontaneous joy that lifts a room and warms those around you. "
+              "Unlike deep sorrow or fake gaiety, mirth is genuine and contagious, helping "
+              "people bond and turning ordinary moments into happy ones."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
