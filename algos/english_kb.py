@@ -744,16 +744,21 @@ _EN_KB = {
                    "It is a social warmth that lowers barriers and builds rapport quickly. Affability differs from mere good "
                    "manners in its sincerity; it is a natural warmth of disposition that makes strangers feel at ease and turns "
                    "casual acquaintances into lasting friends."),
-    "timeliness": ("Timeliness is the quality of being well-timed, punctual and appropriate to the moment at hand. A timely "
+"timeliness": ("Timeliness is the quality of being well-timed, punctual and appropriate to the moment at hand. A timely "
                    "action occurs at the exact right moment to be useful; a timely word is spoken when it can do the most good. "
                    "Timeliness shows respect for others' schedules, foresight about upcoming needs and a practical grasp of the "
                    "situation. In nearly every field, from medicine to business to diplomacy, doing the right thing at the right "
                    "time can be just as important as doing the right thing at all."),
     "steadiness": ("Steadiness is the quality of being firmly fixed, dependable and constant in behavior, emotions or aim. "
-                   "A steady person is not easily swayed by sudden fear, flattery or provocation; their judgment remains clear "
-                   "and their hand remains sure under pressure. It is seen in the craftsman whose hand does not shake, the "
-                   "leader who remains calm in a crisis, and the worker who completes the same honest task day after day. "
-                   "Steadiness is the root of reliability and the steadying hand of every enduring endeavor."),
+                    "A steady person is not easily swayed by sudden fear, flattery or provocation; their judgment remains clear "
+                    "and their hand remains sure under pressure. It is seen in the craftsman whose hand does not shake, the "
+                    "leader who remains calm in a crisis, and the worker who completes the same honest task day after day. "
+                    "Steadiness is the root of reliability and the steadying hand of every enduring endeavor."),
+    "fidelity": ("Fidelity is strict faithfulness to obligations, duties or the person one has pledged loyalty to, and, by "
+                 "extension, the exactness with which something is reproduced or copied. It is the quality that keeps a spouse "
+                 "true, a soldier loyal to their country, and a translator faithful to the original text. Fidelity is the binding "
+                 "thread of every lasting trust, for it assures others that your word is dependable and your promises will be kept "
+                 "even at a cost to yourself."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
