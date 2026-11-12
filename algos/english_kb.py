@@ -1094,6 +1094,8 @@ _TOPIC_TEST = [
     ("simplicity", ("simplicity", "uncomplicated ease", "plain integrity", "guileless plainness", "elemental purity", "severe truthfulness")),
     ("unaffectedness", ("unaffectedness", "spontaneous sincerity", "artless naturalness", "untutored genuineness", "unforced candor", "ingenuous simplicity")),
     ("veracity", ("veracity", "truth-telling habit", "accurate truthfulness", "unerring honesty", "guileless truth", "sincerity of statement")),
+    ("comprehensiveness", ("comprehensiveness", "all-embracing scope", "full coverage", "exhaustive treatment", "all-encompassing view", "whole-scale breadth")),
+    ("thoroughness", ("thoroughness", "painstaking care", "scrupulous detail", "rigorous completeness", "exhaustive precision", "minute exactness")),
 ]
 
 
