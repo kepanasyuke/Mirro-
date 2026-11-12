@@ -385,6 +385,9 @@ _EN_KB = {
     "kindness": ("Kindness is a quality of being friendly, generous and considerate. "
                  "It shows in small acts of care and in how we treat others. "
                  "Kindness builds trust and makes communities stronger."),
+    "determination": ("Determination is the firm resolve to keep pursuing a goal "
+                      "despite obstacles and setbacks. It fuels effort and "
+                      "persistence. Determined people turn plans into results."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
