@@ -882,6 +882,7 @@ _TOPIC_TEST = [
     ("invention", ("invention", "new creation", "innovative device", "novel idea", "ingenious contrivance", "clever construction")),
     ("guilelessness", ("guilelessness", "candid openness", "artless honesty", "unworldly simplicity", "innocent frankness", "transparent plainness")),
     ("neighborliness", ("neighborliness", "helpful companionship", "community spirit", "friendly cooperation", "neighborly goodwill", "kindred community")),
+    ("affability", ("affability", "easy approach", "pleasant manner", "genial courtesy", "open friendliness", "warm approachability")),
 ]
 
 
