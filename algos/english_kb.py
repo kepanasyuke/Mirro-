@@ -459,6 +459,9 @@ _EN_KB = {
               "who has done wrong. It means choosing kindness over punishment when "
               "you have the right to be harsh. Mercy restores dignity and offers a "
               "second chance."),
+    "fervour": ("Fervour is intense and passionate enthusiasm for a cause, idea or "
+                "belief. It comes from deep conviction rather than surface emotion. "
+                "Fervour energizes people and drives them to act boldly."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
