@@ -342,6 +342,9 @@ _EN_KB = {
     "courage": ("Courage is the ability to face danger, difficulty or fear with "
                 "resolve. It is not the absence of fear but acting despite it. "
                 "Acts of courage, large and small, build confidence and respect."),
+    "winner": ("A winner is the person or team that comes first in a contest or "
+               "achieves a goal. Winning often follows effort and preparation. "
+               "A good winner shows respect and uses success to inspire others."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
