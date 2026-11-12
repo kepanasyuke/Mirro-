@@ -48,6 +48,14 @@ class KnowledgeGraph:
             self._adj[name] = []
         elif facts:
             self.nodes[name].facts = list(dict.fromkeys(self.nodes[name].facts + facts))
+        return self.nodes.get(name) if name in self.nodes else None
+
+    def get_node(self, name):
+        """Безопасный доступ к узлу по имени (могут быть None/неверное имя).
+        Один return: Node|None."""
+        if not isinstance(name, str):
+            return None
+        return self.nodes.get(self._norm(name))
 
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
