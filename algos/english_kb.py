@@ -330,6 +330,9 @@ _EN_KB = {
     "contradiction": ("A contradiction happens when two statements cannot both be "
                       "true at the same time. Spotting contradictions helps find "
                       "errors in logic and forces us to rethink ideas."),
+    "vacuum": ("A vacuum is a space with very little or no matter inside. Sound "
+               "cannot travel through a perfect vacuum, and objects fall freely "
+               "in it. Vacuums are used in bulbs, packaging and scientific tools."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
