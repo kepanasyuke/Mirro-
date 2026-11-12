@@ -324,6 +324,9 @@ _EN_KB = {
     "cactus": ("A cactus is a plant adapted to dry deserts. Its thick stem stores "
                "water, and spines reduce water loss and guard it from animals. "
                "Cacti flower and some live for many decades."),
+    "dawn": ("Dawn is the time of day when the sky grows light before sunrise. "
+             "It comes with soft colors and quiet calm. Dawn marks the beginning "
+             "of a new day and the start of daily routines."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
