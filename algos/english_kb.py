@@ -827,6 +827,7 @@ _TOPIC_TEST = [
     ("magnificence", ("magnificence", "grandeur", "splendor", "impressive beauty", "stately grace", "majestic display")),
     ("spirit", ("spirit", "vital force", "liveliness", "enthusiasm", "animation", "inner energy")),
     ("sageness", ("sageness", "deep wisdom", "seasoned judgment", "worldly prudence", "mature insight", "tried and tested wisdom")),
+    ("eloquence", ("eloquence", "persuasive speech", "fluent tongue", "silver tongue", "artful expression", "captivating rhetoric")),
 ]
 
 
