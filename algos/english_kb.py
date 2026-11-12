@@ -688,6 +688,7 @@ _TOPIC_TEST = [
     ("munificence", ("munificence", "lavish generosity", "bountiful", "open-handed", "largess", "generous giving")),
     ("prosperity", ("prosperity", "flourishing", "thriving", "successful", "affluent", "well-off")),
     ("devotion", ("devotion", "dedicated", "committed to", "faithful", "loyal service", "wholehearted")),
+    ("steadfastness", ("steadfastness", "unshakable", "firm in purpose", "immovable", "constant", "unwavering")),
 ]
 
 
