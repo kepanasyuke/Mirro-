@@ -724,6 +724,11 @@ _EN_KB = {
                 "decorum means knowing what is appropriate in any situation — when to speak, when to be silent, when to "
                 "act and when to hold back. Far from being mere etiquette, decorum is a form of kindness that makes people "
                 "around one comfortable and respected."),
+    "finesse": ("Finesse is refined and delicate skill in handling a difficult or delicate task with ease and subtlety. "
+                "It is the art of doing something difficult so smoothly that it looks effortless, without clumsy force. "
+                "Finesse appears in the deft touch of a surgeon, the gentle persuasion of a diplomat and the polished grace "
+                "of a dancer. It is the quality that turns competence into mastery and marks the difference between merely "
+                "getting something done and doing it beautifully."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
