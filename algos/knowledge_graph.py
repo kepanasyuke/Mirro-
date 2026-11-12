@@ -335,6 +335,15 @@ class KnowledgeGraph:
             comps.append(comp)
         return comps
 
+    def density(self):
+        """Плотность графа (отношение числа рёбер к максимально возможному).
+        Для пустого или одного узла возвращает 0.0. Один return: float."""
+        n = len(self.nodes)
+        if n < 2:
+            return 0.0
+        max_edges = n * (n - 1) / 2.0
+        return len(self.edges) / max_edges if max_edges > 0 else 0.0
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
