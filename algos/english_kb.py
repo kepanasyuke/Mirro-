@@ -678,6 +678,7 @@ _TOPIC_TEST = [
     ("heroism", ("heroism", "heroic", "courageous act", "selfless", "gallantry", "valor")),
     ("forthrightness", ("forthrightness", "direct", "candid", "honest speech", "blunt", "straightforward")),
     ("munificence", ("munificence", "lavish generosity", "bountiful", "open-handed", "largess", "generous giving")),
+    ("prosperity", ("prosperity", "flourishing", "thriving", "successful", "affluent", "well-off")),
 ]
 
 
