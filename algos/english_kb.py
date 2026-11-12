@@ -1036,6 +1036,8 @@ _TOPIC_TEST = [
     ("philanthropy", ("philanthropy", "generous giving", "benevolent charity", "humanitarian aid", "philanthropic concern", "public-spirited kindness")),
     ("bereavement", ("bereavement", "personal grief", "sorrowing loss", "mourning the departed", "grieving heart", "internal affliction")),
     ("yearning", ("yearning", "ardent desire", "intense longing", "soulful craving", "longing after", "wistful aspiration")),
+    ("unselfishness", ("unselfishness", "altruistic giving", "selfless generosity", "unsparing devotion", "disinterested kindness", "heedless-of-self charity")),
+    ("foresight", ("foresight", "far-sightedness", "forward planning", "wise anticipation", "prudent foresight", "long-range vision")),
 ]
 
 
