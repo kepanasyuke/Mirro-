@@ -400,6 +400,9 @@ _EN_KB = {
     "serenity": ("Serenity is a state of calmness and peace of mind. It comes from "
                  "accepting what you cannot change and letting go of inner turmoil. "
                  "Serene people stay balanced in the middle of stress."),
+    "humor": ("Humor is the ability to see and express the funny side of life. "
+              "It lightens hard moments and helps people connect. Humor builds "
+              "warmth and makes even serious talks feel human."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
