@@ -695,6 +695,10 @@ _EN_KB = {
                  "sense that belongs to a mature and judicious mind. It is what separates the merely clever from the "
                  "truly wise. A sage does not merely know facts; they know how to apply knowledge to real life, and "
                  "their counsel is valued precisely because it has been tested by seasons of trial and error."),
+    "eloquence": ("Eloquence is fluent, persuasive and graceful use of language. An eloquent speaker chooses words "
+                  "that move the emotions, sharpen the mind and stir the will of the listener. Eloquence is not mere "
+                  "verbal trickery; at its best it is truth expressed with such power and beauty that it can change a "
+                  "person's mind or move a crowd to action. It is the crowning skill of the capable communicator."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
