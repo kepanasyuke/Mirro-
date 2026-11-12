@@ -104,7 +104,7 @@ class KnowledgeGraph:
             amount = float(amount)
         except Exception:
             amount = 0.0
-        if amount <= 0 or not node_a or not node_b:
+        if amount != amount or amount <= 0 or not node_a or not node_b:
             return 0
         a, b = self._norm(node_a), self._norm(node_b)
         strengthened = 0
