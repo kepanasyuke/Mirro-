@@ -924,6 +924,7 @@ _TOPIC_TEST = [
     ("probity", ("probity", "proven integrity", "uncompromising honesty", "unblemished record", "blameless conduct", "faithful dealing")),
     ("goodness", ("goodness", "moral excellence", "beneficent nature", "kindhearted virtue", "upright dealing", "wholesome character")),
     ("kindred spirit", ("kindred spirit", "soul mate", "fellow traveler", "like-minded companion", "twin soul", "auspicious affinity")),
+    ("amiability", ("amiability", "good-natured charm", "sweet disposition", "gentle demeanor", "delightful nature", "likable grace")),
 ]
 
 
