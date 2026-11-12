@@ -245,8 +245,9 @@ def _c_combinatorics(q):
 def _c_probability(q):
     """Классическая вероятность. Один return: tuple|None."""
     out = None
-    if ("вероятн" in q or "шанс" in q) and len(_numbers(q)) >= 2:
-        nums = _numbers(q)[:2]
+    nums = _numbers(q)
+    if ("вероятн" in q or "шанс" in q) and len(nums) >= 2:
+        nums = nums[:2]
         if nums[1] != 0 and 0 <= nums[0] <= nums[1]:
             out = ("вероятность", "12_probability", "classical_probability", (nums[0], nums[1]),
                    f"P = {nums[0]:g}/{nums[1]:g} = {nums[0]/nums[1]:.4f}")
