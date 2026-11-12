@@ -670,6 +670,10 @@ _EN_KB = {
                    "measure. It is the golden mean between deficiency and excess that guides sound living in all "
                    "things — eating, working, speaking, spending and even in showing emotion. Moderation is not "
                    "timidity or mediocrity; it is the disciplined wisdom that gives a person balance and self-control."),
+    "tranquility": ("Tranquility is a state of quiet peacefulness and calm, free from agitation or disturbance. "
+                    "It is the serene stillness of a lake at dawn or the settled ease of a mind at rest. "
+                    "Achieving tranquility often requires turning inward and letting go of racing thoughts. In a "
+                    "hurried world, it is a precious state that restores clarity, health and perspective."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
