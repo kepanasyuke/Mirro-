@@ -397,6 +397,9 @@ _EN_KB = {
     "endurance": ("Endurance is the strength to keep going through difficult or "
                   "prolonged effort. It blends physical stamina with mental "
                   "resolve. Enduring effort is what makes long battles winnable."),
+    "serenity": ("Serenity is a state of calmness and peace of mind. It comes from "
+                 "accepting what you cannot change and letting go of inner turmoil. "
+                 "Serene people stay balanced in the middle of stress."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
