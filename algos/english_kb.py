@@ -661,6 +661,11 @@ _EN_KB = {
                 "It carries a sense of nobility and abundance, as when a king grants lands to a loyal servant "
                 "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show — "
                 "true largess seeks to do real good and to lift others up."),
+    "civility": ("Civility is the practice of behaving in a polite, respectful and courteous manner toward "
+                 "others, even toward those with whom one disagrees. It is the basic glue of a functioning "
+                 "society, making it possible for strangers to cooperate and for opponents to disagree without "
+                 "disrespect. Civility is not weakness or the absence of conviction; it is the willingness to "
+                 "treat every person with basic dignity."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
