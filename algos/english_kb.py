@@ -584,6 +584,10 @@ _EN_KB = {
                  "faith. It goes beyond duty into wholehearted dedication of heart and mind. Devotion "
                  "shows itself in consistent acts of service, faithfulness over time and a genuine love "
                  "for what one serves. It is the emotional bedrock of true commitment."),
+    "steadfastness": ("Steadfastness is the quality of being firm and unshakable in purpose, belief or "
+                      "loyalty. A steadfast person does not give way under pressure, temptation or doubt. "
+                      "It is the discipline that keeps a commitment alive when it would be easier to walk "
+                      "away, and it is what makes promises trustworthy and character reliable."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
