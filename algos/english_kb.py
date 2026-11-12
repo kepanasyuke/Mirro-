@@ -762,6 +762,7 @@ _TOPIC_TEST = [
     ("hardihood", ("hardihood", "bold daring", "audacious courage", "intrepid spirit", "daring resolve", "fearless enterprise")),
     ("fellowship", ("fellowship", "companionship", "comradeship", "mutual support", "shared purpose", "brotherhood")),
     ("gallantry", ("gallantry", "chivalrous courtesy", "brave conduct", "heroic courtesy", "gentlemanly valor", "courtly bravery")),
+    ("nobility", ("nobility", "high character", "moral excellence", "noble-mindedness", "princely valor", "elevated soul")),
 ]
 
 
