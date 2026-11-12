@@ -908,7 +908,10 @@ class KnowledgeGraph:
     # ---------- состояние ----------
     def summary(self):
         note = "" if self.edges else " (граф пуст)"
-        return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей{note}"
+        preds = len({k[1] for k in self.edges
+                     if isinstance(k, (tuple, list)) and len(k) >= 2
+                     and isinstance(k[1], str)}) if self.edges else 0
+        return f"граф: {len(self.nodes)} узлов, {len(self.edges)} связей, {preds} предикатов{note}"
 
     def topic_clusters(self, max_clusters=6, max_nodes=60):
         """Выделяет кластеры тем в графе (простая агломеративная кластеризация):
