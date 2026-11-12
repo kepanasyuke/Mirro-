@@ -318,8 +318,17 @@ class KnowledgeGraph:
             if n.facts:
                 lines.append("Факты: " + "; ".join(n.facts[:5]))
             # соседи по силе связи (вес) — сначала самые «проводимые»
-            safe_nbrs = [r for r in self.neighbors(name)
-                     if isinstance(r, (tuple, list)) and len(r) >= 3]
+            safe_nbrs = []
+            for r in self.neighbors(name):
+                if not (isinstance(r, (tuple, list)) and len(r) >= 3):
+                    continue
+                try:
+                    fw = float(r[2])
+                except (TypeError, ValueError):
+                    continue
+                if fw != fw:
+                    continue
+                safe_nbrs.append(r)
             try:
                 ranked = sorted(safe_nbrs, key=lambda r: float(r[2]))
                 ranked.reverse()
