@@ -325,7 +325,7 @@ def _c_strings_sorts(q):
     out = None
     if "палиндром" in q:
         out = ("строки", "06_strings", "is_palindrome", (q,), None)
-    elif "сортир" in q and _int_numbers(q):
+    elif "сортир" in q:
         arr = _int_numbers(q)
         if len(arr) > 1000:
             arr = arr[:1000]
