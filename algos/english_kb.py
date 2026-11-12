@@ -963,6 +963,7 @@ _EN_KB = {
     "resoluteness": ("Resoluteness is the determined firmness with which one pursues a decision or a course of action, refusing to be swayed, discouraged or turned aside. A resolute person has settled what must be done and intends to see it through, "
                      "meeting obstacles as tests rather than as reasons to retreat. It is the backbone of courage, the steadiness behind every long campaign, and the quality that lets good intentions harden into actual achievement. Resoluteness differs "
                      "from stubbornness in that it aims at a considered goal and adapts its means, while holding its chosen direction with unwavering fixity."),
+    "contentment": ("Contentment is the state of being satisfied with what one has and at peace with one's circumstances, free from restless craving for more. The contented person enjoys the present rather than resenting it, finding quiet pleasure in order, sufficiency and the simple good of the day. It is not complacency or indifference to improvement, but a settled gratitude that keeps happiness from being hostage to fortune. Contentment is the sane calm that lies between the anxiety of ambition and the listlessness of despair, and it is widely counted among the deepest sources of steady human happiness."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -1149,6 +1150,7 @@ _TOPIC_TEST = [
     ("surveillance", ("surveillance", "close watch", "systematic monitoring", "electronic oversight", "careful observation", "continuous tracking")),
     ("devotement", ("devotement", "whole-hearted giving", "deep devotion", "faithful dedication", "self-surrendering love", "steadfast commitment")),
     ("resoluteness", ("resoluteness", "determined firmness", "unwavering purpose", "settled decision", "fixed resolve", "unshakable determination")),
+    ("contentment", ("contentment", "quiet satisfaction", "peaceful sufficiency", "settled contentment", "grateful ease", "tranquil satisfaction")),
 ]
 
 
