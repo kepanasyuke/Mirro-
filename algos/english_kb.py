@@ -691,6 +691,11 @@ _EN_KB = {
                      "of art or nature that leave people in awe. True magnificence is not empty ostentation; it "
                      "combines noble ambition with impeccable taste, so that grandeur serves beauty rather than "
                      "garish display."),
+    "spirit": ("Spirit, in its loftiest sense, is the vital force and enthusiasm that animates a person or a "
+               "group. It is the energy, courage and liveliness that turn mere existence into a life worth living. "
+               "A team with spirit fights on to the last minute; a person with spirit greets each day with fire. "
+               "Spirit is intangible but unmistakable — it is what lifts a people in hard times and drives them to "
+               "achieve what seemed impossible."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
