@@ -35,6 +35,12 @@ class KnowledgeGraph:
         name = self._norm(name)
         if not name:
             return
+        try:
+            weight = float(weight)
+        except Exception:
+            weight = 1.0
+        if weight != weight:
+            weight = 1.0
         if name not in self.nodes:
             self.nodes[name] = Node(name, tag, facts, weight)
             self._adj[name] = []
