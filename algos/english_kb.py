@@ -912,6 +912,7 @@ _TOPIC_TEST = [
     ("steadiness", ("steadiness", "level-headed composure", "unflappable calm", "constant purpose", "steady nerve", "unbroken resolve")),
     ("fidelity", ("fidelity", "steadfast loyalty", "faithful devotion", "exact faithfulness", "unswerving allegiance", "true-hearted constancy")),
     ("probity", ("probity", "proven integrity", "uncompromising honesty", "unblemished record", "blameless conduct", "faithful dealing")),
+    ("goodness", ("goodness", "moral excellence", "beneficent nature", "kindhearted virtue", "upright dealing", "wholesome character")),
 ]
 
 
