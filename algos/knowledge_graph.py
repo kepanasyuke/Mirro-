@@ -857,7 +857,12 @@ class KnowledgeGraph:
     def punish(self, a, b, amount=0.3, floor=0.15):
         """Отрицательный отклик: ослабить связь (анти-Хебб).
         amount <= 0 игнорируется. Один return: int."""
-        if amount <= 0:
+        try:
+            amount = float(amount)
+            floor = float(floor)
+        except Exception:
+            return 0
+        if amount != amount or floor != floor or amount <= 0 or floor < 0:
             return 0
         a, b = self._norm(a), self._norm(b)
         punished = 0
