@@ -471,6 +471,9 @@ _EN_KB = {
     "vigilance": ("Vigilance is careful watchfulness for possible dangers or errors. "
                   "It means staying alert and attentive over long periods. Vigilant "
                   "people notice problems early and prevent small issues from growing."),
+    "hope": ("Hope is the belief that a desired outcome is possible in the future. "
+             "It lets people endure hardship and keep striving despite difficulties. "
+             "Hope fuels motivation and opens the door to real change."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
