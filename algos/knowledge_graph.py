@@ -50,7 +50,7 @@ class KnowledgeGraph:
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
-        if not s or not d or s == d or not p:
+        if not s or not d or s == d or not p or len(p) > 120:
             return
         try:
             weight = float(weight)
