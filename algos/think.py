@@ -296,7 +296,10 @@ def _c_geometry(q):
                    "не треугольник: нарушено неравенство треугольника")
         else:
             s = (a + b + c) / 2
-            area = math.sqrt(s * (s - a) * (s - b) * (s - c))
+            radic = s * (s - a) * (s - b) * (s - c)
+            if radic < 0:
+                radic = 0.0
+            area = math.sqrt(radic)
             out = ("геометрия", "16_university", "triangle_area_heron", (a, b, c),
                    f"площадь = {area:.4g}")
     return out
