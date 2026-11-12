@@ -359,7 +359,8 @@ def _c_gcd_lcm_prime(q):
         elif a != 0 and b != 0 and abs(a) * abs(b) <= 10**12:
             out = ("математика", "08_math", "lcm", (a, b), f"НОК({a},{b}) = {_lcm(a, b)}")
     elif "прост" in q and _int_numbers(q):
-        n = _int_numbers(q)[0]
+        nums_p = _int_numbers(q)
+        n = nums_p[0]
         if n == 0 or n == 1:
             out = ("математика", "08_math", "is_prime", (n,), f"{n} не простое (по определению)")
         elif n > 1:
