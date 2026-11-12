@@ -592,6 +592,10 @@ _EN_KB = {
                     "doing or to the needs of others. A heedful person notices what most people miss and "
                     "acts with care rather than haste. It is the attentive alertness that prevents mistakes, "
                     "avoids accidents and helps one respond properly to the needs of the moment."),
+    "dutifulness": ("Dutifulness is the quality of fulfilling one's obligations and responsibilities with "
+                    "reliability and respect. A dutiful person does what is required without complaint, out "
+                    "of a sense of duty toward family, work or society. It is not glamorous, but it is the "
+                    "quiet engine that keeps families, institutions and communities functioning."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
