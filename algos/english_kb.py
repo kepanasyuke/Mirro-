@@ -795,6 +795,7 @@ _TOPIC_TEST = [
     ("largess", ("largess", "lavish giving", "liberal gifts", "bountiful bestowal", "munificent grant", "generous endowment")),
     ("civility", ("civility", "polite respect", "courteous behavior", "civilized manners", "decent conduct", "gracious etiquette")),
     ("moderation", ("moderation", "temperate living", "balanced habit", "restraint in excess", "measured conduct", "golden mean")),
+    ("tranquility", ("tranquility", "serene calm", "peaceful stillness", "untroubled quiet", "unruffled calm", "placid repose")),
 ]
 
 
