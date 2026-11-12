@@ -708,6 +708,7 @@ _TOPIC_TEST = [
     ("heedfulness", ("heedfulness", "attentive", "watchful care", "mindful", "alert attention", "careful observance")),
     ("dutifulness", ("dutifulness", "obedient to duty", "responsible", "conscientious", "compliant", "respectful of duty")),
     ("confidence", ("confidence", "self-assured", "assertive", "certain of oneself", "self-belief", "trust in abilities")),
+    ("mirth", ("mirth", "cheerfulness", "jovial", "lighthearted", "merry", "joyful laughter")),
 ]
 
 
