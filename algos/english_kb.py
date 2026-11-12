@@ -462,6 +462,9 @@ _EN_KB = {
     "fervour": ("Fervour is intense and passionate enthusiasm for a cause, idea or "
                 "belief. It comes from deep conviction rather than surface emotion. "
                 "Fervour energizes people and drives them to act boldly."),
+    "zest": ("Zest is a vigorous, eager enjoyment of life and activity. It is the "
+             "energetic curiosity that turns ordinary moments into adventures. People "
+             "with zest meet each day with energy and involvement."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
