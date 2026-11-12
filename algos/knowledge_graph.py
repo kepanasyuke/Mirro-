@@ -335,14 +335,23 @@ class KnowledgeGraph:
             comps.append(comp)
         return comps
 
-    def density(self):
-        """Плотность графа (отношение числа рёбер к максимально возможному).
-        Для пустого или одного узла возвращает 0.0. Один return: float."""
-        n = len(self.nodes)
-        if n < 2:
-            return 0.0
-        max_edges = n * (n - 1) / 2.0
-        return len(self.edges) / max_edges if max_edges > 0 else 0.0
+    def top_edges(self, top_n=10):
+        """Самые «сильные» рёбра по весу (сначала самые большие). Нечисловой
+        top_n → 10. Один return: list of (src, pred, dst, weight)."""
+        try:
+            top_n = max(1, int(top_n))
+        except Exception:
+            top_n = 10
+        def key(e):
+            try:
+                return -float(e[1]) if len(e) > 1 and e[1] is not None else 0.0
+            except (TypeError, ValueError):
+                return 0.0
+        edges = [(k[0], k[1], k[2], w) for k, w in self.edges.items()
+                 if isinstance(k, (tuple, list)) and len(k) >= 3
+                 and isinstance(k[0], str) and isinstance(k[2], str)]
+        edges.sort(key=lambda e: -e[3] if isinstance(e[3], (int, float)) and not (e[3] != e[3]) else 0.0)
+        return edges[:top_n]
 
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
