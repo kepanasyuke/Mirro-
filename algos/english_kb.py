@@ -790,6 +790,7 @@ _TOPIC_TEST = [
     ("benevolence", ("benevolence", "kind disposition", "goodwill", "charitable heart", "beneficent action", "well-wishing")),
     ("largess", ("largess", "lavish giving", "liberal gifts", "bountiful bestowal", "munificent grant", "generous endowment")),
     ("civility", ("civility", "polite respect", "courteous behavior", "civilized manners", "decent conduct", "gracious etiquette")),
+    ("moderation", ("moderation", "temperate living", "balanced habit", "restraint in excess", "measured conduct", "golden mean")),
 ]
 
 
