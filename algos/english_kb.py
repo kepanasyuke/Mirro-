@@ -565,6 +565,7 @@ _TOPIC_TEST = [
     ("insight", ("insight", "understanding", "discernment", "deep perception", "clear seeing")),
     ("lenity", ("lenity", "gentle", "mild", "merciful", "tender", "forgiving heart")),
     ("tenacity", ("tenacity", "persevere", "persistent", "stubborn", "determined", "unrelenting")),
+    ("prowess", ("prowess", "skillful", "adept", "masterful", "expert", "dexterous")),
 ]
 
 
