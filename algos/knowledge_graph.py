@@ -225,7 +225,16 @@ class KnowledgeGraph:
         rows = self._adj.get(name, [])
         if not isinstance(rows, (list, tuple)):
             rows = []
-        return [row for row in rows if isinstance(row, (tuple, list)) and len(row) >= 2]
+        seen = set()
+        out = []
+        for row in rows:
+            if not (isinstance(row, (tuple, list)) and len(row) >= 3):
+                continue
+            key = (row[0], row[2])
+            if key not in seen:
+                seen.add(key)
+                out.append(row)
+        return out
 
     def relation(self, a, b):
         """Прямые отношения между a и b (по индексу, без дублей). Один return: list."""
