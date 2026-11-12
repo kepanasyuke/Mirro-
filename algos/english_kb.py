@@ -964,6 +964,7 @@ _EN_KB = {
                      "meeting obstacles as tests rather than as reasons to retreat. It is the backbone of courage, the steadiness behind every long campaign, and the quality that lets good intentions harden into actual achievement. Resoluteness differs "
                      "from stubbornness in that it aims at a considered goal and adapts its means, while holding its chosen direction with unwavering fixity."),
     "contentment": ("Contentment is the state of being satisfied with what one has and at peace with one's circumstances, free from restless craving for more. The contented person enjoys the present rather than resenting it, finding quiet pleasure in order, sufficiency and the simple good of the day. It is not complacency or indifference to improvement, but a settled gratitude that keeps happiness from being hostage to fortune. Contentment is the sane calm that lies between the anxiety of ambition and the listlessness of despair, and it is widely counted among the deepest sources of steady human happiness."),
+    "prudence": ("Prudence is the quality of exercising sound foresight and cautious good judgment in practical affairs, weighing means against ends and consequences before acting. The prudent person does not leap blindly at opportunity but considers timing, cost, risk and the view of the longer road, avoiding needless harm while not shrinking from what must be done. It is one of the classic cardinal virtues, the practical intelligence that governs desire and imprudent impulse. Prudence is the steady hand that guides ambition, the careful planning that turns foresight into safety, and the moderation that refuses to trade a sure good for a glittering risk."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -1151,6 +1152,7 @@ _TOPIC_TEST = [
     ("devotement", ("devotement", "whole-hearted giving", "deep devotion", "faithful dedication", "self-surrendering love", "steadfast commitment")),
     ("resoluteness", ("resoluteness", "determined firmness", "unwavering purpose", "settled decision", "fixed resolve", "unshakable determination")),
     ("contentment", ("contentment", "quiet satisfaction", "peaceful sufficiency", "settled contentment", "grateful ease", "tranquil satisfaction")),
+    ("prudence", ("prudence", "sound foresight", "cautious judgment", "careful planning", "practical wisdom", "wise moderation")),
 ]
 
 
