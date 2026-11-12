@@ -863,6 +863,7 @@ _TOPIC_TEST = [
     ("earnestness", ("earnestness", "sincere seriousness", "wholehearted purpose", "deep conviction", "unfeigned warmth", "grave sincerity")),
     ("honor", ("honor", "uprightness", "integrity of spirit", "faith in one's word", "principle above profit", "stainless reputation")),
     ("decorum", ("decorum", "propriety", "proper behavior", "social grace", "polite formality", "appropriate conduct")),
+    ("finesse", ("finesse", "subtle skill", "delicate handling", "fine touch", "exquisite craft", "polished art")),
 ]
 
 
