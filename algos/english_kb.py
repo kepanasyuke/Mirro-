@@ -760,6 +760,7 @@ _TOPIC_TEST = [
     ("quietness", ("quietness", "stillness", "inner calm", "tranquil quiet", "hushed stillness", "peaceful silence")),
     ("hardihood", ("hardihood", "bold daring", "audacious courage", "intrepid spirit", "daring resolve", "fearless enterprise")),
     ("fellowship", ("fellowship", "companionship", "comradeship", "mutual support", "shared purpose", "brotherhood")),
+    ("gallantry", ("gallantry", "chivalrous courtesy", "brave conduct", "heroic courtesy", "gentlemanly valor", "courtly bravery")),
 ]
 
 
