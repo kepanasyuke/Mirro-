@@ -833,6 +833,7 @@ _TOPIC_TEST = [
     ("spirit", ("spirit", "vital force", "liveliness", "enthusiasm", "animation", "inner energy")),
     ("sageness", ("sageness", "deep wisdom", "seasoned judgment", "worldly prudence", "mature insight", "tried and tested wisdom")),
     ("eloquence", ("eloquence", "persuasive speech", "fluent tongue", "silver tongue", "artful expression", "captivating rhetoric")),
+    ("wit", ("wit", "quick humor", "clever repartee", "sharp banter", "ingenious humor", "nimble mind")),
 ]
 
 
