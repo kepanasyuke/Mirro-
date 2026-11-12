@@ -566,6 +566,12 @@ _TOPIC_TEST = [
     ("lenity", ("lenity", "gentle", "mild", "merciful", "tender", "forgiving heart")),
     ("tenacity", ("tenacity", "persevere", "persistent", "stubborn", "determined", "unrelenting")),
     ("prowess", ("prowess", "skillful", "adept", "masterful", "expert", "dexterous")),
+    ("compassion", ("compassion", "sympathy", "kindness toward", "care for", "empathy")),
+    ("generosity", ("generosity", "giving", "bountiful", "liberal", "open-handed")),
+    ("grit", ("grit", "perseverance", "passion", "long-term goal", "hardy")),
+    ("patience", ("patience", "calm", "wait calmly", "long-suffering", "even-tempered")),
+    ("bravery", ("bravery", "courageous", "fearless", "bold", "heroic", "intrepid")),
+    ("temperance", ("temperance", "moderation", "restraint", "self-control", "balanced")),
 ]
 
 
