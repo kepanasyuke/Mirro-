@@ -858,6 +858,8 @@ class KnowledgeGraph:
             amount = float(amount)
         except Exception:
             return 0
+        if feedback_sign != feedback_sign or amount != amount:
+            return 0
         if abs(feedback_sign) < 1e-9 or amount <= 0:
             return 0
         changed = 0
