@@ -637,6 +637,11 @@ _EN_KB = {
                   "with enough strength to endure hardship. It is a blend of audacity and endurance — the "
                   "courage to attempt difficult things and the toughness to see them through. Hardiness of "
                   "spirit lets a person step beyond comfort to attempt what others would not dare."),
+    "fellowship": ("Fellowship is a feeling of shared interest and mutual support among people who work, "
+                   "worship or travel together. It is the warm bond that grows when shared experiences, "
+                   "common goals or a common purpose draw people into a real community. Fellowship turns a "
+                   "group of individuals into a family of choice, making each person stronger through the "
+                   "loyalty, help and company of the others."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
