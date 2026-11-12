@@ -797,6 +797,11 @@ _EN_KB = {
                 "in society, harmony exists when diverse people live together in agreement and mutual respect. Harmony does not mean "
                 "uniformity or the absence of disagreement, but the resolution of differences into a state of balance and concord "
                 "where every part fittingly contributes to the well-being of the whole."),
+    "comity": ("Comity is courteous respect and mutual consideration between nations, groups or individuals, especially the "
+               "willingness to honor one another's laws, customs and institutions out of mutual goodwill. In the language of "
+               "international law, comity is the principle by which one state recognizes the legal acts of another as a matter of "
+               "courtesy rather than obligation. On a personal level, it is the politeness that makes civilized dealings possible even "
+               "between strangers or rivals, smoothing the friction of everyday life."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
