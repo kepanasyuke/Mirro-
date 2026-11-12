@@ -314,7 +314,7 @@ def _c_geometry(q):
                    f"гипотенуза = {math.hypot(a,b):.4g}")
     elif ("герон" in q or "площадь треугольн" in q) and len(nums) >= 3:
         a, b, c = nums[:3]
-        if a <= 0 or b <= 0 or c <= 0:
+        if a != a or b != b or c != c or a <= 0 or b <= 0 or c <= 0:
             out = None
         elif max(a, b, c) > 1e9:
             out = None
