@@ -286,7 +286,7 @@ def _c_geometry(q):
     nums = _numbers(q)
     if "пифагор" in q and len(nums) >= 2:
         a, b = nums[:2]
-        if a < 0 or b < 0 or (a == 0 and b == 0) or max(abs(a), abs(b)) > 1e12:
+        if a != a or b != b or a < 0 or b < 0 or (a == 0 and b == 0) or max(abs(a), abs(b)) > 1e12:
             out = None
         else:
             out = ("геометрия", "16_university", "right_triangle_sides", (a, b),
