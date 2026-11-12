@@ -744,6 +744,11 @@ _EN_KB = {
                    "It is a social warmth that lowers barriers and builds rapport quickly. Affability differs from mere good "
                    "manners in its sincerity; it is a natural warmth of disposition that makes strangers feel at ease and turns "
                    "casual acquaintances into lasting friends."),
+    "timeliness": ("Timeliness is the quality of being well-timed, punctual and appropriate to the moment at hand. A timely "
+                   "action occurs at the exact right moment to be useful; a timely word is spoken when it can do the most good. "
+                   "Timeliness shows respect for others' schedules, foresight about upcoming needs and a practical grasp of the "
+                   "situation. In nearly every field, from medicine to business to diplomacy, doing the right thing at the right "
+                   "time can be just as important as doing the right thing at all."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
