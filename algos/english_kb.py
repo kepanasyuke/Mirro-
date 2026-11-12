@@ -749,6 +749,11 @@ _EN_KB = {
                    "Timeliness shows respect for others' schedules, foresight about upcoming needs and a practical grasp of the "
                    "situation. In nearly every field, from medicine to business to diplomacy, doing the right thing at the right "
                    "time can be just as important as doing the right thing at all."),
+    "steadiness": ("Steadiness is the quality of being firmly fixed, dependable and constant in behavior, emotions or aim. "
+                   "A steady person is not easily swayed by sudden fear, flattery or provocation; their judgment remains clear "
+                   "and their hand remains sure under pressure. It is seen in the craftsman whose hand does not shake, the "
+                   "leader who remains calm in a crisis, and the worker who completes the same honest task day after day. "
+                   "Steadiness is the root of reliability and the steadying hand of every enduring endeavor."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
