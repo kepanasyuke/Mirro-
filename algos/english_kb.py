@@ -452,6 +452,9 @@ _EN_KB = {
     "discipline": ("Discipline is the practice of training yourself to follow rules "
                    "or a code of conduct consistently. It turns good intentions into "
                    "steady habits. Discipline is the bridge between goals and results."),
+    "diligence": ("Diligence is steady and earnest effort in one's work or duties. "
+                  "It means applying constant care and attention over time. Diligent "
+                  "workers produce quality and earn trust through reliability."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
