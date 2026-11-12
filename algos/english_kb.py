@@ -427,6 +427,9 @@ _EN_KB = {
     "compassion": ("Compassion is awareness of others' suffering together with the "
                    "wish to relieve it. It moves a person from feeling to action. "
                    "Compassion connects people and eases pain in the world."),
+    "altruism": ("Altruism is selfless concern for the welfare of others. It is "
+                 "acting to help someone without expecting anything in return. "
+                 "Altruistic deeds make society more humane and connected."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
