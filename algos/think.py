@@ -254,7 +254,8 @@ def _c_probability(q):
     nums = _numbers(q)
     if ("вероятн" in q or "шанс" in q) and len(nums) >= 2:
         nums = nums[:2]
-        if nums[1] != 0 and 0 <= nums[0] <= nums[1]:
+        if (nums[1] != 0 and 0 <= nums[0] <= nums[1]
+                and nums[0] == nums[0] and nums[1] == nums[1]):
             out = ("вероятность", "12_probability", "classical_probability", (nums[0], nums[1]),
                    f"P = {nums[0]:g}/{nums[1]:g} = {nums[0]/nums[1]:.4f}")
     return out
