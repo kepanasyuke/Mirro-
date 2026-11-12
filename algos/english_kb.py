@@ -584,6 +584,7 @@ _TOPIC_TEST = [
     ("temperance", ("temperance", "moderation", "restraint", "self-control", "balanced")),
     ("pride", ("pride", "self-esteem", "dignity", "self-respect", "satisfaction")),
     ("modesty", ("modesty", "humble", "unassuming", "quiet", "down-to-earth", "reserved")),
+    ("sagacity", ("sagacity", "wise", "judicious", "perceptive", "shrewd", "discerning")),
 ]
 
 
