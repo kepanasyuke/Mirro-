@@ -881,6 +881,37 @@ _EN_KB = {
                "heartfelt and solemn promise to be faithful, to keep one's word and to stand by one's obligations even at great personal cost. Fealty goes beyond mere obedience or friendship; "
                "it is a sacred trust that binds individuals together in a relation of mutual duty and honor. In its deepest sense, true fealty means being loyal when it is easiest to betray, "
                "and remaining true when all the rewards lie in defection."),
+    "loyalty": ("Loyalty is the quality of being firmly and wholeheartedly dedicated to a person, group, cause or country. It is the steadfast attachment that makes someone stand by the ones "
+                "they love through thick and thin, through good times and bad. Loyalty is expressed in constancy of friendship, in keeping promises, and in defending the honor of those to whom "
+                "one is attached. It is one of the most valued of human virtues because it is tested in adversity: a loyal friend is proven not when everything goes smoothly, but precisely when "
+                "the bonds of loyalty are hardest to maintain."),
+    "unfailingness": ("Unfailingness is the quality of never ceasing, never running out, or never letting one down. It describes a supply that does not fail, a patience that does not give out, "
+                      "or an optimism that does not fade. To be unfailing in something is to be constant in it without exception or interruption, as in unfailing kindness, unfailing courage or "
+                      "unfailing support. It is a quiet but powerful guarantee, for it tells others that you can count on it not only today but every day, and that goodwill will not be exhausted no "
+                      "matter how often it is called upon."),
+    "solidity": ("Solidity is the quality of being firm, substantial and dependable, whether in physical structure or in character. A solid structure does not bend or break under pressure; a solid "
+                 "argument is one that cannot be refuted; and a solid friendship is one that survives misunderstanding and time. Solidity is the opposite of flimsiness, weakness or instability. It is what "
+                 "gives confidence, because one can build on a solid foundation, lean on a solid support or trust a solid promise. In human terms, it is the dependability that makes a person a rock of "
+                 "strength to others."),
+    "directness": ("Directness is the quality of being straightforward and unswerving in speech or action, without ambiguity or evasion. A direct person says what they mean and means what they say, "
+                   "avoiding hints, half-truths and hidden agendas. Directness is not the same as rudeness; it can be expressed with perfect courtesy even while being perfectly clear. It saves time, prevents "
+                   "misunderstanding and earns respect, for others always know where they stand with a direct interlocutor. It is prized in business, in friendship and in diplomacy as the surest way to the "
+                   "real issue."),
+    "candor": ("Candor is the quality of being open, honest and frank in expression, and free from bias, reservation or deception. A candid person says what they genuinely think, without hiding behind "
+               "flattery or oblique hints. Candor is the foundation of genuine communication and is essential for clearing away the mists of ambiguity and misunderstanding that cloud so many conversations. "
+               "At its best, candor is tempered with tact, so that the truth is spoken directly yet in love, making it a quality that is as precious in personal friendships as it is in professional dealings."),
+    "plainness": ("Plainness is the quality of being simple, unadorned and easy to understand, without unnecessary ornamentation or embellishment. A plain style of speech is direct and clear, and a plain "
+                  "manner of living is unpretentious and free from artificial pomp. In an age of hype and exaggeration, plainness is a kind of virtue, for it keeps language honest and intentions visible. "
+                  "The plain speaker may not dazzle with rhetorical flourish, but their words carry weight because they are trusted to be exactly what they appear to be."),
+    "simplicity": ("Simplicity is the quality of being uncomplicated, straightforward and free from vain ornament or excess. It denotes a purity of motive and a reduction of one's life to what is truly "
+                   "essential, freeing the mind from useless clutter and deceit. In design, simplicity is elegance reached by subtraction; in conduct, it is honesty achieved by the absence of pretense. "
+                   "Simple living is not the same as living poorly; rather, it is living deliberately and contentedly with less, so that what remains is all the more meaningful."),
+"unaffectedness": ("Unaffectedness is the quality of being genuine and spontaneous in manner, without artificiality or contrivance. An unaffected person does not put on airs, does not perform for others, "
+                       "and does not try to be what they are not, but acts with a natural ease that is free of self-consciousness. It is a rare and refreshing quality in a world of carefully cultivated images, "
+                       "and it is the simplest road to authenticity in personal relationships, for it lets others see the true person behind the social mask."),
+    "veracity": ("Veracity is habitual truthfulness and the disposition to always tell the truth, even when a lie would be easier or more convenient. It is the daily practice of accuracy in reporting facts "
+                 "and the refusal to distort, exaggerate or withhold what is known to be true. Veracity is the bedrock of all reliability and the foundation of credibility, for a person's word is only as good "
+                 "as the truth it carries. In law, in journalism and in daily life, veracity is what makes testimony trustworthy, reports reliable and relationships honest."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
