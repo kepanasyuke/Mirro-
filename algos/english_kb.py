@@ -630,6 +630,7 @@ _TOPIC_TEST = [
     ("equity", ("equity", "fairness", "impartial", "justice", "even-handed", "righteous")),
     ("staunchness", ("staunchness", "loyal", "steadfast", "committed", "reliable", "unwavering")),
     ("acumen", ("acumen", "insightful", "keen judgment", "sharp-witted", "perceptive", "shrewd mind")),
+    ("merit", ("merit", "deserving", "worthiness", "excellence", "distinction", "credit")),
 ]
 
 
