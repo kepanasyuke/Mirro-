@@ -376,6 +376,9 @@ _EN_KB = {
     "gratitude": ("Gratitude is the feeling of being thankful for what you have. "
                   "It focuses attention on the good things in life, from small "
                   "kindness to big support. Practicing it lifts mood and bonds."),
+    "curiosity": ("Curiosity is a strong desire to learn or know more about "
+                  "the world. It drives questions, exploration and discovery. "
+                  "Curious minds stay open to new ideas and grow faster."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
