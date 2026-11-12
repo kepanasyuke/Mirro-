@@ -822,6 +822,7 @@ _TOPIC_TEST = [
     ("warmth", ("warmth", "hearty friendliness", "affectionate manner", "welcoming kindness", "cordial disposition", "genial heat")),
     ("magnificence", ("magnificence", "grandeur", "splendor", "impressive beauty", "stately grace", "majestic display")),
     ("spirit", ("spirit", "vital force", "liveliness", "enthusiasm", "animation", "inner energy")),
+    ("sageness", ("sageness", "deep wisdom", "seasoned judgment", "worldly prudence", "mature insight", "tried and tested wisdom")),
 ]
 
 
