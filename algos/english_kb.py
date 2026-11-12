@@ -900,6 +900,7 @@ _TOPIC_TEST = [
     ("affability", ("affability", "easy approach", "pleasant manner", "genial courtesy", "open friendliness", "warm approachability")),
     ("timeliness", ("timeliness", "punctuality", "well-timed action", "opportune moment", "seasonable promptness", "at-hand readiness")),
     ("steadiness", ("steadiness", "level-headed composure", "unflappable calm", "constant purpose", "steady nerve", "unbroken resolve")),
+    ("fidelity", ("fidelity", "steadfast loyalty", "faithful devotion", "exact faithfulness", "unswerving allegiance", "true-hearted constancy")),
 ]
 
 
