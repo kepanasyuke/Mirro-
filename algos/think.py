@@ -275,8 +275,11 @@ def _c_physics(q):
         if th <= 0:
             th = 1.0
         if n0 >= 0:
+            ratio = t / th
+            if ratio > 1000 or ratio != ratio:
+                ratio = 1000.0
             out = ("физика", "16_university", "half_life_remaining", (n0, t, th),
-                   f"N = {n0:g}·2^(-{t:g}/{th:g}) = {n0*2**(-t/th):.4g}")
+                   f"N = {n0:g}·2^(-{t:g}/{th:g}) = {n0*2**(-ratio):.4g}")
     return out
 
 
