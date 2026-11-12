@@ -615,6 +615,7 @@ _TOPIC_TEST = [
     ("sentiment", ("sentiment", "feeling", "attitude", "emotion", "inclination", "mood")),
     ("chivalry", ("chivalry", "gallant", "courteous", "honorable", "knightly", "noble conduct")),
     ("savvy", ("savvy", "shrewd", "street-smart", "practical", "business-smooth", "astute")),
+    ("equity", ("equity", "fairness", "impartial", "justice", "even-handed", "righteous")),
 ]
 
 
