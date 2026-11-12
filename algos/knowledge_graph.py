@@ -216,6 +216,36 @@ class KnowledgeGraph:
             self._rebuild_adj()
         return moved
 
+    def path_exists(self, a, b, max_depth=3, max_visited=4000):
+        """Есть ли путь между двумя узлами (по рёбрам, без учёта направления)?
+        Использует BFS с ограничением глубины и числа посещённых вершин.
+        Некорректные аргументы → False. Один return: bool."""
+        if not isinstance(a, str) or not isinstance(b, str) or a == b:
+            return False
+        a, b = self._norm(a), self._norm(b)
+        if a not in self.nodes or b not in self.nodes:
+            return False
+        visited = {a}
+        frontier = [a]
+        for _ in range(max_depth):
+            if len(visited) >= max_visited:
+                break
+            nxt = []
+            for cur in frontier:
+                for row in self._adj.get(cur, []):
+                    if not (isinstance(row, (tuple, list)) and len(row) >= 2):
+                        continue
+                    other = row[1]
+                    if other == b:
+                        return True
+                    if other not in visited:
+                        visited.add(other)
+                        nxt.append(other)
+            frontier = nxt
+            if not frontier:
+                break
+        return False
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
