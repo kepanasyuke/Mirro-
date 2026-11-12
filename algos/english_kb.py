@@ -336,6 +336,9 @@ _EN_KB = {
     "silence": ("Silence is the absence of sound or noise. It can bring calm and "
                 "focus, or it can feel awkward in conversation. In music, rests "
                 "and quiet pauses shape rhythm and mood just like the notes do."),
+    "ambition": ("Ambition is a strong wish to achieve something important or "
+                 "to improve in life. It gives direction and energy for hard "
+                 "work. Used well, ambition pushes people to grow and succeed."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
