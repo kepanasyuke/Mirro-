@@ -246,17 +246,17 @@ class KnowledgeGraph:
                 break
         return False
 
-    def get_or_create_node(self, name, tag="понятие", facts=None):
-        """Возвращает существующий узел или создаёт и возвращает новый.
-        Только для строковых имён; пустое имя → None. Один return: Node|None."""
-        if not isinstance(name, str):
-            return None
+    def get_all_neighbors(self, name):
+        """Все различные соседи узла как список (сосед, предикат, вес).
+        То же, что neighbors(), но возвращает копию кортежей, безопасную для
+        использования вне класса. Неизвестный узел → []. Один return: list."""
         name = self._norm(name)
         if not name:
-            return None
-        if name not in self.nodes:
-            self.nodes[name] = Node(name, tag, facts, 1.0)
-        return self.nodes[name]
+            return []
+        rows = self._adj.get(name, [])
+        return [row for row in rows
+                if isinstance(row, (tuple, list)) and len(row) >= 2
+                and isinstance(row[0], str) and isinstance(row[1], str)]
 
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
