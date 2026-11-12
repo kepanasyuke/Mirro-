@@ -635,6 +635,7 @@ _TOPIC_TEST = [
     ("staunchness", ("staunchness", "loyal", "steadfast", "committed", "reliable", "unwavering")),
     ("acumen", ("acumen", "insightful", "keen judgment", "sharp-witted", "perceptive", "shrewd mind")),
     ("merit", ("merit", "deserving", "worthiness", "excellence", "distinction", "credit")),
+    ("sapience", ("sapience", "wisdom", "insightful judgment", "profound understanding", "wise counsel")),
 ]
 
 
