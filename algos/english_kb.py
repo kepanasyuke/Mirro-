@@ -449,6 +449,9 @@ _EN_KB = {
                           "and responsible in your duties. It means doing things well "
                           "and on time, not just quickly. Conscientious people are "
                           "dependable and take pride in their work."),
+    "discipline": ("Discipline is the practice of training yourself to follow rules "
+                   "or a code of conduct consistently. It turns good intentions into "
+                   "steady habits. Discipline is the bridge between goals and results."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
