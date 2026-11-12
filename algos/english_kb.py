@@ -339,6 +339,9 @@ _EN_KB = {
     "ambition": ("Ambition is a strong wish to achieve something important or "
                  "to improve in life. It gives direction and energy for hard "
                  "work. Used well, ambition pushes people to grow and succeed."),
+    "courage": ("Courage is the ability to face danger, difficulty or fear with "
+                "resolve. It is not the absence of fear but acting despite it. "
+                "Acts of courage, large and small, build confidence and respect."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
