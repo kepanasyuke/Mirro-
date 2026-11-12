@@ -802,6 +802,11 @@ _EN_KB = {
                "international law, comity is the principle by which one state recognizes the legal acts of another as a matter of "
                "courtesy rather than obligation. On a personal level, it is the politeness that makes civilized dealings possible even "
                "between strangers or rivals, smoothing the friction of everyday life."),
+    "pleasantness": ("Pleasantness is the quality of being agreeable, cheerful and genial in manner, so that one's company and "
+                     "words give simple pleasure to others. A pleasant person is easy to be around because they spread good cheer, "
+                     "speak kindly and carry themselves with an attractive warmth. It is the everyday polish that makes interactions "
+                     "smooth and is closely related to charm and likeability. Cultivating pleasantness costs nothing, yet it makes the "
+                     "world a friendlier and more livable place for everyone encountered."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
