@@ -545,6 +545,11 @@ _EN_KB = {
                  "judgment applied to real life. Whereas knowledge is information, sapience "
                  "is the wisdom that knows how to use it well. A sapient person grasps the "
                  "bigger picture and offers counsel that stands the test of time."),
+    "tolerance": ("Tolerance is the willingness to accept and respect the beliefs, practices "
+                  "or behaviors of others even when they differ from your own. It does not "
+                  "mean agreeing with everything, but it means coexisting peacefully and "
+                  "granting everyone room to live by their convictions. Tolerance is essential "
+                  "to any free and diverse society."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
