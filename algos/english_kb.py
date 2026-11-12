@@ -357,6 +357,9 @@ _EN_KB = {
     "law": ("Law is a system of rules that governments make and enforce. It "
             "keeps order, protects rights and settles disputes fairly. Laws "
             "apply to everyone and can be changed through proper process."),
+    "pneumatics": ("Pneumatics is the use of compressed air to do work. "
+                   "Air-driven tools and brakes use pressure stored in tanks. "
+                   "Pneumatic systems are clean, simple and common in industry."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
