@@ -650,6 +650,12 @@ class KnowledgeGraph:
         """Центральность понятий: степень узла (число рёбер) как мера важности.
         Возвращает топ-список (понятие, степень) и среднюю степень.
         Один return: dict."""
+        try:
+            top_n = int(top_n)
+        except Exception:
+            top_n = 10
+        if top_n < 1:
+            top_n = 10
         degree = {}
         for key in self.edges:
             if isinstance(key, (tuple, list)) and len(key) >= 3:
