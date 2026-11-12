@@ -279,9 +279,11 @@ def _c_physics(q):
     elif "полураспад" in q and len(_numbers(q)) >= 3:
         n0, t, th = _numbers(q)[:3]
         # защита от деления на ноль и отрицательного периода (физически невозможен)
-        if th <= 0:
+        if th <= 0 or th != th:
             th = 1.0
-        if n0 >= 0:
+        if t != t or n0 != n0:
+            out = None
+        elif n0 >= 0:
             ratio = t / th
             if ratio > 1000 or ratio != ratio:
                 ratio = 1000.0
