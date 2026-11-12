@@ -851,6 +851,7 @@ _TOPIC_TEST = [
     ("wit", ("wit", "quick humor", "clever repartee", "sharp banter", "ingenious humor", "nimble mind")),
     ("charisma", ("charisma", "magnetic presence", "personal magnetism", "compelling charm", "force of personality", "winning charm")),
     ("earnestness", ("earnestness", "sincere seriousness", "wholehearted purpose", "deep conviction", "unfeigned warmth", "grave sincerity")),
+    ("honor", ("honor", "uprightness", "integrity of spirit", "faith in one's word", "principle above profit", "stainless reputation")),
 ]
 
 
