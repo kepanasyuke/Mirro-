@@ -616,6 +616,11 @@ _EN_KB = {
                       "to one's tasks. An assiduous worker is steady, thorough and persistent, giving close "
                       "attention to every detail. It is diligence raised to its highest pitch, and it is the "
                       "behavior, more than raw talent, that most reliably produces excellence."),
+    "discernment": ("Discernment is the ability to judge well and to distinguish the fine differences "
+                    "between things that may look alike. It is the trained skill of telling what is true "
+                    "from what is merely plausible, and what is valuable from what is merely attractive. "
+                    "A discerning person sees with clarity and chooses with wisdom, guided by principle and "
+                    "experience rather than by impulse or surface impression."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
