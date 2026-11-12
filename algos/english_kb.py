@@ -348,6 +348,9 @@ _EN_KB = {
     "humanity": ("Humanity refers to all people as a whole, and to the qualities "
                  "that make us kind and caring, such as empathy and compassion. "
                  "It also names the study and care of people's welfare and rights."),
+    "diligence": ("Diligence is steady and careful effort in work or study. It "
+                  "means paying attention to details and not giving up easily. "
+                  "Diligent people build trust and often reach results with care."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
