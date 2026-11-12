@@ -247,14 +247,14 @@ class KnowledgeGraph:
         seen = set()
         rels = []
         for row in self._adj.get(a, []):
-            if not (isinstance(row, (tuple, list)) and len(row) >= 3):
+            if not (isinstance(row, (list, tuple)) and len(row) >= 3):
                 continue
             p, other, w = row
             if other == b and (p, w) not in seen:
                 seen.add((p, w))
                 rels.append((p, w))
         for row in self._adj.get(b, []):
-            if not (isinstance(row, (tuple, list)) and len(row) >= 3):
+            if not (isinstance(row, (list, tuple)) and len(row) >= 3):
                 continue
             p, other, w = row
             if other == a and (p, w) not in seen:
