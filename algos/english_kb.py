@@ -608,6 +608,10 @@ _EN_KB = {
                   "you say and do. A sincere person means what they say and says what they mean, with no "
                   "hidden agenda. Sincerity builds the deepest form of trust, because it is the foundation "
                   "of authentic relationships and honest communication."),
+    "zeal": ("Zeal is eager and energetic devotion to a cause, activity or pursuit. It is the passionate "
+             "drive that makes work feel like a calling rather than a chore. Zeal can be a tremendous force "
+             "for good — pushing people to achieve great things — but it must be guided by wisdom and truth, "
+             "for unchecked zeal can become fanaticism."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
