@@ -481,6 +481,9 @@ _EN_KB = {
                     "toward rivals or those who have wronged you. It is nobility of mind "
                     "that lets a person act with grace instead of revenge. Magnanimous "
                     "people rise above petty grievances."),
+    "insight": ("Insight is the deep and clear understanding of the nature of things. "
+                "It is seeing connections that are not obvious at first. Insight comes "
+                "from reflection and experience, and it often leads to smart decisions."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
