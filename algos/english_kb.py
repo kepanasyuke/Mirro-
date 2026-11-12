@@ -785,6 +785,7 @@ _TOPIC_TEST = [
     ("virtue", ("virtue", "moral excellence", "righteousness", "goodness", "uprightness", "right living")),
     ("benevolence", ("benevolence", "kind disposition", "goodwill", "charitable heart", "beneficent action", "well-wishing")),
     ("largess", ("largess", "lavish giving", "liberal gifts", "bountiful bestowal", "munificent grant", "generous endowment")),
+    ("civility", ("civility", "polite respect", "courteous behavior", "civilized manners", "decent conduct", "gracious etiquette")),
 ]
 
 
