@@ -892,7 +892,9 @@ class KnowledgeGraph:
                 continue
             try:
                 w = float(w)
-            except Exception:
+            except (TypeError, ValueError):
+                continue
+            if w != w:
                 continue
             s, p, d = key[0], key[1], key[2]
             if (s == a and d == b) or (s == b and d == a):
