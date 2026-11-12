@@ -734,6 +734,7 @@ _TOPIC_TEST = [
     ("zeal", ("zeal", "passionate energy", "eager enthusiasm", "burning ardor", "fervent application", "devoted energy")),
     ("assiduousness", ("assiduousness", "diligent attention", "unremitting care", "thorough application", "steady hard work", "constant effort")),
     ("discernment", ("discernment", "fine judgment", "perceptive insight", "discerning eye", "good taste", "clear-sighted choice")),
+    ("stamina", ("stamina", "enduring energy", "prolonged effort", "physical endurance", "sustained patience", "tireless energy")),
 ]
 
 
