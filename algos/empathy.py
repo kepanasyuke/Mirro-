@@ -135,6 +135,8 @@ def observe(message):
         _fatigue = min(1.0, _fatigue + 0.25)
     else:
         _fatigue = max(0.0, _fatigue - 0.08)
+    if _fatigue != _fatigue:
+        _fatigue = 0.0
     return {"emotion": _emotion, "fatigue": _fatigue}
 
 
