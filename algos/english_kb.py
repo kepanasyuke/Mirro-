@@ -550,6 +550,10 @@ _EN_KB = {
                   "mean agreeing with everything, but it means coexisting peacefully and "
                   "granting everyone room to live by their convictions. Tolerance is essential "
                   "to any free and diverse society."),
+    "dependability": ("Dependability is the quality of being reliable and trustworthy in "
+                      "what you say and do. A dependable person keeps promises, meets deadlines "
+                      "and can be counted on in a crisis. Dependability is built slowly through "
+                      "consistent action and is quickly lost through a single act of betrayal."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
