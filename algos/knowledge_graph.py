@@ -357,11 +357,13 @@ class KnowledgeGraph:
 
     def _rebuild_adj(self):
         """Пересобирает индекс соседей из рёбер. Один return: None."""
-        self._adj = {n: [] for n in self.nodes}
+        self._adj = {n: [] for n in self.nodes if isinstance(n, str)}
         for key, w in self.edges.items():
             if not (isinstance(key, (tuple, list)) and len(key) == 3):
                 continue
             s, p, d = key
+            if not (isinstance(s, str) and isinstance(d, str)):
+                continue
             self._adj.setdefault(s, []).append((p, d, w))
             self._adj.setdefault(d, []).append((p, s, w))
         # граф изменился — сбрасываем кэш дорогих вычислений
