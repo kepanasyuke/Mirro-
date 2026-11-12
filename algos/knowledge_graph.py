@@ -278,34 +278,16 @@ class KnowledgeGraph:
         ranked = sorted(counts.items(), key=lambda x: -x[1])[:top_n]
         return [(p, c) for p, c in ranked]
 
-    def has_node(self, name):
-        """Есть ли узел с данным именем в графе. Один return: bool."""
-        if not isinstance(name, str):
-            return False
-        return self._norm(name) in self.nodes
-
-    def strongest_neighbor(self, name):
-        """Сосед с наибольшим весом связи с данным узлом (или None, если связей нет).
-        Пустой/неизвестный узел → None. Один return: (neighbor, weight) | None."""
-        name = self._norm(name)
-        if not name:
-            return None
-        best = None
-        best_w = -1.0
-        for row in self._adj.get(name, []):
-            if not (isinstance(row, (tuple, list)) and len(row) >= 2):
-                continue
-            nbr, w = row[0], row[1] if len(row) >= 3 else 1.0
-            try:
-                w = float(w)
-            except (TypeError, ValueError):
-                continue
-            if w != w:
-                continue
-            if w > best_w:
-                best_w = w
-                best = (nbr, w)
-        return best
+    def mutual_neighbors(self, a, b):
+        """Общие соседи двух узлов. Неизвестные узлы → []. Один return: list."""
+        if not isinstance(a, str) or not isinstance(b, str) or a == b:
+            return []
+        a, b = self._norm(a), self._norm(b)
+        na = {row[0] for row in self._adj.get(a, [])
+              if isinstance(row, (tuple, list)) and len(row) >= 2 and isinstance(row[0], str)}
+        nb = {row[0] for row in self._adj.get(b, [])
+              if isinstance(row, (tuple, list)) and len(row) >= 2 and isinstance(row[0], str)}
+        return sorted(na & nb)
 
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
