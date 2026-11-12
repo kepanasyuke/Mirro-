@@ -922,8 +922,8 @@ _EN_KB = {
                    "following through on promises and agreements without deception or hidden self-interest. The concept is central to law, where contracts imply a duty of good faith, and to all healthy relationships, which "
                    "cannot survive without it. It is the opposite of fraud, duplicity and bad faith, and its presence is what makes trust possible between strangers."),
 "good humor": ("Good humor is a cheerful and pleasant state of mind that makes a person easy to laugh and enjoyable to be around. It is the good-natured disposition that turns a simple joke into an occasion for happy "
-                   "laughter and keeps one's spirits up through trying times. A person of good humor is quick to laugh at the incongruities of life and slow to become angry, spreading goodwill wherever they go. It is closely "
-                   "akin to cheerfulness, mirth and joviality, and it is one of the most magnetic of human qualities, for it makes the whole world seem brighter and more friendly."),
+                "laughter and keeps one's spirits up through trying times. A person of good humor is quick to laugh at the incongruities of life and slow to become angry, spreading goodwill wherever they go. It is closely "
+                "akin to cheerfulness, mirth and joviality, and it is one of the most magnetic of human qualities, for it makes the whole world seem brighter and more friendly."),
     "attentiveness": ("Attentiveness is the act of paying close and careful attention to what is happening, being said or being done around one. An attentive person listens fully, notices details others miss, and responds promptly to "
                       "the needs of the moment. It is the opposite of distraction and absent-mindedness. In the classroom, attentiveness makes learning effective; in personal relationships, it makes the other person feel valued and heard; "
                       "in the workshop, it prevents accidents and errors. Attentiveness is the practical foundation upon which care, courtesy and understanding are all built."),
@@ -933,9 +933,30 @@ _EN_KB = {
     "watchfulness": ("Watchfulness is the state of keeping careful guard over something or someone, and of being constantly aware of what may happen. The watchful person is on the lookout for danger, opportunity or change, and is ready "
                      "to respond at a moment's notice. It is the attentive vigilance of a sentinel, the caution of a lookout at sea, and the alertness of a mother over a sleeping child. Watchfulness is not the same as anxiety or paranoia; "
                      "it is an even and expectant attention that neither relaxes its guard nor is alarmed without cause. Used rightly, it is the guardian of safety and the first line of defense in every kind of vigilance."),
-    "surveillance": ("Surveillance is close observation kept over someone or something, usually to watch for activity, wrongdoing or change. In modern life it is most often associated with cameras, monitoring systems and intelligence-gathering, "
+"surveillance": ("Surveillance is close observation kept over someone or something, usually to watch for activity, wrongdoing or change. In modern life it is most often associated with cameras, monitoring systems and intelligence-gathering, "
                      "but in its simplest form it is the careful watching that any responsible person does to keep a situation under control. Surveillance can be a force for good or ill, protecting the innocent and catching wrongdoers, or "
                      "invading privacy and chilling free speech. Its morality depends entirely on who is watched, by whom and for what purpose, for it is the same tool that can preserve order or become an instrument of oppression."),
+    "benignity": ("Benignity is the quality of being kind, gentle, gracious and favorable, and of lacking any disposition to harm or do evil. A benign presence is warm and soothing, the opposite of harmful or threatening. The word is used of "
+                  "a benign tumor that does not spread harmfully, of a benign climate that is mild and favorable, and of a benign ruler whose governance is mild and just. Benignity is the gentle face of goodness, touching everything around it "
+                  "with an unmistakable grace and doing good almost as a natural force, rather than as a calculated act."),
+"verve": ("Verve is energy and enthusiasm in the expression of thought or in the pursuit of activity, a lively forcefulness that infuses one's words and deeds with spirit and vitality. A person of verve attacks every task with gusto and "
+               "lives each moment with intensity, so that their very presence is charged with animation. It is what makes a dancer's movement electrifying, a writer's prose crackle with life, and an athlete's play burst with flair. Verve is the "
+               "alive quality that separates the merely competent from the inspired, and the routine from the memorable."),
+"ardor": ("Ardor is intensity of passion, heat of feeling or great eagerness in the pursuit of a cause, person or ambition. The word literally means a burning, and figuratively it names the fire of romantic love, the fervor of devotion and "
+                "the fierce energy of a committed struggle. An ardent supporter is one who cares unreservedly, and her or his ardor enlivens everything from the pages of love letters to the roar of a stadium. Ardor is the fuel that sustains "
+                "long effort and the warmth that makes passionate engagement with the world possible at all."),
+"passion": ("Passion is a very strong emotion, an intense drive or enthusiasm, or the object of such intense feeling. It can be felt for a person, a purpose, a sport or a call in life. Passion is the fire in the belly that pushes artists to "
+                 "create, scientists to discover and activists to persist. It is the difference between engaging with the world and merely passing through it. When directed well, passion gives meaning and color to existence and impels people toward "
+                 "their deepest achievements; when uncontrolled, it leads to obsession and excess, reminding us that this potent and double-edged force must be held in check with wisdom and balance."),
+"vim": ("Vim is robust energy and vitality, the brisk liveliness that spurs one into action. It is a quality of being full of life and ready for anything, suggesting great vigor and force. To have vim is to display a zestful, breezy energy in "
+             "whatever one undertakes, and to perform it with spring and stamina. In phrases like 'vim and vigor' it stands for the twin necessities of spirited activity, and it is the kind of liveliness that keeps old hands young and makes hard "
+             "work feel effortless. Vim is the heartiness of the healthy body and the briskness of the awake mind working together in an untiring rhythm."),
+"firmness": ("Firmness is the quality of being solidly established, resolute and unyielding, whether in material structure, in purpose or in principle. A firm resolve does not waver, a firm grip does not slip, and a firm decision is not revised "
+                  "at the first sign of difficulty. It is the strength that comes from knowing what one stands for, and the consistency that comes from refusing to be blown about by every wind of opinion. Firmness is what allows a leader to hold a "
+                  "course against opposition and a moral agent to resist temptation, and it is misapplied only when it hardens into mere obstinacy."),
+"certitude": ("Certitude is the state of being completely certain about the truth of a matter, free from doubt or hesitation. It is more than mere confidence, which can rest on feeling alone; certitude is grounded in knowledge, evidence or "
+                   "conviction that leaves no room for equivocation. It brings with it a settled peace of mind and a clear direction for action. Certitude must be distinguished from its counterfeit, certitude without grounds, which is dogmatism, and "
+                   "be held with the humility that no human certainty is immune to revision before new evidence."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
