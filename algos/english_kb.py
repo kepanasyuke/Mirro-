@@ -415,6 +415,9 @@ _EN_KB = {
     "prudence": ("Prudence is the careful use of good judgment before acting. "
                  "It weighs risks and consequences instead of rushing in. "
                  "Prudent choices protect your health, money and relationships."),
+    "courtesy": ("Courtesy is polite and considerate behavior toward other people. "
+                 "It is shown in small gestures like greeting, thanking and waiting "
+                 "your turn. Courtesy makes daily life smoother and kinder."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
