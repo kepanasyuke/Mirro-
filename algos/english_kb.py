@@ -360,6 +360,9 @@ _EN_KB = {
     "pneumatics": ("Pneumatics is the use of compressed air to do work. "
                    "Air-driven tools and brakes use pressure stored in tanks. "
                    "Pneumatic systems are clean, simple and common in industry."),
+    "equilibrium": ("Equilibrium is a state of balance where forces or factors "
+                    "cancel each other out. A market, a body or a chemical system "
+                    "can be in equilibrium when opposing influences are equal."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
