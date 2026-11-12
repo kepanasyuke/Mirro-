@@ -246,6 +246,18 @@ class KnowledgeGraph:
                 break
         return False
 
+    def get_or_create_node(self, name, tag="понятие", facts=None):
+        """Возвращает существующий узел или создаёт и возвращает новый.
+        Только для строковых имён; пустое имя → None. Один return: Node|None."""
+        if not isinstance(name, str):
+            return None
+        name = self._norm(name)
+        if not name:
+            return None
+        if name not in self.nodes:
+            self.nodes[name] = Node(name, tag, facts, 1.0)
+        return self.nodes[name]
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
