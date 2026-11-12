@@ -124,6 +124,28 @@ class KnowledgeGraph:
                 count += 1
         return count
 
+    def remove_node(self, name):
+        """Удаляет узел и все связанные с ним рёбра. Возвращает число удалённых
+        рёбер, или 0 если узел не найден. Не-строковое имя → 0. Один return: int."""
+        if not isinstance(name, str):
+            return 0
+        name = self._norm(name)
+        if name not in self.nodes:
+            return 0
+        removed = 0
+        for k in list(self.edges):
+            if not (isinstance(k, (tuple, list)) and len(k) >= 2):
+                continue
+            if k[0] == name or k[2] == name:
+                del self.edges[k]
+                removed += 1
+        del self.nodes[name]
+        if name in self._adj:
+            del self._adj[name]
+        if removed:
+            self._rebuild_adj()
+        return removed
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
