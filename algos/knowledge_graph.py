@@ -258,6 +258,10 @@ class KnowledgeGraph:
                 if isinstance(row, (tuple, list)) and len(row) >= 2
                 and isinstance(row[0], str) and isinstance(row[1], str)]
 
+    def node_weights(self):
+        """Словарь весов всех узлов (name -> weight). Один return: dict."""
+        return {n: getattr(node, "weight", 1.0) for n, node in self.nodes.items()}
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
