@@ -498,9 +498,12 @@ _EN_KB = {
               "achievements or from a group you belong to. When balanced, it builds "
               "self-respect; when excessive, it can blind a person to their faults. "
               "Right pride respects others and stays grounded."),
-    "modesty": ("Modesty is a humble estimate of one's own importance and worth. It is "
-                "the opposite of showing off or demanding attention. Modest people let "
-                "their actions speak rather than their words, and remain teachable."),
+"modesty": ("Modesty is a humble estimate of one's own importance and worth. It is "
+                 "the opposite of showing off or demanding attention. Modest people let "
+                 "their actions speak rather than their words, and remain teachable."),
+    "sagacity": ("Sagacity is the quality of being wise, keen and judicious in judgment. "
+                 "It comes from experience, learning and a sharp perception of detail. "
+                 "Sagacious people see through appearances to the heart of a matter."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
