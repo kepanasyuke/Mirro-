@@ -596,6 +596,10 @@ _EN_KB = {
                     "reliability and respect. A dutiful person does what is required without complaint, out "
                     "of a sense of duty toward family, work or society. It is not glamorous, but it is the "
                     "quiet engine that keeps families, institutions and communities functioning."),
+    "confidence": ("Confidence is trust in one's own abilities, judgment or powers and the courage that grows "
+                   "from that trust. It is not arrogance, which dismisses others, but a calm self-assurance "
+                   "that comes from competence and preparation. Confident people try new things, speak their "
+                   "mind and recover quickly from failure, because they believe in themselves and their goals."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
