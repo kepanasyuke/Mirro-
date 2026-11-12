@@ -129,6 +129,8 @@ class KnowledgeGraph:
             floor = float(floor)
         except Exception:
             amount, floor = 0.01, 0.2
+        if amount != amount or floor != floor:
+            amount, floor = 0.01, 0.2
         if amount < 0 or floor < 0:
             return 0
         changed = 0
