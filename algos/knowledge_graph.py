@@ -154,6 +154,14 @@ class KnowledgeGraph:
         """Число рёбер в графе. Один return: int."""
         return len(self.edges)
 
+    def get_edge_weight(self, src, pred, dst):
+        """Вес конкретного ребра (src, pred, dst) или 0.0, если его нет.
+        Некорректные аргументы → 0.0. Один return: float."""
+        if not src or not pred or not dst:
+            return 0.0
+        s, p, d = self._norm(src), self._norm(pred), self._norm(dst)
+        return self.edges.get((s, p, d), 0.0)
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
