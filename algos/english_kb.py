@@ -370,6 +370,9 @@ _EN_KB = {
     "resilience": ("Resilience is the ability to recover quickly from hard times "
                    "or setbacks. It involves staying flexible and positive under "
                    "pressure. Resilient people adapt, learn and keep going."),
+    "humility": ("Humility is a modest view of one's own importance. It means "
+                 "being open to feedback and not seeing yourself as better than "
+                 "others. Humble people listen, learn and stay approachable."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
