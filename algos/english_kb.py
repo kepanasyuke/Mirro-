@@ -394,6 +394,9 @@ _EN_KB = {
     "freedom": ("Freedom is the state of being able to act, think and choose "
                 "without unfair limits. It comes with responsibility for your "
                 "choices. Freedom is a base for creativity and dignity."),
+    "endurance": ("Endurance is the strength to keep going through difficult or "
+                  "prolonged effort. It blends physical stamina with mental "
+                  "resolve. Enduring effort is what makes long battles winnable."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
