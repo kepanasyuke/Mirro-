@@ -625,6 +625,7 @@ _TOPIC_TEST = [
     ("savvy", ("savvy", "shrewd", "street-smart", "practical", "business-smooth", "astute")),
     ("equity", ("equity", "fairness", "impartial", "justice", "even-handed", "righteous")),
     ("staunchness", ("staunchness", "loyal", "steadfast", "committed", "reliable", "unwavering")),
+    ("acumen", ("acumen", "insightful", "keen judgment", "sharp-witted", "perceptive", "shrewd mind")),
 ]
 
 
