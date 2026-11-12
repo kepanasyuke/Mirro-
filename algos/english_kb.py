@@ -576,6 +576,7 @@ _TOPIC_TEST = [
     ("patience", ("patience", "calm", "wait calmly", "long-suffering", "even-tempered")),
     ("bravery", ("bravery", "courageous", "fearless", "bold", "heroic", "intrepid")),
     ("temperance", ("temperance", "moderation", "restraint", "self-control", "balanced")),
+    ("pride", ("pride", "self-esteem", "dignity", "self-respect", "satisfaction")),
 ]
 
 
