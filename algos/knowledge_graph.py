@@ -162,6 +162,20 @@ class KnowledgeGraph:
         s, p, d = self._norm(src), self._norm(pred), self._norm(dst)
         return self.edges.get((s, p, d), 0.0)
 
+    def edge_pairs(self):
+        """Все уникальные пары (источник, цель) с объединённым максимальным весом.
+        Пропускает петли. Один return: list of (src, dst, weight)."""
+        pairs = {}
+        for k, w in self.edges.items():
+            if not (isinstance(k, (tuple, list)) and len(k) >= 3):
+                continue
+            s, p, d = k[0], k[1], k[2]
+            if not (isinstance(s, str) and isinstance(d, str)) or s == d:
+                continue
+            pair_key = (s, d) if (s, d) in pairs else (d, s)
+            pairs[pair_key] = max(pairs.get(pair_key, 0.0), w)
+        return [(s, d, w) for (s, d), w in sorted(pairs.items())]
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
