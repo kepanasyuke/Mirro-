@@ -333,6 +333,9 @@ _EN_KB = {
     "vacuum": ("A vacuum is a space with very little or no matter inside. Sound "
                "cannot travel through a perfect vacuum, and objects fall freely "
                "in it. Vacuums are used in bulbs, packaging and scientific tools."),
+    "silence": ("Silence is the absence of sound or noise. It can bring calm and "
+                "focus, or it can feel awkward in conversation. In music, rests "
+                "and quiet pauses shape rhythm and mood just like the notes do."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
