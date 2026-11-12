@@ -442,6 +442,9 @@ _EN_KB = {
     "compromise": ("A compromise is an agreement made by mutual adjustment, where "
                    "each side gives up something to reach a shared goal. It takes "
                    "seeing the other view and seeking a fair middle ground."),
+    "equanimity": ("Equanimity is calmness and composure, especially in difficult "
+                   "situations. It means keeping a steady mind whether you win or "
+                   "lose. Equanimity protects wisdom from being swept by emotion."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
