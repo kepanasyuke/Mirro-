@@ -363,6 +363,10 @@ _EN_KB = {
     "equilibrium": ("Equilibrium is a state of balance where forces or factors "
                     "cancel each other out. A market, a body or a chemical system "
                     "can be in equilibrium when opposing influences are equal."),
+    "prosperity": ("Prosperity is a state of being successful and having plenty, "
+                   "especially in wealth or well-being. It comes from growth, "
+                   "opportunity and good health. Prosperity can be personal or "
+                   "shared across a whole society."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
