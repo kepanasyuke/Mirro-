@@ -402,7 +402,7 @@ class KnowledgeGraph:
             if not (isinstance(key, (tuple, list)) and len(key) == 3):
                 continue
             s, p, d = key
-            if not (isinstance(s, str) and isinstance(d, str)):
+            if not (isinstance(s, str) and isinstance(d, str) and isinstance(p, str)):
                 continue
             self._adj.setdefault(s, []).append((p, d, w))
             self._adj.setdefault(d, []).append((p, s, w))
