@@ -262,6 +262,22 @@ class KnowledgeGraph:
         """Словарь весов всех узлов (name -> weight). Один return: dict."""
         return {n: getattr(node, "weight", 1.0) for n, node in self.nodes.items()}
 
+    def popular_relations(self, top_n=10):
+        """Самые частые предикаты и их число вхождений, убывающе отсортированные.
+        Нечисловой top_n → 10. Один return: list of (predicate, count)."""
+        try:
+            top_n = max(1, int(top_n))
+        except Exception:
+            top_n = 10
+        counts = {}
+        for k in self.edges:
+            if not (isinstance(k, (tuple, list)) and len(k) >= 2):
+                continue
+            if isinstance(k[1], str):
+                counts[k[1]] = counts.get(k[1], 0) + 1
+        ranked = sorted(counts.items(), key=lambda x: -x[1])[:top_n]
+        return [(p, c) for p, c in ranked]
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
