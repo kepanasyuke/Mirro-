@@ -190,7 +190,7 @@ def apply_empathy(message, answer):
         # не дублируем, если пользователь просто спросил настроение/самочувствие
         low = (message or "").lower() if isinstance(message, str) else ""
         if not any(w in low for w in ("как ты себя", "как настроение", "как дела")):
-            first = ans[0].lower() if ans else ""
+            first = ans[0].lower() if isinstance(ans, str) and ans else ""
             out = lead + first + ans[1:] if ans else lead
     return out
 
