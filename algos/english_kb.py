@@ -484,6 +484,9 @@ _EN_KB = {
     "insight": ("Insight is the deep and clear understanding of the nature of things. "
                 "It is seeing connections that are not obvious at first. Insight comes "
                 "from reflection and experience, and it often leads to smart decisions."),
+    "lenity": ("Lenity is the quality of being gentle and merciful in judgment. It is "
+               "the mildness that avoids harsh punishment when it is not needed. Lenity "
+               "corrects with care and tempering, without cruelty."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
