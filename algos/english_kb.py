@@ -709,6 +709,11 @@ _EN_KB = {
                  "not mere physical attractiveness or celebrity; it is a blend of presence, confidence, warmth and a "
                  "genuine interest in other people. Those who possess it can move others to great achievement, but it "
                  "carries an ethical responsibility to use that power wisely."),
+    "earnestness": ("Earnestness is the quality of being sincere, serious and wholehearted in purpose or feeling. "
+                    "An earnest person cares deeply about truth and does not treat important matters lightly or with "
+                    "irony. It is the opposite of flippancy and half-heartedness. Earnestness gives weight to words and "
+                    "actions, so that promises mean something and efforts are not wasted on pretense. It is the fuel of "
+                    "conviction and the mark of a trustworthy heart."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
