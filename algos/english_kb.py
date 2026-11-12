@@ -674,6 +674,10 @@ _EN_KB = {
                     "It is the serene stillness of a lake at dawn or the settled ease of a mind at rest. "
                     "Achieving tranquility often requires turning inward and letting go of racing thoughts. In a "
                     "hurried world, it is a precious state that restores clarity, health and perspective."),
+    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another — "
+                   "of a child, a student, a partner or an idea. It combines patience, gentleness and attentive "
+                   "love, giving what is needed for someone to thrive. The nurturing person does not dominate or "
+                   "smother, but creates the safe conditions in which growth can naturally unfold."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
