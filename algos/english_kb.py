@@ -529,6 +529,10 @@ _EN_KB = {
                "is justly their due rather than treating everyone exactly the same. It "
                "recognizes that different situations may need different treatment to reach "
                "an equal outcome. Equity anchors society in justice and mutual respect."),
+    "staunchness": ("Staunchness is the quality of being loyal, committed and reliable, "
+                    "especially in the face of difficulty or opposition. It is a steadfast "
+                    "allegiance to a person, cause or belief that does not waver easily. "
+                    "Staunch friends and allies remain true when it is costly to do so."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
