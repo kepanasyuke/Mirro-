@@ -764,6 +764,11 @@ _EN_KB = {
                 "handling of resources is beyond reproach. Probity is the foundation of professional reputation and the attribute "
                 "that most makes people willing to entrust their interests to you. It is what keeps judges impartial, auditors reliable "
                 "and leaders honest."),
+    "goodness": ("Goodness is the quality of being morally excellent, kindhearted and beneficial in one's actions and intentions. "
+                 "A good person is one whose character is marked by virtue and whose life is a positive influence on those around them. "
+                 "Goodness is not a single act but a consistent pattern of seeing the best in others, telling the truth and lending a "
+                 "helping hand. In its simplest form, goodness is the desire to make things better and the daily commitment to act on "
+                 "that desire."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
