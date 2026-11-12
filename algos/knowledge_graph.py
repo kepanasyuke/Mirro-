@@ -496,6 +496,12 @@ class KnowledgeGraph:
             min_weight = 0.15
         if min_weight != min_weight or min_weight < 0:
             min_weight = 0.15
+        try:
+            max_phrase_words = int(max_phrase_words)
+        except Exception:
+            max_phrase_words = 4
+        if max_phrase_words < 1:
+            max_phrase_words = 4
         # рёбра ниже порога (шум от частых пар) — убираем
         weak = [k for k, w in self.edges.items() if w < min_weight]
         for k in weak:
