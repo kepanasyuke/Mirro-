@@ -662,6 +662,7 @@ _TOPIC_TEST = [
     ("dependability", ("dependability", "reliable", "trustworthy", "dependable", "responsible", "consistent")),
     ("reliability", ("reliability", "dependable", "consistent", "predictable", "steady", "uniform")),
     ("sublimity", ("sublimity", "grandeur", "exalted", "lofty", "awe-inspiring", "majestic")),
+    ("heroism", ("heroism", "heroic", "courageous act", "selfless", "gallantry", "valor")),
 ]
 
 
