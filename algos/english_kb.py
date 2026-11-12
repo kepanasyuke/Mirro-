@@ -576,6 +576,10 @@ _EN_KB = {
                     "lavish scale. It goes beyond ordinary kindness by being remarkably bountiful. "
                     "A munificent patron or donor gives without hoarding, using wealth to elevate "
                     "others and to fund works that benefit the public good."),
+    "prosperity": ("Prosperity is the state of being financially successful, thriving and in good "
+                   "health. It is more than mere wealth; it includes a sense of well-being, security "
+                   "and abundance in one's life. Prosperity can be personal, communal or national, and "
+                   "it is sustained by sound habits, honest work and wise management of resources."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
