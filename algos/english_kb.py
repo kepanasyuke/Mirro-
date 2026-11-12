@@ -455,6 +455,10 @@ _EN_KB = {
     "diligence": ("Diligence is steady and earnest effort in one's work or duties. "
                   "It means applying constant care and attention over time. Diligent "
                   "workers produce quality and earn trust through reliability."),
+    "mercy": ("Mercy is compassion shown toward someone who has power over you or "
+              "who has done wrong. It means choosing kindness over punishment when "
+              "you have the right to be harsh. Mercy restores dignity and offers a "
+              "second chance."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
