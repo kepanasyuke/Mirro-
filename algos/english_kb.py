@@ -436,6 +436,9 @@ _EN_KB = {
     "forbearance": ("Forbearance is patient self-control in the face of annoyance "
                     "or provocation. It means holding back anger and giving second "
                     "chances. Forbearing people keep peace and stay fair under stress."),
+    "resoluteness": ("Resoluteness is firmness of purpose and decisiveness in action. "
+                     "It is the quiet determination behind a clear decision. Resolute "
+                     "people do not waver once they have set a course."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
