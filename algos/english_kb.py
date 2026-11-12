@@ -373,6 +373,9 @@ _EN_KB = {
     "humility": ("Humility is a modest view of one's own importance. It means "
                  "being open to feedback and not seeing yourself as better than "
                  "others. Humble people listen, learn and stay approachable."),
+    "gratitude": ("Gratitude is the feeling of being thankful for what you have. "
+                  "It focuses attention on the good things in life, from small "
+                  "kindness to big support. Practicing it lifts mood and bonds."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
