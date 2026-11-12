@@ -490,6 +490,10 @@ _EN_KB = {
     "tenacity": ("Tenacity is the quality of holding firmly to a course of action or "
                  "belief. It means refusing to give up even when success seems slow or "
                  "far away. Tenacious people keep trying long after others have stopped."),
+    "prowess": ("Prowess is great skill or ability, especially in battle or in one's "
+                "chosen field of endeavor. It is the excellence that comes from talent "
+                "combined with hard practice. Prowess wins respect and opens doors to "
+                "hard-won achievement."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
