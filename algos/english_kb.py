@@ -558,6 +558,8 @@ def try_english(query):
     None = вопрос не англ. (нужно другое)."""
     if not isinstance(query, str) or len(query.strip()) < 6:
         return None
+    if len(query) > 5000:
+        return None
     if not _is_english_query(query):
         return None
     if not isinstance(_EN_KB, dict):
