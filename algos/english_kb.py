@@ -724,16 +724,16 @@ _EN_KB = {
                 "decorum means knowing what is appropriate in any situation — when to speak, when to be silent, when to "
                 "act and when to hold back. Far from being mere etiquette, decorum is a form of kindness that makes people "
                 "around one comfortable and respected."),
-    "finesse": ("Finesse is refined and delicate skill in handling a difficult or delicate task with ease and subtlety. "
+"finesse": ("Finesse is refined and delicate skill in handling a difficult or delicate task with ease and subtlety. "
                 "It is the art of doing something difficult so smoothly that it looks effortless, without clumsy force. "
                 "Finesse appears in the deft touch of a surgeon, the gentle persuasion of a diplomat and the polished grace "
                 "of a dancer. It is the quality that turns competence into mastery and marks the difference between merely "
                 "getting something done and doing it beautifully."),
-    "invention": ("Invention is the creation of something new that did not exist before, whether a device, a method, or an "
-                  "idea. It is the practical face of creativity, turning imagination into form. Invention requires both original "
-                  "insight and the persistence to develop that insight into something real and useful. Every great invention "
-                  "starts as an act of curiosity, is carried forward by hard work, and gains meaning when it improves the lives "
-                  "of others."),
+    "guilelessness": ("Guilelessness is the quality of being free from cunning, deceit or treachery. A guileless person is "
+                      "open, honest and without hidden malice, simple in word and in deed. It is not the same as naivety, "
+                      "which comes from not knowing better; rather, it is a chosen innocence that refuses to manipulate or "
+                      "deceive. In a world full of stratagem, guilelessness is a refreshing and disarming honesty that invites "
+                      "trust and demonstrates true moral simplicity."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
