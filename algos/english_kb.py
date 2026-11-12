@@ -388,6 +388,9 @@ _EN_KB = {
     "determination": ("Determination is the firm resolve to keep pursuing a goal "
                       "despite obstacles and setbacks. It fuels effort and "
                       "persistence. Determined people turn plans into results."),
+    "optimism": ("Optimism is a hopeful outlook that focuses on good possibilities "
+                 "and positive outcomes. It supports motivation during hard times. "
+                 "Optimistic people tend to cope better and try more often."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
