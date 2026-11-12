@@ -610,6 +610,7 @@ _TOPIC_TEST = [
     ("promise", ("promise", "vow", "pledge", "word of honor", "commitment", "engagement")),
     ("sentiment", ("sentiment", "feeling", "attitude", "emotion", "inclination", "mood")),
     ("chivalry", ("chivalry", "gallant", "courteous", "honorable", "knightly", "noble conduct")),
+    ("savvy", ("savvy", "shrewd", "street-smart", "practical", "business-smooth", "astute")),
 ]
 
 
