@@ -678,6 +678,10 @@ _EN_KB = {
                    "of a child, a student, a partner or an idea. It combines patience, gentleness and attentive "
                    "love, giving what is needed for someone to thrive. The nurturing person does not dominate or "
                    "smother, but creates the safe conditions in which growth can naturally unfold."),
+    "serendipity": ("Serendipity is the happy faculty of discovering valuable or pleasant things by chance. "
+                    "It is the unexpected good fortune that comes when a fortunate accident meets a prepared mind. "
+                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill — "
+                    "curious, observant people are the ones most likely to turn a lucky break into an opportunity."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
