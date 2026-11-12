@@ -774,6 +774,11 @@ _EN_KB = {
                        "miracle — someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
                        "the same truths. Such connections are the heart of friendship, offering the comfort of being truly known and the "
                        "rare joy of finding a companion for the road of life."),
+    "amiability": ("Amiability is the quality of being pleasant, good-natured and easy to get along with. An amiable person has a "
+                   "sweet and agreeable disposition that makes others comfortable in their presence. It is a quieter and more passive "
+                   "form of warmth than affability — where the affable person actively reaches out to others, the amiable person's very "
+                   "nature is mild, gentle and likable. Amiability smooths everyday interactions and is one of the most endearing of "
+                   "human qualities."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
