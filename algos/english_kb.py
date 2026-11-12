@@ -894,6 +894,7 @@ _TOPIC_TEST = [
     ("neighborliness", ("neighborliness", "helpful companionship", "community spirit", "friendly cooperation", "neighborly goodwill", "kindred community")),
     ("affability", ("affability", "easy approach", "pleasant manner", "genial courtesy", "open friendliness", "warm approachability")),
     ("timeliness", ("timeliness", "punctuality", "well-timed action", "opportune moment", "seasonable promptness", "at-hand readiness")),
+    ("steadiness", ("steadiness", "level-headed composure", "unflappable calm", "constant purpose", "steady nerve", "unbroken resolve")),
 ]
 
 
