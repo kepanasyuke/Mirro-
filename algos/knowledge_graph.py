@@ -65,6 +65,14 @@ class KnowledgeGraph:
         s, p, d = self._norm(src), self._norm(pred), self._norm(dst)
         return (s, p, d) in self.edges
 
+    def degree_of(self, name):
+        """Степень узла (число рёбер). Неизвестный/некорректный узел → 0.
+        Один return: int."""
+        name = self._norm(name)
+        if not name:
+            return 0
+        return len(self._adj.get(name, []))
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
