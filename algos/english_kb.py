@@ -839,6 +839,7 @@ _TOPIC_TEST = [
     ("sageness", ("sageness", "deep wisdom", "seasoned judgment", "worldly prudence", "mature insight", "tried and tested wisdom")),
     ("eloquence", ("eloquence", "persuasive speech", "fluent tongue", "silver tongue", "artful expression", "captivating rhetoric")),
     ("wit", ("wit", "quick humor", "clever repartee", "sharp banter", "ingenious humor", "nimble mind")),
+    ("charisma", ("charisma", "magnetic presence", "personal magnetism", "compelling charm", "force of personality", "winning charm")),
 ]
 
 
