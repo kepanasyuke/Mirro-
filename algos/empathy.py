@@ -114,6 +114,8 @@ def observe(message):
         return {"emotion": _emotion, "fatigue": _fatigue}
     d = _detect_rad(message)
     net = (d["pos"] - d["neg"]) if d["pos"] == 0 or d["neg"] == 0 else (d["pos"] - d["neg"]) * 0.5
+    if not net == net or (net < -1e6 or net > 1e6):
+        net = 0.0
     delta = 0.15 * max(-2, min(2, net))
     if d["pos"] == 0 and d["neg"] == 0:
         # нейтральная реплика мягко тянет к нулю
