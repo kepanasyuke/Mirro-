@@ -170,6 +170,12 @@ class KnowledgeGraph:
         и узлы-фразы длиннее max_phrase_words слов (корпусный шум, не понятия).
         Один return: int — число удалённых элементов (узлы+рёбра+предикаты)."""
         removed = 0
+        try:
+            max_phrase_words = int(max_phrase_words)
+        except Exception:
+            max_phrase_words = 4
+        if max_phrase_words < 1:
+            max_phrase_words = 4
         if noise_preds is None:
             noise_preds = {"это", "есть", "если", "является", "и", "или", ",", ".", "-"}
         elif isinstance(noise_preds, str):
