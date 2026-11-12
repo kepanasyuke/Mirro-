@@ -529,6 +529,13 @@ _TOPIC_TEST = [
     ("astronomy", ("astronomy", "planet", "star", "galaxy", "nebula", "telescope", "comet")),
     ("botany", ("botany", "plant", "leaf", "root", "flower", "photosynthesis", "tree")),
     ("zoology", ("zoology", "animal", "mammal", "insect", "bird", "habitat", "reptile")),
+    ("mercy", ("mercy", "forgive", "compassion", "spare", "pardon")),
+    ("mettle", ("mettle", "courage", "resolve", "stamina", "fortitude")),
+    ("vigilance", ("vigilance", "alert", "watchful", "vigilant", "attentive")),
+    ("discipline", ("discipline", "self-control", "training", "habit", "consistent")),
+    ("diligence", ("diligence", "careful", "earnest", "thorough", "persistent")),
+    ("kindness", ("kindness", "gentle", "friendly", "considerate", "warm")),
+    ("honesty", ("honesty", "truth", "truthful", "sincere", "candid", "upright")),
 ]
 
 
