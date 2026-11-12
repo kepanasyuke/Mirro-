@@ -490,6 +490,12 @@ class KnowledgeGraph:
         узлы-фразы длиннее порога. Рост плотности за счёт смысла, а не шума.
         Один return: int — число удалённых элементов (рёбра+узлы)."""
         removed = 0
+        try:
+            min_weight = float(min_weight)
+        except Exception:
+            min_weight = 0.15
+        if min_weight != min_weight or min_weight < 0:
+            min_weight = 0.15
         # рёбра ниже порога (шум от частых пар) — убираем
         weak = [k for k, w in self.edges.items() if w < min_weight]
         for k in weak:
