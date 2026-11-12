@@ -822,6 +822,7 @@ _TOPIC_TEST = [
     ("serendipity", ("serendipity", "happy accident", "fortunate discovery", "lucky find", "unexpected blessing", "chance fortune")),
     ("warmth", ("warmth", "hearty friendliness", "affectionate manner", "welcoming kindness", "cordial disposition", "genial heat")),
     ("magnificence", ("magnificence", "grandeur", "splendor", "impressive beauty", "stately grace", "majestic display")),
+    ("spirit", ("spirit", "vital force", "liveliness", "enthusiasm", "animation", "inner energy")),
 ]
 
 
