@@ -391,6 +391,9 @@ _EN_KB = {
     "optimism": ("Optimism is a hopeful outlook that focuses on good possibilities "
                  "and positive outcomes. It supports motivation during hard times. "
                  "Optimistic people tend to cope better and try more often."),
+    "freedom": ("Freedom is the state of being able to act, think and choose "
+                "without unfair limits. It comes with responsibility for your "
+                "choices. Freedom is a base for creativity and dignity."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
