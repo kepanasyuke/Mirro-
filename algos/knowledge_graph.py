@@ -416,6 +416,10 @@ class KnowledgeGraph:
             for o, (p, w) in candidates.items():
                 if not isinstance(o, str) or not o.strip() or " " in o.strip():
                     continue
+                try:
+                    w = float(w)
+                except Exception:
+                    continue
                 oclean = o.split()[0]
                 if len(o) <= 24 and oclean not in junk_neighbors:
                     filtered[o] = (p, w)
