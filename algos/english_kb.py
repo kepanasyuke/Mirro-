@@ -876,6 +876,7 @@ _TOPIC_TEST = [
     ("finesse", ("finesse", "subtle skill", "delicate handling", "fine touch", "exquisite craft", "polished art")),
     ("invention", ("invention", "new creation", "innovative device", "novel idea", "ingenious contrivance", "clever construction")),
     ("guilelessness", ("guilelessness", "candid openness", "artless honesty", "unworldly simplicity", "innocent frankness", "transparent plainness")),
+    ("neighborliness", ("neighborliness", "helpful companionship", "community spirit", "friendly cooperation", "neighborly goodwill", "kindred community")),
 ]
 
 
