@@ -235,7 +235,7 @@ def _c_combinatorics(q):
     elif ("сочет" in q or "c(" in q.lower()) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
         n, k = nums[0], nums[1]
-        if n > 2000 or k > n:
+        if n > 2000 or k > n or (n >= 0 and k < 0):
             out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
                    f"C({n},{k}) — некорректное значение")
         else:
