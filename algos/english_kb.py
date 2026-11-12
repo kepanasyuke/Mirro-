@@ -621,6 +621,10 @@ _EN_KB = {
                     "from what is merely plausible, and what is valuable from what is merely attractive. "
                     "A discerning person sees with clarity and chooses with wisdom, guided by principle and "
                     "experience rather than by impulse or surface impression."),
+    "stamina": ("Stamina is the physical or moral strength to sustain prolonged effort or to withstand "
+                "hardship. It is the durable energy that lets an athlete finish a marathon or a worker "
+                "persist through a long task without flagging. More broadly, stamina refers to the inner "
+                "reserve that carries someone through difficulty when would-be competitors have given up."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
