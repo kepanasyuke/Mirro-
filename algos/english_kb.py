@@ -637,15 +637,16 @@ _EN_KB = {
                   "with enough strength to endure hardship. It is a blend of audacity and endurance — the "
                   "courage to attempt difficult things and the toughness to see them through. Hardiness of "
                   "spirit lets a person step beyond comfort to attempt what others would not dare."),
-    "fellowship": ("Fellowship is a feeling of shared interest and mutual support among people who work, "
+"fellowship": ("Fellowship is a feeling of shared interest and mutual support among people who work, "
                    "worship or travel together. It is the warm bond that grows when shared experiences, "
                    "common goals or a common purpose draw people into a real community. Fellowship turns a "
                    "group of individuals into a family of choice, making each person stronger through the "
                    "loyalty, help and company of the others."),
-    "gallantry": ("Gallantry is gracious attention and special courtesy, especially of a man toward women, "
-                  "or great bravery in battle. In its broadest sense, gallantry is the readiness to put "
-                  "oneself at risk for a noble cause or to treat others with chivalrous respect. It pairs "
-                  "courage with courtesy and has long been prized as a mark of a refined and honorable heart."),
+    "nobility": ("Nobility is the quality of being elevated in character, generous in spirit and free from "
+                 "anything petty or selfish. Historically it named a rank of titled families, but its true "
+                 "meaning is moral rather than social. Noble people act with integrity and compassion because "
+                 "it is right, not because it is profitable, and this inward nobility is available to anyone "
+                 "regardless of birth."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
