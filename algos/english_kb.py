@@ -768,6 +768,7 @@ _TOPIC_TEST = [
     ("fellowship", ("fellowship", "companionship", "comradeship", "mutual support", "shared purpose", "brotherhood")),
     ("gallantry", ("gallantry", "chivalrous courtesy", "brave conduct", "heroic courtesy", "gentlemanly valor", "courtly bravery")),
     ("nobility", ("nobility", "high character", "moral excellence", "noble-mindedness", "princely valor", "elevated soul")),
+    ("virtue", ("virtue", "moral excellence", "righteousness", "goodness", "uprightness", "right living")),
 ]
 
 
