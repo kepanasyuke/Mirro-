@@ -554,6 +554,11 @@ _EN_KB = {
                       "what you say and do. A dependable person keeps promises, meets deadlines "
                       "and can be counted on in a crisis. Dependability is built slowly through "
                       "consistent action and is quickly lost through a single act of betrayal."),
+    "reliability": ("Reliability is the quality of consistently delivering what is expected over "
+                    "time. It is the technical cousin of trustworthiness, applied to machines and "
+                    "systems as much as to people. A reliable engine, report or colleague performs "
+                    "the same way on the tenth use as on the first, giving others a foundation to "
+                    "build upon without fear of sudden failure."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
