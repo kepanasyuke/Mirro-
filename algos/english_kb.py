@@ -406,6 +406,9 @@ _EN_KB = {
     "integrity": ("Integrity is the quality of being honest and having strong moral "
                   "principles. It means doing the right thing even when nobody "
                   "watches. Integrity earns lasting trust and respect."),
+    "generosity": ("Generosity is the willingness to give time, money or kindness "
+                   "freely. It grows out of caring for others, not obligation. "
+                   "Giving generously builds connection and shared joy."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
