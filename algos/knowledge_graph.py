@@ -943,6 +943,8 @@ class KnowledgeGraph:
             if not (isinstance(key, (tuple, list)) and len(key) >= 3):
                 continue
             s, p, d = key[0], key[1], key[2]
+            if not (isinstance(s, str) and isinstance(d, str)):
+                continue
             degree[s] = degree.get(s, 0) + 1
             degree[d] = degree.get(d, 0) + 1
         # структурный фильтр: исключаем узлы, чьи связи почти все через мусорный
