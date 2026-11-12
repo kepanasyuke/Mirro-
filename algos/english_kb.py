@@ -345,6 +345,9 @@ _EN_KB = {
     "winner": ("A winner is the person or team that comes first in a contest or "
                "achieves a goal. Winning often follows effort and preparation. "
                "A good winner shows respect and uses success to inspire others."),
+    "humanity": ("Humanity refers to all people as a whole, and to the qualities "
+                 "that make us kind and caring, such as empathy and compassion. "
+                 "It also names the study and care of people's welfare and rights."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
