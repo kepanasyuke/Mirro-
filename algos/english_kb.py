@@ -612,6 +612,10 @@ _EN_KB = {
              "drive that makes work feel like a calling rather than a chore. Zeal can be a tremendous force "
              "for good — pushing people to achieve great things — but it must be guided by wisdom and truth, "
              "for unchecked zeal can become fanaticism."),
+    "assiduousness": ("Assiduousness is the quality of applying oneself with constant and unremitting care "
+                      "to one's tasks. An assiduous worker is steady, thorough and persistent, giving close "
+                      "attention to every detail. It is diligence raised to its highest pitch, and it is the "
+                      "behavior, more than raw talent, that most reliably produces excellence."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
