@@ -560,6 +560,7 @@ _TOPIC_TEST = [
     ("magnanimity", ("magnanimity", "generous spirit", "noble", "forgiving", "high-minded")),
     ("insight", ("insight", "understanding", "discernment", "deep perception", "clear seeing")),
     ("lenity", ("lenity", "gentle", "mild", "merciful", "tender", "forgiving heart")),
+    ("tenacity", ("tenacity", "persevere", "persistent", "stubborn", "determined", "unrelenting")),
 ]
 
 
