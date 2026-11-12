@@ -494,6 +494,10 @@ _EN_KB = {
                 "chosen field of endeavor. It is the excellence that comes from talent "
                 "combined with hard practice. Prowess wins respect and opens doors to "
                 "hard-won achievement."),
+    "pride": ("Pride is the sense of satisfaction and dignity that comes from your own "
+              "achievements or from a group you belong to. When balanced, it builds "
+              "self-respect; when excessive, it can blind a person to their faults. "
+              "Right pride respects others and stays grounded."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
