@@ -829,7 +829,11 @@ class KnowledgeGraph:
     def reward(self, a, b, amount=0.3):
         """Положительный отклик: усилить связь между a и b (Хебб).
         amount<=0 игнорируется. Один return: int — сколько связей усилено."""
-        if amount <= 0:
+        try:
+            amount = float(amount)
+        except Exception:
+            amount = 0.3
+        if amount != amount or amount <= 0:
             return 0
         return self.hebbian_learn(a, b, amount)
 
