@@ -572,6 +572,10 @@ _EN_KB = {
                        "clear and straightforward way, even when the message is uncomfortable. This "
                        "honesty wins trust, saves time and prevents the confusion that comes from "
                        "hidden agendas."),
+    "munificence": ("Munificence is great generosity, shown in giving money, gifts or aid on a "
+                    "lavish scale. It goes beyond ordinary kindness by being remarkably bountiful. "
+                    "A munificent patron or donor gives without hoarding, using wealth to elevate "
+                    "others and to fund works that benefit the public good."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
