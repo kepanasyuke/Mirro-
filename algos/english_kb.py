@@ -734,6 +734,11 @@ _EN_KB = {
                       "which comes from not knowing better; rather, it is a chosen innocence that refuses to manipulate or "
                       "deceive. In a world full of stratagem, guilelessness is a refreshing and disarming honesty that invites "
                       "trust and demonstrates true moral simplicity."),
+    "neighborliness": ("Neighborliness is the friendly and cooperative spirit that exists among people who live or work "
+                       "near one another. It is the small kindnesses exchanged across a fence or a hallway, the helping hand "
+                       "in a time of need, and the quiet watchfulness that keeps a community safe. Neighborliness turns a mere "
+                       "collection of private houses into a real neighborhood where people know each other and look out for "
+                       "one another."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
