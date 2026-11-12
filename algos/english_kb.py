@@ -580,6 +580,7 @@ _TOPIC_TEST = [
     ("bravery", ("bravery", "courageous", "fearless", "bold", "heroic", "intrepid")),
     ("temperance", ("temperance", "moderation", "restraint", "self-control", "balanced")),
     ("pride", ("pride", "self-esteem", "dignity", "self-respect", "satisfaction")),
+    ("modesty", ("modesty", "humble", "unassuming", "quiet", "down-to-earth", "reserved")),
 ]
 
 
