@@ -686,16 +686,15 @@ _EN_KB = {
                "It is the human glow that makes people feel at ease, accepted and valued in your presence. "
                "Warmth is often underestimated because it is quiet, yet it is one of the most powerful forces "
                "for connection — it melts reserve, softens conflict and opens the door to trust."),
-    "magnificence": ("Magnificence is the quality of being grand in scale, impressive in beauty or generous in "
+"magnificence": ("Magnificence is the quality of being grand in scale, impressive in beauty or generous in "
                      "display, without sacrificing dignity. It is seen in architecture, ceremony and the works "
                      "of art or nature that leave people in awe. True magnificence is not empty ostentation; it "
                      "combines noble ambition with impeccable taste, so that grandeur serves beauty rather than "
                      "garish display."),
-    "spirit": ("Spirit, in its loftiest sense, is the vital force and enthusiasm that animates a person or a "
-               "group. It is the energy, courage and liveliness that turn mere existence into a life worth living. "
-               "A team with spirit fights on to the last minute; a person with spirit greets each day with fire. "
-               "Spirit is intangible but unmistakable — it is what lifts a people in hard times and drives them to "
-               "achieve what seemed impossible."),
+    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection — the kind of hard-won "
+                 "sense that belongs to a mature and judicious mind. It is what separates the merely clever from the "
+                 "truly wise. A sage does not merely know facts; they know how to apply knowledge to real life, and "
+                 "their counsel is valued precisely because it has been tested by seasons of trial and error."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
