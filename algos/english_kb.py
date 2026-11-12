@@ -477,6 +477,10 @@ _EN_KB = {
     "fortitude": ("Fortitude is mental and emotional strength in facing difficulty "
                   "or adversity. It is the courage to endure pain without complaint. "
                   "Fortitude helps people carry on when everything else is heavy."),
+    "magnanimity": ("Magnanimity is the quality of being generous in spirit, especially "
+                    "toward rivals or those who have wronged you. It is nobility of mind "
+                    "that lets a person act with grace instead of revenge. Magnanimous "
+                    "people rise above petty grievances."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
