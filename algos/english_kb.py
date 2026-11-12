@@ -807,6 +807,11 @@ _EN_KB = {
                      "speak kindly and carry themselves with an attractive warmth. It is the everyday polish that makes interactions "
                      "smooth and is closely related to charm and likeability. Cultivating pleasantness costs nothing, yet it makes the "
                      "world a friendlier and more livable place for everyone encountered."),
+    "warmheartedness": ("Warmheartedness is the quality of being kind, affectionate and genuinely caring toward others. A warmhearted "
+                        "person feels deep concern for the welfare of people and lets that concern show through in spontaneous kindness. "
+                        "It is closeness kin to compassion and brotherly love, expressed both in warm words and in tangible acts of help. "
+                        "What distinguishes the warmhearted is the readiness of their affection — they do not wait to be asked, but reach out "
+                        "freely, making the lonely feel remembered and the hurting feel cared for."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
