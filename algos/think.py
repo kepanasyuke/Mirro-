@@ -271,13 +271,14 @@ def _c_probability(q):
 def _c_physics(q):
     """Физика: энергия связи / полураспад. Один return: tuple|None."""
     out = None
-    if "энерги" in q and "связ" in q and _numbers(q):
-        d = _numbers(q)[0]
+    nums = _numbers(q)
+    if "энерги" in q and "связ" in q and nums:
+        d = nums[0]
         if 0 < d <= 1e6:
             out = ("физика", "16_university", "binding_energy", (d,),
                    f"E = {d:g}·931.5 МэВ = {d*931.5:.3g} МэВ")
-    elif "полураспад" in q and len(_numbers(q)) >= 3:
-        n0, t, th = _numbers(q)[:3]
+    elif "полураспад" in q and len(nums) >= 3:
+        n0, t, th = nums[:3]
         # защита от деления на ноль и отрицательного периода (физически невозможен)
         if th <= 0 or th != th:
             th = 1.0
