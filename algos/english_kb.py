@@ -642,6 +642,10 @@ _EN_KB = {
                    "common goals or a common purpose draw people into a real community. Fellowship turns a "
                    "group of individuals into a family of choice, making each person stronger through the "
                    "loyalty, help and company of the others."),
+    "gallantry": ("Gallantry is gracious attention and special courtesy, especially of a man toward women, "
+                  "or great bravery in battle. In its broadest sense, gallantry is the readiness to put "
+                  "oneself at risk for a noble cause or to treat others with chivalrous respect. It pairs "
+                  "courage with courtesy and has long been prized as a mark of a refined and honorable heart."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
