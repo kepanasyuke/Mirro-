@@ -78,6 +78,16 @@ class KnowledgeGraph:
         return {n.tag for n in self.nodes.values()
                 if hasattr(n, "tag") and isinstance(n.tag, str) and n.tag}
 
+    def linked_nodes(self, name):
+        """Имена всех узлов, напрямую связанных с данным (по индексу).
+        Неизвестный/некорректный узел → []. Один return: list."""
+        name = self._norm(name)
+        if not name:
+            return []
+        return [row[1] for row in self._adj.get(name, [])
+                if isinstance(row, (tuple, list)) and len(row) >= 2
+                and isinstance(row[1], str)]
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
