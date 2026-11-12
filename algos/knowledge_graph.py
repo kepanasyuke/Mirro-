@@ -140,6 +140,8 @@ class KnowledgeGraph:
             except Exception:
                 continue
             nw = max(floor, w - amount)
+            if nw != nw or nw in (float("inf"), float("-inf")):
+                continue
             if nw != w:
                 self.edges[key] = nw
                 s, p, d = key
