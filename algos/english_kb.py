@@ -816,6 +816,7 @@ _TOPIC_TEST = [
     ("nurturance", ("nurturance", "fostering care", "mothering warmth", "growth-nourishing love", "protective tenderness", "developmental attention")),
     ("serendipity", ("serendipity", "happy accident", "fortunate discovery", "lucky find", "unexpected blessing", "chance fortune")),
     ("warmth", ("warmth", "hearty friendliness", "affectionate manner", "welcoming kindness", "cordial disposition", "genial heat")),
+    ("magnificence", ("magnificence", "grandeur", "splendor", "impressive beauty", "stately grace", "majestic display")),
 ]
 
 
