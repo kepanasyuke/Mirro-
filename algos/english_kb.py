@@ -956,6 +956,7 @@ _TOPIC_TEST = [
     ("peaceableness", ("peaceableness", "amicable disposition", "exeamic harmony", "nonviolent nature", "tranquil spirit", "concordant temperament")),
     ("harmony", ("harmony", "concordant agreement", "melodious accord", "balanced co-existence", "sympathetic consonance", "communal harmony")),
     ("comity", ("comity", "mutual courtesy", "interstate goodwill", "reciprocal respect", "polite regard", "friendly courtesy between nations")),
+    ("pleasantness", ("pleasantness", "agreeable manner", "cheerful disposition", "genial warmth", "sweet temper", "winsome charm")),
 ]
 
 
