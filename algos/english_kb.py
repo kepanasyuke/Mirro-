@@ -918,6 +918,24 @@ _EN_KB = {
     "thoroughness": ("Thoroughness is the quality of doing something carefully and completely, leaving no detail unchecked and no stone unturned. A thorough worker does not rush through a task, but takes the time "
                      "to do it fully and correctly the first time, attending to details that others might overlook. It is the practical side of conscientiousness, the disciplined follow-through that converts good intentions "
                      "into finished and reliable results. Thoroughness is what separates the excellent craftsman from the careless one, and it is essential in any field where accuracy and completeness matter more than speed."),
+    "good faith": ("Good faith is honesty of intention and sincerity of motive, especially in business transactions, contracts and negotiations. To act in good faith means to deal with others fairly and openly, honestly "
+                   "following through on promises and agreements without deception or hidden self-interest. The concept is central to law, where contracts imply a duty of good faith, and to all healthy relationships, which "
+                   "cannot survive without it. It is the opposite of fraud, duplicity and bad faith, and its presence is what makes trust possible between strangers."),
+"good humor": ("Good humor is a cheerful and pleasant state of mind that makes a person easy to laugh and enjoyable to be around. It is the good-natured disposition that turns a simple joke into an occasion for happy "
+                   "laughter and keeps one's spirits up through trying times. A person of good humor is quick to laugh at the incongruities of life and slow to become angry, spreading goodwill wherever they go. It is closely "
+                   "akin to cheerfulness, mirth and joviality, and it is one of the most magnetic of human qualities, for it makes the whole world seem brighter and more friendly."),
+    "attentiveness": ("Attentiveness is the act of paying close and careful attention to what is happening, being said or being done around one. An attentive person listens fully, notices details others miss, and responds promptly to "
+                      "the needs of the moment. It is the opposite of distraction and absent-mindedness. In the classroom, attentiveness makes learning effective; in personal relationships, it makes the other person feel valued and heard; "
+                      "in the workshop, it prevents accidents and errors. Attentiveness is the practical foundation upon which care, courtesy and understanding are all built."),
+    "wakefulness": ("Wakefulness, in its figurative sense, is alertness of mind and quickness of perception, free from drowsiness or dullness. The wakeful person is not merely awake but stays mentally sharp, aware of what is going on "
+                    "around them and ready to act. It is the mental vigilance that allows one to catch an error before it becomes a disaster or to notice an opportunity before it passes. Wakefulness of spirit is closely tied to "
+                    "watchfulness, and it is essential to anyone whose work demands sustained attention, from the night-shift doctor to the security guard."),
+    "watchfulness": ("Watchfulness is the state of keeping careful guard over something or someone, and of being constantly aware of what may happen. The watchful person is on the lookout for danger, opportunity or change, and is ready "
+                     "to respond at a moment's notice. It is the attentive vigilance of a sentinel, the caution of a lookout at sea, and the alertness of a mother over a sleeping child. Watchfulness is not the same as anxiety or paranoia; "
+                     "it is an even and expectant attention that neither relaxes its guard nor is alarmed without cause. Used rightly, it is the guardian of safety and the first line of defense in every kind of vigilance."),
+    "surveillance": ("Surveillance is close observation kept over someone or something, usually to watch for activity, wrongdoing or change. In modern life it is most often associated with cameras, monitoring systems and intelligence-gathering, "
+                     "but in its simplest form it is the careful watching that any responsible person does to keep a situation under control. Surveillance can be a force for good or ill, protecting the innocent and catching wrongdoers, or "
+                     "invading privacy and chilling free speech. Its morality depends entirely on who is watched, by whom and for what purpose, for it is the same tool that can preserve order or become an instrument of oppression."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
