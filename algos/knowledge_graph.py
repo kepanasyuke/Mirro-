@@ -41,6 +41,8 @@ class KnowledgeGraph:
             weight = 1.0
         if weight != weight:
             weight = 1.0
+        if weight > 1e6 or weight < -1e6:
+            weight = max(-1e6, min(1e6, weight)) if weight == weight else 1.0
         if name not in self.nodes:
             self.nodes[name] = Node(name, tag, facts, weight)
             self._adj[name] = []
