@@ -388,6 +388,10 @@ class KnowledgeGraph:
         Возвращает список строк «related —связь→ other: факты». Один return: list."""
         name = self._norm(name)
         out = []
+        try:
+            max_hop = max(1, min(5, int(max_hop)))
+        except Exception:
+            max_hop = 2
         if name in self.nodes:
             # соберём соседей до max_hop только по самым сильным связям
             seen_nodes = {name}
@@ -396,7 +400,10 @@ class KnowledgeGraph:
             for _ in range(max_hop):
                 nxt = []
                 for cur in frontier:
-                    for p, other, w in self._adj.get(cur, []):
+                    rows = self._adj.get(cur, [])
+                    if not isinstance(rows, (list, tuple)):
+                        rows = []
+                    for p, other, w in rows:
                         if other not in seen_nodes and other not in candidates:
                             seen_nodes.add(other)
                             candidates[other] = (p, w)
