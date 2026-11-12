@@ -764,6 +764,14 @@ class KnowledgeGraph:
         соседей (Jaccard на окрестностях), а НЕ по сырым весам рёбер.
         Ограничивает перебор узлов (limit_nodes) для скорости; результат кэшируется.
         Мусорные стоп-узлы отбрасываются. Один return: list."""
+        try:
+            limit_nodes = max(1, min(100000, int(limit_nodes)))
+        except Exception:
+            limit_nodes = 8000
+        try:
+            top_n = max(1, int(top_n))
+        except Exception:
+            top_n = 5
         a = self._norm(name)
         out = []
         cache_key = ("close", a, top_n, min_sim, len(self.edges))
