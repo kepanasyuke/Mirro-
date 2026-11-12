@@ -567,6 +567,11 @@ _EN_KB = {
                 "danger or adversity. It is measured not by strength alone but by acting for the "
                 "good of others at personal risk. Heroes rise to occasions that demand more than "
                 "self-interest, and their deeds inspire courage in those who witness them."),
+    "forthrightness": ("Forthrightness is the quality of speaking and acting directly and honestly "
+                       "without evasion or pretense. A forthright person says what they mean in a "
+                       "clear and straightforward way, even when the message is uncomfortable. This "
+                       "honesty wins trust, saves time and prevents the confusion that comes from "
+                       "hidden agendas."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
