@@ -354,6 +354,9 @@ _EN_KB = {
     "symmetry": ("Symmetry is balance in shape or structure, where parts mirror "
                  "each other around a line or point. It appears in nature, art "
                  "and geometry, and often makes things look balanced and orderly."),
+    "law": ("Law is a system of rules that governments make and enforce. It "
+            "keeps order, protects rights and settles disputes fairly. Laws "
+            "apply to everyone and can be changed through proper process."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
