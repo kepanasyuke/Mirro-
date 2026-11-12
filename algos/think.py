@@ -232,6 +232,14 @@ def _c_combinatorics(q):
         else:
             out = ("комбинаторика", "10_combinatorics", "combinations_count", (n, k),
                    f"C({n},{k}) — некорректное значение")
+    elif re.search(r"\d+\s*!", q):
+        m_fact = re.search(r"(\d+)\s*!", q)
+        n = int(m_fact.group(1))
+        if 0 <= n <= 1000:
+            out = ("комбинаторика", "10_combinatorics", "factorial", (n,), f"{n}! = {_fact(n)}")
+        else:
+            out = ("комбинаторика", "10_combinatorics", "factorial", (n,),
+                   f"{n}! — слишком большое значение")
     elif ("сочет" in q or "c(" in q.lower()) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
         n, k = nums[0], nums[1]
