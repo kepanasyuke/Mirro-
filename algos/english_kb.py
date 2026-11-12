@@ -588,6 +588,10 @@ _EN_KB = {
                       "loyalty. A steadfast person does not give way under pressure, temptation or doubt. "
                       "It is the discipline that keeps a commitment alive when it would be easier to walk "
                       "away, and it is what makes promises trustworthy and character reliable."),
+    "heedfulness": ("Heedfulness is the quality of paying careful and constant attention to what one is "
+                    "doing or to the needs of others. A heedful person notices what most people miss and "
+                    "acts with care rather than haste. It is the attentive alertness that prevents mistakes, "
+                    "avoids accidents and helps one respond properly to the needs of the moment."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
