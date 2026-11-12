@@ -580,6 +580,10 @@ _EN_KB = {
                    "health. It is more than mere wealth; it includes a sense of well-being, security "
                    "and abundance in one's life. Prosperity can be personal, communal or national, and "
                    "it is sustained by sound habits, honest work and wise management of resources."),
+    "devotion": ("Devotion is the quality of being ardently loyal to a person, cause or religious "
+                 "faith. It goes beyond duty into wholehearted dedication of heart and mind. Devotion "
+                 "shows itself in consistent acts of service, faithfulness over time and a genuine love "
+                 "for what one serves. It is the emotional bedrock of true commitment."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
