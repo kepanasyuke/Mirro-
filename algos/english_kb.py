@@ -1079,6 +1079,15 @@ _TOPIC_TEST = [
     ("foresight", ("foresight", "far-sightedness", "forward planning", "wise anticipation", "prudent foresight", "long-range vision")),
     ("intrepidity", ("intrepidity", "undaunted courage", "dauntless bravery", "fearless daring", "stout-hearted valor", "unblenching resolution")),
     ("fealty", ("fealty", "oath-bound loyalty", "sworn allegiance", "feudal fidelity", "pledged devotion", "solemn promise of loyalty")),
+    ("loyalty", ("loyalty", "steadfast devotion", "constant allegiance", "unshakable faithfulness", "true-hearted fidelity", "firm attachment")),
+    ("unfailingness", ("unfailingness", "never-failing supply", "inexhaustible patience", "unending constancy", "ceaseless devotion", "tireless persistence")),
+    ("solidity", ("solidity", "firm substance", "sturdy reliability", "rock-solid stability", "dependable mass", "unshakeable firmness")),
+    ("directness", ("directness", "unswerving frankness", "straightforward clarity", "direct approach", "plain-spoken honesty", "undeviating course")),
+    ("candor", ("candor", "frank openness", "free-spoken honesty", "unreserved truthfulness", "guileless sincerity", "plain dealing")),
+    ("plainness", ("plainness", "unadorned simplicity", "severity of style", "artless clarity", "unpolished candor", "homely plainness")),
+    ("simplicity", ("simplicity", "uncomplicated ease", "plain integrity", "guileless plainness", "elemental purity", "severe truthfulness")),
+    ("unaffectedness", ("unaffectedness", "spontaneous sincerity", "artless naturalness", "untutored genuineness", "unforced candor", "ingenuous simplicity")),
+    ("veracity", ("veracity", "truth-telling habit", "accurate truthfulness", "unerring honesty", "guileless truth", "sincerity of statement")),
 ]
 
 
