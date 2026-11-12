@@ -888,6 +888,7 @@ _TOPIC_TEST = [
     ("guilelessness", ("guilelessness", "candid openness", "artless honesty", "unworldly simplicity", "innocent frankness", "transparent plainness")),
     ("neighborliness", ("neighborliness", "helpful companionship", "community spirit", "friendly cooperation", "neighborly goodwill", "kindred community")),
     ("affability", ("affability", "easy approach", "pleasant manner", "genial courtesy", "open friendliness", "warm approachability")),
+    ("timeliness", ("timeliness", "punctuality", "well-timed action", "opportune moment", "seasonable promptness", "at-hand readiness")),
 ]
 
 
