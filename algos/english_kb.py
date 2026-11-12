@@ -412,6 +412,9 @@ _EN_KB = {
     "grit": ("Grit is the mix of passion and perseverance toward long-term goals. "
              "It is about steady effort over months and years, not just talent. "
              "Gritty people finish what they start and improve over time."),
+    "prudence": ("Prudence is the careful use of good judgment before acting. "
+                 "It weighs risks and consequences instead of rushing in. "
+                 "Prudent choices protect your health, money and relationships."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
