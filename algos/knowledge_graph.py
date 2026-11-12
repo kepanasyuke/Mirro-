@@ -266,6 +266,11 @@ class KnowledgeGraph:
         """Один шаг BFS: из текущего фронта к b, ограничен размахом и числом
         посещённых вершин (max_visited), чтобы не уйти в долгий обход на
         огромных графах. Один return: (found_path_or_None, next_frontier)."""
+        try:
+            max_fanout = max(1, int(max_fanout))
+            max_visited = max(1, int(max_visited))
+        except Exception:
+            max_fanout, max_visited = 40, 4000
         nxt = []
         found = None
         if frontier:
