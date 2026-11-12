@@ -620,6 +620,7 @@ _TOPIC_TEST = [
     ("chivalry", ("chivalry", "gallant", "courteous", "honorable", "knightly", "noble conduct")),
     ("savvy", ("savvy", "shrewd", "street-smart", "practical", "business-smooth", "astute")),
     ("equity", ("equity", "fairness", "impartial", "justice", "even-handed", "righteous")),
+    ("staunchness", ("staunchness", "loyal", "steadfast", "committed", "reliable", "unwavering")),
 ]
 
 
