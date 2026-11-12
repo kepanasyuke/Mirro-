@@ -439,6 +439,9 @@ _EN_KB = {
     "resoluteness": ("Resoluteness is firmness of purpose and decisiveness in action. "
                      "It is the quiet determination behind a clear decision. Resolute "
                      "people do not waver once they have set a course."),
+    "compromise": ("A compromise is an agreement made by mutual adjustment, where "
+                   "each side gives up something to reach a shared goal. It takes "
+                   "seeing the other view and seeking a fair middle ground."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
