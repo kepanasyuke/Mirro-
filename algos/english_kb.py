@@ -1047,6 +1047,7 @@ _TOPIC_TEST = [
     ("unselfishness", ("unselfishness", "altruistic giving", "selfless generosity", "unsparing devotion", "disinterested kindness", "heedless-of-self charity")),
     ("foresight", ("foresight", "far-sightedness", "forward planning", "wise anticipation", "prudent foresight", "long-range vision")),
     ("intrepidity", ("intrepidity", "undaunted courage", "dauntless bravery", "fearless daring", "stout-hearted valor", "unblenching resolution")),
+    ("fealty", ("fealty", "oath-bound loyalty", "sworn allegiance", "feudal fidelity", "pledged devotion", "solemn promise of loyalty")),
 ]
 
 
