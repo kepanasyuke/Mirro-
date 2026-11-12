@@ -805,6 +805,7 @@ _TOPIC_TEST = [
     ("moderation", ("moderation", "temperate living", "balanced habit", "restraint in excess", "measured conduct", "golden mean")),
     ("tranquility", ("tranquility", "serene calm", "peaceful stillness", "untroubled quiet", "unruffled calm", "placid repose")),
     ("nurturance", ("nurturance", "fostering care", "mothering warmth", "growth-nourishing love", "protective tenderness", "developmental attention")),
+    ("serendipity", ("serendipity", "happy accident", "fortunate discovery", "lucky find", "unexpected blessing", "chance fortune")),
 ]
 
 
