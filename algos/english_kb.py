@@ -647,6 +647,11 @@ _EN_KB = {
                  "meaning is moral rather than social. Noble people act with integrity and compassion because "
                  "it is right, not because it is profitable, and this inward nobility is available to anyone "
                  "regardless of birth."),
+    "virtue": ("Virtue is a quality of moral excellence, righteousness and goodness in a person. It is the "
+               "habit of choosing the right action in the right way for the right reason. Virtues such as "
+               "courage, honesty, temperance, justice and compassion are the building blocks of a trustworthy "
+               "character. To be virtuous is to become the kind of person who does good naturally and reliably, "
+               "not occasionally by chance."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
