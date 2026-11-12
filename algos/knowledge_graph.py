@@ -432,6 +432,8 @@ class KnowledgeGraph:
                     if not isinstance(rows, (list, tuple)):
                         rows = []
                     for p, other, w in rows:
+                        if not (isinstance(other, str) and isinstance(w, (int, float))):
+                            continue
                         if other not in seen_nodes and other not in candidates:
                             seen_nodes.add(other)
                             candidates[other] = (p, w)
