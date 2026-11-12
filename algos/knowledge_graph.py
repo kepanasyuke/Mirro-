@@ -98,6 +98,18 @@ class KnowledgeGraph:
                        if isinstance(k, (tuple, list)) and len(k) >= 2
                        and k[1] == p and isinstance(k[0], str)})
 
+    def prune_self_loops(self):
+        """Удаляет петли (рёбра, где источник и цель совпадают) и возвращает их число.
+        Часто появляются из-за ошибок парсинга. Один return: int."""
+        self_loops = [k for k in self.edges
+                      if isinstance(k, (tuple, list)) and len(k) >= 2
+                      and k[0] == k[2]]
+        for k in self_loops:
+            del self.edges[k]
+        if self_loops:
+            self._rebuild_adj()
+        return len(self_loops)
+
     def add_edge(self, src, pred, dst, weight=1.0):
         s, d = self._norm(src), self._norm(dst)
         p = self._norm(pred)
