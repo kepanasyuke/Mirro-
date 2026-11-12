@@ -744,6 +744,7 @@ _TOPIC_TEST = [
     ("discernment", ("discernment", "fine judgment", "perceptive insight", "discerning eye", "good taste", "clear-sighted choice")),
     ("stamina", ("stamina", "enduring energy", "prolonged effort", "physical endurance", "sustained patience", "tireless energy")),
     ("gentleness", ("gentleness", "mild temperament", "tender spirit", "soft-spoken kindness", "meekness", "gentle nature")),
+    ("quietness", ("quietness", "stillness", "inner calm", "tranquil quiet", "hushed stillness", "peaceful silence")),
 ]
 
 
