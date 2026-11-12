@@ -723,6 +723,7 @@ _TOPIC_TEST = [
     ("mirth", ("mirth", "cheerfulness", "jovial", "lighthearted", "merry", "joyful laughter")),
     ("sincerity", ("sincerity", "genuine", "open-heart", "honest feeling", "unforced truth", "unaffected")),
     ("zeal", ("zeal", "passionate energy", "eager enthusiasm", "burning ardor", "fervent application", "devoted energy")),
+    ("assiduousness", ("assiduousness", "diligent attention", "unremitting care", "thorough application", "steady hard work", "constant effort")),
 ]
 
 
