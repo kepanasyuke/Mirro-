@@ -80,7 +80,14 @@ def _numbers(text):
 
 def _int_numbers(text):
     """Целые числа из текста (только те, что без дробной части). Один return: list."""
-    return [int(x) for x in _numbers(text) if float(x).is_integer()]
+    out = []
+    for x in _numbers(text):
+        try:
+            if float(x).is_integer():
+                out.append(int(x))
+        except Exception:
+            continue
+    return out
 
 
 # ================== РАСПОЗНАВАНИЕ ВОПРОСА ==================
