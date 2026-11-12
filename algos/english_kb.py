@@ -604,6 +604,10 @@ _EN_KB = {
               "It is the light, spontaneous joy that lifts a room and warms those around you. "
               "Unlike deep sorrow or fake gaiety, mirth is genuine and contagious, helping "
               "people bond and turning ordinary moments into happy ones."),
+    "sincerity": ("Sincerity is the quality of being honest and free from hypocrisy or pretense in what "
+                  "you say and do. A sincere person means what they say and says what they mean, with no "
+                  "hidden agenda. Sincerity builds the deepest form of trust, because it is the foundation "
+                  "of authentic relationships and honest communication."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
