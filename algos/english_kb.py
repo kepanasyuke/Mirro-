@@ -682,6 +682,10 @@ _EN_KB = {
                     "It is the unexpected good fortune that comes when a fortunate accident meets a prepared mind. "
                     "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill — "
                     "curious, observant people are the ones most likely to turn a lucky break into an opportunity."),
+    "warmth": ("Warmth is the quality of being friendly, affectionate and genuinely welcoming toward others. "
+               "It is the human glow that makes people feel at ease, accepted and valued in your presence. "
+               "Warmth is often underestimated because it is quiet, yet it is one of the most powerful forces "
+               "for connection — it melts reserve, softens conflict and opens the door to trust."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
