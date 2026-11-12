@@ -1005,6 +1005,13 @@ _TOPIC_TEST = [
     ("warmheartedness", ("warmheartedness", "affectionate kindness", "gentle benevolence", "tender compassion", "open-hearted love", "loving care")),
     ("perspicacity", ("perspicacity", "keen insight", "penetrating discernment", "sharp perception", "quick-witted sagacity", "subtle understanding")),
     ("conviviality", ("conviviality", "festive cheer", "sociable warmth", "jovial fellowship", "merry companionship", "convivial good humor")),
+    ("innocence", ("innocence", "guiltless purity", "harmless simplicity", "untainted virtue", "naive candidness", "blameless innocence")),
+    ("verity", ("verity", "truthful accuracy", "unvarnished fact", "plain truth", "unfailing honesty", "sober reality")),
+    ("purity", ("purity", "immaculate cleanliness", "unsullied whiteness", "spotless chasteness", "unalloyed wholeness", "clear transparency")),
+    ("newness", ("newness", "unworn freshness", "novel character", "pristine novelty", "unspoiled beginning", "nascent quality")),
+    ("genuineness", ("genuineness", "authentic reality", "unaffected sincerity", "true-hearted candor", "honest openness", "unfeigned nature")),
+    ("righteousness", ("righteousness", "moral uprightness", "just dealing", "virtuous conduct", "blameless integrity", "God-fearing honesty")),
+    ("equanimity", ("equanimity", "composed balance", "imperturbable calm", "serene poise", "unvarying temper", "steadied composure")),
 ]
 
 
