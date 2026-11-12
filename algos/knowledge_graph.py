@@ -75,6 +75,12 @@ class KnowledgeGraph:
         Пустые узлы игнорируются. Один return: None."""
         if not from_node or not to_node:
             return None
+        try:
+            weight = float(weight)
+        except (TypeError, ValueError):
+            return None
+        if weight != weight or weight in (float("inf"), float("-inf")):
+            return None
         rows = self._adj.get(from_node, [])
         found = False
         for i, row in enumerate(rows):
