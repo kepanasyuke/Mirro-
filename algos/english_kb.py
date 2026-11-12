@@ -654,6 +654,10 @@ _TOPIC_TEST = [
     ("acumen", ("acumen", "insightful", "keen judgment", "sharp-witted", "perceptive", "shrewd mind")),
     ("merit", ("merit", "deserving", "worthiness", "excellence", "distinction", "credit")),
     ("sapience", ("sapience", "wisdom", "insightful judgment", "profound understanding", "wise counsel")),
+    ("tolerance", ("tolerance", "acceptance", "open-minded", "permitting", "broad-minded", "indulgent")),
+    ("dependability", ("dependability", "reliable", "trustworthy", "dependable", "responsible", "consistent")),
+    ("reliability", ("reliability", "dependable", "consistent", "predictable", "steady", "uniform")),
+    ("sublimity", ("sublimity", "grandeur", "exalted", "lofty", "awe-inspiring", "majestic")),
 ]
 
 
