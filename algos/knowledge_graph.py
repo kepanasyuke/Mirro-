@@ -690,6 +690,12 @@ class KnowledgeGraph:
         число изолированных узлов, размер крупнейшей компоненты.
         Результат кэшируется (дорогой расчёт), инвалидация при add/_rebuild.
         Один return: dict."""
+        try:
+            top_n = int(top_n)
+        except Exception:
+            top_n = 5
+        if top_n < 1:
+            top_n = 5
         cache_key = ("conn", top_n, len(self.edges))
         hit = self._cache.get(cache_key)
         out = None
