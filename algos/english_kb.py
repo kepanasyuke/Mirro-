@@ -935,9 +935,10 @@ _TOPIC_TEST = [
     ("steadiness", ("steadiness", "level-headed composure", "unflappable calm", "constant purpose", "steady nerve", "unbroken resolve")),
     ("fidelity", ("fidelity", "steadfast loyalty", "faithful devotion", "exact faithfulness", "unswerving allegiance", "true-hearted constancy")),
     ("probity", ("probity", "proven integrity", "uncompromising honesty", "unblemished record", "blameless conduct", "faithful dealing")),
-("goodness", ("goodness", "moral excellence", "beneficent nature", "kindhearted virtue", "upright dealing", "wholesome character")),
+    ("goodness", ("goodness", "moral excellence", "beneficent nature", "kindhearted virtue", "upright dealing", "wholesome character")),
     ("kindred spirit", ("kindred spirit", "soul mate", "fellow traveler", "like-minded companion", "twin soul", "auspicious affinity")),
     ("phronesis", ("phronesis", "practical wisdom", "sage counsel", "good judgment", "discerning prudence", "shrewd deliberation")),
+    ("peaceableness", ("peaceableness", "amicable disposition", "exeamic harmony", "nonviolent nature", "tranquil spirit", "concordant temperament")),
 ]
 
 
