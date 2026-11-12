@@ -317,12 +317,20 @@ def _c_gcd_lcm_prime(q):
     if ("нод" in q or "наибольший общий" in q or "gcd" in q) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
         a, b = nums[0], nums[1]
-        if a != 0 and b != 0 and abs(a) * abs(b) <= 10**12:
+        if a == b == 0:
+            out = ("математика", "08_math", "gcd", (0, 0), "НОД(0,0) = 0")
+        elif a != 0 and b != 0 and abs(a) * abs(b) <= 10**12:
             out = ("математика", "08_math", "gcd", (a, b), f"НОД({a},{b}) = {_gcd(a, b)}")
+        elif (a == 0) != (b == 0):
+            nonzero = a if b == 0 else b
+            out = ("математика", "08_math", "gcd", (a, b),
+                   f"НОД({a},{b}) = {abs(nonzero)}")
     elif ("нок" in q or "наименьшее общее" in q or "lcm" in q) and len(_int_numbers(q)) >= 2:
         nums = _int_numbers(q)
         a, b = nums[0], nums[1]
-        if a != 0 and b != 0 and abs(a) * abs(b) <= 10**12:
+        if a == b == 0:
+            out = ("математика", "08_math", "lcm", (0, 0), "НОК(0,0) = 0")
+        elif a != 0 and b != 0 and abs(a) * abs(b) <= 10**12:
             out = ("математика", "08_math", "lcm", (a, b), f"НОК({a},{b}) = {_lcm(a, b)}")
     elif "прост" in q and _int_numbers(q):
         n = _int_numbers(q)[0]
