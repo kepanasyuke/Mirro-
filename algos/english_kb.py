@@ -594,6 +594,7 @@ _TOPIC_TEST = [
     ("modesty", ("modesty", "humble", "unassuming", "quiet", "down-to-earth", "reserved")),
     ("sagacity", ("sagacity", "wise", "judicious", "perceptive", "shrewd", "discerning")),
     ("resolution", ("resolution", "determination", "firmness", "resolve", "steadfastness", "conclusive")),
+    ("promise", ("promise", "vow", "pledge", "word of honor", "commitment", "engagement")),
 ]
 
 
