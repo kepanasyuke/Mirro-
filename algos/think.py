@@ -98,9 +98,9 @@ def classify(query):
     Распознаёт типовые задачи вузов/ссузов/олимпиад.
     Пустой/None-запрос → None.
     """
-    if query is None or not str(query).strip():
+    if query is None or not isinstance(query, str) or not query.strip():
         return None
-    q = str(query).lower().strip()
+    q = query.lower().strip()
     if len(q) > 2000:
         # очень длинный «вопрос» — не задача, а текст; не разбираем регулярами
         return None
