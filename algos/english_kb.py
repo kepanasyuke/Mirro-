@@ -906,6 +906,7 @@ _TOPIC_TEST = [
     ("timeliness", ("timeliness", "punctuality", "well-timed action", "opportune moment", "seasonable promptness", "at-hand readiness")),
     ("steadiness", ("steadiness", "level-headed composure", "unflappable calm", "constant purpose", "steady nerve", "unbroken resolve")),
     ("fidelity", ("fidelity", "steadfast loyalty", "faithful devotion", "exact faithfulness", "unswerving allegiance", "true-hearted constancy")),
+    ("probity", ("probity", "proven integrity", "uncompromising honesty", "unblemished record", "blameless conduct", "faithful dealing")),
 ]
 
 
