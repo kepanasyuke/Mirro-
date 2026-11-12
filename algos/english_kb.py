@@ -629,6 +629,10 @@ _EN_KB = {
                    "kindness rather than force. A gentle person is tender toward others' feelings and "
                    "avoid violence or harshness even when provoked. Far from weakness, true gentleness "
                    "requires great strength and self-control, and it can calm the most heated conflicts."),
+    "quietness": ("Quietness is the state of being free from noise, disturbance or commotion. It can refer "
+                  "both to an outer condition of silence and to an inner state of calm and stillness. "
+                  "A quiet mind is better able to think clearly, listen deeply and act with intention. "
+                  "In a noisy world, cultivating quietness is a strength that fosters focus and peace."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
