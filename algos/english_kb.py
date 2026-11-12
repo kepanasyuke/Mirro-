@@ -818,10 +818,40 @@ _EN_KB = {
                     "make wise decisions on the basis of partial information. Allied with good sense, perspicacity becomes one of the most powerful "
                     "tools of the successful strategist, investor or detective."),
     "conviviality": ("Conviviality is the quality of being festive, sociable and filled with the warmth of good company. A convivial person "
-                     "is one who enjoys and creates joyful social gatherings, making others feel welcome and at ease in their presence. The word "
-                     "encourages an atmosphere of cheerfulness and shared enjoyment, as when friends gather over a meal or neighbors celebrate a happy "
-                     "occasion together. Cultivating conviviality enriches life, for it is in such shared moments of laughter and fellowship that "
-                     "the deepest bonds of friendship are formed."),
+                    "is one who enjoys and creates joyful social gatherings, making others feel welcome and at ease in their presence. The word "
+                    "encourages an atmosphere of cheerfulness and shared enjoyment, as when friends gather over a meal or neighbors celebrate a happy "
+                    "occasion together. Cultivating conviviality enriches life, for it is in such shared moments of laughter and fellowship that "
+                    "the deepest bonds of friendship are formed."),
+    "innocence": ("Innocence is the state of being free from guilt, sin or moral wrong, and free from cunning or malice toward others. In a child, "
+                  "it is the natural and charming purity that comes before the world teaches deceit; in an adult, it is the deliberate choice to live "
+                  "without pretense or cruelty. Innocence is often prized for its simplicity and its power to disarm hostility, for an innocent heart "
+                  "trusts rather than suspects and offers friendship without expecting betrayal. Above all, it is a reminder that integrity and goodness "
+                  "are not weaknesses, but the very substance of a life well-lived."),
+    "verity": ("Verity is truthfulness and conformity to fact or reality. It is the quality of being true and accurate, whether in speech, thought or "
+               "account given. To act with verity is to be honest and to reflect things as they truly are, not as one might wish them to be. In logic and "
+               "philosophy, the pursuit of verity is the pursuit of what is real and can be established beyond doubt. In daily life, it is the simple discipline "
+               "of not deceiving others or oneself, and of standing firmly on the side of what is true."),
+    "purity": ("Purity is the state of being free from contamination, whether physical or moral, and of being unmixed with what is foreign or base. In a "
+               "physical sense, it is the condition of substance free from impurities; in a moral sense, it is the cleanness of heart that comes from "
+               "avoiding what corrupts. Purity should not be confused with naivety or prudishness; rather, it is the strength to keep oneself untainted by the "
+               "corrupting influences of the surrounding world. It is the quality that lets the light of a person's character shine through undistorted."),
+    "newness": ("Newness is the quality of being recently made or unused, or of being novel and fresh in character. In an everyday sense, it is the excitement "
+                "of a thing that has not yet been worn down by habit or time, or of an idea that has not yet grown stale. Newness brings with it freshness of "
+                "perspective, vigor of effort and the promise of untried potential. It is the beginning of every journey and the blank canvas of every creation, "
+                "and as such it is treasured not for its own sake but for the promise it carries of what is yet to come."),
+    "genuineness": ("Genuineness is the quality of being real, authentic and true to one's actual nature, thoughts and feelings. A genuine person does not wear "
+                    "a mask or pretend to be what they are not, but lets their true self show in all their dealings. In a world of polished surfaces and careful "
+                    "posturing, genuine sincerity stands out as a rare and refreshing virtue. Genuineness builds trust because it reveals no discrepancy between "
+                    "the person one appears to be and the person one actually is, and it is the foundation of all honesty in personal relationships."),
+    "righteousness": ("Righteousness is the quality of being morally right, just and virtuous; of doing what is right in the sight of God and fellow humans. "
+                      "A righteous person acts with moral integrity, upholding what is just even when it is costly or unpopular. It is not to be confused with "
+                      "self-righteousness, which is the smug pretense of one's own goodness; rather, true righteousness is the humble and faithful pursuit of "
+                      "right conduct in all things. History and scripture alike hold up the righteous as those who walk the straight path, whose lives testify to "
+                      "the power of walking uprightly."),
+    "equanimity": ("Equanimity is mental calmness and composure, especially in times of stress. It is the evenness of temper that keeps a person's mind steady "
+                  "and clear whether they face triumph or disaster. The practice of equanimity does not mean being indifferent to what happens, but instead means "
+                  "not being ruled by fleeting passions and shocks. It allows one to view situations with wisdom and to act with sobriety, and it is a quality prized "
+                  "by philosophers and warriors alike as a mark of true poise and inner strength."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
