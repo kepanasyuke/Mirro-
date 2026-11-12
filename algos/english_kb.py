@@ -403,6 +403,9 @@ _EN_KB = {
     "humor": ("Humor is the ability to see and express the funny side of life. "
               "It lightens hard moments and helps people connect. Humor builds "
               "warmth and makes even serious talks feel human."),
+    "integrity": ("Integrity is the quality of being honest and having strong moral "
+                  "principles. It means doing the right thing even when nobody "
+                  "watches. Integrity earns lasting trust and respect."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
