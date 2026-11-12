@@ -186,8 +186,8 @@ def _c_quadratic(q):
             try:
                 a_s, b_s, c_s = m.group(1), m.group(2), m.group(3)
                 a = -1.0 if a_s == "-" else (float(a_s) if a_s not in (None, "") else 1.0)
-                b = -1.0 if b_s == "-" else (float(b_s) if b_s not in (None, "") else 0.0)
-                c = -1.0 if c_s == "-" else (float(c_s) if c_s not in (None, "") else 0.0)
+                b = 1.0 if b_s == "+" else (-1.0 if b_s == "-" else (float(b_s) if b_s not in (None, "") else 0.0))
+                c = 1.0 if c_s == "+" else (-1.0 if c_s == "-" else (float(c_s) if c_s not in (None, "") else 0.0))
             except Exception:
                 return None
             roots = _solve_quadratic(a, b, c)
