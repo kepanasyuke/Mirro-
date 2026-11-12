@@ -559,6 +559,10 @@ _EN_KB = {
                     "systems as much as to people. A reliable engine, report or colleague performs "
                     "the same way on the tenth use as on the first, giving others a foundation to "
                     "build upon without fear of sudden failure."),
+    "sublimity": ("Sublimity is the quality of being so grand, beautiful or inspiring that it "
+                  "overwhelms the senses and lifts the spirit. It is found in great natural views, "
+                  "in profound art and in acts of extraordinary courage. Encountering the sublime "
+                  "reminds us how small we are, but also how much greatness we are capable of."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
