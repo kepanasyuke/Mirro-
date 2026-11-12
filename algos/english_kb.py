@@ -755,6 +755,7 @@ _TOPIC_TEST = [
     ("gentleness", ("gentleness", "mild temperament", "tender spirit", "soft-spoken kindness", "meekness", "gentle nature")),
     ("quietness", ("quietness", "stillness", "inner calm", "tranquil quiet", "hushed stillness", "peaceful silence")),
     ("hardihood", ("hardihood", "bold daring", "audacious courage", "intrepid spirit", "daring resolve", "fearless enterprise")),
+    ("fellowship", ("fellowship", "companionship", "comradeship", "mutual support", "shared purpose", "brotherhood")),
 ]
 
 
