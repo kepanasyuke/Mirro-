@@ -877,6 +877,10 @@ _EN_KB = {
                     "would hesitate, driven by a fortitude that goes beyond natural boldness. It appears in the mountaineer who scales a sheer cliff without a net, the firefighter who "
                     "charges into a burning building, and the leader who stands by a conviction though it costs them everything. Intrepidity is not recklessness, which ignores danger; it is "
                     "courage that fully sees the danger and chooses to proceed anyway."),
+    "fealty": ("Fealty is the oath-bound loyalty that a vassal pledges to a lord in medieval feudalism, and by extension any faithful allegiance to a person, cause or country. It is a "
+               "heartfelt and solemn promise to be faithful, to keep one's word and to stand by one's obligations even at great personal cost. Fealty goes beyond mere obedience or friendship; "
+               "it is a sacred trust that binds individuals together in a relation of mutual duty and honor. In its deepest sense, true fealty means being loyal when it is easiest to betray, "
+               "and remaining true when all the rewards lie in defection."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
