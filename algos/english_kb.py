@@ -508,6 +508,10 @@ _EN_KB = {
                     "through. It is the inner decision that turns a wish into a vow to act. "
                     "People of resolution do not abandon their aim at the first obstacle; "
                     "they carry their purpose to completion."),
+    "promise": ("A promise is a declaration that one will or will not do something. "
+                "Keeping a promise builds trust and shows that your word can be relied "
+                "upon. Broken promises, by contrast, break relationships and reputations. "
+                "The keeping of promises is the foundation of honor and accountability."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
