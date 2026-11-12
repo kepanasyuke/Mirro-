@@ -1114,6 +1114,12 @@ _TOPIC_TEST = [
     ("veracity", ("veracity", "truth-telling habit", "accurate truthfulness", "unerring honesty", "guileless truth", "sincerity of statement")),
     ("comprehensiveness", ("comprehensiveness", "all-embracing scope", "full coverage", "exhaustive treatment", "all-encompassing view", "whole-scale breadth")),
     ("thoroughness", ("thoroughness", "painstaking care", "scrupulous detail", "rigorous completeness", "exhaustive precision", "minute exactness")),
+    ("good faith", ("good faith", "honest intent", "bona fide dealing", "sincere motive", "fair dealing", "honest bargaining")),
+    ("good humor", ("good humor", "cheerful disposition", "sunny temper", "good-natured mirth", "jovial spirits", "lighthearted cheer")),
+    ("attentiveness", ("attentiveness", "close attention", "heedful regard", "alert listening", "careful observation", "mindful awareness")),
+    ("wakefulness", ("wakefulness", "alert vigilance", "waking awareness", "sleepless watch", "lucid alertness", "unremitting attention")),
+    ("watchfulness", ("watchfulness", "vigilant guard", "sentry duty", "alert lookout", "circumspect observation", "continuous surveillance")),
+    ("surveillance", ("surveillance", "close watch", "systematic monitoring", "electronic oversight", "careful observation", "continuous tracking")),
 ]
 
 
