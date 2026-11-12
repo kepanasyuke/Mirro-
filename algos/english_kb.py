@@ -657,6 +657,10 @@ _EN_KB = {
                     "in return. Benevolence differs from mere generosity in its motivation — it is not about "
                     "giving things but about wishing others well and acting on that wish. It is one of the most "
                     "practical forms of love."),
+    "largess": ("Largess is generous bestowal of gifts or money, usually to those in need or for public good. "
+                "It carries a sense of nobility and abundance, as when a king grants lands to a loyal servant "
+                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show — "
+                "true largess seeks to do real good and to lift others up."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
