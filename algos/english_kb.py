@@ -974,6 +974,7 @@ _TOPIC_TEST = [
     ("pleasantness", ("pleasantness", "agreeable manner", "cheerful disposition", "genial warmth", "sweet temper", "winsome charm")),
     ("warmheartedness", ("warmheartedness", "affectionate kindness", "gentle benevolence", "tender compassion", "open-hearted love", "loving care")),
     ("perspicacity", ("perspicacity", "keen insight", "penetrating discernment", "sharp perception", "quick-witted sagacity", "subtle understanding")),
+    ("conviviality", ("conviviality", "festive cheer", "sociable warmth", "jovial fellowship", "merry companionship", "convivial good humor")),
 ]
 
 
