@@ -800,6 +800,7 @@ _TOPIC_TEST = [
     ("civility", ("civility", "polite respect", "courteous behavior", "civilized manners", "decent conduct", "gracious etiquette")),
     ("moderation", ("moderation", "temperate living", "balanced habit", "restraint in excess", "measured conduct", "golden mean")),
     ("tranquility", ("tranquility", "serene calm", "peaceful stillness", "untroubled quiet", "unruffled calm", "placid repose")),
+    ("nurturance", ("nurturance", "fostering care", "mothering warmth", "growth-nourishing love", "protective tenderness", "developmental attention")),
 ]
 
 
