@@ -779,6 +779,10 @@ _EN_KB = {
                    "form of warmth than affability — where the affable person actively reaches out to others, the amiable person's very "
                    "nature is mild, gentle and likable. Amiability smooths everyday interactions and is one of the most endearing of "
                    "human qualities."),
+    "stalwartness": ("Stalwartness is stubborn and hearty loyalty combined with physical or moral strength. A stalwart supporter "
+                     "is one who can be relied upon completely, in good times and in bad, without wavering. The word conjures the image of "
+                     "a robust and resolute figure who stands firm against the storm. Stalwartness is the quality of the friend who never "
+                     "deserts you, the employee who stays loyal through adversity, and the soldier who holds the line when it matters most."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
