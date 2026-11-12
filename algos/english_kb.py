@@ -605,6 +605,7 @@ _TOPIC_TEST = [
     ("resolution", ("resolution", "determination", "firmness", "resolve", "steadfastness", "conclusive")),
     ("promise", ("promise", "vow", "pledge", "word of honor", "commitment", "engagement")),
     ("sentiment", ("sentiment", "feeling", "attitude", "emotion", "inclination", "mood")),
+    ("chivalry", ("chivalry", "gallant", "courteous", "honorable", "knightly", "noble conduct")),
 ]
 
 
