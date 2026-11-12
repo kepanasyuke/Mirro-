@@ -873,6 +873,10 @@ _EN_KB = {
                   "ahead, avoid hazards and seize opportunities before they are obvious to others. Foresight is a mark of wisdom, for it joins a realistic understanding of the present "
                   "with a shrewd guess about the morrow. It is what saves a business from an unwise venture, what keeps a family from financial ruin, and what allows a leader to see "
                   "the shape of coming events."),
+    "intrepidity": ("Intrepidity is fearlessness in the face of danger or daunting odds, a courage that is not shaken by threats or hardships. An intrepid person advances where others "
+                    "would hesitate, driven by a fortitude that goes beyond natural boldness. It appears in the mountaineer who scales a sheer cliff without a net, the firefighter who "
+                    "charges into a burning building, and the leader who stands by a conviction though it costs them everything. Intrepidity is not recklessness, which ignores danger; it is "
+                    "courage that fully sees the danger and chooses to proceed anyway."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
