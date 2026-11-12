@@ -382,6 +382,9 @@ _EN_KB = {
     "patience": ("Patience is the capacity to stay calm while waiting or dealing "
                  "with delay and difficulty. It helps keep focus and avoid rash "
                  "reactions. Patient people persevere and reach long-term goals."),
+    "kindness": ("Kindness is a quality of being friendly, generous and considerate. "
+                 "It shows in small acts of care and in how we treat others. "
+                 "Kindness builds trust and makes communities stronger."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
