@@ -555,6 +555,8 @@ _TOPIC_TEST = [
     ("hope", ("hope", "faith", "optimism", "expectation", "positive")),
     ("fortitude", ("fortitude", "strength", "endurance", "courage under", "brave heart")),
     ("magnanimity", ("magnanimity", "generous spirit", "noble", "forgiving", "high-minded")),
+    ("insight", ("insight", "understanding", "discernment", "deep perception", "clear seeing")),
+    ("lenity", ("lenity", "gentle", "mild", "merciful", "tender", "forgiving heart")),
 ]
 
 
