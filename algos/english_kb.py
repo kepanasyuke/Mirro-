@@ -792,6 +792,11 @@ _EN_KB = {
                       "choosing their battles and more skilled at resolving differences through words rather than force. Peacefulness "
                       "at the personal level makes homes happier, and at the national level it is what makes diplomacy and lasting "
                       "agreements possible between peoples."),
+    "harmony": ("Harmony is the pleasing arrangement of parts into a cohesive and balanced whole, whether in music, in a "
+                "community or in one's own life. In music, harmonious notes combine to create chords that resonate beautifully; "
+                "in society, harmony exists when diverse people live together in agreement and mutual respect. Harmony does not mean "
+                "uniformity or the absence of disagreement, but the resolution of differences into a state of balance and concord "
+                "where every part fittingly contributes to the well-being of the whole."),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
