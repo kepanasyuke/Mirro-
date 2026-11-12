@@ -698,6 +698,7 @@ _TOPIC_TEST = [
     ("devotion", ("devotion", "dedicated", "committed to", "faithful", "loyal service", "wholehearted")),
     ("steadfastness", ("steadfastness", "unshakable", "firm in purpose", "immovable", "constant", "unwavering")),
     ("heedfulness", ("heedfulness", "attentive", "watchful care", "mindful", "alert attention", "careful observance")),
+    ("dutifulness", ("dutifulness", "obedient to duty", "responsible", "conscientious", "compliant", "respectful of duty")),
 ]
 
 
