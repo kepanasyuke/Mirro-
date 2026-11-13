@@ -236,6 +236,87 @@ class TestChatContract(unittest.TestCase):
         self.assertEqual(h.sent[-1][0], "json")
 
 
+class TestCallLogging(unittest.TestCase):
+    """log_call не должен ронять ответ клиента из-за диска/счётчиков."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mc = _get_core()
+
+    def test_utc_stamp_is_iso_without_utcnow(self):
+        stamp = self.mc._utc_now_iso()
+        self.assertRegex(stamp, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}")
+        self.assertNotIn("+00:00", stamp)
+
+    def test_call_log_entry_has_all_audit_fields(self):
+        """entry аудита пишется в logs/calls.jsonl со всеми полями.
+
+        Проверяем через реальный LOGS: счётчики stats.json и models/ не трогаются
+        (пишется одна строка лога, как и в бою)."""
+        import json as _j
+        original = self.mc.LOGS
+        self.mc.LOGS = _TempLogs()
+        try:
+            self.mc._append_call_log("вопрос", "ru", "mirro-base", 12, True, tokens=7)
+            written = self.mc.LOGS.calls_path.read_text("utf-8").strip()
+        finally:
+            self.mc.LOGS.cleanup()
+            self.mc.LOGS = original
+        entry = _j.loads(written)
+        self.assertEqual(entry["cluster"], "ru")
+        self.assertEqual(entry["tokens"], 7)
+        self.assertEqual(entry["prompt_len"], 6)
+        self.assertRegex(entry["ts"], r"^20\d\d-")
+
+    def test_log_call_survives_unwritable_log_dir(self):
+        core_obj = self.mc.MirroCore.__new__(self.mc.MirroCore)
+        core_obj.stats = {"calls": 0, "clusters_used": {}, "total_examples": 0}
+        core_obj._save_json = lambda *_a, **_k: (_ for _ in ()).throw(OSError("диск"))
+        original = self.mc.LOGS
+        self.mc.LOGS = _BrokenLogs()
+        try:
+            core_obj.log_call("вопрос", "ru", "mirro-base", 5, True)
+        finally:
+            self.mc.LOGS = original
+        self.assertEqual(core_obj.stats["calls"], 1)
+
+
+class _TempLogs:
+    """Временная папка логов вне репозитория: пишет calls.jsonl и удаляется."""
+
+    def __init__(self):
+        import tempfile
+        from pathlib import Path
+        self.root = Path(tempfile.mkdtemp(prefix="mirro-logs-"))
+        self.calls_path = self.root / "calls.jsonl"
+
+    def mkdir(self, **_kwargs):
+        return None
+
+    def __truediv__(self, name):
+        return self.root / name
+
+    def cleanup(self):
+        import shutil
+        shutil.rmtree(self.root, ignore_errors=True)
+
+
+class _BrokenLogs:
+    """LOGS, который не даёт ни создать папку, ни открыть файл."""
+
+    def mkdir(self, **_kwargs):
+        raise OSError("нет прав")
+
+    def __truediv__(self, name):
+        return self
+
+    def __fspath__(self):
+        return "broken-log-path"
+
+    def open(self, *_a, **_k):
+        raise OSError("нет записи")
+
+
 class TestHealthEndpoint(unittest.TestCase):
     """GET /health не должен падать, если индекс/граф ещё не прогрет."""
 

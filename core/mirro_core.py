@@ -39,6 +39,39 @@ for d in [
 ]:
     TASK_ROUTES.update(d)
 
+def _append_call_log(prompt, cluster, provider, latency_ms, success, tokens=0):
+    """Одна строка аудита вызова в logs/calls.jsonl. Ошибка записи не должна
+    ронять запрос клиента — только пропускаем лог. Один return: None."""
+    entry = {"ts": _utc_now_iso(), "cluster": cluster, "provider": provider,
+             "latency_ms": latency_ms, "success": success, "tokens": tokens,
+             "prompt_len": len(prompt or "")}
+    try:
+        LOGS.mkdir(parents=True, exist_ok=True)
+        _write_call_line(LOGS / "calls.jsonl", json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    return None
+
+
+def _write_call_line(path, line):
+    """Дописывает строку в файл лога вызовов. Один return: None."""
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(line)
+    return None
+
+
+def _utc_now_iso():
+    """Отметка времени UTC в ISO 8601 (utcnow устарел в Python 3.12+).
+    Один return: str."""
+    stamp = ""
+    try:
+        from datetime import timezone
+        stamp = _datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+    except Exception:
+        stamp = ""
+    return stamp
+
+
 class MirroCore:
     def __init__(self):
         self.processed_dir = DATA / "processed"
@@ -87,8 +120,7 @@ class MirroCore:
     def log_call(self, prompt, cluster, provider, latency_ms, success, tokens=0):
         self.stats["calls"] += 1
         self.stats["clusters_used"][cluster] = self.stats["clusters_used"].get(cluster, 0) + 1
-        with open(LOGS / "calls.jsonl", "a", encoding="utf-8") as f:
-            f.write(json.dumps({"ts": _datetime.utcnow().isoformat(), "cluster": cluster, "provider": provider, "latency_ms": latency_ms, "success": success, "prompt_len": len(prompt)}, ensure_ascii=False) + "\n")
+        _append_call_log(prompt, cluster, provider, latency_ms, success, tokens)
         # ТОП-вопросов: считаем нормализованные запросы (ТОП-30)
         self.stats.setdefault("top_questions", {})
         q = " ".join(prompt.split())[:60].lower()
@@ -98,7 +130,11 @@ class MirroCore:
             if len(self.stats["top_questions"]) > 30:
                 rare = min(self.stats["top_questions"], key=self.stats["top_questions"].get)
                 self.stats["top_questions"].pop(rare, None)
-        self._save_json(CORE / "stats.json", dict(self.stats))
+        try:
+            self._save_json(CORE / "stats.json", dict(self.stats))
+        except Exception:
+            pass
+        return None
     def get_cluster_info(self):
         return {name: {**info, "examples": len(self.knowledge_base.get(name, [])), "calls": self.stats["clusters_used"].get(name, 0)} for name, info in KNOWLEDGE_CLUSTERS.items()}
     def status(self):
@@ -280,7 +316,7 @@ def autonomous_learning_loop(interval_sec=3600):
                     merged["perceptron_bias"] = algo.perceptron_bias
                     merged["perceptron_trained"] = algo.perceptron_trained
                     merged["auto_learned"] = (prev.get("auto_learned") or 0) + (n or 0)
-                    merged["updated"] = _datetime.utcnow().isoformat()
+                    merged["updated"] = _utc_now_iso()
                     MODEL_STATE_FILE.write_text(json.dumps(merged, ensure_ascii=False), "utf-8")
                 except: pass
                 # периодический самоконтроль: прогон QA-пар (вопрос → ответ)
