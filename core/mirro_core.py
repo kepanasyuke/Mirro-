@@ -1693,9 +1693,153 @@ def _text_of(result):
 
 
 def _sse_event(data):
-    """Одно SSE-событие `data: <json>\\n\\n` в UTF-8. Один return: bytes."""
+    """Одно SSE-событие: `data: <json>` и пустая строка после него, UTF-8.
+    Один return: bytes."""
     line = "data: " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n\n"
     return line.encode("utf-8")
+
+
+def _health_algorithm_status():
+    """Секция algorithms для /health. Не падает, если индекс/граф не прогрет.
+    Один return: dict."""
+    status = {}
+    try:
+        status = _grab_algo().status()
+        if not isinstance(status, dict):
+            status = {}
+    except Exception:
+        status = {}
+    try:
+        _health_attach_graph_metrics(status)
+    except Exception:
+        status = status if isinstance(status, dict) else {}
+    return status
+
+
+def _health_attach_graph_metrics(status):
+    """Нейромедиаторы, граф, кванты и иммунитет; каждая часть отдельно безопасна.
+    Мутирует status и возвращает его. Один return: dict."""
+    from algos.neuromodulators import nm as _nm
+    from algos.knowledge_graph import kg as _kg
+    status["neuromodulators"] = _health_neuromodulators(_nm)
+    status["knowledge_graph"] = _health_graph_summary(_kg)
+    status["quantum"] = _health_quantum_summary(_kg)
+    status["immunity"] = _health_immunity_summary(_kg)
+    return status
+
+
+def _health_neuromodulators(nm):
+    """Уровни медиаторов + текущий ритм. Один return: dict."""
+    levels = {}
+    try:
+        levels = dict(getattr(nm, "level", {}) or {})
+        levels["rhythm"] = nm.rhythm_state()
+    except Exception:
+        levels = levels if isinstance(levels, dict) else {}
+    return levels
+
+
+def _health_graph_summary(kg):
+    """Размеры и плотность графа; отдельные метрики падают изолированно.
+    Один return: dict."""
+    nodes = _safe_len(getattr(kg, "nodes", None))
+    edges = _safe_len(getattr(kg, "edges", None))
+    summary = {"nodes": nodes, "edges": edges,
+               "avg_dimension": 0.0,
+               "density": round(edges / max(1, nodes), 3),
+               "edges_per_node": round(edges / max(1, nodes), 2),
+               "central_nodes": [], "mean_degree": 0.0}
+    summary["avg_dimension"] = _safe_avg_dimension(kg) if nodes else 0.0
+    if nodes:
+        summary["central_nodes"], summary["mean_degree"] = _safe_centrality(kg)
+    summary.update(_health_connectivity(kg) if edges else _empty_connectivity())
+    return summary
+
+
+def _safe_len(value):
+    """len() без исключения для None/не-контейнеров. Один return: int."""
+    size = 0
+    try:
+        size = len(value) if value is not None else 0
+    except Exception:
+        size = 0
+    return size
+
+
+def _safe_avg_dimension(kg):
+    """Средняя размерность сети; без графа — 0.0. Один return: float."""
+    dim = 0.0
+    try:
+        from algos.zero_dimensional import dimension_of_understanding
+        dim = float(dimension_of_understanding(kg))
+    except Exception:
+        dim = 0.0
+    return dim
+
+
+def _safe_centrality(kg):
+    """(топ-узлы, средняя степень) одним проходом. Один возврат: tuple."""
+    top, mean = [], 0.0
+    try:
+        stats = kg.centrality(top_n=5)
+        top = [n for n, _d in stats.get("top", [])]
+        mean = float(stats.get("mean_degree", 0.0))
+    except Exception:
+        top, mean = [], 0.0
+    return top, mean
+
+
+def _empty_connectivity():
+    """Поля связности для пустого/непрогретого графа. Один return: dict."""
+    return {"components": 0, "biggest_component": 0, "isolated": 0, "top_nodes": []}
+
+
+def _health_connectivity(kg):
+    """Связность графа; при сбое — нули. Один return: dict."""
+    conn = _empty_connectivity()
+    try:
+        raw = kg.connectivity(top_n=3)
+        conn["components"] = raw.get("components", 0)
+        conn["biggest_component"] = raw.get("biggest_component", 0)
+        conn["isolated"] = raw.get("isolated", 0)
+        conn["top_nodes"] = [n for n, _d in raw.get("top_degree", [])]
+    except Exception:
+        conn = _empty_connectivity()
+    return conn
+
+
+def _health_quantum_summary(kg):
+    """Суперпозиция узлов; пустой граф сразу даёт нули. Один return: dict."""
+    summary = {"superposed_nodes": 0, "P_active_sample": []}
+    if not _safe_len(getattr(kg, "nodes", None)):
+        return summary
+    try:
+        from algos.quantum_graph import init_quantum_states
+        states = init_quantum_states(kg).states
+        summary = {"superposed_nodes": len(states),
+                   "P_active_sample": [round(a * a, 3) for a, _b in list(states.items())[:8]]}
+    except Exception:
+        summary = {"superposed_nodes": 0, "P_active_sample": []}
+    return summary
+
+
+def _health_immunity_summary(kg):
+    """Иммунный скан только на непустом графе (иначе «0 заражённых» — враньё).
+    Один return: dict."""
+    summary = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
+    if not _safe_len(getattr(kg, "edges", None)):
+        return summary
+    try:
+        from algos.immune_sentinel import run_graph_immune_scan
+        from algos.refractory import init_refractory_counters
+        _graph, quarantined = run_graph_immune_scan(kg, max_allowed_weight=5.0)
+        refr = init_refractory_counters(kg)
+        summary = {"quarantined": len(quarantined),
+                   "n_routes": len(getattr(kg, "meta_routes", {}) or {}),
+                   "fatigued_edges": sum(1 for v in refr.edge_exhaustion.values() if v > 0.0)}
+    except Exception:
+        summary = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
+    return summary
 
 
 def try_ai_history(prompt):
@@ -1790,60 +1934,7 @@ class MirroAPI(BaseHTTPRequestHandler):
         handled = True
         if route == "/health":
             status = core.status()
-            try:
-                status["algorithms"] = _grab_algo().status()
-            except Exception:
-                status["algorithms"] = {}
-            try:
-                from algos.neuromodulators import nm as _nm
-                from algos.knowledge_graph import kg as _kg
-                from algos.zero_dimensional import dimension_of_understanding as _dimen
-                st = status.get("algorithms", {})
-                st["neuromodulators"] = dict(_nm.level)
-                st["neuromodulators"]["rhythm"] = _nm.rhythm_state()
-                st["knowledge_graph"] = {
-                    "nodes": len(_kg.nodes), "edges": len(_kg.edges),
-                    "avg_dimension": _dimen(_kg),
-                    "density": round(len(_kg.edges) / max(1, len(_kg.nodes)), 3),
-                    "edges_per_node": round(len(_kg.edges) / max(1, len(_kg.nodes)), 2),
-                    "central_nodes": [n for n, _d in _kg.centrality(top_n=5)["top"]],
-                    "mean_degree": _kg.centrality(top_n=2)["mean_degree"],
-                }
-                try:
-                    _conn = _kg.connectivity(top_n=3)
-                    st["knowledge_graph"]["components"] = _conn["components"]
-                    st["knowledge_graph"]["biggest_component"] = _conn["biggest_component"]
-                    st["knowledge_graph"]["isolated"] = _conn["isolated"]
-                    st["knowledge_graph"]["top_nodes"] = [n for n, _d in _conn["top_degree"]]
-                except Exception:
-                    pass
-                try:
-                    from algos.quantum_graph import init_quantum_states
-                    qst = init_quantum_states(_kg)
-                    n_sup = len(qst.states)
-                    p_active = []
-                    for _n, (a, _b) in list(qst.states.items())[:8]:
-                        p_active.append(round(a * a, 3))
-                    st["quantum"] = {"superposed_nodes": n_sup,
-                                     "P_active_sample": p_active}
-                except Exception:
-                    st["quantum"] = {"superposed_nodes": 0, "P_active_sample": []}
-                try:
-                    from algos.immune_sentinel import run_graph_immune_scan
-                    from algos.refractory import init_refractory_counters
-                    _g, quarantined = run_graph_immune_scan(_kg, max_allowed_weight=5.0)
-                    refr = init_refractory_counters(_kg)
-                    n_fatigued = sum(1 for v in refr.edge_exhaustion.values() if v > 0.0)
-                    st["immunity"] = {
-                        "quarantined": len(quarantined),
-                        "n_routes": len(getattr(_kg, "meta_routes", {})),
-                        "fatigued_edges": n_fatigued,
-                    }
-                except Exception:
-                    st["immunity"] = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
-                status["algorithms"] = st
-            except Exception:
-                pass
+            status["algorithms"] = _health_algorithm_status()
             self._json(status)
         elif route == "/v1/models":
             t = int(time.time())

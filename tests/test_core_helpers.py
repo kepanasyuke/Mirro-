@@ -236,6 +236,118 @@ class TestChatContract(unittest.TestCase):
         self.assertEqual(h.sent[-1][0], "json")
 
 
+class TestHealthEndpoint(unittest.TestCase):
+    """GET /health не должен падать, если индекс/граф ещё не прогрет."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mc = _get_core()
+
+    def _get(self, route="/health"):
+        h = self.mc.MirroAPI.__new__(self.mc.MirroAPI)
+        h.path = route
+        sent = []
+        h._json = lambda data, status=200: sent.append((status, data))
+        self.mc.MirroAPI._route_GET_dispatch(h, route)
+        return sent[0]
+
+    def test_health_returns_200_and_algorithms_block(self):
+        status, payload = self._get()
+        self.assertEqual(status, 200)
+        self.assertIn("algorithms", payload)
+        self.assertIsInstance(payload["algorithms"], dict)
+
+    def test_health_graph_block_has_full_metric_set(self):
+        _status, payload = self._get()
+        graph = payload["algorithms"]["knowledge_graph"]
+        for key in ("nodes", "edges", "avg_dimension", "density", "edges_per_node",
+                    "central_nodes", "mean_degree"):
+            self.assertIn(key, graph)
+        self.assertIsInstance(graph["central_nodes"], list)
+
+    def test_health_neuromodulators_include_rhythm(self):
+        _status, payload = self._get()
+        nm_block = payload["algorithms"]["neuromodulators"]
+        self.assertIn("rhythm", nm_block)
+        self.assertIsInstance(nm_block["rhythm"], str)
+
+    def test_health_quantum_and_immunity_blocks_always_present(self):
+        _status, payload = self._get()
+        self.assertIn("superposed_nodes", payload["algorithms"]["quantum"])
+        for key in ("quarantined", "n_routes", "fatigued_edges"):
+            self.assertIn(key, payload["algorithms"]["immunity"])
+
+    def test_health_never_calls_immune_scan_without_graph_nodes(self):
+        """Пустой граф не должен доходить до иммунного скана и засчитывать карантин."""
+        calls = []
+        import algos.knowledge_graph as kg_mod
+        import algos.immune_sentinel as immune_mod
+        original_scan = immune_mod.run_graph_immune_scan
+        def spy(*args, **kwargs):
+            calls.append(len(args[0].nodes))
+            return original_scan(*args, **kwargs)
+        immune_mod.run_graph_immune_scan = spy
+        original_kg = kg_mod.kg
+        kg_mod.kg = kg_mod.KnowledgeGraph()
+        try:
+            _status, payload = self._get()
+        finally:
+            immune_mod.run_graph_immune_scan = original_scan
+            kg_mod.kg = original_kg
+        self.assertEqual(calls, [])
+        self.assertEqual(payload["algorithms"]["immunity"]["quarantined"], 0)
+
+    def test_health_survives_broken_metric_modules(self):
+        import algos.zero_dimensional as zd_mod
+        original = zd_mod.dimension_of_understanding
+        def boom(*_a, **_k):
+            raise RuntimeError("размерность не считается")
+        zd_mod.dimension_of_understanding = boom
+        try:
+            status, payload = self._get()
+        finally:
+            zd_mod.dimension_of_understanding = original
+        self.assertEqual(status, 200)
+        self.assertIsInstance(payload["algorithms"], dict)
+
+
+class TestPostHandlers(unittest.TestCase):
+    """POST-хендлеры должны отвечать всегда — без падения при не-dict теле."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mc = _get_core()
+
+    def _handler(self, body):
+        h = self.mc.MirroAPI.__new__(self.mc.MirroAPI)
+        h.path = "/v1/feedback"
+        h.sent = []
+        h._read = lambda: body
+        h._json = lambda data, status=200: h.sent.append((status, data))
+        return h
+
+    def test_feedback_with_non_dict_body_answers_500_not_raises(self):
+        h = self._handler(["не", "dict"])
+        h._post_feedback()
+        self.assertEqual(h.sent[0][0], 500)
+        self.assertEqual(h.sent[0][1]["status"], "error")
+
+    def test_feedback_with_none_body_is_guarded(self):
+        """_read() отдаёт None (сломанное/пустое тело) — список не должен падать.
+
+        Внешний try уже ловит это и отдаёт 500, тест переименован: страховка
+        цепочки фиксируется на уровне вызова.
+        """
+        h = self._handler(None)
+        h._post_feedback()
+        self.assertEqual(h.sent[0][0], 500)
+
+    def test_feedback_with_number_like_query_does_not_raise(self):
+        h = self._handler({"query": 42, "response": "ответ", "liked": True})
+        h._post_feedback()
+        self.assertIsInstance(h.sent[0][1], dict)
+
+
 class _FakeWriter:
     def __init__(self, sink):
         self.sink = sink
