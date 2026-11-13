@@ -29,8 +29,7 @@ LEARN_META = LEARN_DIR / "meta.json"
 # =============================================================
 # Mirro's Own Knowledge — what Mirro already knows how to do
 # =============================================================
-MIRRO_SKILLS = [
-    {"domain": "presentation", "skill": "Презентации PPTX", "desc": "Сборка .pptx с анимациями, диаграммами, картинками через PptxGenJS; корпоративные шаблоны; экспорт в PDF"},
+MIRRO_SKILLS = [    {"domain": "presentation", "skill": "Презентации PPTX", "desc": "Сборка .pptx с анимациями, диаграммами, картинками через PptxGenJS; корпоративные шаблоны; экспорт в PDF"},
     {"domain": "presentation", "skill": "Экспорт презентаций в PDF", "desc": "Конвертация готовых слайдов в PDF для показа и рассылки"},
     {"domain": "3d", "skill": "3D-моделирование в Blender", "desc": "Создание, редактирование, рендеринг сцен через cli-anything; экспорт в игровые движки (BeamNG, Minecraft)"},
     {"domain": "3d", "skill": "CAD-модели (FreeCAD)", "desc": "Технические модели, чертежи, экспорт в STL/STEP"},
@@ -66,6 +65,78 @@ MIRRO_SKILLS = [
 ]
 
 
+def _default_meta():
+    """Пустая статистика самообучения. Один return: dict."""
+    return {"total_sessions": 0, "total_learned": 0, "domains": {}, "last_run": None}
+
+
+def example_key(example):
+    """Стабильный ключ примера для дедупа записей. Один return: str."""
+    payload = "\x1f".join((
+        str(example.get("instruction") or "").strip(),
+        str(example.get("input") or "").strip(),
+        str(example.get("output") or "").strip(),
+    ))
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()
+
+
+def existing_keys(path):
+    """Ключи примеров, уже лежащих в jsonl-файле. Один return: set[str]."""
+    keys = set()
+    try:
+        if path.exists():
+            for line in path.read_text("utf-8", errors="replace").splitlines():
+                try:
+                    rec = json.loads(line)
+                except ValueError:
+                    rec = None
+                if isinstance(rec, dict):
+                    keys.add(example_key(rec))
+    except OSError:
+        keys = set()
+    return keys
+
+
+def append_new_examples(path, examples):
+    """Дописывает только новые примеры (повторный прогон не дублирует).
+    Один return: int — сколько строк реально добавлено."""
+    added = 0
+    known = existing_keys(path)
+    fresh = []
+    for example in examples:
+        key = example_key(example)
+        if key not in known:
+            known.add(key)
+            fresh.append(example)
+    if fresh:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(path, "a", encoding="utf-8") as f:
+                for example in fresh:
+                    f.write(json.dumps(example, ensure_ascii=False) + "\n")
+            added = len(fresh)
+        except OSError:
+            added = 0
+    return added
+
+
+def _log_line_to_example(line):
+    """Превращает строку calls.jsonl в учебный пример. Один return: dict|None."""
+    example = None
+    try:
+        entry = json.loads(line)
+    except ValueError:
+        entry = None
+    if isinstance(entry, dict) and entry.get("success") and entry.get("prompt_len", 0) > 20:
+        example = {
+            "instruction": f"[Mirro self-log] Task: {entry.get('cluster','?')}",
+            "input": f"provider={entry.get('provider','?')} latency={entry.get('latency_ms',0)}ms",
+            "output": f"Call #{entry.get('ts','?')} — cluster: {entry.get('cluster')}, "
+                      f"tokens: {entry.get('tokens',0)}, latency: {entry.get('latency_ms',0)}ms",
+        }
+    return example
+
+
 class SelfLearner:
     """Autonomous learning loop — Mirro grows forever."""
 
@@ -74,15 +145,30 @@ class SelfLearner:
         self.session = 0
 
     def _load_meta(self):
-        meta = {"total_sessions": 0, "total_learned": 0, "domains": {}, "last_run": None}
+        """Читает meta.json; при битом/неполном файле дополняет дефолтами.
+        Один return: dict."""
+        meta = _default_meta()
         try:
-            meta = json.loads(LEARN_META.read_text("utf-8"))
-        except Exception:
-            meta = {"total_sessions": 0, "total_learned": 0, "domains": {}, "last_run": None}
+            loaded = json.loads(LEARN_META.read_text("utf-8"))
+        except (OSError, ValueError):
+            loaded = None
+        if isinstance(loaded, dict):
+            meta.update(loaded)
+            if not isinstance(meta.get("domains"), dict):
+                meta["domains"] = {}
         return meta
 
     def _save_meta(self):
-        LEARN_META.write_text(json.dumps(self.meta, ensure_ascii=False, indent=2), "utf-8")
+        """Атомарно пишет meta.json (иначе сбой оставляет пустой файл).
+        Один return: bool — удалось ли сохранить."""
+        ok = True
+        try:
+            tmp = LEARN_META.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps(self.meta, ensure_ascii=False, indent=2), "utf-8")
+            os.replace(str(tmp), str(LEARN_META))
+        except OSError:
+            ok = False
+        return ok
 
     def _fetch(self, url, timeout=20, as_json=False, errors="replace"):
         """Скачивает URL: как JSON (as_json=True) или как текст. Один return."""
@@ -92,9 +178,12 @@ class SelfLearner:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MirroSelfLearner/1.0"
             })
             with urllib.request.urlopen(req, timeout=timeout) as resp:
+                status = getattr(resp, "status", 200)
                 text = resp.read().decode("utf-8", errors=errors)
             data = json.loads(text) if as_json else text
-        except Exception:
+            if not 200 <= int(status or 0) < 300:
+                data = None
+        except (urllib.error.URLError, OSError, ValueError, UnicodeDecodeError):
             data = None
         return data
 
@@ -162,7 +251,7 @@ class SelfLearner:
                 cat_path.write_text(json.dumps(cat, ensure_ascii=False, indent=2), "utf-8")
                 for e in new_entries[:5]:
                     print(f"    + {e['ds']} ({e['cat']})")
-        except Exception as e:
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
             print(f"    ERROR: {e}")
         return new_count
 
@@ -177,24 +266,11 @@ class SelfLearner:
                 # Sample successful calls and save as examples
                 examples = []
                 for line in lines[-100:]:
-                    try:
-                        entry = json.loads(line)
-                        if entry.get("success") and entry.get("prompt_len", 0) > 20:
-                            examples.append({
-                                "instruction": f"[Mirro self-log] Task: {entry.get('cluster','?')}",
-                                "input": f"provider={entry.get('provider','?')} latency={entry.get('latency_ms',0)}ms",
-                                "output": f"Call #{entry.get('ts','?')} — cluster: {entry.get('cluster')}, "
-                                          f"tokens: {entry.get('tokens',0)}, latency: {entry.get('latency_ms',0)}ms"
-                            })
-                    except Exception:
-                        pass
+                    example = _log_line_to_example(line)
+                    if example:
+                        examples.append(example)
                 if examples:
-                    cluster = "general"
-                    out_path = LEARN_DIR / f"selflog_{cluster}.jsonl"
-                    with open(out_path, "a", encoding="utf-8") as f:
-                        for ex in examples:
-                            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-                    learned = len(examples)
+                    learned = append_new_examples(LEARN_DIR / "selflog_general.jsonl", examples)
         return learned
 
     # ---- Wikipedia (new articles) ----
@@ -232,12 +308,8 @@ class SelfLearner:
                                     })
 
                 if examples:
-                    out_path = LEARN_DIR / "wikipedia_ru.jsonl"
-                    with open(out_path, "a", encoding="utf-8") as f:
-                        for ex in examples:
-                            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-                    written = len(examples)
-        except Exception as e:
+                    written = append_new_examples(LEARN_DIR / "wikipedia_ru.jsonl", examples)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
             print(f"    ERROR: {e}")
         return written
 
@@ -256,19 +328,13 @@ class SelfLearner:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
                 count += 1
 
-        # Also save them in the knowledge cluster system
+        # Also save them in the knowledge cluster system (только новые записи:
+        # каждый вызов раньше дописывал все навыки домена заново)
         proc_dir = MIRRO / "data" / "processed"
-        for domain in set(s["domain"] for s in MIRRO_SKILLS):
-            cluster_file = proc_dir / f"{domain}.jsonl"
-            with open(cluster_file, "a", encoding="utf-8") as f:
-                for skill in MIRRO_SKILLS:
-                    if skill["domain"] == domain:
-                        entry = {
-                            "instruction": skill["skill"],
-                            "input": "",
-                            "output": skill["desc"],
-                        }
-                        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        for domain in sorted(set(s["domain"] for s in MIRRO_SKILLS)):
+            entries = [{"instruction": s["skill"], "input": "", "output": s["desc"]}
+                       for s in MIRRO_SKILLS if s["domain"] == domain]
+            append_new_examples(proc_dir / f"{domain}.jsonl", entries)
         print(f"  🧠 Mirro: {count} навыков записано в knowledge base")
         return count
 
@@ -298,7 +364,6 @@ class SelfLearner:
         print(f"  → {n} статей из Wikipedia")
 
         # 4. Build skills knowledge (run once)
-        skills_meta = LEARN_META if LEARN_META.exists() else None
         if not self.meta.get("skills_built"):
             self.build_skills_knowledge()
             self.meta["skills_built"] = True

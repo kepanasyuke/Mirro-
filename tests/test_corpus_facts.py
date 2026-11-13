@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Юнит-тесты для corpus_facts (expansión фактов, дедуп) и corpus_audit (аналитика)."""
+import json
 import os
 import sys
 import tempfile
@@ -14,8 +15,39 @@ class TestCorpusFacts(unittest.TestCase):
         self._facts_path = os.path.join(self._tmpdir, "facts.jsonl")
 
     def test_norm_question(self):
+        # ключ дедупа — только содержательные слова: служебные отброшены
         from corpus_facts import _norm_question
-        self.assertEqual(_norm_question("Что такое нейрон?"), "что такое нейрон")
+        self.assertEqual(_norm_question("Что такое нейрон?"), "нейрон")
+
+    def test_norm_question_merges_punctuation_variants(self):
+        from corpus_facts import _norm_question
+        self.assertEqual(_norm_question("Что такое нейрон?"),
+                         _norm_question("что такое  нейрон ,"))
+        self.assertEqual(_norm_question("Почему небо голубое"),
+                         _norm_question("почему небо голубое?"))
+
+    def test_norm_question_empty(self):
+        from corpus_facts import _norm_question
+        self.assertEqual(_norm_question(""), "")
+        self.assertEqual(_norm_question(None), "")
+
+    def test_all_builtin_facts_have_unique_keys(self):
+        import corpus_facts
+        from collections import Counter
+        keys = [corpus_facts._norm_question(q) for q, _ in corpus_facts.FACTS]
+        self.assertEqual(len(keys), len(set(keys)))
+
+    def test_dedup_across_punctuation_variants(self):
+        import corpus_facts
+        target = Path(self._facts_path)
+        target.write_text('{"instruction": "Что такое нейрон?", "input": "", "output": "x"}\n',
+                          encoding="utf-8")
+        corpus_facts.TARGET = target
+        added = corpus_facts.run()
+        rows = [json.loads(x) for x in target.read_text("utf-8").splitlines() if x.strip()]
+        keys = [corpus_facts._norm_question(r["instruction"]) for r in rows]
+        self.assertEqual(len(keys), len(set(keys)))
+        self.assertLess(added, len(corpus_facts.FACTS))
 
     def test_dedup_adds_only_new(self):
         import corpus_facts

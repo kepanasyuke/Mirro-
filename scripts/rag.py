@@ -14,9 +14,40 @@ from collections import Counter, defaultdict
 ROOT_DIR = Path(__file__).resolve().parent.parent
 CORPUS_DIR = ROOT_DIR / "data" / "corpus_big"
 INDEX_DIR = ROOT_DIR / "models" / "rag_index"
-INDEX_DIR.mkdir(parents=True, exist_ok=True)
 
 SEG_SIZE = 200_000   # примеров в сегменте
+GLOBAL_INDEX_NAME = "global_index.pkl"   # имя файла глобального индекса
+INDEX_VERSION = 1    # формат pickle; несовпадение = пересборка
+
+
+def _ensure_index_dir():
+    """Создаёт папку индексов при первом использовании. Один return: Path."""
+    INDEX_DIR.mkdir(parents=True, exist_ok=True)
+    return INDEX_DIR
+
+
+def _open_pickle(path):
+    """Читает pickle в бинарном режиме. Один return: dict|None при битом файле."""
+    data = None
+    try:
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+    except (OSError, EOFError, pickle.UnpicklingError, ValueError, AttributeError):
+        data = None
+    return data
+
+
+def _is_index_payload(data, payload_key):
+    """Годится ли pickle как индекс: поле payload_key на месте, формат совпадает.
+
+    Индексы, собранные до версионирования (без поля version), читаются как
+    есть — пересборка боевого индекса на 4.8 млн примеров недопустима.
+    Один return: bool.
+    """
+    is_valid = isinstance(data, dict) and payload_key in data
+    if is_valid:
+        is_valid = data.get("version", INDEX_VERSION) == INDEX_VERSION
+    return is_valid
 
 
 def tokenize(text):
@@ -27,31 +58,43 @@ def tokenize(text):
 
 
 class MirroRAG:
+    @property
+    def segments(self):
+        """Сегменты корпуса; перечитываются, если каталог сменился.
+        Один return: list[Path]."""
+        found = sorted(CORPUS_DIR.glob("corpus-*.jsonl"))
+        if found != self._segments_cache:
+            self._segments_cache = found
+            self._seg_built = set()
+        return self._segments_cache
+
+    @segments.setter
+    def segments(self, value):
+        self._segments_cache = list(value)
+        self._seg_built = set()
+
     def __init__(self):
         self.global_index = {}        # слово -> set(номер сегмента)
-        self.segments = sorted(CORPUS_DIR.glob("corpus-*.jsonl"))
         self.seg_built = set()        # номера сегментов, для которых есть pickle
         self.seg_files = {}           # номер -> имя файла
+        self._segments_cache = []
+        self.segments = sorted(CORPUS_DIR.glob("corpus-*.jsonl"))
         self._load_global()
 
     # ------------- построение глобального индекса -------------
     def _load_global(self):
-        gfile = INDEX_DIR / "global_index.pkl"
-        if gfile.exists():
-            try:
-                with open(gfile, "rb") as f:
-                    data = pickle.load(f)
-                self.global_index = data["global"]
-                self.seg_built = set(data["seg_built"])
-                print(f"  [RAG] глобальный индекс загружен: {len(self.global_index)} слов, "
-                      f"{len(self.seg_built)} сегментов")
-                return
-            except Exception:
-                pass
-        print("  [RAG] глобальный индекс не найден — сначала вызови build_tier1()")
+        gfile = INDEX_DIR / GLOBAL_INDEX_NAME
+        data = _open_pickle(gfile) if gfile.exists() else None
+        if _is_index_payload(data, "global"):
+            self.global_index = data.get("global") or {}
+            self.seg_built = set(data.get("seg_built") or ())
+            print(f"  [RAG] глобальный индекс загружен: {len(self.global_index)} слов, "
+                  f"{len(self.seg_built)} сегментов")
+        else:
+            print("  [RAG] глобальный индекс не найден — сначала вызови build_tier1()")
 
     def build_tier1(self):
-        """Строит глобальный индекс: слово -> сегменты. Быстро.""" 
+        """Строит глобальный индекс: слово -> сегменты. Быстро."""
         t0 = time.time()
         gidx = defaultdict(set)
         for i, seg in enumerate(self.segments):
@@ -64,15 +107,25 @@ class MirroRAG:
                     if line.strip():
                         try:
                             inst = json.loads(line).get("instruction", "")
-                            for w in set(tokenize(inst)):
-                                gidx[w].add(i)
-                        except Exception:
-                            pass
+                        except (ValueError, AttributeError):
+                            inst = ""
+                        for w in set(tokenize(inst)):
+                            gidx[w].add(i)
         self.global_index = dict(gidx)
-        with open(INDEX_DIR / "global_index.pkl", "wb") as f:
-            pickle.dump({"global": self.global_index, "seg_built": []}, f, protocol=4)
+        with open(_ensure_index_dir() / GLOBAL_INDEX_NAME, "wb") as f:
+            pickle.dump({"version": INDEX_VERSION, "global": self.global_index,
+                         "seg_built": sorted(self.seg_built)}, f, protocol=4)
         print(f"  [RAG] глобальный индекс: {len(gidx)} слов, {len(self.segments)} сегментов "
               f"за {time.time()-t0:.0f}с")
+
+    def load_segment_file(self, i, path):
+        """Регистрирует сегмент по номеру (для альтернативных каталогов).
+        Один return: список сегментов."""
+        self.seg_files[i] = Path(path)
+        while len(self.segments) <= i:
+            self.segments.append(Path(path))
+        self.segments[i] = Path(path)
+        return self.segments
 
     # ------------- построение локальных индексов сегментов -------------
     def build_segment_index(self, i):
@@ -80,38 +133,47 @@ class MirroRAG:
         seg = self.seg_files.get(i) or self.segments[i]
         pfile = INDEX_DIR / f"seg_{i:06d}.pkl"
         local_words = defaultdict(dict)  # слово -> {doc_id: tf}
+        n_docs = 0
         with open(seg, encoding="utf-8", errors="replace") as f:
             for doc_id, line in enumerate(f):
+                n_docs = doc_id + 1
                 if line.strip():
                     try:
                         ex = json.loads(line)
+                    except ValueError:
+                        ex = {}
+                    if isinstance(ex, dict):
                         inst = ex.get("instruction", "")
                         out = ex.get("output", "")
-                    except Exception:
-                        pass
-                    else:
                         words = Counter(tokenize(inst + " " + out[:100]))
                         for w, tf in words.items():
                             local_words[w][doc_id] = tf
-        with open(pfile, "wb") as f:
-            pickle.dump({"words": dict(local_words), "n_docs": doc_id + 1}, f, protocol=4)
+        with open(_ensure_index_dir() / f"seg_{i:06d}.pkl", "wb") as f:
+            pickle.dump({"version": INDEX_VERSION, "words": dict(local_words),
+                         "n_docs": n_docs}, f, protocol=4)
         # освобождаем память
         local_words.clear()
         return pfile
 
     def _load_segment(self, i):
         pfile = INDEX_DIR / f"seg_{i:06d}.pkl"
-        if not pfile.exists():
+        data = _open_pickle(pfile) if pfile.exists() else None
+        if not _is_index_payload(data, "words") or not isinstance(data.get("words"), dict):
             self.build_segment_index(i)
-        with open(pfile, "rb") as f:
-            return pickle.load(f)
+            data = _open_pickle(pfile) or {"version": INDEX_VERSION, "words": {}, "n_docs": 0}
+        return data
 
     # ------------- поиск -------------
     @staticmethod
     def _local_idf(local, ndocs, w):
-        """IDF слова внутри локального корпуса сегмента. Один return: float."""
+        """IDF слова внутри локального корпуса сегмента. Один return: float.
+
+        Неотрицательный: если df >= ndocs (счётчик документов отстал от
+        индекса), вес не должен становиться отрицательным — иначе частые
+        термины штрафуются, а сглаживание 0.5 душит вес целиком.
+        """
         df = len(local.get(w, {}))
-        return math.log(ndocs / (1 + df))
+        return max(0.0, math.log((ndocs + 1) / (df + 0.5)))
 
     def search(self, query, top_segments=4, top_k=3):
         """
@@ -122,63 +184,66 @@ class MirroRAG:
         """
         t0 = time.time()
         q_words = Counter(tokenize(query))
-        seg_scores = defaultdict(float)
+        results = []
         if q_words:
             # --- Уровень 1: ранжирование сегментов ---
+            seg_scores = defaultdict(float)
             for w, qt in q_words.items():
-                segs = self.global_index.get(w, set())
-                for s in segs:
+                for s in self.global_index.get(w, ()):
                     seg_scores[s] += qt
-        best_segs = [s for s, _ in sorted(seg_scores.items(), key=lambda x: -x[1])[:top_segments]]
-
-        # --- Уровень 2: локальный поиск внутри сегментов ---
-        results = []
-        total_docs_in_segs = 0
-        for s in best_segs:
-            data = self._load_segment(s)
-            local = data["words"]
-            ndocs = data["n_docs"] or 1
-            total_docs_in_segs += ndocs
-            # локальные кандидаты по пересечению слов
-            candidate_docs = set()
-            for w in q_words:
-                if w in local:
-                    candidate_docs.update(local[w].keys())
-
-            for doc_id in candidate_docs:
-                score = 0.0
-                for w, qt in q_words.items():
-                    tf = local.get(w, {}).get(doc_id, 0)
-                    if tf:
-                        score += qt * self._local_idf(local, ndocs, w) * (tf * 1.5) / (tf + 1.5)
-                if score > 0:
-                    # достаём текст документа
-                    text = self._read_doc(s, doc_id)
-                    if text:
-                        results.append((score, text[0], text[1]))
+            best_segs = [s for s, _ in sorted(seg_scores.items(), key=lambda x: -x[1])[:top_segments]]
+            # --- Уровень 2: локальный поиск внутри сегментов ---
+            for s in best_segs:
+                results.extend(self._search_segment(s, q_words))
 
         results.sort(key=lambda x: -x[0])
         return results[:top_k]
 
+    def _search_segment(self, seg_idx, q_words):
+        """Локальный TF-IDF внутри одного сегмента. Один return: list."""
+        found = []
+        data = self._load_segment(seg_idx)
+        local = data.get("words") or {}
+        ndocs = data.get("n_docs") or 1
+        candidate_docs = set()
+        for w in q_words:
+            candidate_docs.update(local.get(w, {}).keys())
+
+        for doc_id in candidate_docs:
+            score = 0.0
+            for w, qt in q_words.items():
+                tf = local.get(w, {}).get(doc_id, 0)
+                if tf:
+                    score += qt * self._local_idf(local, ndocs, w) * (tf * 1.5) / (tf + 1.5)
+            text = self._read_doc(seg_idx, doc_id) if score > 0 else None
+            if text:
+                found.append((score, text[0], text[1]))
+        return found
+
+    def _segment_path(self, seg_idx):
+        """Путь сегмента по номеру (с приоритетом seg_files). Один return: Path."""
+        return self.seg_files.get(seg_idx) or self.segments[seg_idx]
+
     def _read_doc(self, seg_idx, doc_id):
-        """Читает один документ из сегмента по номеру строки."""
-        seg = self.seg_files.get(seg_idx) or self.segments[seg_idx]
+        """Читает один документ из сегмента по номеру строки. Один return: tuple|None."""
+        seg = self._segment_path(seg_idx)
         hit = None
         with open(seg, encoding="utf-8", errors="replace") as f:
             for i, line in enumerate(f):
                 if i == doc_id:
                     try:
                         ex = json.loads(line)
+                    except ValueError:
+                        ex = None
+                    if isinstance(ex, dict):
                         hit = (ex.get("instruction", ""), ex.get("output", ""))
-                    except Exception:
-                        hit = None
                     break
                 if i > doc_id:
                     break
         return hit
 
     def run_quantum_guided_rag(self, user_query, meta_pair=None, top_k=3):
-        """Направленный RAG-поиск с дееериминированным мета-контекстом.
+        """Направленный RAG-поиск с детерминированным мета-контекстом.
 
         Комбинаторное ядро выбирает пару концептов (meta_pair). Из неё строится
         СТАБИЛЬНЫЙ (не рандомизированный hash()) добавочный контекст, который

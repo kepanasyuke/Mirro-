@@ -10,7 +10,7 @@ Mirro Core AI — собственные алгоритмы
   4. Adaptive scoring — запоминает, какие совпадения работают лучше
 """
 
-import json, random, math, time, re as _re
+import json, random, math, time, threading, re as _re
 from pathlib import Path
 from collections import Counter, defaultdict
 
@@ -23,7 +23,9 @@ class MirroAI:
     Ядро Mirro: собственные алгоритмы поиска, генерации и обучения.
     """
 
-    def __init__(self):
+    def __init__(self, source_dir=None, state_file=None):
+        self.source_dir = Path(source_dir) if source_dir else PROC
+        self.state_file = Path(state_file) if state_file else STATE_FILE
         self.term_freq = Counter()      # term -> total occurrences
         self.doc_freq = Counter()       # term -> docs containing term  
         self.total_docs = 0
@@ -35,21 +37,29 @@ class MirroAI:
         self._build_index()
 
     def _load_state(self):
-        if STATE_FILE.exists():
+        if self.state_file.exists():
             try:
-                data = json.loads(STATE_FILE.read_text("utf-8"))
-                self.boost_map = data.get("boost_map", {})
-            except Exception:
-                pass
+                data = json.loads(self.state_file.read_text("utf-8"))
+                if isinstance(data, dict) and isinstance(data.get("boost_map"), dict):
+                    self.boost_map = data["boost_map"]
+            except (OSError, ValueError):
+                self.boost_map = {}
 
     def _save_state(self):
-        STATE_FILE.write_text(json.dumps({
-            "boost_map": self.boost_map,
-            "updated": time.time(),
-        }, ensure_ascii=False), "utf-8")
+        """Сохраняет бусты рядом с источником. Один return: bool."""
+        ok = True
+        try:
+            self.state_file.parent.mkdir(parents=True, exist_ok=True)
+            self.state_file.write_text(json.dumps({
+                "boost_map": self.boost_map,
+                "updated": time.time(),
+            }, ensure_ascii=False), "utf-8")
+        except OSError:
+            ok = False
+        return ok
 
     def _tokenize(self, text):
-        return [w for w in _re.findall(r"[а-яёa-z0-9]+", text.lower()) if len(w) > 1]
+        return [w for w in _re.findall(r"[а-яёa-z0-9]+", str(text or "").lower()) if len(w) > 1]
 
     @staticmethod
     def _boost_key(inst):
@@ -63,36 +73,42 @@ class MirroAI:
         if self._loaded:
             return
         total = 0
-        for f in sorted(PROC.glob("*.jsonl")):
-            with open(f, "r", encoding="utf-8") as fh:
+        for f in sorted(self.source_dir.glob("*.jsonl")):
+            with open(f, "r", encoding="utf-8", errors="replace") as fh:
                 for line in fh:
-                    if line.strip():
-                        try:
-                            ex = json.loads(line)
-                            inst = ex.get("instruction", ex.get("user", ""))
-                            out = ex.get("output", ex.get("assistant", ""))
-                            if inst and out and len(out) > 20:
-                                idx = len(self.examples)
-                                self.examples.append((inst, out, f.stem))
-                                words = self._tokenize(inst)
-                                self.term_freq.update(words)
-                                for w in set(words):
-                                    self.doc_freq[w] += 1
-                                total += 1
-                        except Exception:
-                            pass
+                    is_added = self._add_example(line, f.stem)
+                    total += 1 if is_added else 0
         self.total_docs = max(total, 1)
         self._load_self_questions()
         self._loaded = True
         print(f"  Index: {total} examples, {len(self.term_freq)} unique terms")
 
+    def _add_example(self, line, cluster):
+        """Разбирает одну строку корпуса и добавляет пример в индекс.
+        Один return: bool — добавлен ли пример."""
+        added = False
+        try:
+            ex = json.loads(line)
+            inst = ex.get("instruction", ex.get("user", ""))
+            out = ex.get("output", ex.get("assistant", ""))
+        except (ValueError, TypeError, AttributeError):
+            ex = None
+        if isinstance(ex, dict) and inst and out and len(out) > 20:
+            self.examples.append((inst, out, cluster))
+            words = self._tokenize(inst)
+            self.term_freq.update(words)
+            for w in set(words):
+                self.doc_freq[w] += 1
+            added = True
+        return added
+
     def _tfidf(self, term, doc_count):
-        """TF-IDF вес термина в документе."""
-        weight = 0
+        """TF-IDF вес термина в документе. Один return: float."""
+        weight = 0.0
         if term in self.doc_freq:
             df = self.doc_freq[term]
-            idf = math.log(self.total_docs / (1 + df))
-            weight = doc_count * idf
+            idf = math.log((self.total_docs + 1) / (df + 1))
+            weight = doc_count * max(0.0, idf)
         return weight
 
     def search(self, query: str, top_n=5) -> list:
@@ -193,20 +209,42 @@ def _evaluate_match(engine, answer, output, inst, learned):
     return result
 
 
-ai = MirroAI()
+class _LazyAI:
+    """Ленивый фасад над MirroAI.
+
+    Раньше индекс (1.2 млн примеров) строился прямо при импорте модуля:
+    импорт стоил гигабайты памяти в любом процессе, включая тесты и CLI.
+    Теперь индекс поднимается при первом обращении к атрибуту/вызову, а
+    интерфейс `ai.search(...)`, `ai.status()` остаётся прежним.
+    """
+
+    def __init__(self):
+        self._engine = None
+        self._lock = threading.Lock()
+
+    def _get(self):
+        """Возвращает (и при первом вызове строит) движок. Один return: MirroAI."""
+        with self._lock:
+            if self._engine is None:
+                self._engine = MirroAI()
+        return self._engine
+
+    def __getattr__(self, name):
+        attribute = getattr(self._get(), name)
+        return attribute
+
+
+ai = _LazyAI()
 
 
 def generate_answer(query: str, cluster: str = "") -> str:
-    """Главная функция: поиск + компоновка ответа."""
-    results = ai.search(query, top_n=5)
-    answer = ai.compose_answer(results)
-    return answer
+    """Главная функция: поиск + компоновка ответа. Один return: str|None."""
+    return ai.compose_answer(ai.search(query, top_n=5))
 
 
 def run_self_learning(cycles=20):
-    """Запускает самообучение Mirro."""
-    learned = ai.self_question_loop(cycles)
-    return learned
+    """Запускает самообучение Mirro. Один return: int."""
+    return ai.self_question_loop(cycles)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Mirro Data Ingestion — convert raw datasets → processed knowledge clusters."""
-import json, os, gzip, io
+import json, os, gzip, io, hashlib, tempfile
 from pathlib import Path
 from collections import defaultdict
 
@@ -38,10 +38,15 @@ DS_CLUSTER_MAP = defaultdict(lambda: "general", {
 
 
 def detect_cluster(dataset_id: str) -> str:
-    dataset_lower = dataset_id.lower()
+    """Кластер по подстроке имени датасета. Один return: str.
+
+    Ключи карты сравниваются в нижнем регистре: раньше ключи с заглавными
+    буквами (WebSight, MATH-500, CodeAlpaca, …) не совпадали никогда.
+    """
+    dataset_lower = (dataset_id or "").lower()
     cluster = "general"
     for key, c in DS_CLUSTER_MAP.items():
-        if key in dataset_lower:
+        if key.lower() in dataset_lower:
             cluster = c
             break
     return cluster
@@ -115,7 +120,7 @@ def _convert_messages(item):
 
 
 def scan_raw_data():
-    """Scan raw data directory and convert everything."""
+    """Scan raw data directory and convert everything (идемпотентно)."""
     cluster_buffers = defaultdict(list)
     total_input = 0
     total_conv = 0
@@ -137,15 +142,57 @@ def scan_raw_data():
                     cluster_buffers[cluster].append(conv)
                     total_conv += 1
 
-    # Write per-cluster files
+    # Write per-cluster files (только новые записи: повторный ingest не дублирует)
+    written = 0
     for cluster, examples in cluster_buffers.items():
         out_path = PROC / f"{cluster}.jsonl"
-        with open(out_path, "a", encoding="utf-8") as f:
-            for ex in examples:
-                f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-        print(f"  {cluster:12} → {len(examples):>6} examples  ({out_path})")
+        fresh = _drop_known_keys(examples, _existing_keys(out_path))
+        if fresh:
+            with open(out_path, "a", encoding="utf-8") as f:
+                for ex in fresh:
+                    f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+        written += len(fresh)
+        print(f"  {cluster:12} → {len(fresh):>6} новых из {len(examples):>6} ({out_path})")
 
-    print(f"\n  Всего: {total_input} файлов прочитано, {total_conv} примеров сохранено")
+    print(f"\n  Всего: {total_input} файлов прочитано, {total_conv} примеров, "
+          f"{written} новых записано")
+
+
+def record_key(conv):
+    """Стабильный ключ примера для дедупа между прогонами. Один return: str."""
+    payload = "\x1f".join((
+        (conv.get("instruction") or "").strip(),
+        (conv.get("input") or "").strip(),
+        (conv.get("output") or "").strip(),
+    ))
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()
+
+
+def _existing_keys(path):
+    """Ключи примеров, уже лежащих в jsonl-файле. Один return: set[str]."""
+    keys = set()
+    if path.exists():
+        with open(path, encoding="utf-8", errors="replace") as f:
+            for line in f:
+                try:
+                    rec = json.loads(line)
+                except ValueError:
+                    rec = None
+                if isinstance(rec, dict):
+                    keys.add(record_key(rec))
+    return keys
+
+
+def _drop_known_keys(examples, known):
+    """Отфильтровывает примеры, чей ключ уже известен (и дубли внутри пачки).
+    Один return: list."""
+    fresh = []
+    for ex in examples:
+        key = record_key(ex)
+        if key not in known:
+            known.add(key)
+            fresh.append(ex)
+    return fresh
 
 
 def _extract_items(dataset_dir):
