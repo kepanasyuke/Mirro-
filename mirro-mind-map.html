@@ -116,7 +116,6 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
         } else {
           nhtml='<div class="n-row"><div class="n-ru">'+esc(n.ru)+'</div></div>';
           if(n.note) nhtml+='<div class="n-note">'+esc(n.note)+'</div>';
-          if(n.sub && n.note) nhtml='<div class="n-row"><div class="n-ru">'+esc(n.ru)+'</div></div><div class="n-note">'+esc(n.note)+'</div>';
         }
         nEl.innerHTML=nhtml;
         canvas.appendChild(nEl);
