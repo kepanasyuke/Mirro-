@@ -1131,7 +1131,7 @@ function drawSubsystemHealth(d) {
     ['Поиск (TF-IDF)', a.vocab ? 'ok' : 'warn', (a.vocab||0) + ' слов в словаре'],
     ['Иммунитет', (imm.quarantined||0) === 0 ? 'ok' : 'warn', 'карантин: ' + (imm.quarantined||0)],
     ['Нейромедиаторы', nm && (nm.dop!=null||nm.ser!=null) ? 'ok' : 'warn', 'хим. уровни активны'],
-    ['Память диалога', (d.total_calls||0) > 0 ? 'ok' : 'warn', (d.total_calls||0) + ' вызовов'),
+    ['Память диалога', (d.total_calls||0) > 0 ? 'ok' : 'warn', (d.total_calls||0) + ' вызовов'],
   ];
   el.innerHTML = items.map(([name, st, desc]) =>
     '<div style="flex:1;min-width:170px;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--card)">' +
