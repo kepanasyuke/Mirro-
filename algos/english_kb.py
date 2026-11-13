@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Mirro English KB вЂ” Р±Р°Р·РѕРІС‹Р№ Р°РЅРіР»РёР№СЃРєРёР№ СЂРµР¶РёРј.
+"""Mirro English KB — Р±Р°Р·РѕРІС‹Р№ Р°РЅРіР»РёР№СЃРєРёР№ СЂРµР¶РёРј.
 
-Р Р°СЃРїРѕР·РЅР°С‘С‚ Р°РЅРіР»РѕСЏР·С‹С‡РЅС‹Р№ РІРѕРїСЂРѕСЃ (РїРѕРґР°РІР»СЏСЋС‰РµРµ Р±РѕР»СЊС€РёРЅСЃС‚РІРѕ Р±СѓРєРІ вЂ” Р»Р°С‚РёРЅРёС†Р°,
+Р Р°СЃРїРѕР·РЅР°С‘С‚ Р°РЅРіР»РѕСЏР·С‹С‡РЅС‹Р№ РІРѕРїСЂРѕСЃ (РїРѕРґР°РІР»СЏСЋС‰РµРµ Р±РѕР»СЊС€РёРЅСЃС‚РІРѕ Р±СѓРєРІ — Р»Р°С‚РёРЅРёС†Р°,
 РµСЃС‚СЊ Р°РЅРіР». СЃС‚РѕРї-СЃР»РѕРІРѕ) Рё РѕС‚РІРµС‡Р°РµС‚ РёР· РјРёРЅРё-СЃРїСЂР°РІРѕС‡РЅРёРєР° Р±Р°Р·РѕРІС‹С… РїРѕРЅСЏС‚РёР№
 (РЅРµР№СЂРѕСЃРµС‚СЊ, Р°Р»РіРѕСЂРёС‚Рј, РїР°РјСЏС‚СЊ, РіСЂР°С„, Р”РќРљ Рё С‚.Рї.) РЅР° Р°РЅРіР»РёР№СЃРєРѕРј.
-Р•СЃР»Рё РїРѕРЅСЏС‚РёСЏ РЅРµС‚ РІ СЃРїСЂР°РІРѕС‡РЅРёРєРµ вЂ” РѕС‚РІРµС‡Р°РµС‚ РЅРµР№С‚СЂР°Р»СЊРЅРѕР№ С„СЂР°Р·РѕР№-РїРµСЂРµС…РѕРґРѕРј.
+Р•СЃР»Рё РїРѕРЅСЏС‚РёСЏ РЅРµС‚ РІ СЃРїСЂР°РІРѕС‡РЅРёРєРµ — РѕС‚РІРµС‡Р°РµС‚ РЅРµР№С‚СЂР°Р»СЊРЅРѕР№ С„СЂР°Р·РѕР№-РїРµСЂРµС…РѕРґРѕРј.
 
 Р§РёСЃС‚С‹Р№ Python, Р°С‚РѕРјР°СЂРЅС‹Рµ С„СѓРЅРєС†РёРё (РѕРґРЅРё return), РїРѕ LINTER.md.
 """
@@ -37,7 +37,7 @@ _EN_KB = {
     "internet": ("The internet is a global network connecting computers. Data moves "
                  "in packets routed by protocols like TCP/IP between connected devices."),
     "energy": ("Energy is the ability to do work. It can be kinetic (motion), "
-               "potential (stored), thermal, electrical. Energy is conserved вЂ” it "
+               "potential (stored), thermal, electrical. Energy is conserved — it "
                "changes form but is never lost."),
     "database": ("A database stores data in an organized way and lets you retrieve "
                  "it quickly. Tables hold records; SQL queries read and update them. "
@@ -610,7 +610,7 @@ _EN_KB = {
                   "of authentic relationships and honest communication."),
     "zeal": ("Zeal is eager and energetic devotion to a cause, activity or pursuit. It is the passionate "
              "drive that makes work feel like a calling rather than a chore. Zeal can be a tremendous force "
-             "for good вЂ” pushing people to achieve great things вЂ” but it must be guided by wisdom and truth, "
+             "for good — pushing people to achieve great things — but it must be guided by wisdom and truth, "
              "for unchecked zeal can become fanaticism."),
     "assiduousness": ("Assiduousness is the quality of applying oneself with constant and unremitting care "
                       "to one's tasks. An assiduous worker is steady, thorough and persistent, giving close "
@@ -634,7 +634,7 @@ _EN_KB = {
                   "A quiet mind is better able to think clearly, listen deeply and act with intention. "
                   "In a noisy world, cultivating quietness is a strength that fosters focus and peace."),
     "hardihood": ("Hardihood is the quality of being bold and fearless in daring undertakings, combined "
-                  "with enough strength to endure hardship. It is a blend of audacity and endurance вЂ” the "
+                  "with enough strength to endure hardship. It is a blend of audacity and endurance — the "
                   "courage to attempt difficult things and the toughness to see them through. Hardiness of "
                   "spirit lets a person step beyond comfort to attempt what others would not dare."),
 "fellowship": ("Fellowship is a feeling of shared interest and mutual support among people who work, "
@@ -654,12 +654,12 @@ _EN_KB = {
                "not occasionally by chance."),
     "benevolence": ("Benevolence is the disposition to do good and the desire to promote the happiness of "
                     "others. It is kindness translated into action, a readiness to help that asks for nothing "
-                    "in return. Benevolence differs from mere generosity in its motivation вЂ” it is not about "
+                    "in return. Benevolence differs from mere generosity in its motivation — it is not about "
                     "giving things but about wishing others well and acting on that wish. It is one of the most "
                     "practical forms of love."),
     "largess": ("Largess is generous bestowal of gifts or money, usually to those in need or for public good. "
                 "It carries a sense of nobility and abundance, as when a king grants lands to a loyal servant "
-                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show вЂ” "
+                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show — "
                 "true largess seeks to do real good and to lift others up."),
     "civility": ("Civility is the practice of behaving in a polite, respectful and courteous manner toward "
                  "others, even toward those with whom one disagrees. It is the basic glue of a functioning "
@@ -668,30 +668,30 @@ _EN_KB = {
                  "treat every person with basic dignity."),
     "moderation": ("Moderation is the avoidance of excess and the practice of keeping everything in its proper "
                    "measure. It is the golden mean between deficiency and excess that guides sound living in all "
-                   "things вЂ” eating, working, speaking, spending and even in showing emotion. Moderation is not "
+                   "things — eating, working, speaking, spending and even in showing emotion. Moderation is not "
                    "timidity or mediocrity; it is the disciplined wisdom that gives a person balance and self-control."),
     "tranquility": ("Tranquility is a state of quiet peacefulness and calm, free from agitation or disturbance. "
                     "It is the serene stillness of a lake at dawn or the settled ease of a mind at rest. "
                     "Achieving tranquility often requires turning inward and letting go of racing thoughts. In a "
                     "hurried world, it is a precious state that restores clarity, health and perspective."),
-    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another вЂ” "
+    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another — "
                    "of a child, a student, a partner or an idea. It combines patience, gentleness and attentive "
                    "love, giving what is needed for someone to thrive. The nurturing person does not dominate or "
                    "smother, but creates the safe conditions in which growth can naturally unfold."),
     "serendipity": ("Serendipity is the happy faculty of discovering valuable or pleasant things by chance. "
                     "It is the unexpected good fortune that comes when a fortunate accident meets a prepared mind. "
-                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill вЂ” "
+                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill — "
                     "curious, observant people are the ones most likely to turn a lucky break into an opportunity."),
     "warmth": ("Warmth is the quality of being friendly, affectionate and genuinely welcoming toward others. "
                "It is the human glow that makes people feel at ease, accepted and valued in your presence. "
                "Warmth is often underestimated because it is quiet, yet it is one of the most powerful forces "
-               "for connection вЂ” it melts reserve, softens conflict and opens the door to trust."),
+               "for connection — it melts reserve, softens conflict and opens the door to trust."),
 "magnificence": ("Magnificence is the quality of being grand in scale, impressive in beauty or generous in "
                      "display, without sacrificing dignity. It is seen in architecture, ceremony and the works "
                      "of art or nature that leave people in awe. True magnificence is not empty ostentation; it "
                      "combines noble ambition with impeccable taste, so that grandeur serves beauty rather than "
                      "garish display."),
-    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection вЂ” the kind of hard-won "
+    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection — the kind of hard-won "
                  "sense that belongs to a mature and judicious mind. It is what separates the merely clever from the "
                  "truly wise. A sage does not merely know facts; they know how to apply knowledge to real life, and "
                  "their counsel is valued precisely because it has been tested by seasons of trial and error."),
@@ -701,7 +701,7 @@ _EN_KB = {
                   "person's mind or move a crowd to action. It is the crowning skill of the capable communicator."),
     "wit": ("Wit is the quick, clever humor that springs from intelligence and sharp perception. A witty remark "
             "joins amusing ideas in a surprising way, delighting the listener with its truth and timing. Wit is "
-            "more than the ability to tell jokes; it is a way of thinking вЂ” agile and associative вЂ” that sees "
+            "more than the ability to tell jokes; it is a way of thinking — agile and associative — that sees "
             "unexpected connections others miss. In the right hands, wit disarms hostility, eases tension and makes "
             "company delightful."),
     "charisma": ("Charisma is an attractive quality in a person that inspires devotion, trust and enthusiasm in "
@@ -721,7 +721,7 @@ _EN_KB = {
               "person of honor would rather suffer loss than betray their word."),
     "decorum": ("Decorum is behavior in keeping with good taste, propriety and the accepted standards of polite "
                 "society. It is the outward expression of an inward respect for others and for oneself. Acting with "
-                "decorum means knowing what is appropriate in any situation вЂ” when to speak, when to be silent, when to "
+                "decorum means knowing what is appropriate in any situation — when to speak, when to be silent, when to "
                 "act and when to hold back. Far from being mere etiquette, decorum is a form of kindness that makes people "
                 "around one comfortable and respected."),
 "finesse": ("Finesse is refined and delicate skill in handling a difficult or delicate task with ease and subtlety. "
@@ -771,19 +771,19 @@ _EN_KB = {
                  "that desire."),
     "kindred spirit": ("A kindred spirit is a person whose nature, tastes or sensibilities are very similar to your own, so that "
                        "understanding between you is immediate and deep. Meeting a kindred spirit is rare enough to feel like a small "
-                       "miracle вЂ” someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
+                       "miracle — someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
                        "the same truths. Such connections are the heart of friendship, offering the comfort of being truly known and the "
                        "rare joy of finding a companion for the road of life."),
     "amiability": ("Amiability is the quality of being pleasant, good-natured and easy to get along with. An amiable person has a "
                    "sweet and agreeable disposition that makes others comfortable in their presence. It is a quieter and more passive "
-                   "form of warmth than affability вЂ” where the affable person actively reaches out to others, the amiable person's very "
+                   "form of warmth than affability — where the affable person actively reaches out to others, the amiable person's very "
                    "nature is mild, gentle and likable. Amiability smooths everyday interactions and is one of the most endearing of "
                    "human qualities."),
     "stalwartness": ("Stalwartness is stubborn and hearty loyalty combined with physical or moral strength. A stalwart supporter "
                      "is one who can be relied upon completely, in good times and in bad, without wavering. The word conjures the image of "
                      "a robust and resolute figure who stands firm against the storm. Stalwartness is the quality of the friend who never "
                      "deserts you, the employee who stays loyal through adversity, and the soldier who holds the line when it matters most."),
-    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom вЂ” the ability to think about how and why one "
+    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom — the ability to think about how and why one "
                   "should act in order to achieve a good life. Unlike theoretical knowledge, phronesis is concerned with action "
                   "in particular situations and with what is good and bad for humans. It is the wisdom of the experienced "
                   "statesman, the skilled artisan and the mature counselor, embodying good judgment in everyday decision-making."),
@@ -810,7 +810,7 @@ _EN_KB = {
     "warmheartedness": ("Warmheartedness is the quality of being kind, affectionate and genuinely caring toward others. A warmhearted "
                         "person feels deep concern for the welfare of people and lets that concern show through in spontaneous kindness. "
                         "It is closeness kin to compassion and brotherly love, expressed both in warm words and in tangible acts of help. "
-                        "What distinguishes the warmhearted is the readiness of their affection вЂ” they do not wait to be asked, but reach out "
+                        "What distinguishes the warmhearted is the readiness of their affection — they do not wait to be asked, but reach out "
                         "freely, making the lonely feel remembered and the hurting feel cared for."),
 "perspicacity": ("Perspicacity is the quality of showing keen mental discernment and penetrating insight into things. A perspicacious "
                      "person sees quickly and clearly to the heart of a matter, catching implications and possibilities that escape slower or "
@@ -3778,7 +3778,7 @@ _TOPIC_TEST = [
 
 
 def _is_english_query(q):
-    """РџРѕС…РѕР¶ Р»Рё РІРѕРїСЂРѕСЃ РЅР° Р°РЅРіР»РёР№СЃРєРёР№. РњРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»Р°С‚РёРЅРёС†С‹ вЂ” 6 СЃРёРјРІРѕР»РѕРІ
+    """РџРѕС…РѕР¶ Р»Рё РІРѕРїСЂРѕСЃ РЅР° Р°РЅРіР»РёР№СЃРєРёР№. РњРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»Р°С‚РёРЅРёС†С‹ — 6 СЃРёРјРІРѕР»РѕРІ
     (С‡С‚РѕР±С‹ РѕРґРёРЅРѕС‡РЅС‹Рµ В«what?/hiВ» РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°Р»Рё). РќРµ-СЃС‚СЂРѕРєР° в†’ False.
     РћРґРёРЅ return: bool."""
     if not isinstance(q, str):
@@ -3843,4 +3843,4 @@ def try_english(query):
 if __name__ == "__main__":
     print(try_english("what is a neural network?"))
     print(try_english("what is the fibonacci algorithm and its complexity?"))
-    print(try_english("СЂР°СЃСЃРєР°Р¶Рё РїСЂРѕ РЅРµР№СЂРѕРЅ"))  # СЂСѓСЃСЃРєРёР№ вЂ” РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ None
+    print(try_english("СЂР°СЃСЃРєР°Р¶Рё РїСЂРѕ РЅРµР№СЂРѕРЅ"))  # СЂСѓСЃСЃРєРёР№ — РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ None
