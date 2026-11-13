@@ -235,6 +235,58 @@ class TestChatContract(unittest.TestCase):
         h._handle_chat({"messages": [{"role": "user", "content": big}]})
         self.assertEqual(h.sent[-1][0], "json")
 
+    def test_messages_not_a_list_returns_400(self):
+        h = self._handler()
+        h._handle_chat({"messages": "привет"})
+        self.assertEqual(h.sent[0][1], 400)
+
+
+class TestRequestBodyParsing(unittest.TestCase):
+    """_read не должен молча подменять не-UTF8 тело ASCII-мусором."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.mc = _get_core()
+
+    def _read_handler(self, raw, content_length=None):
+        h = self.mc.MirroAPI.__new__(self.mc.MirroAPI)
+
+        class _Headers(dict):
+            def get(self, name, default=None):
+                if name.lower() == "content-length":
+                    return str(len(raw) if content_length is None else content_length)
+                return default
+
+        h.headers = _Headers()
+        h.rfile = _RawReader(raw)
+        return h
+
+    def test_invalid_utf8_is_rejected(self):
+        raw = b'{"messages": [{"role": "user", "content": "\xff\xfe\xfa"}]}'
+        with self.assertRaises(UnicodeDecodeError):
+            self._read_handler(raw)._read()
+
+    def test_negative_content_length_is_zero(self):
+        body = self._read_handler(b"{}", content_length=-5)._read()
+        self.assertIsNone(body)
+
+    def test_non_numeric_content_length_rejected(self):
+        h = self._read_handler(b"{}")
+        h.headers = {"Content-Length": "много"}
+        self.assertIsNone(h._read())
+
+    def test_valid_body_is_parsed(self):
+        body = self._read_handler('{"messages": [{"role": "user", "content": "привет"}]}'.encode("utf-8"))._read()
+        self.assertEqual(body["messages"][0]["content"], "привет")
+
+
+class _RawReader:
+    def __init__(self, data):
+        self.data = data
+
+    def read(self, size=-1):
+        return self.data if size is None or size < 0 else self.data[:size]
+
 
 class TestCallLogging(unittest.TestCase):
     """log_call не должен ронять ответ клиента из-за диска/счётчиков."""

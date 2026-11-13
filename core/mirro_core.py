@@ -53,6 +53,17 @@ def _append_call_log(prompt, cluster, provider, latency_ms, success, tokens=0):
     return None
 
 
+def _content_length(headers):
+    """Content-Length без падения на мусоре: отрицательное и нечисловое → 0.
+    Один return: int."""
+    length = 0
+    try:
+        length = max(0, int(headers.get("Content-Length", 0) or 0))
+    except (TypeError, ValueError):
+        length = 0
+    return length
+
+
 def _write_call_line(path, line):
     """Дописывает строку в файл лога вызовов. Один return: None."""
     with open(path, "a", encoding="utf-8") as fh:
@@ -1902,8 +1913,15 @@ class MirroAPI(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers(); self.wfile.write(body)
     def _read(self):
-        length = int(self.headers.get("Content-Length", 0))
-        return json.loads(self.rfile.read(length).decode("utf-8"))
+        """Тело POST как dict. Нестандартные длительности сводятся к нулю, битый
+        JSON — к None (клиент получает 400), не-UTF8 — к ошибке декодирования.
+        Один return: dict или None."""
+        data = None
+        length = _content_length(self.headers)
+        if length:
+            raw = self.rfile.read(length) or b""
+            data = json.loads(raw.decode("utf-8"))
+        return data
     def _serve_file(self, path, ctype):
         served = False
         if path.exists():
@@ -2247,9 +2265,9 @@ class MirroAPI(BaseHTTPRequestHandler):
         return report
     def _chat_payload(self, messages, model, response, prompt):
         """Формирует итоговый JSON-ответ (не-SSE). Единственный return: dict."""
-        content = response.get("content", "") if response else "Ошибка"
+        content = _text_of(response) if response else "Ошибка"
         # видимая внутренняя речь: шаги рассуждения из mindstream, затем квантовая сноска
-        thinking = response.get("thinking", []) or []
+        thinking = (response.get("thinking") or []) if isinstance(response, dict) else []
         reasoning = ""
         try:
             steps = "\n".join(f"• {s}" for s in thinking)
@@ -2262,25 +2280,27 @@ class MirroAPI(BaseHTTPRequestHandler):
                 "choices": [{"index": 0, "message": {"role": "assistant",
                              "content": content,
                              "reasoning_content": reasoning,
-                             "plan": response.get("plan", ""),
-                             "source": response.get("source", ""),
+                             "plan": _text_of({"content": response.get("plan", "")}) if isinstance(response, dict) else "",
+                             "source": _text_of({"content": response.get("source", "")}) if isinstance(response, dict) else "",
                              "confidence": response.get("confidence", None)}}]}
 
     def _handle_chat(self, body):
         """Обрабатывает POST /v1/chat/completions. Единственный return: None.
 
         Пишет ответ клиенту (SSE или JSON) внутри. Не возвращает значение."""
-        messages = body.get("messages", [])
-        model = body.get("model", "mirro/default")
-        stream = body.get("stream", False)
-        if not messages:
+        messages = body.get("messages", []) if isinstance(body, dict) else []
+        model = body.get("model", "mirro/default") if isinstance(body, dict) else "mirro/default"
+        stream = body.get("stream", False) if isinstance(body, dict) else False
+        if not isinstance(messages, list) or not messages:
             self._json({"error": "no messages"}, 400)
         else:
             conversation = []
             last_user = ""
             for m in messages:
-                role = (m.get("role") or "").lower()
-                content = (m.get("content") or "").strip()
+                if not isinstance(m, dict):
+                    continue
+                role = str(m.get("role") or "").lower()
+                content = str(m.get("content") or "").strip()
                 if content:
                     conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
                     if role in ("user", "human"):
