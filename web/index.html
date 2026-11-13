@@ -451,9 +451,12 @@ code { background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 4px; 
 <script>
 // Mirro 3D viewport — частицы-вихрь с глубиной, как в Blender
 const c = document.getElementById('bgCanvas');
-const ctx = c.getContext('2d');
-let W, H, t = 0;
-function resize() { W = c.width = window.innerWidth; H = c.height = window.innerHeight; }
+const ctx = c && c.getContext ? c.getContext('2d') : null;
+let W = window.innerWidth, H = window.innerHeight, t = 0;
+function resize() {
+  W = window.innerWidth; H = window.innerHeight;
+  if (c) { c.width = W; c.height = H; }
+}
 resize(); window.addEventListener('resize', resize);
 
 // частицы: положение в 3D, скорость
@@ -512,7 +515,9 @@ function draw() {
   ctx.globalAlpha = 1.0;
   requestAnimationFrame(draw);
 }
-draw();
+/* Фон декоративный: без контекста (или при сбое кадра) не крутим бесконечный
+   цикл ошибок — одна неудача кадра не должна засыпать консоль и жечь CPU. */
+if (ctx) { try { draw(); } catch (e) { /* фон отключён */ } }
 
 /* ===== Переключатель темы (тёмная/светлая) ===== */
 function toggleTheme() {
@@ -1184,9 +1189,14 @@ function drawGraphGrowth(kg) {
   if (!cv) return;
   const ctx = cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
-  if (!kg) { if (meta) meta.textContent='граф не загружен'; return; }
-  const n = kg.nodes||0, e = kg.edges||0;
-  let m = 'узлов: ' + n.toLocaleString() + ' · рёбер: ' + e.toLocaleString() + ' · плотность: ' + (kg.density||(e/Math.max(1,n))).toFixed(3);
+  if (!kg || typeof kg !== 'object') { if (meta) meta.textContent='граф не загружен'; return; }
+  /* Числа приводим явно: сервер может не прислать поле, а `kg.density || …`
+     подставлял вычисленное значение вместо настоящего 0. */
+  const n = Number(kg.nodes) || 0;
+  const e = Number(kg.edges) || 0;
+  const dens = Number(kg.density);
+  let m = 'узлов: ' + n.toLocaleString() + ' · рёбер: ' + e.toLocaleString() + ' · плотность: ' +
+    (isFinite(dens) ? dens.toFixed(3) : (e / Math.max(1, n)).toFixed(3));
   if (kg.components != null) m += ' · компоненты: ' + kg.components + ' · изолированных: ' + kg.isolated + ' · топ: ' + (kg.top_nodes||[]).join(', ');
   if (meta) meta.textContent = m;
   ctx.fillStyle='#0c1220'; ctx.fillRect(0,0,cv.width,cv.height);
