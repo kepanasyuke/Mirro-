@@ -467,7 +467,8 @@ class KnowledgeGraph:
 
     @staticmethod
     def _norm(name):
-        return _re.sub(r"\s+", " ", str(name or "")).strip().lower().rstrip(".!?;")[:200]
+        name = name if isinstance(name, str) else str(name or "")
+        return _re.sub(r"\s+", " ", name).strip().lower().rstrip(".!?;")[:200]
 
     def prune_noise(self, noise_preds=None, max_phrase_words=4):
         """Убирает мусор: рёбра с шумовыми предикатами («это», «есть», «если»)
@@ -689,21 +690,35 @@ class KnowledgeGraph:
         return ok
 
     def load(self, path):
-        """Загружает граф с диска; если файла нет — пусто. Один return: int (рёбер)."""
+        """Загружает граф с диска; если файла нет или он битый — пустой граф.
+        Битый pickle и структурно неверный бэкап (nodes не dict, edges=None,
+        ключи не тройки строк) не оставляют граф в полуразобранном состоянии:
+        данные валидируются ДО записи в self. Один return: int (рёбер)."""
+        data = self._read_pickle(path)
+        nodes = _load_valid_nodes(data)
+        edges = _load_valid_edges(data)
+        # очищаем и пишем только после успешной валидации
         self.nodes = {}
         self.edges = {}
         self._adj = {}
+        self.nodes = nodes
+        self.edges = edges
+        self._rebuild_adj()
+        return len(self.edges)
+
+    @staticmethod
+    def _read_pickle(path):
+        """Читает pickle-дамп; любая ошибка (нет файла, битый байткод,
+        неподдерживаемый класс) → None. Один return: dict|None."""
+        data = None
         try:
             import pickle
             with open(str(path), "rb") as f:
-                data = pickle.load(f)
-            self.nodes = data.get("nodes", {})
-            self.edges = data.get("edges", {})
-            # восстанавливаем индекс соседей
-            self._rebuild_adj()
+                loaded = pickle.load(f)
+            data = loaded if isinstance(loaded, dict) else None
         except Exception:
-            pass
-        return len(self.edges)
+            data = None
+        return data
 
     def _rebuild_adj(self):
         """Пересобирает индекс соседей из рёбер. Один return: None."""
@@ -1323,6 +1338,38 @@ class KnowledgeGraph:
 
 # Общий синглтон графа для всего процесса
 kg = KnowledgeGraph()
+
+
+def _load_valid_nodes(data):
+    """Узлы из pickle-дампа: только dict вида {имя: Node}; всё прочее → {}.
+    Раньше ["a","b"] из битого бэкапа уезжал в self.nodes и граф «оживал»
+    со списком вместо словаря. Один return: dict."""
+    raw = data.get("nodes") if isinstance(data, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    nodes = {}
+    for name, node in list(raw.items()):
+        if isinstance(name, str) and name and isinstance(node, Node):
+            nodes[name] = node
+    return nodes
+
+
+def _load_valid_edges(data):
+    """Рёбра из pickle-дампа: только {(src, pred, dst): число}; всё прочее
+    отбрасывается (None вместо edges ронял summary() трейсбеком).
+    Один return: dict."""
+    raw = data.get("edges") if isinstance(data, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    edges = {}
+    for key, weight in list(raw.items()):
+        is_key = (isinstance(key, (tuple, list)) and len(key) == 3
+                  and all(isinstance(part, str) and part for part in key))
+        is_weight = isinstance(weight, (int, float)) and not isinstance(weight, bool)
+        if is_key and is_weight:
+            edges[tuple(key)] = weight
+    return edges
+
 
 
 def build_function_links():
