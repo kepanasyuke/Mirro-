@@ -161,11 +161,13 @@ AI_HISTORY = {
 def _lookup(query):
     """Находит запись по подстроке. Один return: dict-ответ или None."""
     q = query.lower()
+    found = None
     for key, (answer, authors, idea) in AI_HISTORY.items():
         if key in q:
             footer = "Авторы: " + ", ".join(authors) + ". Идея: " + idea
-            return {"content": answer + "\n(" + footer + ")", "kind": "ai_history", "key": key}
-    return None
+            found = {"content": answer + "\n(" + footer + ")", "kind": "ai_history", "key": key}
+            break
+    return found
 
 
 def _any_trigger(query):
@@ -184,12 +186,10 @@ def применить(query):
     таким термином. Прямой lookup не цепляет случайные бытовые вопросы.
     """
     hit = _lookup(query)
+    ans = None
     if hit is not None:
-        return hit["content"]
-    # вопрос «кто/откуда/история» без точного ключа (например «кто автор» без имени)
-    if _any_trigger(query):
-        return None
-    return None
+        ans = hit["content"]
+    return ans
 
 
 def run_self_check():

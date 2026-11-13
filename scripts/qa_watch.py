@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scripts.run_qa import check_case, _server_up
+from scripts.run_qa import check_case, _server_up, graph_metrics
 
 MIRRO = Path(__file__).resolve().parent.parent
 REPORT = MIRRO / "data" / "qa_report.jsonl"
@@ -72,7 +72,8 @@ def main():
             else:
                 passed = sum(1 for r in results if r["pass"])
                 ok_rate = passed / len(results) if results else 0.0
-                log(f"цикл ({n} cессий): {passed}/{len(results)} OK ({ok_rate:.0%})")
+                gm = graph_metrics()
+                log(f"цикл ({n} cессий): {passed}/{len(results)} OK ({ok_rate:.0%}) | граф: {gm['edges']} рёбер, {gm['nodes']} узлов, плотность {gm['density']}")
                 degraded = _degredation_flag(last_ok, ok_rate)
                 if degraded:
                     log(f"  ⚠ падение точности: было {last_ok:.0%}, стало {ok_rate:.0%}")

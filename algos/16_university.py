@@ -45,9 +45,10 @@ def solve_quadratic(a, b, c):
 
 def solve_linear(a, b):
     """Линейное уравнение ax+b=0."""
+    ans = [-b / a]
     if a == 0:
-        return "все числа" if b == 0 else []
-    return [-b / a]
+        ans = "все числа" if b == 0 else []
+    return ans
 
 
 def arithmetic_progression_sum(a1, d, n):
@@ -57,31 +58,35 @@ def arithmetic_progression_sum(a1, d, n):
 
 def geometric_progression_sum(b1, q, n):
     """Сумма геометрической прогрессии."""
+    ans = b1 * (1 - q ** n) / (1 - q)
     if q == 1:
-        return b1 * n
-    return b1 * (1 - q ** n) / (1 - q)
+        ans = b1 * n
+    return ans
 
 
 def system_linear_2x2(a1, b1, c1, a2, b2, c2):
     """Система двух линейных уравнений методом Крамера.
     a1x+b1y=c1; a2x+b2y=c2. Возвращает (x,y) или None."""
     det = a1 * b2 - a2 * b1
-    if det == 0:
-        return None  # нет единственного решения
-    det_x = c1 * b2 - c2 * b1
-    det_y = a1 * c2 - a2 * c1
-    return det_x / det, det_y / det
+    ans = None  # нет единственного решения
+    if det != 0:
+        det_x = c1 * b2 - c2 * b1
+        det_y = a1 * c2 - a2 * c1
+        ans = det_x / det, det_y / det
+    return ans
 
 
 def solve_equation_with_module(a, b, c):
     """|ax+b| = c → корни."""
-    if c < 0:
-        return []
-    if a == 0:
-        return "все числа" if abs(b) == c else []
-    x1 = (c - b) / a
-    x2 = (-c - b) / a
-    return sorted(set([x1, x2]))
+    ans = []
+    if c >= 0:
+        if a == 0:
+            ans = "все числа" if abs(b) == c else []
+        else:
+            x1 = (c - b) / a
+            x2 = (-c - b) / a
+            ans = sorted(set([x1, x2]))
+    return ans
 
 
 def discriminant(a, b, c):
@@ -91,11 +96,13 @@ def discriminant(a, b, c):
 
 def viet_check(p, q, roots):
     """Проверка корней по теореме Виета: x1+x2=-p, x1*x2=q."""
-    if len(roots) != 2:
-        return False, ""
-    s, pr = sum(roots), roots[0] * roots[1]
-    ok = abs(s + p) < 1e-9 and abs(pr - q) < 1e-9
-    return ok, f"сумма={s}, произведение={pr}"
+    ok = False
+    detail = ""
+    if len(roots) == 2:
+        s, pr = sum(roots), roots[0] * roots[1]
+        ok = abs(s + p) < 1e-9 and abs(pr - q) < 1e-9
+        detail = f"сумма={s}, произведение={pr}"
+    return ok, detail
 
 
 # ============ МАТЕМАТИКА · ТРИГОНОМЕТРИЯ ============
@@ -108,17 +115,16 @@ def sin_cos_tan(angle_deg):
 
 def solve_trig_basic(b, c):
     """sin(b·x) = c, базовый случай: возвращает x в градусах на [0,360)."""
-    if abs(c) > 1:
-        return []
-    r = math.degrees(math.asin(c))
-    base = r / b
     out = []
-    for k in range(4):
-        val1 = (r + 360 * k) / b
-        val2 = (180 - r + 360 * k) / b
-        for v in (val1, val2):
-            if 0 <= v < 360:
-                out.append(round(v, 4))
+    if abs(c) <= 1:
+        r = math.degrees(math.asin(c))
+        base = r / b
+        for k in range(4):
+            val1 = (r + 360 * k) / b
+            val2 = (180 - r + 360 * k) / b
+            for v in (val1, val2):
+                if 0 <= v < 360:
+                    out.append(round(v, 4))
     return out
 
 
@@ -126,10 +132,11 @@ def solve_trig_basic(b, c):
 
 def triangle_area_heron(a, b, c):
     """Площадь треугольника по трём сторонам (формула Герона)."""
-    if a + b <= c or a + c <= b or b + c <= a:
-        return None  # не треугольник
-    p = (a + b + c) / 2
-    return math.sqrt(p * (p - a) * (p - b) * (p - c))
+    area = None  # не треугольник
+    if not (a + b <= c or a + c <= b or b + c <= a):
+        p = (a + b + c) / 2
+        area = math.sqrt(p * (p - a) * (p - b) * (p - c))
+    return area
 
 
 def circle_geometry(r):
@@ -224,9 +231,10 @@ def projectile_max_height(v0, angle_deg, g=9.81):
 def relativistic_gamma(v):
     """Лоренц-фактор γ = 1/√(1-v²/c²)."""
     c = 3e8
-    if v >= c:
-        return float("inf")
-    return 1 / math.sqrt(1 - (v / c) ** 2)
+    gamma = float("inf")
+    if v < c:
+        gamma = 1 / math.sqrt(1 - (v / c) ** 2)
+    return gamma
 
 
 def kinetic_energy_relativistic(m0, v):
@@ -257,25 +265,27 @@ def binary_to_decimal(bits):
 
 def decimal_to_base(n, base):
     """Перевод числа в систему счисления."""
-    if n == 0:
-        return "0"
     digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     out = ""
-    while n:
-        out = digits[n % base] + out
-        n //= base
+    if n == 0:
+        out = "0"
+    else:
+        while n:
+            out = digits[n % base] + out
+            n //= base
     return out
 
 
 def truth_input_task(expr_type, a, b):
     """ЕГЭ-информатика: логические выражения (И/ИЛИ/НЕ)."""
+    result = None
     if expr_type == "and":
-        return a and b
-    if expr_type == "or":
-        return a or b
-    if expr_type == "xor":
-        return a != b
-    return None
+        result = a and b
+    elif expr_type == "or":
+        result = a or b
+    elif expr_type == "xor":
+        result = a != b
+    return result
 
 
 def count_ones_in_range(a, b):
@@ -285,15 +295,16 @@ def count_ones_in_range(a, b):
 
 def sieve_primes_count(n):
     """Количество простых до n (проверка быстродействия алгоритма)."""
-    if n < 2:
-        return 0
-    flags = [True] * (n + 1)
-    flags[0] = flags[1] = False
-    for i in range(2, int(n ** 0.5) + 1):
-        if flags[i]:
-            for j in range(i * i, n + 1, i):
-                flags[j] = False
-    return sum(flags)
+    total = 0
+    if n >= 2:
+        flags = [True] * (n + 1)
+        flags[0] = flags[1] = False
+        for i in range(2, int(n ** 0.5) + 1):
+            if flags[i]:
+                for j in range(i * i, n + 1, i):
+                    flags[j] = False
+        total = sum(flags)
+    return total
 
 
 # ============ ТОПОЛОГИЯ (НГУ) ============
@@ -342,9 +353,10 @@ def mixture_percent(c1, v1, c2, v2):
 
 def work_time(A1, A2):
     """Производительность двух рабочих: время общей работы."""
-    if A1 <= 0 or A2 <= 0:
-        return None
-    return 1 / (1 / A1 + 1 / A2)  # A1, A2 — время по отдельности
+    t = None
+    if A1 > 0 and A2 > 0:
+        t = 1 / (1 / A1 + 1 / A2)  # A1, A2 — время по отдельности
+    return t
 
 
 def interest_compound(P, r, n_years):
@@ -361,9 +373,10 @@ def speed_average(v1, dist_ratio):
 
 def pipe_fill_time(t1, t2):
     """Две трубы наполняют бассейн: общее время."""
-    if t1 <= 0 or t2 <= 0:
-        return None
-    return 1 / (1 / t1 + 1 / t2)
+    t = None
+    if t1 > 0 and t2 > 0:
+        t = 1 / (1 / t1 + 1 / t2)
+    return t
 
 
 if __name__ == "__main__":

@@ -38,16 +38,19 @@ def _get(url, auth=False):
     headers = {"User-Agent": "Mirro-Dashboard"}
     if auth and TOKEN:
         headers["Authorization"] = "Bearer " + TOKEN
+    result = {"__error__": "request failed"}
     try:
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=15) as r:
             body = r.read().decode("utf-8", "replace")
             ct = r.headers.get("Content-Type", "")
             if "json" in ct or body.lstrip().startswith(("{", "[")):
-                return json.loads(body)
-            return body
+                result = json.loads(body)
+            else:
+                result = body
     except Exception as e:
-        return {"__error__": str(e)}
+        result = {"__error__": str(e)}
+    return result
 
 
 def _collect():
@@ -72,18 +75,22 @@ def _collect():
 
 def _embed(report):
     """Встраивает снимок в дашборд. Один return: bool (изменено/успех)."""
+    ok = False
     data_json = json.dumps(report, ensure_ascii=False)
-    if not DASH_FILE.exists():
+    if DASH_FILE.exists():
+        html = DASH_FILE.read_text("utf-8")
+        new_html = re.sub(r"const D = \{.*?\};\n", "const D = " + data_json + ";\n",
+                          html, count=1, flags=re.S)
+        if new_html == html:
+            print("[warn] шаблон 'const D = {...}' не найден — файл мог измениться вручную.")
+            ok = False
+        else:
+            DASH_FILE.write_text(new_html, "utf-8")
+            ok = True
+    else:
         print(f"[err] нет дашборда: {DASH_FILE}")
-        return False
-    html = DASH_FILE.read_text("utf-8")
-    new_html = re.sub(r"const D = \{.*?\};\n", "const D = " + data_json + ";\n",
-                      html, count=1, flags=re.S)
-    if new_html == html:
-        print("[warn] шаблон 'const D = {...}' не найден — файл мог измениться вручную.")
-        return False
-    DASH_FILE.write_text(new_html, "utf-8")
-    return True
+        ok = False
+    return ok
 
 
 def _append_phi(report, max_points=720):
@@ -97,19 +104,18 @@ def _append_phi(report, max_points=720):
     if not isinstance(history, list):
         history = []
     phi_raw = report.get("health", {}).get("algorithms", {}).get("consciousness_phi", {}).get("phi")
-    if phi_raw is None:
-        return history
-    point = {"ts": report.get("generated_at"), "phi": round(float(phi_raw), 4)}
-    if history and history[-1].get("ts") == point["ts"]:
-        history[-1] = point
-    else:
-        history.append(point)
-    if len(history) > max_points:
-        history = history[-max_points:]
-    try:
-        PHI_HIST_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), "utf-8")
-    except Exception:
-        pass
+    if phi_raw is not None:
+        point = {"ts": report.get("generated_at"), "phi": round(float(phi_raw), 4)}
+        if history and history[-1].get("ts") == point["ts"]:
+            history[-1] = point
+        else:
+            history.append(point)
+        if len(history) > max_points:
+            history = history[-max_points:]
+        try:
+            PHI_HIST_FILE.write_text(json.dumps(history, ensure_ascii=False, indent=2), "utf-8")
+        except Exception:
+            pass
     return history
 
 
@@ -134,10 +140,11 @@ def main():
     if _embed(report):
         phi = report.get("health", {}).get("algorithms", {}).get("consciousness_phi", {}).get("phi")
         print("[ok] дашборд обновлён; generated_at=%s; phi=%s" % (report["generated_at"], phi))
+        code = 0
     else:
         print("[err] не встроил данные в дашборд")
-        return 1
-    return 0
+        code = 1
+    return code
 
 
 if __name__ == "__main__":

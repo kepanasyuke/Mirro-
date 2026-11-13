@@ -39,15 +39,16 @@ def is_prime(n):
 
 def sieve(n):
     """Сито Эратосфена: все простые до n."""
-    if n < 2:
-        return []
-    flags = [True] * (n + 1)
-    flags[0] = flags[1] = False
-    for i in range(2, int(n ** 0.5) + 1):
-        if flags[i]:
-            for j in range(i * i, n + 1, i):
-                flags[j] = False
-    return [i for i, ok in enumerate(flags) if ok]
+    primes = []
+    if n >= 2:
+        flags = [True] * (n + 1)
+        flags[0] = flags[1] = False
+        for i in range(2, int(n ** 0.5) + 1):
+            if flags[i]:
+                for j in range(i * i, n + 1, i):
+                    flags[j] = False
+        primes = [i for i, ok in enumerate(flags) if ok]
+    return primes
 
 
 def factorize(n):
@@ -108,15 +109,16 @@ def pow_mod(a, b, m):
 
 def modular_inverse(a, m):
     """Обратное по модулю (расширенный Евклид)."""
-    if gcd(a, m) != 1:
-        return None
-    t, new_t = 0, 1
-    r, new_r = m, a
-    while new_r:
-        q = r // new_r
-        t, new_t = new_t, t - q * new_t
-        r, new_r = new_r, r - q * new_r
-    return t % m
+    inv = None
+    if gcd(a, m) == 1:
+        t, new_t = 0, 1
+        r, new_r = m, a
+        while new_r:
+            q = r // new_r
+            t, new_t = new_t, t - q * new_t
+            r, new_r = new_r, r - q * new_r
+        inv = t % m
+    return inv
 
 
 def divisors(n):

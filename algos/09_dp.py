@@ -132,15 +132,16 @@ def rod_cut(prices, n):
 def partition_subset(nums):
     """Можно ли разбить на два подмножества с равной суммой."""
     total = sum(nums)
-    if total % 2:
-        return False
-    half = total // 2
-    dp = [False] * (half + 1)
-    dp[0] = True
-    for x in nums:
-        for s in range(half, x - 1, -1):
-            dp[s] = dp[s] or dp[s - x]
-    return dp[half]
+    possible = False
+    if total % 2 == 0:
+        half = total // 2
+        dp = [False] * (half + 1)
+        dp[0] = True
+        for x in nums:
+            for s in range(half, x - 1, -1):
+                dp[s] = dp[s] or dp[s - x]
+        possible = dp[half]
+    return possible
 
 
 def max_subarray(a):

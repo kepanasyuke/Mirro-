@@ -105,11 +105,12 @@ class Neuromodulators:
         """Текущий «ритм» по уровню возбуждения (alpha спокойный / beta / gamma).
         Один return: str."""
         arousal = self.level["nor"] + self.level["dop"]
+        rhythm = "alpha-ритм: спокойный, рассеянный фон"
         if arousal > 1.1:
-            return "gamma-ритм: высокая активность, плотная активация"
-        if arousal > 0.85:
-            return "beta-ритм: рабочий фокус"
-        return "alpha-ритм: спокойный, рассеянный фон"
+            rhythm = "gamma-ритм: высокая активность, плотная активация"
+        elif arousal > 0.85:
+            rhythm = "beta-ритм: рабочий фокус"
+        return rhythm
 
     def dominant(self):
         """Доминирующий медиатор. Один return: str (ключ)."""
@@ -160,9 +161,10 @@ def style_prefix(nm: Neuromodulators):
 
 def answer_with_style(nm, core_answer):
     """Оборачивает ответ в эмоциональный стиль. Один return: str."""
-    if not core_answer:
-        return core_answer
-    return style_prefix(nm) + " " + core_answer[0:1].lower() + core_answer[1:]
+    styled = core_answer
+    if core_answer:
+        styled = style_prefix(nm) + " " + core_answer[0:1].lower() + core_answer[1:]
+    return styled
 
 
 # глобальный набор медиаторов для процесса

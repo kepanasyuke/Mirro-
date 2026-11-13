@@ -42,6 +42,26 @@ def _server_up():
     return up
 
 
+def graph_metrics():
+    """Читает метрики графа из /health (nodes/edges/density). Один return: dict."""
+    m = {}
+    try:
+        req = urllib.request.Request(
+            BASE + "/health", method="GET",
+            headers={"Authorization": "Bearer " + TOKEN})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        kg = ((data.get("algorithms") or {}).get("knowledge_graph")) or {}
+        m = {
+            "nodes": kg.get("nodes", 0),
+            "edges": kg.get("edges", 0),
+            "density": kg.get("density", 0.0),
+        }
+    except Exception:
+        m = {"nodes": 0, "edges": 0, "density": 0.0}
+    return m
+
+
 def ask(question):
     body = {"model": "mirro/default",
             "messages": [{"role": "user", "content": question}]}

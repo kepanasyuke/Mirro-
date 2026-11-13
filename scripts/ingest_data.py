@@ -39,22 +39,62 @@ DS_CLUSTER_MAP = defaultdict(lambda: "general", {
 
 def detect_cluster(dataset_id: str) -> str:
     dataset_lower = dataset_id.lower()
-    for key, cluster in DS_CLUSTER_MAP.items():
+    cluster = "general"
+    for key, c in DS_CLUSTER_MAP.items():
         if key in dataset_lower:
-            return cluster
-    return "general"
+            cluster = c
+            break
+    return cluster
 
 
 def convert_item(item: dict) -> dict:
     """Convert any dataset item to unified {instruction, input, output}."""
-    # Alpaca format
+    conv = None
     if "instruction" in item:
-        return {
+        # Alpaca format
+        conv = {
             "instruction": (item.get("instruction") or "")[:1000],
             "input": (item.get("input") or "")[:1000],
             "output": (item.get("output") or item.get("response") or "")[:4000],
         }
-    # ShareGPT / Saiga / messages format
+    elif item.get("messages") or item.get("conversations"):
+        conv = _convert_messages(item)
+    elif item.get("user") and item.get("assistant"):
+        # Camel format (role-playing)
+        conv = {
+            "instruction": str(item["user"])[:1000],
+            "input": str(item.get("system", ""))[:1000],
+            "output": str(item["assistant"])[:4000],
+        }
+    elif "question" in item and "answer" in item:
+        # Question/Answer
+        conv = {
+            "instruction": str(item["question"])[:1000],
+            "input": str(item.get("system_prompt", item.get("context", "")))[:1000],
+            "output": str(item["answer"])[:4000],
+        }
+    elif "title" in item and ("abstract" in item or "text" in item):
+        # Wikipedia abstract
+        text = item.get("abstract") or item.get("text") or ""
+        conv = {
+            "instruction": f"Расскажи про: {item['title']}",
+            "input": "",
+            "output": str(text)[:4000],
+        }
+    elif "text" in item and isinstance(item["text"], str) and len(item["text"]) > 100:
+        # Just text
+        conv = {
+            "instruction": "Продолжи текст",
+            "input": "",
+            "output": item["text"][:4000],
+        }
+    return conv
+
+
+def _convert_messages(item):
+    """ShareGPT/Saiga: messages или conversations → пара user/assistant.
+    Один return: dict|None."""
+    conv = None
     msgs = item.get("messages") or item.get("conversations") or []
     if msgs:
         user_parts, asst_parts = [], []
@@ -66,41 +106,12 @@ def convert_item(item: dict) -> dict:
             elif role in ("assistant", "gpt", "bot"):
                 asst_parts.append(content if isinstance(content, str) else json.dumps(content, ensure_ascii=False))
         if user_parts and asst_parts:
-            return {
+            conv = {
                 "instruction": "\n".join(user_parts)[:1000],
                 "input": "",
                 "output": "\n".join(asst_parts)[:4000],
             }
-    # Camel format (role-playing)
-    if item.get("user") and item.get("assistant"):
-        return {
-            "instruction": str(item["user"])[:1000],
-            "input": str(item.get("system", ""))[:1000],
-            "output": str(item["assistant"])[:4000],
-        }
-    # Question/Answer
-    if "question" in item and "answer" in item:
-        return {
-            "instruction": str(item["question"])[:1000],
-            "input": str(item.get("system_prompt", item.get("context", "")))[:1000],
-            "output": str(item["answer"])[:4000],
-        }
-    # Wikipedia abstract
-    if "title" in item and ("abstract" in item or "text" in item):
-        text = item.get("abstract") or item.get("text") or ""
-        return {
-            "instruction": f"Расскажи про: {item['title']}",
-            "input": "",
-            "output": str(text)[:4000],
-        }
-    # Just text
-    if "text" in item and isinstance(item["text"], str) and len(item["text"]) > 100:
-        return {
-            "instruction": "Продолжи текст",
-            "input": "",
-            "output": item["text"][:4000],
-        }
-    return None
+    return conv
 
 
 def scan_raw_data():
@@ -115,59 +126,62 @@ def scan_raw_data():
             and dataset_dir.suffix in (".json", ".jsonl", ".parquet", ".gz")
             and dataset_dir.stat().st_size > 0
         )
-        if not is_usable_file:
-            continue
-
-        rel_path = dataset_dir.relative_to(RAW)
-        dataset_id = str(rel_path.parent).replace("__", "/")
-        cluster = detect_cluster(str(rel_path))
-        total_input += 1
-
-        try:
-            items = []
-            data = dataset_dir.read_bytes()
-            suffix = dataset_dir.suffix
-            # .gz — сначала распаковываем, затем определяем формат по настоящему имени
-            if suffix == ".gz":
-                with gzip.GzipFile(fileobj=io.BytesIO(data)) as f:
-                    data = f.read()
-                suffix = Path(dataset_dir.stem).suffix  # "xx.jsonl.gz" -> ".jsonl"
-
-            if suffix == ".jsonl":
-                for line in data.decode("utf-8", errors="replace").split("\n"):
-                    if line.strip():
-                        try: items.append(json.loads(line))
-                        except: pass
-            elif suffix == ".json":
-                try:
-                    parsed = json.loads(data.decode("utf-8", errors="replace"))
-                    if isinstance(parsed, list):
-                        items = parsed
-                    elif isinstance(parsed, dict):
-                        items = [parsed]
-                except: pass
-            elif suffix == ".parquet":
-                continue  # skip parquet (needs pandas)
-
-            for item in items:
+        if is_usable_file:
+            rel_path = dataset_dir.relative_to(RAW)
+            cluster = detect_cluster(str(rel_path))
+            total_input += 1
+            added = _extract_items(dataset_dir)
+            for item in added:
                 conv = convert_item(item)
                 if conv:
                     cluster_buffers[cluster].append(conv)
                     total_conv += 1
 
-        except Exception as e:
-            pass
-
     # Write per-cluster files
     for cluster, examples in cluster_buffers.items():
         out_path = PROC / f"{cluster}.jsonl"
-        mode = "a" if out_path.exists() else "w"
         with open(out_path, "a", encoding="utf-8") as f:
             for ex in examples:
                 f.write(json.dumps(ex, ensure_ascii=False) + "\n")
         print(f"  {cluster:12} → {len(examples):>6} examples  ({out_path})")
 
     print(f"\n  Всего: {total_input} файлов прочитано, {total_conv} примеров сохранено")
+
+
+def _extract_items(dataset_dir):
+    """Извлекает список записей из одного файла (json/jsonl/gz/parquet).
+    Один return: list."""
+    items = []
+    try:
+        data = dataset_dir.read_bytes()
+        suffix = dataset_dir.suffix
+        # .gz — сначала распаковываем, затем определяем формат по настоящему имени
+        if suffix == ".gz":
+            with gzip.GzipFile(fileobj=io.BytesIO(data)) as f:
+                data = f.read()
+            suffix = Path(dataset_dir.stem).suffix  # "xx.jsonl.gz" -> ".jsonl"
+
+        if suffix == ".jsonl":
+            for line in data.decode("utf-8", errors="replace").split("\n"):
+                if line.strip():
+                    try:
+                        items.append(json.loads(line))
+                    except Exception:
+                        pass
+        elif suffix == ".json":
+            try:
+                parsed = json.loads(data.decode("utf-8", errors="replace"))
+                if isinstance(parsed, list):
+                    items = parsed
+                elif isinstance(parsed, dict):
+                    items = [parsed]
+            except Exception:
+                pass
+        elif suffix == ".parquet":
+            pass  # skip parquet (needs pandas)
+    except Exception:
+        items = []
+    return items
 
 
 if __name__ == "__main__":

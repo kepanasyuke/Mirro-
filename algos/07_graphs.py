@@ -43,18 +43,24 @@ def has_cycle_directed(graph):
 
     def visit(n):
         color[n] = GRAY
+        cyclic = False
         for nei, _ in graph.get(n, []):
             if color.get(nei, WHITE) == GRAY:
-                return True
+                cyclic = True
+                break
             if color.get(nei, WHITE) == WHITE and visit(nei):
-                return True
-        color[n] = BLACK
-        return False
+                cyclic = True
+                break
+        if not cyclic:
+            color[n] = BLACK
+        return cyclic
 
+    has_cycle = False
     for n in graph:
         if color[n] == WHITE and visit(n):
-            return True
-    return False
+            has_cycle = True
+            break
+    return has_cycle
 
 
 def topological_sort(graph):
@@ -105,10 +111,11 @@ def kruskal_mst(graph):
 
     def union(a, b):
         ra, rb = find(a), find(b)
+        merged = False
         if ra != rb:
             parent[ra] = rb
-            return True
-        return False
+            merged = True
+        return merged
 
     edges = []
     seen = set()
@@ -144,20 +151,24 @@ def bipartite_check(graph):
     def ok(start):
         color[start] = 0
         q = deque([start])
-        while q:
+        valid = True
+        while q and valid:
             n = q.popleft()
             for nei, _ in graph.get(n, []):
                 if nei not in color:
                     color[nei] = 1 - color[n]
                     q.append(nei)
                 elif color[nei] == color[n]:
-                    return False
-        return True
+                    valid = False
+                    break
+        return valid
 
+    is_bip = True
     for n in graph:
         if n not in color and not ok(n):
-            return False
-    return True
+            is_bip = False
+            break
+    return is_bip
 
 
 def graph_diameter_bfs(graph):
@@ -189,12 +200,12 @@ def adjacency_matrix(graph):
 
 def is_island(grid, r, c):
     """(задача на сетке) заливка: размер компонента из клетки."""
-    if not (0 <= r < len(grid) and 0 <= c < len(grid[0])) or grid[r][c] != 1:
-        return 0
-    grid[r][c] = -1  # посещено
-    size = 1
-    for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-        size += is_island(grid, r + dr, c + dc)
+    size = 0
+    if 0 <= r < len(grid) and 0 <= c < len(grid[0]) and grid[r][c] == 1:
+        grid[r][c] = -1  # посещено
+        size = 1
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            size += is_island(grid, r + dr, c + dc)
     return size
 
 

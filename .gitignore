@@ -40,6 +40,21 @@ restore/
 backups/*
 !backups/*.dec
 
+# Отчёты ночных смен и рабочие выгрузки
+reports/
+
+# Runtime logs (пишет сервер)
+data/qa_*.jsonl
+data/qa_watch.log
+data/dialogue_memory.json
+data/graph_story.jsonl
+data/moderation_log.jsonl
+data/reflection_log.jsonl
+data/mindstream/
+data/self_learned/facts.jsonl
+data/self_learned/mindstream.jsonl
+models/*.tmp
+
 # Build artifacts
 dist/
 

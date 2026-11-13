@@ -88,77 +88,65 @@ class MirroAI:
 
     def _tfidf(self, term, doc_count):
         """TF-IDF вес термина в документе."""
-        if term not in self.doc_freq:
-            return 0
-        df = self.doc_freq[term]
-        idf = math.log(self.total_docs / (1 + df))
-        return doc_count * idf
+        weight = 0
+        if term in self.doc_freq:
+            df = self.doc_freq[term]
+            idf = math.log(self.total_docs / (1 + df))
+            weight = doc_count * idf
+        return weight
 
     def search(self, query: str, top_n=5) -> list:
         """TF-IDF поиск: находит лучшие примеры под вопрос."""
         query_words = self._tokenize(query)
-        if not query_words:
-            return []
-
-        query_tfidf = {w: self._tfidf(w, query_words.count(w)) for w in set(query_words)}
         scored = []
-        for idx, (inst, output, cluster) in enumerate(self.examples):
-            inst_words = self._tokenize(inst)
-            # Term overlap with TF-IDF weighting
-            common = set(query_words) & set(inst_words)
-            if inst_words and common:
-                score = sum(query_tfidf.get(w, 0) for w in common)
-                # Normalize by doc length
-                score /= math.sqrt(len(inst_words))
-                # Boost from previous success (стабильный ключ, не hash() — он рандомизирован)
-                boost = self.boost_map.get(self._boost_key(inst), 0)
-                score += boost
-                if score > 0:
-                    scored.append((score, output, inst, cluster))
+        if query_words:
+            query_tfidf = {w: self._tfidf(w, query_words.count(w)) for w in set(query_words)}
+            for idx, (inst, output, cluster) in enumerate(self.examples):
+                inst_words = self._tokenize(inst)
+                # Term overlap with TF-IDF weighting
+                common = set(query_words) & set(inst_words)
+                if inst_words and common:
+                    score = sum(query_tfidf.get(w, 0) for w in common)
+                    # Normalize by doc length
+                    score /= math.sqrt(len(inst_words))
+                    # Boost from previous success (стабильный ключ, не hash() — он рандомизирован)
+                    boost = self.boost_map.get(self._boost_key(inst), 0)
+                    score += boost
+                    if score > 0:
+                        scored.append((score, output, inst, cluster))
 
-        scored.sort(key=lambda x: -x[0])
+            scored.sort(key=lambda x: -x[0])
         return scored[:top_n]
 
     def compose_answer(self, results, max_len=4000):
         """Компонует ответ из найденных результатов."""
-        if not results:
-            return None
-        seen = set()
-        parts = []
-        for score, output, inst, cluster in results:
-            if output[:80] not in seen:
-                seen.add(output[:80])
-                parts.append(output[:1200].strip())
-        if parts:
-            combined = "\n\n".join(parts)[:max_len]
-            return combined
-        return None
+        combined = None
+        if results:
+            seen = set()
+            parts = []
+            for score, output, inst, cluster in results:
+                if output[:80] not in seen:
+                    seen.add(output[:80])
+                    parts.append(output[:1200].strip())
+            if parts:
+                combined = "\n\n".join(parts)[:max_len]
+        return combined
 
     def self_question_loop(self, count=10):
         """Генерирует вопросы из своих данных и отвечает на них."""
-        if len(self.examples) == 0:
-            return 0
         learned = 0
-        for _ in range(count):
-            # Pick a random example
-            inst, output, cluster = random.choice(self.examples[:10000])
-            results = []
-            if len(inst) >= 10:
-                # Search for best answer
-                results = self.search(inst, top_n=3)
-            if results and results[0][0] > 0.01:
-                # Evaluate: how much of the original answer does our response cover?
-                answer = self.compose_answer(results)
-                if answer:
-                    orig_words = set(self._tokenize(output[:500]))
-                    gen_words = set(self._tokenize(answer[:500]))
-                    if orig_words:
-                        coverage = len(gen_words & orig_words) / len(orig_words)
-                        if coverage > 0.3:
-                            # Good match — save as learned
-                            boost_key = self._boost_key(inst)
-                            self.boost_map[boost_key] = self.boost_map.get(boost_key, 0) + 0.1
-                            learned += 1
+        if len(self.examples) > 0:
+            for _ in range(count):
+                # Pick a random example
+                inst, output, cluster = random.choice(self.examples[:10000])
+                results = []
+                if len(inst) >= 10:
+                    # Search for best answer
+                    results = self.search(inst, top_n=3)
+                if results and results[0][0] > 0.01:
+                    # Evaluate: how much of the original answer does our response cover?
+                    answer = self.compose_answer(results)
+                    learned = _evaluate_match(self, answer, output, inst, learned)
         self._save_state()
         return learned
 
@@ -188,6 +176,23 @@ class MirroAI:
         }
 
 
+def _evaluate_match(engine, answer, output, inst, learned):
+    """Оценивает совпадение ответа с эталоном и при успехе усиливает буст.
+    Один return: int (обновлённый счётчик learned)."""
+    result = learned
+    if answer:
+        orig_words = set(engine._tokenize(output[:500]))
+        gen_words = set(engine._tokenize(answer[:500]))
+        if orig_words:
+            coverage = len(gen_words & orig_words) / len(orig_words)
+            if coverage > 0.3:
+                # Good match — save as learned
+                boost_key = engine._boost_key(inst)
+                engine.boost_map[boost_key] = engine.boost_map.get(boost_key, 0) + 0.1
+                result = learned + 1
+    return result
+
+
 ai = MirroAI()
 
 
@@ -195,9 +200,7 @@ def generate_answer(query: str, cluster: str = "") -> str:
     """Главная функция: поиск + компоновка ответа."""
     results = ai.search(query, top_n=5)
     answer = ai.compose_answer(results)
-    if answer:
-        return answer
-    return None
+    return answer
 
 
 def run_self_learning(cycles=20):

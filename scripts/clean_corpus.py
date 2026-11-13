@@ -62,6 +62,7 @@ def clean_jsonl(path, apply=False):
     """Чистит один JSONL-файл. Возвращает (kept, removed). Один return: tuple."""
     kept = 0
     removed = 0
+    ok = True
     seen = set()
     out_rows = []
     try:
@@ -70,31 +71,32 @@ def clean_jsonl(path, apply=False):
                 stripped = line.strip()
                 if not stripped:
                     removed += 1
-                    continue
-                try:
-                    rec = json.loads(stripped)
-                except Exception:
-                    removed += 1
-                    continue
-                if not isinstance(rec, dict) or not _is_keepable(rec):
-                    removed += 1
-                    continue
-                key = _record_key(rec)
-                if key in seen:
-                    removed += 1
-                    continue
-                seen.add(key)
-                out_rows.append(rec)
-                kept += 1
+                else:
+                    try:
+                        rec = json.loads(stripped)
+                    except Exception:
+                        rec = None
+                    key = _record_key(rec) if isinstance(rec, dict) and _is_keepable(rec) else None
+                    if rec is None or not isinstance(rec, dict) or not _is_keepable(rec):
+                        removed += 1
+                    elif key in seen:
+                        removed += 1
+                    else:
+                        seen.add(key)
+                        out_rows.append(rec)
+                        kept += 1
     except OSError:
-        return 0, 0
-    if apply and out_rows:
+        ok = False
+    if ok and apply and out_rows:
         try:
             with open(path, "w", encoding="utf-8") as fh:
                 for rec in out_rows:
                     fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
         except OSError:
-            return kept, removed
+            ok = False
+    if not ok:
+        kept = 0
+        removed = 0
     return kept, removed
 
 
@@ -103,18 +105,16 @@ def clean_directory(directory, apply=False):
     total_kept = 0
     total_removed = 0
     files = 0
-    if not directory.exists():
-        return {"files": 0, "kept": 0, "removed": 0}
-    for f in sorted(directory.glob("*.jsonl")):
-        try:
-            if f.stat().st_size > MAX_BYTES:
-                continue
-        except OSError:
-            continue
-        kept, removed = clean_jsonl(f, apply)
-        files += 1
-        total_kept += kept
-        total_removed += removed
+    if directory.exists():
+        for f in sorted(directory.glob("*.jsonl")):
+            try:
+                if f.stat().st_size <= MAX_BYTES:
+                    kept, removed = clean_jsonl(f, apply)
+                    files += 1
+                    total_kept += kept
+                    total_removed += removed
+            except OSError:
+                pass
     return {"files": files, "kept": total_kept, "removed": total_removed}
 
 

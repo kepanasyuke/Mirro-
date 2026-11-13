@@ -60,57 +60,59 @@ class Vault:
 
     def unlock(self, master_password: str) -> bool:
         """Unlock vault with master password."""
-        if not MASTER_HASH_FILE.exists():
-            return False
-        meta = json.loads(MASTER_HASH_FILE.read_text("utf-8"))
-        key = hashlib.pbkdf2_hmac("sha256", master_password.encode(),
-                                   meta["salt"].encode(), 100_000)
-        if key.hex() != meta["hash"]:
-            return False
-        self._master_password = master_password
-        self._unlocked = True
-        # Try to load entries
-        try:
-            data = VAULT_FILE.read_text("utf-8")
-            if data:
-                self._entries = json.loads(data)
-        except Exception:
-            self._entries = {}
-        return True
+        ok = False
+        if MASTER_HASH_FILE.exists():
+            meta = json.loads(MASTER_HASH_FILE.read_text("utf-8"))
+            key = hashlib.pbkdf2_hmac("sha256", master_password.encode(),
+                                       meta["salt"].encode(), 100_000)
+            if key.hex() == meta["hash"]:
+                self._master_password = master_password
+                self._unlocked = True
+                # Try to load entries
+                try:
+                    data = VAULT_FILE.read_text("utf-8")
+                    if data:
+                        self._entries = json.loads(data)
+                except Exception:
+                    self._entries = {}
+                ok = True
+        return ok
 
     def lock(self):
         self._unlocked = False
         self._entries = {}
 
     def set(self, service: str, username: str, password: str):
-        if not self._unlocked:
-            return False
-        self._entries[service] = {
-            "username": username,
-            "password": password,
-            "updated": datetime.utcnow().isoformat(),
-        }
-        VAULT_FILE.write_text(json.dumps(self._entries, ensure_ascii=False, indent=2), "utf-8")
-        return True
+        ok = False
+        if self._unlocked:
+            self._entries[service] = {
+                "username": username,
+                "password": password,
+                "updated": datetime.utcnow().isoformat(),
+            }
+            VAULT_FILE.write_text(json.dumps(self._entries, ensure_ascii=False, indent=2), "utf-8")
+            ok = True
+        return ok
 
     def get(self, service: str):
-        if not self._unlocked:
-            return None
-        return self._entries.get(service)
+        entry = None
+        if self._unlocked:
+            entry = self._entries.get(service)
+        return entry
 
     def list_services(self):
-        if not self._unlocked:
-            return []
-        return list(self._entries.keys())
+        services = []
+        if self._unlocked:
+            services = list(self._entries.keys())
+        return services
 
     def delete(self, service: str):
-        if not self._unlocked:
-            return False
-        if service in self._entries:
+        ok = False
+        if self._unlocked and service in self._entries:
             del self._entries[service]
             VAULT_FILE.write_text(json.dumps(self._entries, ensure_ascii=False, indent=2), "utf-8")
-            return True
-        return False
+            ok = True
+        return ok
 
     def is_locked(self) -> bool:
         return not self._unlocked
@@ -157,49 +159,68 @@ class VaultHandler(BaseHTTPRequestHandler):
         try:
             body = self._read()
         except Exception as e:
-            return self._json({"error": str(e)}, 400)
+            self._json({"error": str(e)}, 400)
+        else:
+            self._route_post(self.path, body)
 
-        path = self.path
-
+    def _route_post(self, path, body):
+        """Диспетчер POST-маршрутов vault. Один return: None."""
         if path == "/create":
-            mp = body.get("master_password", "")
-            if not mp or len(mp) < 4:
-                return self._json({"error": "password too short"}, 400)
-            if vault.create(mp):
-                return self._json({"status": "vault created"})
-            return self._json({"error": "already exists"}, 409)
-
+            self._post_create(body)
         elif path == "/unlock":
-            mp = body.get("master_password", "")
-            if vault.unlock(mp):
-                return self._json({"status": "unlocked", "services": vault.list_services()})
-            return self._json({"error": "wrong password"}, 401)
-
+            self._post_unlock(body)
         elif path == "/lock":
             vault.lock()
-            return self._json({"status": "locked"})
-
+            self._json({"status": "locked"})
         elif path == "/set":
-            if vault.is_locked():
-                return self._json({"error": "locked"}, 401)
+            self._post_set(body)
+        elif path == "/delete":
+            self._post_delete(body)
+        else:
+            self._json({"error": "not found"}, 404)
+
+    def _post_create(self, body):
+        """POST /create. Один return: None."""
+        mp = body.get("master_password", "")
+        if not mp or len(mp) < 4:
+            self._json({"error": "password too short"}, 400)
+        elif vault.create(mp):
+            self._json({"status": "vault created"})
+        else:
+            self._json({"error": "already exists"}, 409)
+
+    def _post_unlock(self, body):
+        """POST /unlock. Один return: None."""
+        mp = body.get("master_password", "")
+        if vault.unlock(mp):
+            self._json({"status": "unlocked", "services": vault.list_services()})
+        else:
+            self._json({"error": "wrong password"}, 401)
+
+    def _post_set(self, body):
+        """POST /set. Один return: None."""
+        if vault.is_locked():
+            self._json({"error": "locked"}, 401)
+        else:
             service = body.get("service", "")
             username = body.get("username", "")
             password = body.get("password", "")
             if not service or not password:
-                return self._json({"error": "service and password required"}, 400)
-            vault.set(service, username, password)
-            return self._json({"status": "saved", "service": service})
+                self._json({"error": "service and password required"}, 400)
+            else:
+                vault.set(service, username, password)
+                self._json({"status": "saved", "service": service})
 
-        elif path == "/delete":
-            if vault.is_locked():
-                return self._json({"error": "locked"}, 401)
+    def _post_delete(self, body):
+        """POST /delete. Один return: None."""
+        if vault.is_locked():
+            self._json({"error": "locked"}, 401)
+        else:
             service = body.get("service", "")
             if vault.delete(service):
-                return self._json({"status": "deleted"})
-            return self._json({"error": "not found"}, 404)
-
-        else:
-            return self._json({"error": "not found"}, 404)
+                self._json({"status": "deleted"})
+            else:
+                self._json({"error": "not found"}, 404)
 
     def do_OPTIONS(self):
         self.send_response(204)

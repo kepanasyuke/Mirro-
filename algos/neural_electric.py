@@ -241,12 +241,15 @@ def try_neural_electric(query, kg=None):
 def _find_node(graph, needle):
     """Находит узел графа по вхождению (учитывая окончания). Один return: str|None."""
     n = (needle or "").strip().lower()
+    found = None
     if n in graph.nodes:
-        return n
-    for node in graph.nodes:
-        if node and (node in n or n in node or node.startswith(n[:5])):
-            return node
-    return None
+        found = n
+    else:
+        for node in graph.nodes:
+            if node and (node in n or n in node or node.startswith(n[:5])):
+                found = node
+                break
+    return found
 
 
 def _sample_triples():

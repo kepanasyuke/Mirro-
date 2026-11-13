@@ -59,17 +59,95 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
 .eh{height:1px;background:var(--conn)}
 .ev{width:1px;background:var(--conn)}
 .is-hidden{display:none}
-</style></head><body><div class="app"><div class="bar"><div class="bar-years">2026</div><div class="bar-title">Mirro — план улучшений</div><div class="bar-en">38 ЗАДАЧ · 10 ГОТОВО · интеллект-карта</div><div class="bar-sp"></div><div class="bar-hint">клик по ветви — свернуть · тяни — двигать · колесо — масштаб</div><div class="btns"><button id="zout" title="Уменьшить">−</button><button id="rst" title="По размеру">по размеру</button><button id="zin" title="Увеличить">+</button></div></div><div class="stage" id="stage"><div class="canvas" id="canvas"><div id="edges"></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Стемминг русских слов</div></div><div class="n-note">ГОТОВО: Porter-style, словарь исключений</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">BM25 + TF-IDF поиск</div></div><div class="n-note">ГОТОВО: k1/b, dl norm</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">TextRank суммаризация</div></div><div class="n-note">ГОТОВО: PageRank на графе предложений</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Naive Bayes классификация</div></div><div class="n-note">ГОТОВО: 6 кластеров</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">KeyBERT извлечение слов</div></div><div class="n-note">ГОТОВО: TF-IDF взвешивание</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Перцептрон (1 слой)</div></div><div class="n-note">ГОТОВО: обучение на feedback</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">MLP (2 слоя)</div></div><div class="n-note">скрытый слой · ЖДЁТ</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Self-correction</div></div><div class="n-note">ГОТОВО: повторный поиск при плохой оценке</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Детектор галлюцинаций</div></div><div class="n-note">ГОТОВО: TF-IDF поддержка фактов</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Автономное обучение</div></div><div class="n-note">ГОТОВО: планировщик на 60 мин</div></div><div class="n side-l" data-parent="b0" data-side="l"><div class="n-row"><div class="n-ru">Кэш частых запросов</div></div><div class="n-note">ГОТОВО: 200 запросов</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Чат (основной экран)</div></div><div class="n-note">аватары · история · лайк/дизлайк · быстрые кнопки</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Аналитика (дашборд)</div></div><div class="n-note">метрики · карточки · графики баров</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Кластеры (данные)</div></div><div class="n-note">датасеты · категории · прогресс-бары</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Боковая панель</div></div><div class="n-note">навигация · кнопка обучения · статус</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Тёмная/светлая тема</div></div><div class="n-note">переключатель · ЖДЁТ</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Прогресс обучения</div></div><div class="n-note">индикатор · сколько усвоила · ЖДЁТ</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">История диалогов</div></div><div class="n-note">ГОТОВО: localStorage</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Экспорт знаний</div></div><div class="n-note">PDF/MD · ЖДЁТ</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Уведомления</div></div><div class="n-note">статус автообучения · колокольчик</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Строка поиска датасетов</div></div><div class="n-note">ГОТОВО: фильтрация в реальном времени</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Состояния UI:</div></div><div class="n-en">ЗАГРУЗКА · ПУСТО · ОШИБКА · ГОТОВО</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Loading</div></div><div class="n-note">спиннер · скелетон · анимация</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Empty</div></div><div class="n-note">приветствие · подсказки · что спросить</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Error</div></div><div class="n-note">корректное сообщение об ошибке</div></div><div class="n side-r" data-parent="b1" data-side="r"><div class="n-row"><div class="n-ru">Блок Ready</div></div><div class="n-note">основное содержимое с переходами</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Дизайн/креатив</div></div><div class="n-note">SVG · постеры · Figma · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Math (200k+)</div></div><div class="n-note">Orca-math · GSM8K · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Knowledge Википедия</div></div><div class="n-note">раздел RU · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Код The Stack</div></div><div class="n-note">образец кода · ЖДЁТ</div></div><div class="n side-r" data-parent="b2" data-side="r"><div class="n-row"><div class="n-ru">Дедупликация</div></div><div class="n-note">убрать дубли · ЖДЁТ</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Планировщик 60 мин</div></div><div class="n-note">ГОТОВО: фоновый поток</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Перцептрон на feedback</div></div><div class="n-note">ГОТОВО: train_on_feedback</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Ре-плей буфер</div></div><div class="n-note">переигрывать лайки · ЧАСТИЧНО</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Затухание бустов</div></div><div class="n-note">старые → ниже вес · ЖДЁТ</div></div><div class="n side-l" data-parent="b3" data-side="l"><div class="n-row"><div class="n-ru">Пакетное обучение</div></div><div class="n-note">батчи из history · ЖДЁТ</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">mirro_core.py</div></div><div class="n-note">API :3443 · планировщик · автообучение</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">algorithms.py</div></div><div class="n-note">TF-IDF · TextRank · NB · перцептрон · стемминг</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">index.html (web)</div></div><div class="n-note">чат · аналитика · кластеры · дизайн-карта</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">setup.bat / start.py</div></div><div class="n-note">запуск одной кнопкой</div></div><div class="n side-r" data-parent="b4" data-side="r"><div class="n-row"><div class="n-ru">model_state.json</div></div><div class="n-note">сохранение весов перцептрона</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Автостарт Windows</div></div><div class="n-note">опционально · ЖДЁТ</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Логирование</div></div><div class="n-note">ГОТОВО: JSONL calls.jsonl</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Кэш ответов</div></div><div class="n-note">ГОТОВО: 200 входов</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Бэкап модели</div></div><div class="n-note">ai_state.json · ЧАСТИЧНО</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Self-health check</div></div><div class="n-note">мониторинг · ЖДЁТ</div></div><div class="n side-l" data-parent="b5" data-side="l"><div class="n-row"><div class="n-ru">Метрики автообучения</div></div><div class="n-note">сколько усвоила · ЧАСТИЧНО</div></div><div class="b side-l" data-id="b0" data-side="l"><div class="b-row"><div class="b-num">01</div><div class="b-ru">Алгоритмы (11 задач)</div><div class="b-sign">−</div></div></div><div class="b side-r" data-id="b1" data-side="r"><div class="b-row"><div class="b-num">02</div><div class="b-ru">Интерфейс Mirro</div><div class="b-sign">−</div></div><div class="b-en">ДИЗАЙН-КАРТА</div></div><div class="b side-r" data-id="b2" data-side="r"><div class="b-row"><div class="b-num">03</div><div class="b-ru">Данные (5 задач)</div><div class="b-sign">−</div></div></div><div class="b side-l" data-id="b3" data-side="l"><div class="b-row"><div class="b-num">04</div><div class="b-ru">Обучение (5 задач)</div><div class="b-sign">−</div></div></div><div class="b side-r" data-id="b4" data-side="r"><div class="b-row"><div class="b-num">05</div><div class="b-ru">Архитектура</div><div class="b-sign">−</div></div></div><div class="b side-l" data-id="b5" data-side="l"><div class="b-row"><div class="b-num">06</div><div class="b-ru">Инфраструктура (6 задач)</div><div class="b-sign">−</div></div></div><div class="root"><div class="root-years">2026</div><div class="root-title">Mirro — план улучшений</div><div class="root-en">38 ЗАДАЧ · 10 ГОТОВО</div></div></div></div></div><script>
+.loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+         font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink45)}
+</style></head><body><div class="app"><div class="bar"><div class="bar-years" id="barYears">2026</div><div class="bar-title" id="barTitle">Mirro — план улучшений</div><div class="bar-en" id="barEn">…</div><div class="bar-sp"></div><div class="bar-hint">клик по ветви — свернуть · тяни — двигать · колесо — масштаб</div><div class="btns"><button id="zout" title="Уменьшить">−</button><button id="rst" title="По размеру">по размеру</button><button id="zin" title="Увеличить">+</button></div></div><div class="stage" id="stage"><div class="canvas" id="canvas"><div id="edges"></div></div></div><div class="loading" id="loading">загрузка данных…</div>
+
+<script>
 (function(){
   var CFG={"rootW":240,"rootH":118,"w1":172,"w2":252,"g1":44,"g2":52,"gap":14,"gg":36,"pad":30};
   var stage=document.getElementById('stage'), canvas=document.getElementById('canvas');
-  var edgeBox=document.getElementById('edges'), rootEl=document.querySelector('.root');
-  var branches=[].slice.call(document.querySelectorAll('.b'));
+  var edgeBox=document.getElementById('edges'), rootEl=null;
   var collapsed={}, cw=0, ch=0, fit={s:1,x:0,y:0}, tr=null;
 
-  branches.forEach(function(b){
-    b.__kids=[].slice.call(document.querySelectorAll('.n[data-parent="'+b.getAttribute('data-id')+'"]'));
-  });
+  function esc(s){ s=(s==null)?'':String(s);
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // ---------- построение карты из данных JSON ----------
+  function build(data){
+    var loading=document.getElementById('loading');
+    if(loading) loading.parentNode.removeChild(loading);
+    var years=(data&&data.years)||'2026';
+    var title=(data&&data.title)||'Mirro — план улучшений';
+    var langs=(data&&data.lang)||'ru';
+    document.getElementById('barYears').textContent=years;
+    document.getElementById('barTitle').textContent=title;
+    document.documentElement.lang=langs;
+
+    // корневой блок
+    rootEl=document.createElement('div'); rootEl.className='root';
+    rootEl.innerHTML='<div class="root-years">'+esc(years)+'</div>'+
+      '<div class="root-title">'+esc(title)+'</div>'+
+      '<div class="root-en"></div>';
+    canvas.appendChild(rootEl);
+
+    // ветви и узлы
+    var branches=(data&&data.branches)||[];
+    branches.forEach(function(b,i){
+      var id='b'+i, side=(i%2===0)?'l':'r';
+      var kids=b.nodes||[];
+      var bEl=document.createElement('div');
+      bEl.className='b side-'+side+' is-hidden';
+      bEl.setAttribute('data-id',id); bEl.setAttribute('data-side',side);
+      var html='<div class="b-row"><div class="b-num">'+esc(b.num)+'</div>'+
+        '<div class="b-ru">'+esc(b.ru)+'</div><div class="b-sign">−</div></div>';
+      if(b.sub) html+='<div class="b-en">'+esc(b.sub)+'</div>';
+      bEl.innerHTML=html;
+      canvas.appendChild(bEl);
+
+      kids.forEach(function(n){
+        var nEl=document.createElement('div');
+        nEl.className='n side-'+side+' is-hidden';
+        nEl.setAttribute('data-parent',id); nEl.setAttribute('data-side',side);
+        var nhtml;
+        // узел-группа (подзаголовок) — без рамки-пунктира, только подпись
+        if(n.sub && !n.note){
+          nhtml='<div class="n-en">'+esc(n.sub)+'</div>';
+        } else {
+          nhtml='<div class="n-row"><div class="n-ru">'+esc(n.ru)+'</div></div>';
+          if(n.note) nhtml+='<div class="n-note">'+esc(n.note)+'</div>';
+          if(n.sub && n.note) nhtml='<div class="n-row"><div class="n-ru">'+esc(n.ru)+'</div></div><div class="n-note">'+esc(n.note)+'</div>';
+        }
+        nEl.innerHTML=nhtml;
+        canvas.appendChild(nEl);
+      });
+    });
+
+    // счётчики считаем автоматически из узлов (ГОТОВО / ЧАСТИЧНО / остальное ЖДЁТ)
+    var total=0, done=0, partial=0;
+    branches.forEach(function(b){ (b.nodes||[]).forEach(function(n){
+      total++;
+      var t=String(n.note||'').toUpperCase();
+      if(t.indexOf('ГОТОВО')>=0) done++;
+      else if(t.indexOf('ЧАСТИЧНО')>=0) partial++;
+    });});
+    var wait=total-done-partial;
+    var en=total+' ЗАДАЧ · '+done+' ГОТОВО';
+    if(partial) en+=' · '+partial+' ЧАСТИЧНО';
+    if(wait)   en+=' · '+wait+' ЖДЁТ';
+    document.getElementById('barEn').textContent=en;
+    rootEl.querySelector('.root-en').textContent=en;
+    return en;
+  }
+
+  // ---------- присоединение ветвей к узлам ----------
+  var branches=[];
+  function link(){
+    branches=[].slice.call(document.querySelectorAll('.b'));
+    branches.forEach(function(b){
+      b.__kids=[].slice.call(document.querySelectorAll('.n[data-parent="'+b.getAttribute('data-id')+'"]'));
+    });
+  }
 
   function clamp(s){ return Math.min(3, Math.max(0.25, s)); }
   function T(){ return tr || fit; }
@@ -96,7 +174,7 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
     branches.forEach(function(b){
       var open=!collapsed[b.getAttribute('data-id')];
       b.__kids.forEach(function(k){ k.classList.toggle('is-hidden', !open); });
-      var sign=b.querySelector('.b-sign'); if(sign) sign.textContent=open?'\u2212':'+';
+      var sign=b.querySelector('.b-sign'); if(sign) sign.textContent=open?'−':'+';
     });
 
     var half=CFG.rootW/2+CFG.g1+CFG.w1+CFG.g2+CFG.w2+CFG.pad;
@@ -116,8 +194,6 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
           var c=cur, ys=[];
           kids.forEach(function(k){ var h=k.offsetHeight; ys.push(c+h/2); c+=h+CFG.gap; });
           var span=(c-CFG.gap)-gs;
-          // A tall branch label must not overhang into its neighbours: give the
-          // group at least the branch's own height and centre the kids in it.
           if(span<hb){ var padY=(hb-span)/2; ys=ys.map(function(y){ return y+padY; }); span=hb; }
           items.push({b:b, by:(ys[0]+ys[ys.length-1])/2, kids:kids, ys:ys});
           cur=gs+span;
@@ -170,8 +246,7 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
   document.getElementById('rst').onclick=function(){ tr=null; layout(); };
 
   // Drag to pan. Tap-vs-drag is decided in SCREEN pixels; pointer capture is
-  // taken only once a real drag starts, because capturing on pointerdown
-  // retargets the event away from the branch that was pressed.
+  // taken only once a real drag starts.
   var DRAG_PX=3, drag=null;
   stage.addEventListener('pointerdown', function(e){
     drag={x:e.clientX, y:e.clientY, moved:false, captured:false,
@@ -193,17 +268,16 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
     if(!drag) return;
     var d=drag; drag=null; stage.classList.remove('grabbing');
     if(d.captured&&e){ try{ stage.releasePointerCapture(e.pointerId); }catch(_){ } }
-    if(!d.moved && d.b){                       // a tap on a branch toggles it
+    if(!d.moved && d.b){
       var id=d.b.getAttribute('data-id');
       collapsed[id]=!collapsed[id];
-      layout();                                 // recompute: the canvas compacts
+      // переносим клик-переключение на ветвь, а не стадию — оставляем здесь
+      layout();
     }
   }
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
 
-  // Native listener with {passive:false} — preventDefault is required or the
-  // wheel scrolls the page instead of zooming.
   stage.addEventListener('wheel', function(e){
     e.preventDefault();
     var r=stage.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
@@ -212,7 +286,21 @@ body{font-family:'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:an
   }, {passive:false});
 
   window.addEventListener('resize', function(){ layout(); });
-  layout();
-  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layout).catch(function(){});
+
+  // ---------- загрузка данных ----------
+  function start(d){
+    build(d);
+    link();
+    layout();
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(layout).catch(function(){});
+  }
+  function fail(){
+    var loading=document.getElementById('loading');
+    if(loading) loading.textContent='не удалось загрузить mirro-mind-map.json';
+  }
+  fetch('mirro-mind-map.json', {cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(start)
+    .catch(fail);
 })();
 </script></body></html>

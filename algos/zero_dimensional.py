@@ -35,10 +35,11 @@ def field_signature(kg, name, depth=1):
 
 def overlap(a_set, b_set):
     """Доля пересечения двух полей (0..1). 0 — ничего общего, 1 — полное совпадение."""
-    if not a_set or not b_set:
-        return 0.0
-    inter = len(a_set & b_set)
-    return inter / max(len(a_set), len(b_set))
+    ratio = 0.0
+    if a_set and b_set:
+        inter = len(a_set & b_set)
+        ratio = inter / max(len(a_set), len(b_set))
+    return ratio
 
 
 def zero_dim_similarity(kg, a, b, depth=1):
@@ -145,30 +146,32 @@ def _node_meta_dependencies(kg, name):
     Один return: int."""
     deps = 0
     meta = getattr(kg, "meta_routes", None)
-    if not meta:
-        return 0
-    node = _norm_zd(kg, name)
-    # рёбра, затронутые узлом (в обе стороны): исходящие из node и входящие в node
-    node_edges = set()
-    for s, p, d in kg.edges:
-        if s == node or d == node:
-            node_edges.add((s, p, d))
-            node_edges.add((d, p, s))  # обратный ключ для поиска
-    for (fkey, tkey), _mod in meta.items():
-        if fkey in node_edges or tkey in node_edges:
-            deps += 1
+    if meta:
+        node = _norm_zd(kg, name)
+        # рёбра, затронутые узлом (в обе стороны): исходящие из node и входящие в node
+        node_edges = set()
+        for s, p, d in kg.edges:
+            if s == node or d == node:
+                node_edges.add((s, p, d))
+                node_edges.add((d, p, s))  # обратный ключ для поиска
+        for (fkey, tkey), _mod in meta.items():
+            if fkey in node_edges or tkey in node_edges:
+                deps += 1
     return deps
 
 
 def _norm_zd(kg, name):
     """Нормализует имя узла под ключи графа. Один return: str."""
     n = (name or "").strip().lower()
+    found = n
     if n in kg.nodes:
-        return n
-    for node in kg.nodes:
-        if node == n or n in node or node.startswith(n[:4]):
-            return node
-    return n
+        found = n
+    else:
+        for node in kg.nodes:
+            if node == n or n in node or node.startswith(n[:4]):
+                found = node
+                break
+    return found
 
 
 def dimension_of(kg, name):

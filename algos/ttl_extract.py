@@ -60,17 +60,19 @@ def _clean_sentence(s):
 
 def _match_condition(s):
     """Ловит «если X то Y»/«X если Y» -> (X, 'условие для', Y). Один return: tuple|None."""
+    match = None
     m = _IF_RE.search(s)
     if m:
         cond, then = _clean(m.group(1)), _clean(m.group(2))
         if cond and then:
-            return (cond, "условие для", then)
-    m2 = _IF_POST_RE.search(s)
-    if m2:
-        then, cond = _clean(m2.group(1)), _clean(m2.group(2))
-        if then and cond:
-            return (then, "если", cond)
-    return None
+            match = (cond, "условие для", then)
+    if match is None:
+        m2 = _IF_POST_RE.search(s)
+        if m2:
+            then, cond = _clean(m2.group(1)), _clean(m2.group(2))
+            if then and cond:
+                match = (then, "если", cond)
+    return match
 
 
 def _sentences(text):
@@ -80,10 +82,11 @@ def _sentences(text):
 
 def _match_triple(s):
     """Достаёт (subj,pred,obj) из предложения. Один return: tuple или None."""
+    triple = None
     m = _re.search(rf"^(.+?)\s+({_VERBS_RE})\s+(.+)$", s, flags=_re.I)
-    if not m:
-        return None
-    return (_clean(m.group(1)), _clean(m.group(2)), _clean(m.group(3)))
+    if m:
+        triple = (_clean(m.group(1)), _clean(m.group(2)), _clean(m.group(3)))
+    return triple
 
 
 def _valid(triple, min_subj, min_obj):

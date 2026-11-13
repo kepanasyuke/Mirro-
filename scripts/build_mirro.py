@@ -68,20 +68,26 @@ def build_zip():
     n = 0
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(ROOT.rglob("*")):
-            if f.is_dir():
-                continue
-            try:
-                rel = f.relative_to(ROOT)
-            except ValueError:
-                continue
-            parts = rel.parts
-            if any(part in EXCLUDE_DIRS for part in parts):
-                continue
-            z.write(f, f"{arcname_root}/{rel.as_posix()}")
-            n += 1
+            if not f.is_dir():
+                rel = _rel_safe(f)
+                if rel is not None:
+                    parts = rel.parts
+                    if not any(part in EXCLUDE_DIRS for part in parts):
+                        z.write(f, f"{arcname_root}/{rel.as_posix()}")
+                        n += 1
     size = out.stat().st_size
     print(f"[zip] {out} - {n} files, {size / 1024:.0f} KB")
     return True
+
+
+def _rel_safe(f):
+    """Путь файла относительно ROOT или None. Один return: Path|None."""
+    rel = None
+    try:
+        rel = f.relative_to(ROOT)
+    except ValueError:
+        rel = None
+    return rel
 
 
 def check_smoke():

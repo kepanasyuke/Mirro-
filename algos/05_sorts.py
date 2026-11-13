@@ -40,27 +40,29 @@ def insertion_sort(arr):
 
 
 def merge_sort(arr):
-    if len(arr) <= 1:
-        return arr
-    mid = len(arr) // 2
-    left, right = merge_sort(arr[:mid]), merge_sort(arr[mid:])
-    out, i, j = [], 0, 0
-    while i < len(left) and j < len(right):
-        if left[i] <= right[j]:
-            out.append(left[i]); i += 1
-        else:
-            out.append(right[j]); j += 1
-    return out + left[i:] + right[j:]
+    result = arr
+    if len(arr) > 1:
+        mid = len(arr) // 2
+        left, right = merge_sort(arr[:mid]), merge_sort(arr[mid:])
+        out, i, j = [], 0, 0
+        while i < len(left) and j < len(right):
+            if left[i] <= right[j]:
+                out.append(left[i]); i += 1
+            else:
+                out.append(right[j]); j += 1
+        result = out + left[i:] + right[j:]
+    return result
 
 
 def quick_sort(arr):
-    if len(arr) <= 1:
-        return arr
-    pivot = arr[len(arr) // 2]
-    less = [x for x in arr if x < pivot]
-    eq = [x for x in arr if x == pivot]
-    more = [x for x in arr if x > pivot]
-    return quick_sort(less) + eq + quick_sort(more)
+    result = arr
+    if len(arr) > 1:
+        pivot = arr[len(arr) // 2]
+        less = [x for x in arr if x < pivot]
+        eq = [x for x in arr if x == pivot]
+        more = [x for x in arr if x > pivot]
+        result = quick_sort(less) + eq + quick_sort(more)
+    return result
 
 
 def heap_sort(arr):
@@ -139,22 +141,6 @@ def _radix_pass(a):
         cur = out
         exp *= 10
     return cur
-    mx = max(a)
-    exp = 1
-    while mx // exp > 0:
-        out = [0] * len(a)
-        counts = [0] * 10
-        for x in a:
-            counts[(x // exp) % 10] += 1
-        for i in range(1, 10):
-            counts[i] += counts[i - 1]
-        for x in reversed(a):
-            idx = (x // exp) % 10
-            counts[idx] -= 1
-            out[counts[idx]] = x
-        a = out
-        exp *= 10
-    return a
 
 
 def timsort(arr):

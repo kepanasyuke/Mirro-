@@ -51,12 +51,15 @@ def init_quantum_states(graph):
 def _valid_node(graph, name):
     """Существует ли узел (с нормализацией). Один return: str|None."""
     n = (name or "").strip().lower()
+    found = None
     if n in graph.nodes:
-        return n
-    for node in graph.nodes:
-        if node == n or n in node or node.startswith(n[:4]):
-            return node
-    return None
+        found = n
+    else:
+        for node in graph.nodes:
+            if node == n or n in node or node.startswith(n[:4]):
+                found = node
+                break
+    return found
 
 
 def apply_quantum_entanglement(graph, st, src_edge, tgt_edge, mod=1.0):
@@ -67,24 +70,24 @@ def apply_quantum_entanglement(graph, st, src_edge, tgt_edge, mod=1.0):
     новый QState. Один return: QState.
     """
     edges = graph.edges
-    if src_edge not in edges or tgt_edge not in edges:
-        return st
-    s_from, _p1, s_to = src_edge
-    t_from, _p2, t_to = tgt_edge
-    # активность источника = проводимость ребра-источника
-    theta = edges[src_edge] * mod
-    new_states = dict(st.states)
-    for node_key in (t_from, t_to):
-        real = _valid_node(graph, node_key)
-        if real is None:
-            continue
-        a_real, b_imag = new_states.get(real, (0.0, 0.0))
-        na = a_real * math.cos(theta) - b_imag * math.sin(theta)
-        nb = a_real * math.sin(theta) + b_imag * math.cos(theta)
-        norm = math.hypot(na, nb) or 1.0
-        new_states[real] = (na / norm, nb / norm)
     out = QState()
-    out.states = new_states
+    if src_edge in edges and tgt_edge in edges:
+        s_from, _p1, s_to = src_edge
+        t_from, _p2, t_to = tgt_edge
+        # активность источника = проводимость ребра-источника
+        theta = edges[src_edge] * mod
+        new_states = dict(st.states)
+        for node_key in (t_from, t_to):
+            real = _valid_node(graph, node_key)
+            if real is not None:
+                a_real, b_imag = new_states.get(real, (0.0, 0.0))
+                na = a_real * math.cos(theta) - b_imag * math.sin(theta)
+                nb = a_real * math.sin(theta) + b_imag * math.cos(theta)
+                norm = math.hypot(na, nb) or 1.0
+                new_states[real] = (na / norm, nb / norm)
+        out.states = new_states
+    else:
+        out.states = st.states
     return out
 
 
@@ -101,10 +104,9 @@ def quantum_superposition_report(graph, st, top_n=6):
     """Отчёт о суперпозициях узлов (для /health и чата). Один return: str."""
     items = []
     for name, (a, b) in st.states.items():
-        if not name or len(name) < 3:
-            continue
-        probe = abs(a) + abs(b)
-        items.append((probe, name, a, b))
+        if name and len(name) >= 3:
+            probe = abs(a) + abs(b)
+            items.append((probe, name, a, b))
     items.sort(key=lambda x: -x[0])
     lines = [f"квантовые состояния: {len(st.states)} узлов в суперпозиции"]
     for _p, name, a, b in items[:top_n]:

@@ -74,10 +74,12 @@ class SelfLearner:
         self.session = 0
 
     def _load_meta(self):
+        meta = {"total_sessions": 0, "total_learned": 0, "domains": {}, "last_run": None}
         try:
-            return json.loads(LEARN_META.read_text("utf-8"))
+            meta = json.loads(LEARN_META.read_text("utf-8"))
         except Exception:
-            return {"total_sessions": 0, "total_learned": 0, "domains": {}, "last_run": None}
+            meta = {"total_sessions": 0, "total_learned": 0, "domains": {}, "last_run": None}
+        return meta
 
     def _save_meta(self):
         LEARN_META.write_text(json.dumps(self.meta, ensure_ascii=False, indent=2), "utf-8")
@@ -107,19 +109,16 @@ class SelfLearner:
     # ---- HuggingFace trends ----
     def learn_from_hf_trending(self):
         """Find trending/new datasets on HuggingFace and add to catalog."""
-        print("  📡 HuggingFace: checking trending datasets...")
+        print("  HuggingFace: checking trending datasets...")
+        new_count = 0
         try:
             data = self._fetch_json("https://huggingface.co/api/datasets?sort=trendingScore&limit=20")
-            if not data:
-                return 0
-
             existing = set()
             cat_path = MIRRO / "data" / "catalog_phase1.json"
             if cat_path.exists():
                 for entry in json.loads(cat_path.read_text("utf-8")):
                     existing.add(entry["ds"])
 
-            new_count = 0
             new_entries = []
             for ds in data:
                 ds_id = ds.get("id", "")
@@ -163,93 +162,84 @@ class SelfLearner:
                 cat_path.write_text(json.dumps(cat, ensure_ascii=False, indent=2), "utf-8")
                 for e in new_entries[:5]:
                     print(f"    + {e['ds']} ({e['cat']})")
-
-            return new_count
         except Exception as e:
             print(f"    ERROR: {e}")
-            return 0
+        return new_count
 
     # ---- Learn from logs (own experience) ----
     def learn_from_logs(self):
         """Mirro учится на своих же вызовах — повторно использует лучшие."""
         log_path = LOG_DIR / "calls.jsonl"
-        if not log_path.exists():
-            return 0
-
-        lines = log_path.read_text("utf-8").strip().split("\n")
-        if len(lines) < 10:
-            return 0
-
-        # Sample successful calls and save as examples
-        examples = []
-        for line in lines[-100:]:
-            try:
-                entry = json.loads(line)
-                if entry.get("success") and entry.get("prompt_len", 0) > 20:
-                    examples.append({
-                        "instruction": f"[Mirro self-log] Task: {entry.get('cluster','?')}",
-                        "input": f"provider={entry.get('provider','?')} latency={entry.get('latency_ms',0)}ms",
-                        "output": f"Call #{entry.get('ts','?')} — cluster: {entry.get('cluster')}, "
-                                  f"tokens: {entry.get('tokens',0)}, latency: {entry.get('latency_ms',0)}ms"
-                    })
-            except Exception:
-                pass
-
-        if examples:
-            cluster = "general"
-            out_path = LEARN_DIR / f"selflog_{cluster}.jsonl"
-            with open(out_path, "a", encoding="utf-8") as f:
-                for ex in examples:
-                    f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-            return len(examples)
-        return 0
+        learned = 0
+        if log_path.exists():
+            lines = log_path.read_text("utf-8").strip().split("\n")
+            if len(lines) >= 10:
+                # Sample successful calls and save as examples
+                examples = []
+                for line in lines[-100:]:
+                    try:
+                        entry = json.loads(line)
+                        if entry.get("success") and entry.get("prompt_len", 0) > 20:
+                            examples.append({
+                                "instruction": f"[Mirro self-log] Task: {entry.get('cluster','?')}",
+                                "input": f"provider={entry.get('provider','?')} latency={entry.get('latency_ms',0)}ms",
+                                "output": f"Call #{entry.get('ts','?')} — cluster: {entry.get('cluster')}, "
+                                          f"tokens: {entry.get('tokens',0)}, latency: {entry.get('latency_ms',0)}ms"
+                            })
+                    except Exception:
+                        pass
+                if examples:
+                    cluster = "general"
+                    out_path = LEARN_DIR / f"selflog_{cluster}.jsonl"
+                    with open(out_path, "a", encoding="utf-8") as f:
+                        for ex in examples:
+                            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+                    learned = len(examples)
+        return learned
 
     # ---- Wikipedia (new articles) ----
     def learn_from_wikipedia(self):
         """Скачивает свежие статьи из Wikipedia RU."""
-        print("  📖 Wikipedia RU: checking recent changes...")
+        print("Wikipedia RU: checking recent changes...")
+        written = 0
         try:
             # Random articles for variety
             url = "https://ru.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=5&format=json"
             data = self._fetch_json(url)
-            if not data or "query" not in data:
-                return 0
+            if data and "query" in data:
+                examples = []
+                for page in data["query"].get("random", []):
+                    title = page.get("title", "")
+                    content_data = None
+                    if title:
+                        # Get the article content
+                        content_url = (
+                            "https://ru.wikipedia.org/w/api.php"
+                            f"?action=query&titles={urllib.parse.quote(title)}"
+                            "&prop=extracts&exintro&explaintext&format=json"
+                        )
+                        content_data = self._fetch_json(content_url)
+                    if content_data:
+                        pages = content_data.get("query", {}).get("pages", {})
+                        for pid, info in pages.items():
+                            if pid != "-1":
+                                text = info.get("extract", "")
+                                if text and len(text) > 200:
+                                    examples.append({
+                                        "instruction": f"Расскажи про: {title}",
+                                        "input": "",
+                                        "output": text[:4000],
+                                    })
 
-            examples = []
-            for page in data["query"].get("random", []):
-                title = page.get("title", "")
-                content_data = None
-                if title:
-                    # Get the article content
-                    content_url = (
-                        "https://ru.wikipedia.org/w/api.php"
-                        f"?action=query&titles={urllib.parse.quote(title)}"
-                        "&prop=extracts&exintro&explaintext&format=json"
-                    )
-                    content_data = self._fetch_json(content_url)
-                if content_data:
-                    pages = content_data.get("query", {}).get("pages", {})
-                    for pid, info in pages.items():
-                        if pid == "-1":
-                            continue
-                        text = info.get("extract", "")
-                        if text and len(text) > 200:
-                            examples.append({
-                                "instruction": f"Расскажи про: {title}",
-                                "input": "",
-                                "output": text[:4000],
-                            })
-
-            if examples:
-                out_path = LEARN_DIR / "wikipedia_ru.jsonl"
-                with open(out_path, "a", encoding="utf-8") as f:
-                    for ex in examples:
-                        f.write(json.dumps(ex, ensure_ascii=False) + "\n")
-                return len(examples)
-            return 0
+                if examples:
+                    out_path = LEARN_DIR / "wikipedia_ru.jsonl"
+                    with open(out_path, "a", encoding="utf-8") as f:
+                        for ex in examples:
+                            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+                    written = len(examples)
         except Exception as e:
             print(f"    ERROR: {e}")
-            return 0
+        return written
 
     # ---- Collect Mirro's own skills as knowledge ----
     def build_skills_knowledge(self):

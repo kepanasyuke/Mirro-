@@ -46,12 +46,13 @@ class ReferenceCollector:
         self.results_queue = queue.Queue()
         
     def _load_catalog(self):
+        catalog = []
         if CATALOG_FILE.exists():
             try:
-                return json.loads(CATALOG_FILE.read_text("utf-8"))
+                catalog = json.loads(CATALOG_FILE.read_text("utf-8"))
             except Exception:
-                return []
-        return []
+                catalog = []
+        return catalog
 
     def _save_catalog(self):
         CATALOG_FILE.write_text(json.dumps(self.catalog, ensure_ascii=False, indent=2), "utf-8")
@@ -81,45 +82,42 @@ class ReferenceCollector:
                "?action=query&list=search&srsearch=" + urllib.parse.quote(query) +
                "&srnamespace=6&srlimit=20&format=json&srqiprofile=classic_ns6")
         data = self._fetch(url)
-        if not data:
-            return []
-
-        try:
-            results = json.loads(data).get("query", {}).get("search", [])
-        except Exception:
-            return []
-
         count = 0
-        for result in results:
-            if count >= max_results:
-                break
-            title = result.get("title", "")
+        if data:
+            try:
+                results = json.loads(data).get("query", {}).get("search", [])
+            except Exception:
+                results = []
 
-            # Get image URL
-            img_url = ""
-            if title:
-                img_url = ("https://commons.wikimedia.org/w/api.php"
-                           "?action=query&titles=" + urllib.parse.quote(title) +
-                           "&prop=imageinfo&iiprop=url&format=json")
-            img_data = self._fetch(img_url)
-            if img_data:
-                try:
-                    pages = json.loads(img_data).get("query", {}).get("pages", {})
-                    for page_id, info in pages.items():
-                        if page_id == "-1":
-                            continue
-                        img_info = info.get("imageinfo", [])
-                        if img_info and "url" in img_info[0]:
-                            file_url = img_info[0]["url"]
-                            self.catalog.append({
-                                "source": "wikimedia", "query": query,
-                                "title": title.replace("File:", ""),
-                                "url": file_url,
-                                "collected": datetime.utcnow().isoformat(),
-                            })
-                            count += 1
-                except Exception:
-                    continue
+            for result in results:
+                if count >= max_results:
+                    break
+                title = result.get("title", "")
+
+                # Get image URL
+                img_url = ""
+                if title:
+                    img_url = ("https://commons.wikimedia.org/w/api.php"
+                               "?action=query&titles=" + urllib.parse.quote(title) +
+                               "&prop=imageinfo&iiprop=url&format=json")
+                img_data = self._fetch(img_url)
+                if img_data:
+                    try:
+                        pages = json.loads(img_data).get("query", {}).get("pages", {})
+                        for page_id, info in pages.items():
+                            if page_id != "-1":
+                                img_info = info.get("imageinfo", [])
+                                if img_info and "url" in img_info[0]:
+                                    file_url = img_info[0]["url"]
+                                    self.catalog.append({
+                                        "source": "wikimedia", "query": query,
+                                        "title": title.replace("File:", ""),
+                                        "url": file_url,
+                                        "collected": datetime.utcnow().isoformat(),
+                                    })
+                                    count += 1
+                    except Exception:
+                        pass
         return count
 
     # ---- 2. Openverse (free CC images) ----
@@ -128,28 +126,27 @@ class ReferenceCollector:
         url = ("https://api.openverse.org/v1/images/?q=" + urllib.parse.quote(query) +
                "&page_size=15&license=cc-by")
         data = self._fetch(url)
-        if not data:
-            return 0
-        try:
-            results = json.loads(data).get("results", [])
-        except Exception:
-            return 0
-
         count = 0
-        for r in results:
-            if count >= max_results:
-                break
-            img_url = r.get("url", "")
-            if img_url:
-                self.catalog.append({
-                    "source": "openverse", "query": query,
-                    "title": r.get("title", ""),
-                    "url": img_url,
-                    "license": r.get("license", "cc-by"),
-                    "creator": r.get("creator", ""),
-                    "collected": datetime.utcnow().isoformat(),
-                })
-                count += 1
+        if data:
+            try:
+                results = json.loads(data).get("results", [])
+            except Exception:
+                results = []
+
+            for r in results:
+                if count >= max_results:
+                    break
+                img_url = r.get("url", "")
+                if img_url:
+                    self.catalog.append({
+                        "source": "openverse", "query": query,
+                        "title": r.get("title", ""),
+                        "url": img_url,
+                        "license": r.get("license", "cc-by"),
+                        "creator": r.get("creator", ""),
+                        "collected": datetime.utcnow().isoformat(),
+                    })
+                    count += 1
         return count
 
     # ---- 3. NASA API (public domain) ----
@@ -158,30 +155,29 @@ class ReferenceCollector:
         url = ("https://images-api.nasa.gov/search?q=" + urllib.parse.quote(query) +
                "&media_type=image&page_size=10")
         data = self._fetch(url)
-        if not data:
-            return 0
-        try:
-            items = json.loads(data).get("collection", {}).get("items", [])
-        except Exception:
-            return 0
-
         count = 0
-        for item in items:
-            if count >= max_results:
-                break
-            data_ = item.get("data", [{}])[0]
-            links = item.get("links", [])
-            img_url = links[0]["href"] if links else ""
+        if data:
+            try:
+                items = json.loads(data).get("collection", {}).get("items", [])
+            except Exception:
+                items = []
 
-            if img_url:
-                self.catalog.append({
-                    "source": "nasa", "query": query,
-                    "title": data_.get("title", ""),
-                    "description": data_.get("description", "")[:200],
-                    "url": img_url,
-                    "collected": datetime.utcnow().isoformat(),
-                })
-                count += 1
+            for item in items:
+                if count >= max_results:
+                    break
+                data_ = item.get("data", [{}])[0]
+                links = item.get("links", [])
+                img_url = links[0]["href"] if links else ""
+
+                if img_url:
+                    self.catalog.append({
+                        "source": "nasa", "query": query,
+                        "title": data_.get("title", ""),
+                        "description": data_.get("description", "")[:200],
+                        "url": img_url,
+                        "collected": datetime.utcnow().isoformat(),
+                    })
+                    count += 1
         return count
 
     # ---- 4. Archive.org (audio, video, images) ----
@@ -190,41 +186,40 @@ class ReferenceCollector:
         url = ("https://archive.org/advancedsearch.php?q=" + urllib.parse.quote(query) +
                "&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=description&rows=10&page=1&output=json")
         data = self._fetch(url)
-        if not data:
-            return 0
-        try:
-            results = json.loads(data).get("response", {}).get("docs", [])
-        except Exception:
-            return 0
-
         count = 0
-        for r in results:
-            if count >= max_results:
-                break
-            ident = r.get("identifier", "")
-            if ident:
-                self.catalog.append({
-                    "source": "archive", "query": query,
-                    "title": r.get("title", ""),
-                    "url": f"https://archive.org/details/{ident}",
-                    "description": (r.get("description", [""])[0] if isinstance(r.get("description"), list) else "")[:200],
-                    "collected": datetime.utcnow().isoformat(),
-                })
-                count += 1
+        if data:
+            try:
+                results = json.loads(data).get("response", {}).get("docs", [])
+            except Exception:
+                results = []
+
+            for r in results:
+                if count >= max_results:
+                    break
+                ident = r.get("identifier", "")
+                if ident:
+                    self.catalog.append({
+                        "source": "archive", "query": query,
+                        "title": r.get("title", ""),
+                        "url": f"https://archive.org/details/{ident}",
+                        "description": (r.get("description", [""])[0] if isinstance(r.get("description"), list) else "")[:200],
+                        "collected": datetime.utcnow().isoformat(),
+                    })
+                    count += 1
         return count
 
     # ---- Met Museum (public domain art) ----
     def collect_met(self, query: str, max_results: int = 10):
         """Met Museum Collection API — public domain art images."""
+        ids = []
         try:
             url = ("https://collectionapi.metmuseum.org/public/collection/v1/search"
                    "?q=" + urllib.parse.quote(query) + "&hasImages=true&pageSize=20")
             data = self._fetch(url)
-            if not data:
-                return 0
-            ids = json.loads(data).get("objectIDs", []) or []
+            if data:
+                ids = json.loads(data).get("objectIDs", []) or []
         except Exception:
-            return 0
+            ids = []
 
         count = 0
         for oid in ids[:max_results * 2]:
@@ -293,9 +288,10 @@ class ReferenceCollector:
         """Get a random reference from the catalog."""
         import random
         candidates = [r for r in self.catalog if not source or r.get("source") == source]
-        if not candidates:
-            return None
-        return random.choice(candidates)
+        ref = None
+        if candidates:
+            ref = random.choice(candidates)
+        return ref
 
     # ---- Show latest ----
     def show_latest(self, n: int = 5):

@@ -26,13 +26,16 @@ NUMBERS_PER_LINE = 32
 
 def load_key(key_source):
     """Ключ: путь к файлу-документу или фраза через --phrase."""
+    key = None
     if isinstance(key_source, tuple):  # (is_phrase, value)
         is_phrase, value = key_source
         if is_phrase:
-            return value.encode("utf-8")
-        return Path(value).read_bytes()
-    p = Path(key_source)
-    return p.read_bytes()
+            key = value.encode("utf-8")
+        else:
+            key = Path(value).read_bytes()
+    else:
+        key = Path(key_source).read_bytes()
+    return key
 
 
 def expand_key(key, length):
@@ -87,16 +90,19 @@ def try_generate_secure_key(key_filepath="keys/secret.key", key_length=32, seed=
 def try_load_secure_key(key_filepath="keys/secret.key"):
     """Загружает ключ-соль; если файла нет — генерирует и сохраняет.
     Один return: байты ключа (как load_key при документе)."""
+    key_bytes = None
     try:
         path = Path(key_filepath)
         if path.exists():
             text = path.read_text(encoding="utf-8").strip()
             if text:
-                return text.encode("utf-8")
+                key_bytes = text.encode("utf-8")
     except (OSError, IOError):
-        pass
-    # нет ключа — генерируем на лету и возвращаем его же
-    return try_generate_secure_key(key_filepath).encode("utf-8")
+        key_bytes = None
+    if key_bytes is None:
+        # нет ключа — генерируем на лету и возвращаем его же
+        key_bytes = try_generate_secure_key(key_filepath).encode("utf-8")
+    return key_bytes
 
 
 def transform_bytes_to_cipher(data_bytes, key_string, decrypt=False):
@@ -107,10 +113,10 @@ def transform_bytes_to_cipher(data_bytes, key_string, decrypt=False):
     Один return: bytes.
     """
     key = key_string.encode("utf-8") if isinstance(key_string, str) else bytes(key_string)
+    out = bytes(encode(data_bytes, key))      # list байтов (десятичный массив)
     if decrypt:
-        return decode(data_bytes, key)
-    encoded = encode(data_bytes, key)          # list байтов (десятичный массив)
-    return bytes(encoded)
+        out = decode(data_bytes, key)
+    return out
 
 
 def main():

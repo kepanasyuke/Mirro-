@@ -172,27 +172,25 @@ def evaluate_best_logical_tree(graph, available_nodes, chaos_target=0.5):
         a, b = pair[0], pair[1]
         # ищем прямую связь в реальном графе (в любом направлении)
         w = _edge_weight_between(graph, a, b)
-        if w is None:
-            continue
-        chaos = abs(w * w - chaos_target)
-        if chaos < min_chaos:
-            min_chaos = chaos
-            best_pair = (a, b)
+        if w is not None:
+            chaos = abs(w * w - chaos_target)
+            if chaos < min_chaos:
+                min_chaos = chaos
+                best_pair = (a, b)
     return best_pair, min_chaos
 
 
 def _edge_weight_between(graph, a, b):
     """Активный вес прямой связи между a и b (в любом направлении), или None.
     Один return: float|None."""
-    if graph is None:
-        return None
     best = None
-    a, b = (a or "").strip().lower(), (b or "").strip().lower()
-    for (s, _p, d), w in getattr(graph, "edges", {}).items():
-        ss, dd = s.strip().lower(), d.strip().lower()
-        if (ss == a and dd == b) or (ss == b and dd == a):
-            if best is None or abs(w) < abs(best):
-                best = w
+    if graph is not None:
+        a, b = (a or "").strip().lower(), (b or "").strip().lower()
+        for (s, _p, d), w in getattr(graph, "edges", {}).items():
+            ss, dd = s.strip().lower(), d.strip().lower()
+            if (ss == a and dd == b) or (ss == b and dd == a):
+                if best is None or abs(w) < abs(best):
+                    best = w
     return best
 
 

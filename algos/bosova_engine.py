@@ -34,14 +34,13 @@ def _words(text):
     }
     out = []
     for w in _re.findall(r"[а-яёa-z0-9]+", text.lower()):
-        if w in stop or len(w) < 3:
-            continue
-        # мини-стем: обрезаем частые окончания для сравнения
-        for suf in ("ения", "ений", "ение", "ость", "ного", "тое", "ость"):
-            if w.endswith(suf) and len(w) > len(suf) + 2:
-                w = w[:-len(suf)]
-                break
-        out.append(w)
+        if w not in stop and len(w) >= 3:
+            # мини-стем: обрезаем частые окончания для сравнения
+            for suf in ("ения", "ений", "ение", "ость", "ного", "тое", "ость"):
+                if w.endswith(suf) and len(w) > len(suf) + 2:
+                    w = w[:-len(suf)]
+                    break
+            out.append(w)
     return out
 
 
@@ -69,40 +68,45 @@ def решить_арифметику(query):
     """
     q = query.lower()
     nums = _числа(query)
+    result = None
+    scheme = None
     # процент: "X% от Y"
     m = _re.search(r"(\d+)\s*%\s*(?:от|из|о т)?\s*(\d+)", q.lower())
-    if m and "процент" in q or (m and "% от" in q):
+    if m and ("процент" in q or "% от" in q):
         p, v = int(m.group(1)), int(m.group(2))
         ans = v * p // 100
+        result = ans
         scheme = ("ЦИКЛ ПОКА <в вопросе есть проценты>",
                   [f"ВВОД: {p}% от {v}",
                    f"ВЫЧИСЛИТЬ: {v} × {p} / 100",
                    f"ВЫВОД: {ans}"])
-        return ans, scheme
+    else:
+        multiplier = None
+        if ("умнож" in q or "×" in q or "*" in q or "найди произведение" in q) and len(nums) >= 2:
+            multiplier = nums[-2] * nums[-1]
+        elif "плюс" in q or "сумм" in q or "+" in q or "сколько будет" in q:
+            if len(nums) >= 2:
+                # сложение
+                a, b = nums[-2], nums[-1]
+                # если это "a - b", минус стоит перед
+                mn = _re.search(r"(\d+)\s*-\s*(\d+)", q)
+                multiplier = (a - b) if mn and str(a) + "-" + str(b) in q.replace(" ", "") else (a + b)
+        elif "минус" in q or "-" in q:
+            m2 = _re.search(r"(\d+)\s*-\s*(\d+)", q)
+            if m2 and len(nums) >= 2:
+                multiplier = int(m2.group(1)) - int(m2.group(2))
 
-    multiplier = None
-    if ("умнож" in q or "×" in q or "*" in q or "найди произведение" in q) and len(nums) >= 2:
-        multiplier = nums[-2] * nums[-1]
-    elif "плюс" in q or "сумм" in q or "+" in q or "сколько будет" in q:
-        if len(nums) >= 2:
-            # сложение
-            a, b = nums[-2], nums[-1]
-            # если это "a - b", минус стоит перед
-            mn = _re.search(r"(\d+)\s*-\s*(\d+)", q)
-            multiplier = (a - b) if mn and str(a) + "-" + str(b) in q.replace(" ", "") else (a + b)
-    elif "минус" in q or "-" in q:
-        m2 = _re.search(r"(\d+)\s*-\s*(\d+)", q)
-        if m2 and len(nums) >= 2:
-            multiplier = int(m2.group(1)) - int(m2.group(2))
-
-    if multiplier is None:
-        return None, ("Следование (нет операции)",
+        if multiplier is None:
+            result = None
+            scheme = ("Следование (нет операции)",
                       ["НАЧАЛО", "ОПРЕДЕЛИТЬ: чисел нет или операция не распознана", "КОНЕЦ → без результата"])
-    scheme = ("Ветвление ЕСЛИ/ТО + вычисление",
-              [f"ВВОД: числа {nums}",
-               f"ЕСЛИ операция распознана ТО ВЫЧИСЛИТЬ",
-               f"ВЫВОД: {multiplier}"])
-    return multiplier, scheme
+        else:
+            result = multiplier
+            scheme = ("Ветвление ЕСЛИ/ТО + вычисление",
+                      [f"ВВОД: числа {nums}",
+                       f"ЕСЛИ операция распознана ТО ВЫЧИСЛИТЬ",
+                       f"ВЫВОД: {multiplier}"])
+    return result, scheme
 
 
 def таблица_решений(query, факты):
@@ -194,10 +198,15 @@ def тройственность(query):
     # Также берём любые длинные слова как потенциальные элементы, если их 3+ и не стоп
     if len(present) < 3:
         present = [w for w in words if len(w) >= 4]
-    if len(present) < 3:
-        return None
+    out = None
+    if len(present) >= 3:
+        A, B, C = present[:3]
+        out = _построить_рассуждение(A, B, C)
+    return out
 
-    A, B, C = present[:3]
+
+def _построить_рассуждение(A, B, C):
+    """Строит тройственное рассуждение для трёх элементов. Один return: dict."""
 
     # Мера «силы связи» — как у Шеннона: чем больше общих/длинных лексем,
     # тем выше «неопределённость», которую элемент несёт. Здесь — эвристика.
@@ -246,30 +255,29 @@ def применить(query):
     не подходит (тогда Mirro отвечает обычным путём).
     """
     q = query.lower().strip()
+    outcome = None
 
     # 1. Выполнимая арифметика по правилам Босовой
     ans, scheme = решить_арифметику(query)
     if ans is not None:
-        return {"kind": "bosova_arifmetika", "answer": f"{ans}", "scheme": scheme}
-
-    # 2. Тройственное рассуждение (по мотивам трёх тел + Шеннона)
-    if "между" in q or "треть" in q or "отношени" in q or "связ" in q or "влия" in q:
+        outcome = {"kind": "bosova_arifmetika", "answer": f"{ans}", "scheme": scheme}
+    elif "между" in q or "треть" in q or "отношени" in q or "связ" in q or "влия" in q:
+        # 2. Тройственное рассуждение (по мотивам трёх тел + Шеннона)
         tr = тройственность(query)
         if tr:
-            return {"kind": "troystvennost", "answer": tr["рассуждение"], "scheme": tr["таблица"]}
-
-    # 3. Просьба показать схему мышления
-    if "схема" in q or "блок-схем" in q or "алгоритм мышления" in q or "как ты думаешь" in q:
+            outcome = {"kind": "troystvennost", "answer": tr["рассуждение"], "scheme": tr["таблица"]}
+    elif "схема" in q or "блок-схем" in q or "алгоритм мышления" in q or "как ты думаешь" in q:
+        # 3. Просьба показать схему мышления
         name = None
         for n in список_схем():
             if n.replace("_", " ") in q or n in q:
                 name = n
                 break
         s = схема_мышления(name or "вспомогательный")
-        return {"kind": "bosova_shema", "answer": "\n".join(s["steps"]),
-                "scheme": (s["name"], s["steps"])}
+        outcome = {"kind": "bosova_shema", "answer": "\n".join(s["steps"]),
+                   "scheme": (s["name"], s["steps"])}
 
-    return None
+    return outcome
 
 
 # ======================================================================
