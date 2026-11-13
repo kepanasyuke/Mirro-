@@ -1448,21 +1448,30 @@ def _fallback_chain(prompt):
     return result
 
 
-def _guarded_first_stage(prompt, default=None):
+def _guarded_first_stage(prompt):
     """Первая стадия ответа: уточнение и модерация. Любое исключение внутри
     (или None вместо dict) не должно ронять ответ — тогда возвращается None,
     и цепочка идёт дальше. Один return: dict-ответ или None."""
     result = None
     try:
-        clarify = _clarify_guess(prompt)
-        chosen = clarify if clarify is not None else _moderation_gate(prompt)
-        if isinstance(chosen, dict) and chosen.get("content"):
-            result = chosen
-            result["workspace"] = ("сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
-                                   if clarify is not None
-                                   else "сознание: безопасность (запрос отсечён фильтром модерации)")
+        result = _pick_clarify_or_gate()
     except Exception:
         result = None
+    return result
+
+
+def _pick_clarify_or_gate(prompt):
+    """Уточняющий вопрос важнее модерации: он не запускает фильтр и не тратит
+    работу. Поле workspace объясняет, какая стадия сработала.
+    Один return: dict-ответ или None."""
+    result = None
+    clarify = _clarify_guess(prompt)
+    chosen = clarify if clarify is not None else _moderation_gate(prompt)
+    if isinstance(chosen, dict) and chosen.get("content"):
+        result = chosen
+        result["workspace"] = ("сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
+                               if clarify is not None
+                               else "сознание: безопасность (запрос отсечён фильтром модерации)")
     return result
 
 
