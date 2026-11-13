@@ -767,10 +767,40 @@ function resetReaction() {
 
 <script>
 const API = 'http://127.0.0.1:3443';
-const TOKEN = 'test-secret-123';
-const AUTH_HDR = { 'Authorization': 'Bearer ' + TOKEN };
+/* Токен берём из окружения страницы (?token= или sessionStorage), а не хардкодом:
+   сервер включает авторизацию только при MIRRO_TOKEN, и «test-secret-123» в этом
+   режиме гарантированно давал 401. Без токена работает локальный режим. */
+const TOKEN = (function () {
+  try {
+    const q = new URLSearchParams(location.search).get('token');
+    if (q) { sessionStorage.setItem('mirro_token', q); return q; }
+    return sessionStorage.getItem('mirro_token') || '';
+  } catch (e) { return ''; }
+})();
+const AUTH_HDR = TOKEN ? { 'Authorization': 'Bearer ' + TOKEN } : {};
 let history = JSON.parse(localStorage.getItem('mirro_history') || '[]');
 let lastQuery = '';
+
+/* Единая точка запросов: проверяет response.ok и достаёт текст ошибки сервера,
+   чтобы 401/500 не превращались в тихий «Успех» с пустыми полями. */
+async function apiFetch(path, opts) {
+  const r = await fetch(API + path, Object.assign({headers: AUTH_HDR}, opts || {}));
+  if (!r.ok) {
+    let detail = '';
+    try {
+      const body = await r.json();
+      detail = body && body.error ? String(body.error) : '';
+    } catch (e) { /* тело не JSON — оставляем только код */ }
+    const err = new Error('HTTP ' + r.status + (detail ? ': ' + detail : ''));
+    err.status = r.status;
+    throw err;
+  }
+  return r.json();
+}
+function errorText(e) {
+  if (e && e.status === 401) return 'Нужен токен доступа: открой страницу с ?token=…';
+  return (e && e.message) ? e.message : 'неизвестная ошибка';
+}
 
 /* ===== Навигация ===== */
 document.querySelectorAll('.nav-item').forEach(b => {
@@ -786,14 +816,13 @@ document.querySelectorAll('.nav-item').forEach(b => {
 
 /* ===== Статус ===== */
 async function updateStatus() {
+  const pill = document.getElementById('pill');
   try {
-    const r = await fetch(API + '/health', {signal: AbortSignal.timeout(4000), headers: AUTH_HDR});
-    const d = await r.json();
-    const pill = document.getElementById('pill');
+    const d = await apiFetch('/health', {signal: AbortSignal.timeout(4000)});
+    const n = Number(d.total_examples) || 0;
     pill.className = 'status-pill on';
-    pill.querySelector('span').textContent = 'онлайн · ' + (d.total_examples/1000).toFixed(0) + 'k';
+    pill.querySelector('span').textContent = 'онлайн · ' + (n / 1000).toFixed(0) + 'k';
   } catch {
-    const pill = document.getElementById('pill');
     pill.className = 'status-pill off';
     pill.querySelector('span').textContent = 'сервер не запущен';
   }
@@ -873,16 +902,15 @@ async function improve(btn) {
   if (!q) { toast('Сначала задай вопрос', 'err'); return; }
   btn.disabled = true;
   try {
-    const r = await fetch(API + '/v1/improve', {
+    const d = await apiFetch('/v1/improve', {
       method: 'POST', headers: {'Content-Type':'application/json', ...AUTH_HDR},
       body: JSON.stringify({query: q, response: prev})
     });
-    const d = await r.json();
-    const better = d.content || d.error || 'Не удалось улучшить';
-    bubble.innerHTML = renderContent(better);
+    if (!d.content) throw new Error(d.error || 'пустой ответ');
+    bubble.innerHTML = renderContent(d.content);
     btn.closest('.acts').querySelectorAll('button').forEach(b => { b.classList.add('done'); b.disabled = true; });
     toast('Переформулировала ответ.', 'ok');
-  } catch { toast('Не удалось улучшить', 'err'); btn.disabled = false; }
+  } catch (e) { toast('Не удалось улучшить: ' + errorText(e), 'err'); btn.disabled = false; }
 }
 
 /* Печать ответа посимвольно (живой набор текста) */
@@ -962,11 +990,10 @@ async function sendChat() {
   for (const s of steps) { typingText(s); await sleep(350); }
 
   try {
-    const r = await fetch(API + '/v1/chat/completions', {
+    const d = await apiFetch('/v1/chat/completions', {
       method: 'POST', headers: {'Content-Type': 'application/json', ...AUTH_HDR},
       body: JSON.stringify({messages: [{role:'user', content:text}]})
     });
-    const d = await r.json();
     const reply = d.choices?.[0]?.message?.content || 'Нет ответа';
     const reasoning = d.choices?.[0]?.message?.reasoning_content || '';
     const plan = d.choices?.[0]?.message?.plan || '';
@@ -975,23 +1002,27 @@ async function sendChat() {
     await addBotTyping(reply, reasoning, plan, source);   // печать ответа («мысли»+план сверху)
     history.push({q:text, a:reply, ts:new Date().toISOString()});
     if (history.length > 200) history.shift();
-    localStorage.setItem('mirro_history', JSON.stringify(history));
+    try { localStorage.setItem('mirro_history', JSON.stringify(history)); } catch (e) { /* переполнение квоты */ }
   } catch(e) {
     document.getElementById('typing')?.remove();
-    addMsg('bot', 'Не удалось связаться с Mirro. Убедись, что сервер запущен.');
+    /* Различаем «сервер не отвечает» и «сервер ответил ошибкой»: при 401/500
+       сообщение «запусти сервер» уводит в сторону. */
+    addMsg('bot', e && e.status
+      ? 'Сервер Mirro вернул ошибку (' + errorText(e) + ').'
+      : 'Не удалось связаться с Mirro. Убедись, что сервер запущен.');
   }
   document.getElementById('sendBtn').disabled = false;
 }
 
 async function rate(btn, val, liked) {
   try {
-    await fetch(API + '/v1/feedback', {
+    await apiFetch('/v1/feedback', {
       method: 'POST', headers: {'Content-Type':'application/json', ...AUTH_HDR},
       body: JSON.stringify({query: lastQuery, response: btn.closest('.body').querySelector('.bubble').textContent, liked})
     });
     btn.closest('.acts').querySelectorAll('button').forEach(b => { b.classList.add('done'); b.disabled = true; });
     toast(val > 0 ? 'Спасибо! Mirro запомнит.' : 'Учтено — буду искать точнее.', 'ok');
-  } catch { toast('Не удалось сохранить оценку', 'err'); }
+  } catch (e) { toast('Не удалось сохранить оценку: ' + errorText(e), 'err'); }
 }
 
 /* ===== Самообучение ===== */
@@ -1010,10 +1041,9 @@ async function runLearn() {
     bar.style.width = p + '%';
   }, 700);
   try {
-    const r = await fetch(API + '/v1/self-learn', {
+    const d = await apiFetch('/v1/self-learn', {
       method: 'POST', headers: {'Content-Type':'application/json', ...AUTH_HDR}, body: '{}'
     });
-    const d = await r.json();
     clearInterval(iv);
     bar.style.width = '100%';
     txt.textContent = 'Усвоено приёмов: ' + (d.learned || 0) + ' из ' + (d.checked || 0);
@@ -1021,7 +1051,7 @@ async function runLearn() {
   } catch(e) {
     clearInterval(iv);
     bar.style.width = '15%';
-    txt.textContent = 'Ошибка: ' + e.message;
+    txt.textContent = 'Ошибка: ' + errorText(e);
     toast('Ошибка обучения', 'err');
   }
   btn.disabled = false;
@@ -1069,25 +1099,30 @@ function toast(msg, type) {
 /* ===== Аналитика ===== */
 async function loadStats() {
   const grid = document.getElementById('statGrid');
+  if (!grid) return;
   try {
-    const r = await fetch(API + '/health', {headers: AUTH_HDR});
-    const d = await r.json();
+    const d = await apiFetch('/health');
     const a = d.algorithms || {};
     const cl = d.clusters || {};
-    let total = 0, corpus = d.corpus_examples || 0, topC = '', topN = 0;
-    for (const [k,v] of Object.entries(cl)) {
-      total += v.examples;
-      if (v.examples > topN) { topN = v.examples; topC = k; }
+    /* /health не отдаёт corpus_examples — раньше здесь всегда было 0, и «Знаний
+       всего» недооценивало базу. Валидируем обе стороны и не складываем NaN. */
+    let total = 0, corpus = Number(d.corpus_examples) || 0, topC = '—', topN = 0;
+    for (const [k, v] of Object.entries(cl)) {
+      const n = Number(v && v.examples) || 0;
+      total += n;
+      if (n > topN) { topN = n; topC = k; }
     }
     const grandTotal = total + corpus;
+    const kg = a.knowledge_graph || {};
+    const sep = s => String(s).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     grid.innerHTML =
-      '<div class="card"><div class="k">Знаний всего</div><div class="v">' + (grandTotal/1000).toFixed(0) + 'k</div><div class="s">кластеры ' + (total/1000).toFixed(0) + 'k + корпус ' + (corpus/1000).toFixed(0) + 'k</div></div>' +
-      '<div class="card"><div class="k">Словарь</div><div class="v">' + ((a.vocab||0)/1000).toFixed(0) + 'k</div><div class="s">уникальных слов</div></div>' +
-      '<div class="card"><div class="k">Активный индекс</div><div class="v">' + (a.examples||'?') + '</div><div class="s">документов</div></div>' +
+      '<div class="card"><div class="k">Знаний всего</div><div class="v">' + (grandTotal/1000).toFixed(0) + 'k</div><div class="s">кластеры ' + (total/1000).toFixed(0) + 'k' + (corpus ? ' + корпус ' + (corpus/1000).toFixed(0) + 'k' : '') + '</div></div>' +
+      '<div class="card"><div class="k">Словарь</div><div class="v">' + ((Number(a.vocab)||0)/1000).toFixed(0) + 'k</div><div class="s">уникальных слов</div></div>' +
+      '<div class="card"><div class="k">Активный индекс</div><div class="v">' + (a.examples != null ? sep(a.examples) : '?') + '</div><div class="s">документов</div></div>' +
       '<div class="card"><div class="k">Топ кластер</div><div class="v v-md">' + topC + '</div><div class="s">' + topN.toLocaleString() + ' примеров</div></div>' +
       '<div class="card"><div class="k">Алгоритмы</div><div class="v v-md">10 шт</div><div class="s">TF-IDF · TextRank · NB · RAG…</div></div>' +
-      '<div class="card"><div class="k">Граф: узлов</div><div class="v v-md">' + String((a.knowledge_graph&&a.knowledge_graph.nodes)||0).replace(/\B(?=(\d{3})+(?!\d))/g,' ') + '</div><div class="s">рёбер ' + String((a.knowledge_graph&&a.knowledge_graph.edges)||0).replace(/\B(?=(\d{3})+(?!\d))/g,' ') + '</div></div>' +
-      '<div class="card"><div class="k">Плотность графа</div><div class="v v-md">' + (a.knowledge_graph?a.knowledge_graph.density:'?') + '</div><div class="s">рёбер на узел</div></div>';
+      '<div class="card"><div class="k">Граф: узлов</div><div class="v v-md">' + sep(Number(kg.nodes) || 0) + '</div><div class="s">рёбер ' + sep(Number(kg.edges) || 0) + '</div></div>' +
+      '<div class="card"><div class="k">Плотность графа</div><div class="v v-md">' + (kg.density != null ? kg.density : '?') + '</div><div class="s">рёбер на узел</div></div>';
     const lines = [
       ['TF-IDF + BM25 поиск', true], ['TextRank суммаризация', true],
       ['Naive Bayes классификация', true], ['Перцептрон', true],
@@ -1100,11 +1135,13 @@ async function loadStats() {
       lines.map(([n, ok]) => '<div class="algo-line"><span class="nm">' + n + '</span><span class="st ' + (ok?'yes':'no') + '">' + (ok?'активен':'—') + '</span></div>').join('');
     drawGraphGrowth(a.knowledge_graph);
     drawSubsystemHealth(d);
+    loadQuantumSelector();
     loadDialogueSummary();
     loadGraphLog();
     loadTopQuestions();
-  } catch {
-    grid.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--danger)">Сервер недоступен — запусти Mirro через лаунчер.</div>';
+  } catch (e) {
+    grid.innerHTML = '<div style="grid-column:1/-1; padding:40px; text-align:center; color:var(--danger)">' +
+      (e && e.status ? 'Сервер вернул ошибку: ' + errorText(e) : 'Сервер недоступен — запусти Mirro через лаунчер.') + '</div>';
   }
 }
 
@@ -1112,8 +1149,7 @@ async function loadDialogueSummary() {
   try {
     const el = document.getElementById('dialogueSummary');
     if (!el) return;
-    const r = await fetch(API + '/v1/dialogue-summary', {headers: AUTH_HDR});
-    const d = await r.json();
+    const d = await apiFetch('/v1/dialogue-summary');
     const s = d.summary || '';
     el.textContent = s ? s : 'Пока нет резюме длинного диалога.';
   } catch { /* тихо */ }
@@ -1166,20 +1202,20 @@ async function loadGraphLog() {
   const host = document.getElementById('graphLog');
   if (!host) return;
   try {
-    const r = await fetch(API + '/v1/learn-report', {headers: AUTH_HDR});
-    const d = await r.json();
-    const story = (d.graph_story || []);
+    const d = await apiFetch('/v1/learn-report');
+    const story = Array.isArray(d.graph_story) ? d.graph_story : [];
     const last = story[story.length - 1];
-    const links = (last && last.new_links) || [];
+    const links = Array.isArray(last && last.new_links) ? last.new_links : [];
     host.innerHTML = '<div style="font-size:var(--fs-tiny);color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:4px 2px 6px">Свежие связи графа</div>' +
       (links.length
-        ? links.map(l => '<div class="algo-line"><span class="nm">' + l.replace(/`/g,'').substring(0,52) + '</span></div>').join('')
+        ? links.map(l => '<div class="algo-line"><span class="nm">' + esc(String(l).replace(/`/g,'').substring(0,52)) + '</span></div>').join('')
         : '<div style="color:var(--muted);font-size:var(--fs-small)">новых связей ещё нет</div>');
-  } catch { if (host) host.innerHTML = '<div style="color:var(--muted)">лог недоступен</div>'; }
+  } catch { host.innerHTML = '<div style="color:var(--muted)">лог недоступен</div>'; }
 }
 
 let netNodes = [];   // позиции узлов для клика #0 центр, далее связи
 let netSelected = null;  // выбранное (кликнутое) понятие для подсветки
+let netSeq = 0;          // номер последнего запроса: отсекает гонку ответов canvas
 async function showNetMap() {
   const inp = document.getElementById('netInput');
   const cv = document.getElementById('cvNetMap');
@@ -1188,14 +1224,17 @@ async function showNetMap() {
   let concept = (inp.value || '').trim();
   if (!concept) { inp.value = 'граф'; concept = 'граф'; }
   const ctx = cv.getContext('2d');
+  const seq = ++netSeq;
   ctx.clearRect(0,0,cv.width,cv.height);
   if (info) info.textContent = 'загружаю связи «' + concept + '»…';
   netNodes = [];
   netSelected = concept;  // подсветка выбранного понятия
   try {
-    const r = await fetch(API + '/v1/knowledge?q=' + encodeURIComponent(concept) + '&kind=links', {headers: AUTH_HDR});
-    const d = await r.json();
-    const links = d.answer || [];
+    const d = await apiFetch('/v1/knowledge?q=' + encodeURIComponent(concept) + '&kind=links');
+    /* Пока ждали ответ, пользователь мог кликнуть другой узел: рисуем только
+       результат самого свежего запроса, иначе карта остаётся от предыдущего. */
+    if (seq !== netSeq) return;
+    const links = Array.isArray(d.answer) ? d.answer : [];
     ctx.fillStyle = '#0c1220'; ctx.fillRect(0,0,cv.width,cv.height);
     const cx = cv.width/2, cy = cv.height/2;
     // центр — понятие (выбранное подсвечено ярче)
@@ -1214,15 +1253,16 @@ async function showNetMap() {
       ctx.beginPath(); ctx.moveTo(cx+14*Math.cos(ang), cy+14*Math.sin(ang)); ctx.lineTo(x,y); ctx.stroke();
       ctx.fillStyle = '#9aa0b5';
       // вытаскиваем имя понятия из строки связи
-      let nm = String(links[i]).replace(concept,'…').replace(/\(вес[\s\S]*$/, '').split(/\s+/)[0];
+      const text = String(links[i]);
+      const nm = text.replace(concept, '…').replace(/\(вес[\s\S]*$/, '').split(/\s+/)[0] || text.substring(0, 18);
       ctx.beginPath(); ctx.arc(x, y+4, 4, 0, Math.PI*2); ctx.fillStyle='#e8c05a'; ctx.fill();
       ctx.fillStyle = '#9aa0b5';
       ctx.fillText(nm.substring(0,18), x-40, y-4);
       netNodes.push({x:x, y:y+4, name:nm});
     }
     if (info) info.textContent = 'связи «' + concept + '»: кликни узел, чтобы раскрыть его · ' + (links.length ? links.slice(0,8).join(' · ') : 'нет связей');
-  } catch {
-    if (info) info.textContent = 'не удалось загрузить связи сети';
+  } catch (e) {
+    if (seq === netSeq && info) info.textContent = 'не удалось загрузить связи сети: ' + errorText(e);
   }
 }
 
@@ -1248,21 +1288,21 @@ async function loadTopQuestions() {
   const el = document.getElementById('topQuestions');
   if (!el) return;
   try {
-    const r = await fetch(API + '/v1/top-questions', {headers: AUTH_HDR});
-    const d = await r.json();
-    const qs = d.questions || [];
+    const d = await apiFetch('/v1/top-questions');
+    const qs = Array.isArray(d.questions) ? d.questions.filter(q => q && q.q) : [];
     if (!qs.length) {
       el.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-small)">Пока нет данных — задайте несколько вопросов Mirro.</div>';
       return;
     }
-    const max = qs[0].count || 1;
-    el.innerHTML = qs.slice(0, 10).map(q =>
-      '<div style="display:flex;align-items:center;gap:10px;font-size:var(--fs-ui)">' +
-        '<span style="flex:0 0 34px;color:var(--muted);font-variant-numeric:tabular-nums">' + q.count + '×</span>' +
-        '<div style="flex:1;min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(q.q) + '</div>' +
-        '<div style="height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden"><i style="display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:' + Math.max(4,(q.count/max)*100) + '%"></i></div></div>' +
-      '</div>'
-    ).join('');
+    const max = Math.max(1, Number(qs[0].count) || 1);
+    el.innerHTML = qs.slice(0, 10).map(q => {
+      const n = Number(q.count) || 0;
+      return '<div style="display:flex;align-items:center;gap:10px;font-size:var(--fs-ui)">' +
+        '<span style="flex:0 0 34px;color:var(--muted);font-variant-numeric:tabular-nums">' + n + '×</span>' +
+        '<div style="flex:1;min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(String(q.q)) + '</div>' +
+        '<div style="height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden"><i style="display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:' + Math.max(4,(n/max)*100) + '%"></i></div></div>' +
+      '</div>';
+    }).join('');
   } catch {
     el.innerHTML = '<div style="color:var(--muted);font-size:var(--fs-small)">Не удалось загрузить ТОП-вопросов.</div>';
   }
@@ -1270,21 +1310,20 @@ async function loadTopQuestions() {
 
 async function exportKnowledge() {
   try {
-    const r = await fetch(API + '/health', {headers: AUTH_HDR});
-    const d = await r.json();
+    const d = await apiFetch('/health');
     const cl = d.clusters || {};
     const now = new Date().toISOString().slice(0, 10);
 
     let md = '# Mirro — дайджест знаний\n\n';
     md += '**Дата:** ' + now + '  \n';
-    md += '**Всего примеров:** ' + (d.total_examples || 0).toLocaleString() + '  \n';
+    md += '**Всего примеров:** ' + (Number(d.total_examples) || 0).toLocaleString() + '  \n';
     md += '**Версия:** ' + (d.version || '0.3') + '  \n\n';
     md += '## Алгоритмы\n\n';
     md += '- TF-IDF + BM25 поиск\n- TextRank суммаризация\n- Naive Bayes классификация\n- Перцептрон (обучение на оценках)\n- Детектор галлюцинаций\n- Стемминг русских слов\n- Web-поиск (Wikidata)\n- Кэш частых запросов\n- Автономное обучение\n\n';
     md += '## Кластеры знаний\n\n';
     md += '| Кластер | Примеров |\n|---|---|\n';
     for (const [k, v] of Object.entries(cl)) {
-      md += '| ' + k + ' | ' + (v.examples || 0).toLocaleString() + ' |\n';
+      md += '| ' + k + ' | ' + (Number(v && v.examples) || 0).toLocaleString() + ' |\n';
     }
     md += '\n*Сгенерировано Mirro*\n';
 
@@ -1293,33 +1332,44 @@ async function exportKnowledge() {
     a.href = URL.createObjectURL(blob);
     a.download = 'mirro-knowledge-' + now + '.md';
     a.click();
-    URL.revokeObjectURL(a.href);
+    /* Отзывать URL сразу после click() нельзя — часть браузеров не успевает
+       начать загрузку и файл не сохраняется. */
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     toast('Дайджест сохранён', 'ok');
   } catch(e) {
-    toast('Не удалось экспортировать: ' + e.message, 'err');
+    toast('Не удалось экспортировать: ' + errorText(e), 'err');
   }
 }
 
 /* ===== Кластеры ===== */
 async function loadClusters() {
+  const list = document.getElementById('clusterList');
   try {
-    const r = await fetch(API + '/health', {headers: AUTH_HDR});
-    const d = await r.json();
+    const d = await apiFetch('/health');
     const cl = d.clusters || {};
-    let max = 1;
-    for (const v of Object.values(cl)) if (v.examples > max) max = v.examples;
-    const list = document.getElementById('clusterList');
-    list.innerHTML = Object.entries(cl).sort((a,b)=>b[1].examples-a[1].examples).map(([k,v]) =>
-      '<div class="cluster-item"><div><div class="nm">' + k + '</div><div class="ds">' + v.desc + '</div></div>' +
-      '<div class="bwrap"><i style="width:' + Math.max(3,(v.examples/max)*100) + '%"></i></div>' +
-      '<div class="ct">' + v.examples.toLocaleString() + '</div></div>').join('');
+    const rows = Object.entries(cl)
+      .map(([k, v]) => [k, v || {}])
+      .sort((a, b) => (Number(b[1].examples) || 0) - (Number(a[1].examples) || 0));
+    const max = Math.max(1, ...rows.map(([, v]) => Number(v.examples) || 0));
+    if (list) {
+      list.innerHTML = rows.map(([k, v]) => {
+        const n = Number(v.examples) || 0;
+        return '<div class="cluster-item"><div><div class="nm">' + esc(k) + '</div><div class="ds">' + esc(v.desc || '') + '</div></div>' +
+          '<div class="bwrap"><i style="width:' + Math.max(3,(n/max)*100) + '%"></i></div>' +
+          '<div class="ct">' + n.toLocaleString() + '</div></div>';
+      }).join('');
+    }
 
-    const r2 = await fetch(API + '/catalog.json', {headers: AUTH_HDR});
-    const cat = await r2.json();
-    document.getElementById('catalogBody').innerHTML =
-      cat.map(e => '<tr><td>' + e.cat + '</td><td>' + e.ds + '</td><td>' + esc(e.desc||'') + '</td></tr>').join('');
-  } catch {
-    document.getElementById('clusterList').innerHTML = '<div style="padding:20px;color:var(--danger)">Сервер недоступен</div>';
+    const cat = await apiFetch('/catalog.json');
+    const body = document.getElementById('catalogBody');
+    if (body) {
+      const list2 = Array.isArray(cat) ? cat : [];
+      body.innerHTML = list2.map(e =>
+        '<tr><td>' + esc(String(e.cat || '')) + '</td><td>' + esc(String(e.ds || '')) + '</td><td>' + esc(e.desc || '') + '</td></tr>').join('');
+    }
+  } catch (e) {
+    if (list) list.innerHTML = '<div style="padding:20px;color:var(--danger)">' +
+      (e && e.status ? 'Ошибка сервера: ' + errorText(e) : 'Сервер недоступен') + '</div>';
   }
 }
 function filterCatalog(v) {
@@ -1329,39 +1379,43 @@ function filterCatalog(v) {
 
 /* ===== Квантовое состояние концептов (виджет) ===== */
 const _qCache = {nodes: []};
+/* Вызывается из loadStats(): раньше функция была определена, но не вызывалась
+   нигде, поэтому оба canvas (cvQuantum, cvImmune) оставались пустыми. */
 async function loadQuantumSelector() {
   try {
-    const r = await fetch(API + '/health', {headers: AUTH_HDR});
-    const d = await r.json();
+    const d = await apiFetch('/health');
     const a = d.algorithms || {};
-    // узлы графа берём из knowledge_graph в /health
-    const kg = a.knowledge_graph || {};
-    // нет списка имён в health — строим по выбранным метрикам; иначе используем топ-понятия
     const sel = document.getElementById('qSel');
-    const f = (a.quantum && a.quantum.P_active_sample) ? a.quantum.P_active_sample : [];
+    const raw = (a.quantum && Array.isArray(a.quantum.P_active_sample)) ? a.quantum.P_active_sample : [];
+    /* В /health лежат только вероятности, без имён понятий: берём имена из
+       центральных узлов графа, иначе показываем «концепт#N». */
+    const kg = a.knowledge_graph || {};
+    const names = Array.isArray(kg.central_nodes) ? kg.central_nodes : [];
+    const f = raw.map(p => Math.max(0, Math.min(1, Number(p) || 0)));
     _qCache.nodes = [];
     if (sel && f.length) {
       sel.innerHTML = '';
       f.forEach((p, i) => {
-        const nm = 'концепт#' + (i + 1);
-        _qCache.nodes.push({name: nm, alpha: Math.sqrt(p), beta: Math.sqrt(Math.max(0,1-p))});
+        const nm = names[i] ? String(names[i]) : 'концепт#' + (i + 1);
+        _qCache.nodes.push({name: nm, alpha: Math.sqrt(p), beta: Math.sqrt(Math.max(0, 1 - p))});
         const o = document.createElement('option'); o.value = i; o.textContent = nm;
         sel.appendChild(o);
       });
-      if (drawQuantumWaveState) drawQuantumWaveState();
     }
-    // иммунный виджет: когерентность, карантин, энергия синапсов
-    if (typeof drawImmuneAndPhaseStatus === 'function') {
-      const imm = a.immunity || {};
-      const kgA = a.knowledge_graph || {};
-      drawImmuneAndPhaseStatus('cvImmune', {
-        pinn_loss: (a.pinn_loss || (kgA.avg_dimension != null ? Math.abs(kgA.avg_dimension/3 - 0.64) : 0)),
-        immune_quarantine_count: imm.quarantined || 0,
-        synaptic_energy: (imm.synaptic_energy || (kgA.avg_dimension != null ? Math.abs(kgA.avg_dimension/3) : 0)),
-        fatigued_edges: imm.fatigued_edges || 0
-      });
-    }
-  } catch {}
+    drawQuantumWaveState();
+    const imm = a.immunity || {};
+    const kgA = a.knowledge_graph || {};
+    drawImmuneAndPhaseStatus('cvImmune', {
+      pinn_loss: (a.pinn_loss || (kgA.avg_dimension != null ? Math.abs(kgA.avg_dimension/3 - 0.64) : 0)),
+      immune_quarantine_count: imm.quarantined || 0,
+      synaptic_energy: (imm.synaptic_energy || (kgA.avg_dimension != null ? Math.abs(kgA.avg_dimension/3) : 0)),
+      fatigued_edges: imm.fatigued_edges || 0
+    });
+  } catch {
+    /* сервер недоступен — оставляем демо-состояние на canvas */
+    drawQuantumWaveState();
+    drawImmuneAndPhaseStatus('cvImmune', {pinn_loss: 0, immune_quarantine_count: 0, synaptic_energy: 0, fatigued_edges: 0});
+  }
 }
 function drawQuantumWaveState() {
   const cv = document.getElementById('cvQuantum');
@@ -1377,7 +1431,7 @@ function drawQuantumWaveState() {
   ctx.strokeStyle = 'rgba(0,255,204,.25)'; ctx.stroke();
   // данные выбранного концепта (или демо)
   const sel = document.getElementById('qSel');
-  const idx = sel ? parseInt(sel.value || '0', 10) : 0;
+  const idx = sel ? (parseInt(sel.value, 10) || 0) : 0;
   const node = (_qCache.nodes && _qCache.nodes[idx]) || {name:'концепт', alpha:0.71, beta:0.71};
   const tx = cx + node.alpha * R;
   const ty = cy - node.beta * R;
