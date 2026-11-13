@@ -140,24 +140,48 @@ def _dim_from_deg(deg, reach2):
     return dim
 
 
-def _node_meta_dependencies(kg, name):
+def _node_meta_dependencies(kg, name, meta_edges=None):
     """Количество роу-ссылок (мета-связей), влияющих на рёбра узла.
     Роу-ссылки живут в graph.meta_routes (см. neural_electric.add_meta_route).
-    Один return: int."""
+    meta_edges — предварительно собранный индекс {ребро: набор роу-ссылок}
+    (см. _meta_edges_index), чтобы не сканировать весь мета-граф на узел.
+    Граф без meta_routes → 0 (не AttributeError). Один return: int."""
     deps = 0
     meta = getattr(kg, "meta_routes", None)
-    if meta:
+    if isinstance(meta, dict) and meta:
+        index = meta_edges if isinstance(meta_edges, dict) else _meta_edges_index(kg)
         node = _norm_zd(kg, name)
-        # рёбра, затронутые узлом (в обе стороны): исходящие из node и входящие в node
-        node_edges = set()
-        for s, p, d in kg.edges:
-            if s == node or d == node:
-                node_edges.add((s, p, d))
-                node_edges.add((d, p, s))  # обратный ключ для поиска
-        for (fkey, tkey), _mod in meta.items():
-            if fkey in node_edges or tkey in node_edges:
-                deps += 1
+        for key, routes in index.items():
+            if (isinstance(key, (tuple, list)) and len(key) == 3
+                    and (key[0] == node or key[2] == node)):
+                deps += len(routes)
     return deps
+
+
+def _meta_edges_index(kg):
+    """Индекс роу-ссылок по рёбрам: {ребро-кортеж: [ключи роу-ссылок]}.
+    Строится один раз на отчёт вместо полного перебора мета-графа для каждого
+    узла (раньше 20 000 рёбер считались ~114 секунд). Ключи-списки
+    нормализуются в кортежи, иначе они нехешируемы и роу-ссылки теряются.
+    Один return: dict."""
+    index = {}
+    meta = getattr(kg, "meta_routes", None)
+    if isinstance(meta, dict):
+        for key in list(meta.keys()):
+            if not (isinstance(key, (tuple, list)) and len(key) == 2):
+                continue
+            for edge in key:
+                edge_key = _edge_key_tuple(edge)
+                if edge_key is not None:
+                    index.setdefault(edge_key, []).append(key)
+    return index
+
+
+def _edge_key_tuple(edge):
+    """Ключ ребра как кортеж (src, pred, dst) или None. Один return: tuple|None."""
+    if isinstance(edge, (tuple, list)) and len(edge) == 3:
+        return tuple(edge)
+    return None
 
 
 def _norm_zd(kg, name):
@@ -174,16 +198,17 @@ def _norm_zd(kg, name):
     return found
 
 
-def dimension_of(kg, name):
+def dimension_of(kg, name, meta_edges=None):
     """Мера «размерности» понятия: изолированная точка (0D) → линейная цепочка (1D)
     → плоскость (2D, узла много) → объёмный мета-граф (3D, есть роу-связи).
 
     Размерность повышается, если узел входит в роу-ссылки мета-графа — это
     признак того, что вокруг него выстроена «руководимая» структура (меньше каши).
-    Быстро (без обхода 2-го порядка). Один return: (dim, deg)."""
+    Быстро (без обхода 2-го порядка); meta_edges — готовый индекс роу-ссылок
+    для массового расчёта по всем узлам. Один return: (dim, deg)."""
     deg = len(kg.neighbors(name))
     dim = _dim_from_deg(deg, 0)
-    meta_deps = _node_meta_dependencies(kg, name)
+    meta_deps = _node_meta_dependencies(kg, name, meta_edges)
     # обладая роу-связями, «плоскость» из 2D переходит в «объём» 3D
     if meta_deps >= 3 and deg >= 2:
         dim = 3.0
@@ -198,23 +223,38 @@ def dimension_of_understanding(kg):
     """Общая мера «роста понимания» всей сети: средняя размерность узлов.
 
     От 0 (всё изолировано) до 3. Быстрый подсчёт: один проход по узлам.
+    Метрика честно учитывает мета-граф: если у графа есть роу-ссылки, то
+    результат совпадает со средним dimension_of (тот же источник, что и
+    growth_report), иначе хватает дешёвого прохода по степеням.
     Один return: float."""
     avg = 0.0
     if kg.nodes:
-        degs = [len(kg.neighbors(n)) for n in kg.nodes]
-        dims = [_dim_from_deg(d, 0) for d in degs]
+        meta = getattr(kg, "meta_routes", None)
+        if isinstance(meta, dict) and meta:
+            index = _meta_edges_index(kg)
+            dims = [dimension_of(kg, n, index)[0] for n in kg.nodes]
+        else:
+            dims = [_dim_from_deg(len(kg.neighbors(n)), 0) for n in kg.nodes]
         avg = round(sum(dims) / len(dims), 2)
     return avg
 
 
 def growth_report(kg):
-    """Текстовый отчёт о росте размерностей: сколько узлов на каждом уровне."""
+    """Текстовый отчёт о росте размерностей: сколько узлов на каждом уровне.
+
+    Средняя размерность берётся из тех же dimension_of, что и разбивка по
+    уровням: раньше средняя считалась только по степеням и игнорировала
+    роу-ссылки, поэтому отчёт мог сказать «средняя 1.5» и одновременно
+    «3D=1». Пустой граф → нули без деления на ноль. Один return: str."""
     buckets = {"0D": 0, "1D": 0, "2D": 0, "3D": 0}
+    dims = []
+    index = _meta_edges_index(kg)
     for n in kg.nodes:
-        d, deg = dimension_of(kg, n)
+        d, _deg = dimension_of(kg, n, index)
+        dims.append(d)
         b = "0D" if d < 0.75 else ("1D" if d < 1.5 else ("2D" if d < 2.5 else "3D"))
         buckets[b] += 1
-    avg = dimension_of_understanding(kg)
+    avg = round(sum(dims) / len(dims), 2) if dims else 0.0
     return (f"Рост понимания: средняя размерность {avg} из 3. "
             f"Узлы: " + ", ".join(f"{k}={v}" for k, v in buckets.items()) + ".")
 

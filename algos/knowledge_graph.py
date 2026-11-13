@@ -467,7 +467,8 @@ class KnowledgeGraph:
 
     @staticmethod
     def _norm(name):
-        return _re.sub(r"\s+", " ", str(name or "")).strip().lower().rstrip(".!?;")[:200]
+        name = name if isinstance(name, str) else str(name or "")
+        return _re.sub(r"\s+", " ", name).strip().lower().rstrip(".!?;")[:200]
 
     def prune_noise(self, noise_preds=None, max_phrase_words=4):
         """Убирает мусор: рёбра с шумовыми предикатами («это», «есть», «если»)
@@ -689,21 +690,35 @@ class KnowledgeGraph:
         return ok
 
     def load(self, path):
-        """Загружает граф с диска; если файла нет — пусто. Один return: int (рёбер)."""
+        """Загружает граф с диска; если файла нет или он битый — пустой граф.
+        Битый pickle и структурно неверный бэкап (nodes не dict, edges=None,
+        ключи не тройки строк) не оставляют граф в полуразобранном состоянии:
+        данные валидируются ДО записи в self. Один return: int (рёбер)."""
+        data = self._read_pickle(path)
+        nodes = _load_valid_nodes(data)
+        edges = _load_valid_edges(data)
+        # очищаем и пишем только после успешной валидации
         self.nodes = {}
         self.edges = {}
         self._adj = {}
+        self.nodes = nodes
+        self.edges = edges
+        self._rebuild_adj()
+        return len(self.edges)
+
+    @staticmethod
+    def _read_pickle(path):
+        """Читает pickle-дамп; любая ошибка (нет файла, битый байткод,
+        неподдерживаемый класс) → None. Один return: dict|None."""
+        data = None
         try:
             import pickle
             with open(str(path), "rb") as f:
-                data = pickle.load(f)
-            self.nodes = data.get("nodes", {})
-            self.edges = data.get("edges", {})
-            # восстанавливаем индекс соседей
-            self._rebuild_adj()
+                loaded = pickle.load(f)
+            data = loaded if isinstance(loaded, dict) else None
         except Exception:
-            pass
-        return len(self.edges)
+            data = None
+        return data
 
     def _rebuild_adj(self):
         """Пересобирает индекс соседей из рёбер. Один return: None."""
@@ -742,9 +757,9 @@ class KnowledgeGraph:
                     if not isinstance(rows, (list, tuple)):
                         rows = []
                     for p, other, w in rows:
-                        if not (isinstance(other, str) and isinstance(w, (int, float))):
-                            continue
-                        if other not in seen_nodes and other not in candidates:
+                        is_link = (isinstance(other, str) and isinstance(w, (int, float))
+                                   and not _is_noisy_predicate(p))
+                        if is_link and other not in seen_nodes and other not in candidates:
                             seen_nodes.add(other)
                             candidates[other] = (p, w)
                             nxt.append(other)
@@ -951,7 +966,8 @@ class KnowledgeGraph:
             safe = [r for r in self.neighbors(name)
                     if isinstance(r, (tuple, list)) and len(r) >= 3]
             for p, other, w in sorted(safe, key=lambda r: -r[2])[:8]:
-                lines.append(f"{name} {p} {other} (вес {w:.2f})")
+                if not _is_noisy_predicate(p):
+                    lines.append(f"{name} {p} {other} (вес {w:.2f})")
         return lines
 
     def similarity(self, a, b):
@@ -1324,6 +1340,38 @@ class KnowledgeGraph:
 kg = KnowledgeGraph()
 
 
+def _load_valid_nodes(data):
+    """Узлы из pickle-дампа: только dict вида {имя: Node}; всё прочее → {}.
+    Раньше ["a","b"] из битого бэкапа уезжал в self.nodes и граф «оживал»
+    со списком вместо словаря. Один return: dict."""
+    raw = data.get("nodes") if isinstance(data, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    nodes = {}
+    for name, node in list(raw.items()):
+        if isinstance(name, str) and name and isinstance(node, Node):
+            nodes[name] = node
+    return nodes
+
+
+def _load_valid_edges(data):
+    """Рёбра из pickle-дампа: только {(src, pred, dst): число}; всё прочее
+    отбрасывается (None вместо edges ронял summary() трейсбеком).
+    Один return: dict."""
+    raw = data.get("edges") if isinstance(data, dict) else None
+    if not isinstance(raw, dict):
+        return {}
+    edges = {}
+    for key, weight in list(raw.items()):
+        is_key = (isinstance(key, (tuple, list)) and len(key) == 3
+                  and all(isinstance(part, str) and part for part in key))
+        is_weight = isinstance(weight, (int, float)) and not isinstance(weight, bool)
+        if is_key and is_weight:
+            edges[tuple(key)] = weight
+    return edges
+
+
+
 def build_function_links():
     """Связывает функции базы знаний (module_knowledge) с графом: для каждой
     функции создаёт узел-пункт знания и рёбра «использует_понятие» к словам из
@@ -1673,6 +1721,16 @@ def _wants_links(q):
                                 "соедин", "ассоциац"))
 
 
+_NOISY_PREDICATES = {"связано_с", "связано", "связан", "связь", "-"}
+
+
+def _is_noisy_predicate(pred):
+    """Мусорный ли предикат связи (корпусные связки вроде «связано_с»).
+    Один return: bool."""
+    name = (pred or "").strip().lower() if isinstance(pred, str) else ""
+    return (not name) or (name in _NOISY_PREDICATES)
+
+
 def _clean_link_text(link):
     """Чистит одну связь «topic p other» от мусорных фрагментов.
     Возвращает None, если связь бессмысленна. Один return: str|None."""
@@ -1795,12 +1853,12 @@ def try_enrich(query):
         topic = _extract_topic(query)
         if topic:
             links = kg.enrich(topic, max_hop=2)
-            good = [_clean_link_text(l) for l in links]
+            good = [_clean_link_text(l.replace(topic + " ", "", 1)) for l in links]
             good = [g for g in good if g]
             if good:
-                # формулируем связно, не клеем «|»
+                # формулируем связно, без служебной фразы «вот что я нахожу в связях»
                 body = "; ".join(dict.fromkeys(good[:5]))
-                ans = f"{topic[0].upper() + topic[1:]} — вот что я нахожу в связях: {body}."
+                ans = f"«{topic}» — {body}."
     return ans
 
 
