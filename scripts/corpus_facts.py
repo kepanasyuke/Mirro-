@@ -141,8 +141,14 @@ _STOP = set(("что", "такое", "почему", "как", "это", "про
 
 
 def _norm_question(q):
-    """Нормализует вопрос для дедупа. Один return: str."""
-    return re.sub(r"[^а-яёa-z0-9]+", " ", (q or "").lower()).strip()
+    """Нормализует вопрос для дедупа. Один return: str.
+
+    Служебные слова («что», «такое», «как»…) и пунктуация отбрасываются:
+    «Что такое чёрная дыра?» и «что такое чёрная дыра» — один и тот же факт,
+    а старый ключ их различал и пропускал дубль в корпус.
+    """
+    words = re.sub(r"[^а-яёa-z0-9]+", " ", (q or "").lower()).split()
+    return " ".join(w for w in words if w not in _STOP)
 
 
 def _existing_keys():
@@ -154,9 +160,9 @@ def _existing_keys():
                 try:
                     r = json.loads(line)
                     keys.add(_norm_question(r.get("instruction", "")))
-                except Exception:
+                except (ValueError, AttributeError):
                     continue
-    except Exception:
+    except OSError:
         keys = set()
     return keys
 
