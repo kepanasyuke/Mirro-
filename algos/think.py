@@ -596,6 +596,9 @@ def answer_question(query):
     head = f"[{r['category']}] "
     answer_value = r["answer"]
     explanation = r["explanation"]
+    # страховка: даже без пояснения не оставляем пустую строку
+    if not explanation and answer_value is None:
+        return head + "Ответ не удалось получить."
     text = ""
     if answer_value is None:
         text = explanation
