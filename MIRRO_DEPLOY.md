@@ -141,22 +141,25 @@ Windows через `scripts/schedule_dashboard.ps1`).
 перезапускать в любой момент.
 
 > ⚠️ Для фоновых циклов, пишущих каждые 60 мин, важен достаточный диск и место
-> для `models/` (граф ~10–100 МБ). Ставь `Environment=PYTHONUNBUFFERED=1` (уже в
-> разделе 3) — иначе логи PINN-loss буферизуются.
+> для `models/` (граф ~10–100 МБ). Для незабуференного вывода добавь в юнит
+> `Environment=PYTHONUNBUFFERED=1` — иначе логи PINN-loss буферизуются.
 
 ## 5.7 Валидация перед рестартом
 
 После каждого обновления файлов из репозитория, **до** перезапуска демона,
-прогони внутреннюю DRY-проверку и весь тестовый пакет — иначе бэкенд может упасть
+прогони сборочную проверку и весь тестовый пакет — иначе бэкенд может упасть
 из-за несовместимости новых модулей:
 
 ```bash
 cd ~/mirro
-python tools/check_duplicates.py
-python -m unittest discover -s tests -v
+python scripts/build_mirro.py --check    # файлы + компиляция + smoke; ждём ALL CHECKS PASSED
+python -m pytest tests -q -p no:cacheprovider
+python tools/check_duplicates.py --min-lines 6   # кандидаты в дубли (код выхода 1 = есть кандидаты)
 sudo systemctl restart mirro
 sudo journalctl -u mirro -f -n 50
 ```
+
+> `python -m unittest discover -s tests` на Python 3.14 зависает на сборе — только pytest.
 
 Если тесты упали — не перезапускай демон, а откати изменения:
 
