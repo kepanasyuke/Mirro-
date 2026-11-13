@@ -148,7 +148,10 @@ class Genome{
     return this;
   }
   crossover(other){ const c=this.clone(); const take=()=> rnd()<0.5?this:other;
-    this.nodes.forEach((nd,i)=>{ const s=take().nodes[i]; c.nodes[i].w=nd.w.map((row,r)=>s.w[r].slice()); });
+    /* Строку донора берём по индексу r от собственной копии nd.w и проверяем
+       наличие: если геномы разойдутся по размеру слоя, slice(undefined) ронял
+       всю эволюцию. Недостающая строка остаётся прежней (из clone). */
+    this.nodes.forEach((nd,i)=>{ const s=take().nodes[i]; c.nodes[i].w=nd.w.map((row,r)=>(s.w[r]?s.w[r].slice():row.slice())); });
     c.wg=this.wg.map((row,i)=>take().wg[i].slice());
     c.dop=take().dop; c.ser=take().ser; c.ach=take().ach; c.gsr=take().gsr;
     c.dec=this.dec.map((_,i)=>take().dec[i]);
@@ -245,12 +248,17 @@ el('btnReset').onclick=()=>{ ev.reset(); el('log').innerHTML=''; render(); log('
 let auto=null;
 el('btnAuto').onclick=()=>{ if(auto){ clearInterval(auto); auto=null; el('btnAuto').textContent='⏵ 20 поколений'; return; }
   el('btnAuto').textContent='■ Стоп'; let left=20;
+  /* Счётчик уменьшается ДО шага: иначе после 20 поколений интервал срабатывал
+     ещё раз и кнопка показывала «20», хотя поколений было 21. */
   auto=setInterval(()=>{ if(left<=0){ clearInterval(auto); auto=null; el('btnAuto').textContent='⏵ 20 поколений'; return; }
-    const s=ev.step(); render(); log('поколение '+ev.gen+': best='+s.best.toFixed(3),'gen'); left--; }, 60);
+    left--; const s=ev.step(); render(); log('поколение '+ev.gen+': best='+s.best.toFixed(3),'gen'); }, 60);
   };
-el('inNodes').oninput=e=>{ cfg.nodes=+e.target.value; el('lbNodes').textContent=cfg.nodes;
+/* Сброс запущенного автопрогона при смене структуры: иначе интервал продолжал
+   шагать старый Evolver, которого уже нет в `ev`, и лог врал о поколениях. */
+function stopAuto(){ if(auto){ clearInterval(auto); auto=null; el('btnAuto').textContent='⏵ 20 поколений'; } }
+el('inNodes').oninput=e=>{ stopAuto(); cfg.nodes=+e.target.value; el('lbNodes').textContent=cfg.nodes;
   ev=new Evolver(cfg.nodes,cfg.pop); ev.reset(); render(); };
-el('inPop').oninput=e=>{ cfg.pop=+e.target.value; el('lbPop').textContent=cfg.pop; ev=new Evolver(cfg.nodes,cfg.pop); ev.reset(); render(); };
+el('inPop').oninput=e=>{ stopAuto(); cfg.pop=+e.target.value; el('lbPop').textContent=cfg.pop; ev=new Evolver(cfg.nodes,cfg.pop); ev.reset(); render(); };
 el('inMut').oninput=e=>{ cfg.mut=+e.target.value/20; el('lbMut').textContent=cfg.mut.toFixed(2); };
 
 /* запуск: несколько поколений сразу, чтобы сцена жила */
