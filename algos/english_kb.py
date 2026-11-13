@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Mirro English KB вЂ” Р±Р°Р·РѕРІС‹Р№ Р°РЅРіР»РёР№СЃРєРёР№ СЂРµР¶РёРј.
+"""Mirro English KB — Р±Р°Р·РѕРІС‹Р№ Р°РЅРіР»РёР№СЃРєРёР№ СЂРµР¶РёРј.
 
-Р Р°СЃРїРѕР·РЅР°С‘С‚ Р°РЅРіР»РѕСЏР·С‹С‡РЅС‹Р№ РІРѕРїСЂРѕСЃ (РїРѕРґР°РІР»СЏСЋС‰РµРµ Р±РѕР»СЊС€РёРЅСЃС‚РІРѕ Р±СѓРєРІ вЂ” Р»Р°С‚РёРЅРёС†Р°,
+Р Р°СЃРїРѕР·РЅР°С‘С‚ Р°РЅРіР»РѕСЏР·С‹С‡РЅС‹Р№ РІРѕРїСЂРѕСЃ (РїРѕРґР°РІР»СЏСЋС‰РµРµ Р±РѕР»СЊС€РёРЅСЃС‚РІРѕ Р±СѓРєРІ — Р»Р°С‚РёРЅРёС†Р°,
 РµСЃС‚СЊ Р°РЅРіР». СЃС‚РѕРї-СЃР»РѕРІРѕ) Рё РѕС‚РІРµС‡Р°РµС‚ РёР· РјРёРЅРё-СЃРїСЂР°РІРѕС‡РЅРёРєР° Р±Р°Р·РѕРІС‹С… РїРѕРЅСЏС‚РёР№
 (РЅРµР№СЂРѕСЃРµС‚СЊ, Р°Р»РіРѕСЂРёС‚Рј, РїР°РјСЏС‚СЊ, РіСЂР°С„, Р”РќРљ Рё С‚.Рї.) РЅР° Р°РЅРіР»РёР№СЃРєРѕРј.
-Р•СЃР»Рё РїРѕРЅСЏС‚РёСЏ РЅРµС‚ РІ СЃРїСЂР°РІРѕС‡РЅРёРєРµ вЂ” РѕС‚РІРµС‡Р°РµС‚ РЅРµР№С‚СЂР°Р»СЊРЅРѕР№ С„СЂР°Р·РѕР№-РїРµСЂРµС…РѕРґРѕРј.
+Р•СЃР»Рё РїРѕРЅСЏС‚РёСЏ РЅРµС‚ РІ СЃРїСЂР°РІРѕС‡РЅРёРєРµ — РѕС‚РІРµС‡Р°РµС‚ РЅРµР№С‚СЂР°Р»СЊРЅРѕР№ С„СЂР°Р·РѕР№-РїРµСЂРµС…РѕРґРѕРј.
 
 Р§РёСЃС‚С‹Р№ Python, Р°С‚РѕРјР°СЂРЅС‹Рµ С„СѓРЅРєС†РёРё (РѕРґРЅРё return), РїРѕ LINTER.md.
 """
@@ -37,7 +37,7 @@ _EN_KB = {
     "internet": ("The internet is a global network connecting computers. Data moves "
                  "in packets routed by protocols like TCP/IP between connected devices."),
     "energy": ("Energy is the ability to do work. It can be kinetic (motion), "
-               "potential (stored), thermal, electrical. Energy is conserved вЂ” it "
+               "potential (stored), thermal, electrical. Energy is conserved — it "
                "changes form but is never lost."),
     "database": ("A database stores data in an organized way and lets you retrieve "
                  "it quickly. Tables hold records; SQL queries read and update them. "
@@ -610,7 +610,7 @@ _EN_KB = {
                   "of authentic relationships and honest communication."),
     "zeal": ("Zeal is eager and energetic devotion to a cause, activity or pursuit. It is the passionate "
              "drive that makes work feel like a calling rather than a chore. Zeal can be a tremendous force "
-             "for good вЂ” pushing people to achieve great things вЂ” but it must be guided by wisdom and truth, "
+             "for good — pushing people to achieve great things — but it must be guided by wisdom and truth, "
              "for unchecked zeal can become fanaticism."),
     "assiduousness": ("Assiduousness is the quality of applying oneself with constant and unremitting care "
                       "to one's tasks. An assiduous worker is steady, thorough and persistent, giving close "
@@ -634,7 +634,7 @@ _EN_KB = {
                   "A quiet mind is better able to think clearly, listen deeply and act with intention. "
                   "In a noisy world, cultivating quietness is a strength that fosters focus and peace."),
     "hardihood": ("Hardihood is the quality of being bold and fearless in daring undertakings, combined "
-                  "with enough strength to endure hardship. It is a blend of audacity and endurance вЂ” the "
+                  "with enough strength to endure hardship. It is a blend of audacity and endurance — the "
                   "courage to attempt difficult things and the toughness to see them through. Hardiness of "
                   "spirit lets a person step beyond comfort to attempt what others would not dare."),
 "fellowship": ("Fellowship is a feeling of shared interest and mutual support among people who work, "
@@ -654,12 +654,12 @@ _EN_KB = {
                "not occasionally by chance."),
     "benevolence": ("Benevolence is the disposition to do good and the desire to promote the happiness of "
                     "others. It is kindness translated into action, a readiness to help that asks for nothing "
-                    "in return. Benevolence differs from mere generosity in its motivation вЂ” it is not about "
+                    "in return. Benevolence differs from mere generosity in its motivation — it is not about "
                     "giving things but about wishing others well and acting on that wish. It is one of the most "
                     "practical forms of love."),
     "largess": ("Largess is generous bestowal of gifts or money, usually to those in need or for public good. "
                 "It carries a sense of nobility and abundance, as when a king grants lands to a loyal servant "
-                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show вЂ” "
+                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show — "
                 "true largess seeks to do real good and to lift others up."),
     "civility": ("Civility is the practice of behaving in a polite, respectful and courteous manner toward "
                  "others, even toward those with whom one disagrees. It is the basic glue of a functioning "
@@ -668,30 +668,30 @@ _EN_KB = {
                  "treat every person with basic dignity."),
     "moderation": ("Moderation is the avoidance of excess and the practice of keeping everything in its proper "
                    "measure. It is the golden mean between deficiency and excess that guides sound living in all "
-                   "things вЂ” eating, working, speaking, spending and even in showing emotion. Moderation is not "
+                   "things — eating, working, speaking, spending and even in showing emotion. Moderation is not "
                    "timidity or mediocrity; it is the disciplined wisdom that gives a person balance and self-control."),
     "tranquility": ("Tranquility is a state of quiet peacefulness and calm, free from agitation or disturbance. "
                     "It is the serene stillness of a lake at dawn or the settled ease of a mind at rest. "
                     "Achieving tranquility often requires turning inward and letting go of racing thoughts. In a "
                     "hurried world, it is a precious state that restores clarity, health and perspective."),
-    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another вЂ” "
+    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another — "
                    "of a child, a student, a partner or an idea. It combines patience, gentleness and attentive "
                    "love, giving what is needed for someone to thrive. The nurturing person does not dominate or "
                    "smother, but creates the safe conditions in which growth can naturally unfold."),
     "serendipity": ("Serendipity is the happy faculty of discovering valuable or pleasant things by chance. "
                     "It is the unexpected good fortune that comes when a fortunate accident meets a prepared mind. "
-                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill вЂ” "
+                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill — "
                     "curious, observant people are the ones most likely to turn a lucky break into an opportunity."),
     "warmth": ("Warmth is the quality of being friendly, affectionate and genuinely welcoming toward others. "
                "It is the human glow that makes people feel at ease, accepted and valued in your presence. "
                "Warmth is often underestimated because it is quiet, yet it is one of the most powerful forces "
-               "for connection вЂ” it melts reserve, softens conflict and opens the door to trust."),
+               "for connection — it melts reserve, softens conflict and opens the door to trust."),
 "magnificence": ("Magnificence is the quality of being grand in scale, impressive in beauty or generous in "
                      "display, without sacrificing dignity. It is seen in architecture, ceremony and the works "
                      "of art or nature that leave people in awe. True magnificence is not empty ostentation; it "
                      "combines noble ambition with impeccable taste, so that grandeur serves beauty rather than "
                      "garish display."),
-    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection вЂ” the kind of hard-won "
+    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection — the kind of hard-won "
                  "sense that belongs to a mature and judicious mind. It is what separates the merely clever from the "
                  "truly wise. A sage does not merely know facts; they know how to apply knowledge to real life, and "
                  "their counsel is valued precisely because it has been tested by seasons of trial and error."),
@@ -701,7 +701,7 @@ _EN_KB = {
                   "person's mind or move a crowd to action. It is the crowning skill of the capable communicator."),
     "wit": ("Wit is the quick, clever humor that springs from intelligence and sharp perception. A witty remark "
             "joins amusing ideas in a surprising way, delighting the listener with its truth and timing. Wit is "
-            "more than the ability to tell jokes; it is a way of thinking вЂ” agile and associative вЂ” that sees "
+            "more than the ability to tell jokes; it is a way of thinking — agile and associative — that sees "
             "unexpected connections others miss. In the right hands, wit disarms hostility, eases tension and makes "
             "company delightful."),
     "charisma": ("Charisma is an attractive quality in a person that inspires devotion, trust and enthusiasm in "
@@ -721,7 +721,7 @@ _EN_KB = {
               "person of honor would rather suffer loss than betray their word."),
     "decorum": ("Decorum is behavior in keeping with good taste, propriety and the accepted standards of polite "
                 "society. It is the outward expression of an inward respect for others and for oneself. Acting with "
-                "decorum means knowing what is appropriate in any situation вЂ” when to speak, when to be silent, when to "
+                "decorum means knowing what is appropriate in any situation — when to speak, when to be silent, when to "
                 "act and when to hold back. Far from being mere etiquette, decorum is a form of kindness that makes people "
                 "around one comfortable and respected."),
 "finesse": ("Finesse is refined and delicate skill in handling a difficult or delicate task with ease and subtlety. "
@@ -771,19 +771,19 @@ _EN_KB = {
                  "that desire."),
     "kindred spirit": ("A kindred spirit is a person whose nature, tastes or sensibilities are very similar to your own, so that "
                        "understanding between you is immediate and deep. Meeting a kindred spirit is rare enough to feel like a small "
-                       "miracle вЂ” someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
+                       "miracle — someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
                        "the same truths. Such connections are the heart of friendship, offering the comfort of being truly known and the "
                        "rare joy of finding a companion for the road of life."),
     "amiability": ("Amiability is the quality of being pleasant, good-natured and easy to get along with. An amiable person has a "
                    "sweet and agreeable disposition that makes others comfortable in their presence. It is a quieter and more passive "
-                   "form of warmth than affability вЂ” where the affable person actively reaches out to others, the amiable person's very "
+                   "form of warmth than affability — where the affable person actively reaches out to others, the amiable person's very "
                    "nature is mild, gentle and likable. Amiability smooths everyday interactions and is one of the most endearing of "
                    "human qualities."),
     "stalwartness": ("Stalwartness is stubborn and hearty loyalty combined with physical or moral strength. A stalwart supporter "
                      "is one who can be relied upon completely, in good times and in bad, without wavering. The word conjures the image of "
                      "a robust and resolute figure who stands firm against the storm. Stalwartness is the quality of the friend who never "
                      "deserts you, the employee who stays loyal through adversity, and the soldier who holds the line when it matters most."),
-    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom вЂ” the ability to think about how and why one "
+    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom — the ability to think about how and why one "
                   "should act in order to achieve a good life. Unlike theoretical knowledge, phronesis is concerned with action "
                   "in particular situations and with what is good and bad for humans. It is the wisdom of the experienced "
                   "statesman, the skilled artisan and the mature counselor, embodying good judgment in everyday decision-making."),
@@ -810,7 +810,7 @@ _EN_KB = {
     "warmheartedness": ("Warmheartedness is the quality of being kind, affectionate and genuinely caring toward others. A warmhearted "
                         "person feels deep concern for the welfare of people and lets that concern show through in spontaneous kindness. "
                         "It is closeness kin to compassion and brotherly love, expressed both in warm words and in tangible acts of help. "
-                        "What distinguishes the warmhearted is the readiness of their affection вЂ” they do not wait to be asked, but reach out "
+                        "What distinguishes the warmhearted is the readiness of their affection — they do not wait to be asked, but reach out "
                         "freely, making the lonely feel remembered and the hurting feel cared for."),
 "perspicacity": ("Perspicacity is the quality of showing keen mental discernment and penetrating insight into things. A perspicacious "
                      "person sees quickly and clearly to the heart of a matter, catching implications and possibilities that escape slower or "
@@ -1576,6 +1576,7 @@ _EN_KB = {
     "handicraft_art": ("Handicraft, considered as an art and a pleasure, is the skilled making of useful or beautiful things by hand, and the product of such skilled hand-work; and it is the craft of the artisan, the potter, the weaver, the carver and the smith, who work with tool and hand to a finished excellence. This word has been treated fully in this list for its place among the trades; this entry stresses the art and the value of the hand-made, for the hand-wrought thing carries the skill and the person of its maker as no machine-made article can, and the practice of a handicraft is a refreshment and a discipline in a mechanical age, keeping alive the old bond of hand, eye and material. Handicraft is the treasure of the workshop and the joy of the maker, being the honest and beautiful work that the machine cannot cheaply imitate."),
     "inscription": ("An inscription is something written or engraved, an inscription on a stone, coin, medal, monument or other surface, and the act of inscribing, of writing or engraving words upon a lasting material. It is the record cut in stone or metal that outlasts the paper and the memory, and it is the memorial on the tomb, the legend on the coin, the dedication in a book, and the formal writing in a library; and the study of inscriptions, epigraphy, is one of the foundations of history, for the stones of the ancient world speak through what is inscribed on them. An inscription is thus the writing that is made to endure and to be read, and it is the voice of the past fixed in the enduring material, being the word that refuses to be forgotten."),
     "embellishment": ("Embellishment is the act of embellishing, of making beautiful by ornament, the ornament or decoration added to a thing, and the adornment of something with beautiful or striking details. It is the trimming and garnish of speech or dress, of building or book, by which plainness is made comely, and it is the addition of graceful or vivid touches to a narrative or a design; and while embellishment can enrich, it must not overburden, for the ornament that conceals the thing is a fault, and the true embellishment sets off the form without hiding it. Embellishment is thus the art of finishing and beautifying, the garnish that makes the dish and the decoration that makes the object, being the loving addition of the little graces that delight the eye."),
+    "comrade": ("A comrade is a close companion who shares a task, a cause or a danger with another, the fellow who stands beside one in work, in travel, in a struggle or in arms, and in whom one has trust and confidence. It is a name of warm and equal fellowship rather than of command or service, the greeting of those who are bound together by a common undertaking. It differs from a stranger, with whom no bond exists, in being bound by a shared purpose, and it differs from a servant or a subordinate, in being an equal who does the same work and bears the same burden. Comrades are the soldiers who fight side by side, the workers who labor at one bench, and the companions who make a long and hard journey together, and the word carries a promise of loyalty, that a comrade will not abandon the others when the road becomes hard. Comrade is thus a close and trusted companion who shares work, cause or danger, and a name of loyal fellowship among equals."),
     "companionship": ("Companionship is the state of being with a companion or companions, the society and fellowship of persons who keep one another company, and the relation of one who shares another's company, journey or life. It is the pleasant and unconstrained being-together of friends, the sharing of hours, words, journeys and quiet company, and it is the comfort of human nearness, being the relief of solitude and the delight of the road and the fireside. Companionship differs from friendship in being less exacting and more casual, yet it is one of the great joys of life, for the companionship of a good companion doubles the pleasure of every enterprise and halves its burden; and the quiet gift of companionship, simply being with another, is among the most ancient and most human of all satisfactions."),
     "bonding": ("Bonding is the act of forming a bond, the establishing of a close and lasting connection between persons, and the emotional tie that grows up between people through shared experience and mutual regard. It is the formation of the deep attachment that binds mother and child, friend to friend, or comrade to comrade, and it comes of trust, shared feeling and the hours spent together, being the cement that holds the first small group of the family together. Bonding is the human glue of all relationships and communities, for it is by the quiet accumulation of shared experience that strangers become friends and groups become families; and the capacity for bonding, the readiness to form such ties, is one of the most social and life-giving of the human powers."),
     "intimacy": ("Intimacy is the state of being intimate, of close and familiar personal association, and the depth of mutual knowledge, trust and affection that belongs to the nearest of relationships. It is the close friendship or the near relation of husband and wife, parent and child, or bosom friend to bosom friend, in which each is thoroughly known to the other and at ease, and it is the sharing of the heart's secrets and the confidence of hours; and intimacy is the privilege and the risk of the closest bonds, for it is given only where trust is complete, and it is the sweetest of the rewards of a long and honest friendship. Intimacy, though it can be sullied, is the very substance of love and friendship at their deepest, being the nearness of soul to soul."),
@@ -1611,6 +1612,9 @@ _EN_KB = {
     "pedagogy_practice": ("Pedagogy, considered as the living practice of the teacher, is the art and profession of teaching in action, the conducting of the instruction of the young, and the whole craft of the educator in the actual work of the classroom. This word has been treated fully in this list as the science and profession of teaching; this entry stresses its character as an art exercised in relation to living minds, in which the teacher, knowing the child, adapts matter, manner and motive to the learner's need, and it is the tact and skill that lie beyond all rule. Pedagogy, in this living sense, is the art of leading the pupil, of asking the right question, of kindling interest and of making knowledge pass from the one mind to the other, and it is the practical genius of the good teacher, being the art that no book, but only living practice, can fully teach."),
     "edification": ("Edification is the building up, is the act of instructing and improving, especially in morals and religion, and the improvement of the mind and the bettering of the soul by teaching and good example; and it is the instructive and beneficial effect of a discourse or a life. It is the building up of the character and the strengthening of faith and virtue, as the word suggests the raising of a spiritual building, and it is the aim of all true preaching and teaching, which seek not to store the head merely but to build the life; and the discourse that edifies is the one that leaves its hearer wiser, purer and more resolved, being the instruction that tells upon the will and the heart. Edification is thus the constructive work of good teaching and good books, the upbuilding of the inner man, and it is the sign of the truly profitable lesson."),
     "learning_habit": ("Learning, considered as the habit of the growing mind, is the constant acquisition of knowledge and skill, the practice of taking in from study, experience and observation, and the lifelong disposition of the learner. This word has been treated fully in this list in its sense of knowledge acquired and of the faculty by which it is gained; this entry stresses the active and continuing habit, for learning is not a store filled once and shut, but the open and growing mind that is always adding, and the true learner is the one who is learning still, curious and humble at every age. Learning is the pursuit of the self-taught and the refreshment of the educated, and it is the habit that keeps the mind young, being the daily exercise by which knowledge is acquired and the character widened, and the love of learning, early formed, is one of the surest possessions of a happy and useful life."),
+    "psychology": ("Psychology is the systematic study of the mind and of behavior, the science which seeks to describe, explain and predict how people and animals think, feel, perceive and act. It treats both the inner life, as in the study of attention, memory and emotion, and the outward conduct, as in the study of learning and of social exchange, and it works by observation, by experiment and by careful measurement rather than by mere opinion. Psychology differs from philosophy, which reasons about the mind from first principles, in being an empirical science that tests its claims against evidence, and it differs from physiology, which studies the body as such, in taking the whole person and the whole behavior as its subject. The psychologist observes how a child learns a language, how a worker is swayed by a group, or how a fear may be unlearned, and from such cases builds and refines a general account of the mind. The word once meant simply the study of the soul, and in this wider and older sense psychology is the discipline by which we seek to understand ourselves and others, and the practical foundation of education, medicine and all sound dealing among people."),
+    "spirit": ("Spirit is the animating and vital principle of a living being, the breath or the inner force by which a body is quickened and moved, and by extension the lively and energetic temper of a person or a group. In one sense it is the immaterial and conscious part of a human being, the seat of the will and of moral purpose, as when we speak of the spirit as opposed to the flesh, and in another it is the keen and glowing energy with which a thing is done, the liveliness and enthusiasm of a gathering, the animation of a performance, and the buoyant and undaunted mood which rises in the face of hardship. It differs from the body, which is the mere frame and instrument, in being the force that informs and drives it, and it differs from temper, which is a settled emotional inclination, in being the more active and outgoing power of animation. A company of people shows its spirit when, under difficulty, it keeps its courage and its eagerness undiminished, and a work of art shows its spirit when it is quick with life and meaning rather than merely correct in form. Spirit is thus the vital and animating force of a living being, the lively and courageous temper of a person or a group, and the inner energy and enthusiasm by which the whole is quickened and moved."),
+    "invention": ("Invention is the act of inventing, of devising by thought and contrivance something which did not exist before, and the thing so devised, whether a machine, a process, a story or a method. It is the work of the inventive mind, the combination of existing means into a new and serviceable whole, and the first appearance of the new thing in the world. It differs from discovery, which finds what was already there, in bringing into being what was not, and it differs from innovation, which is the introduction and wide adoption of the new, in being the originating act rather than the spreading of its fruits. An invention may be practical, as the printing press that multiplied books, or fictional, as the invented plot of a tale, and it may arise from long labor or from a sudden flash of insight. The inventor is the one who presses beyond the known to the new, and who, by the patient perfection of the contrivance, turns a bright idea into a lasting benefit. Invention is thus the act of devising something new, the new thing itself, and the fertile and contriving power of the mind from which all useful novelty proceeds."),
     "innovation": ("Innovation is the act of innovating, of introducing something new, and the new thing so introduced, whether an idea, a method, a machine or an institution. It is the change that breaks with the established and brings in what is novel and better, and it differs from invention, which creates the new thing, in being the introduction and adoption of it, and it is the engine of progress, for it is by innovation that societies are improved and life made easier, and the innovator is the one who dares to try the new way. Innovation is at once a virtue and a risk, for the new may prove false or untimely, and the wise innovation is the well-judged and well-timed change; and it is the life of trade, of science and of reform, being the introduction of novelty that, when it succeeds, is presently the new order, and the mark of a living and advancing people."),
     "improvement": ("Improvement is the act of improving, of making better, and the state of being improved, the betterment of a person, a thing or a condition; and it is a change for the better, an amendment, and the making of progress toward a more excellent state. It is the gradual betterment of a craft, a mind, a house or an estate, and it is the constant effort of all progressive life, whether in the improvement of inventions, of methods, of manners or of character; and it differs from mere change in being change toward the better, being the direction of effort to the perfecting of what now is. Improvement is the modest and solid form of progress, for it works by small and constant betterments rather than by revolution, and it is the daily work of the workman, the reformer and the individual, being the patient making better of what had been good enough."),
     "refinement_process": ("Refinement, considered as the perfecting of a thing or a person, is the process of making something more refined, more delicate, more exact or more polished, and the improvement by which the coarse is made fine and the rough is made smooth. This word has been treated fully in this list in its sense of polish of manners and cultivation; this entry stresses the process and the perfecting, for refinement is the removal of the dross and the bringing of a thing to its finest and most exact form, whether the refining of sugar, of a metal or of a style, and it is the gradual polishing by repeated care. Refinement is thus the improving and purifying action, both of the arts, which are refined by the masters, and of the person, who is refined by education and good society, being the process of making everything it touches finer, clearer and more finished."),
@@ -2285,6 +2289,293 @@ _EN_KB = {
     "sanctity": ("Sanctity is the quality or the state of being sacred and holy, the inviolable and august sacredness of a person, a thing or an institution, and the deep and reverent purity which is set apart from the profane; and it is the sanctity of a holy place, of a person's sacred trust, and of an oath that is held inviolable, being the sacred and inviolable character, and it differs from a natural goodness, which is a moral worth, in being the sacred and set-apart character, being the inviolable and august sacredness, and it is the sanctity which, guarding the deepest and the most precious goods, is at once the reverence of the religious and the shield of the sacred bond, being the sacred and inviolable character; and a thing has a sanctity when it is held sacred and inviolable, being the sacred and august one; and sanctity is thus the quality or the state of being sacred and holy, the inviolable and august sacredness of a person or a thing, and the deep and reverent purity which is set apart from the profane."),
     "spotlessness": ("Spotlessness is the quality or the state of being spotless, the complete and unblemished cleanness of a thing which has no spot nor stain, and the pure and irreproachable condition of a character or a reputation without a fault; and it is the spotlessness of a well-kept and shining surface, of a name that has never been touched, and of a life that is clean and blameless, being the unblemished and stainless condition, and it differs from a mere tidiness, which is an order, in being the absence of every spot and stain, being the immaculate and stainless cleanness, and it is the spotlessness which, whether of the person or of the name, is the mark of the pure and the mark of the guarded life, being the unblemished and clean condition; and a thing is of a spotlessness when it has no spot nor stain upon it, being the stainless and clean one; and spotlessness is thus the quality or the state of being spotless, the complete and unblemished cleanness which has no spot nor stain, and the pure and irreproachable condition without a fault."),
     "immaculateness": ("Immaculateness is the quality or the state of being immaculate, the absolutely pure and undefiled cleanness of a thing which is wholly free from every stain, and the spotless and unblemished purity of a person or a name; and it is the immaculateness of a spotlessly white garment, of a life that is entirely clean, and of a reputation that has never been touched, being the absolutely pure and undefiled condition, and it differs from a relative cleanliness, which admits of some fault, in being the perfect and absolute freedom from every stain, being the spotless and unblemished purity, and it is the immaculateness which, whether of a thing or of a character, is the ideal of the pure and the perfection of the clean, being the absolutely pure and undefiled state; and a thing is of an immaculateness when it is wholly free from every spot or stain, being the perfectly pure and unblemished one; and immaculateness is thus the quality or the state of being immaculate, the absolutely pure and undefiled cleanness, and the spotless and unblemished purity of a person or a name."),
+    "aperture": ("Aperture is the narrow and circumscribed opening of a thing, the small and definite gap which pierces a solid body or a boundary, and the admitting mouth through which light, air or the eye may pass into what is hid; and it is the aperture of a camera or of a lens, of the small window of a chapel, and of the chink in a shuttered wall, being the small and admitting opening, and it differs from a cleft, which is a division of the stuff itself, in being the opening made and bounded in a solid, being the deliberate and bordered passage, and it differs from a recess, which is a hollow set back within a surface, in being the passage through rather than the space within, being the through and admitting opening; and it is the aperture which, whether of stone, of glass or of flesh, is the bounded gate between the within and the without, being the small and admitting mouth; and a thing has an aperture when a small and definite opening is cut in it for the passage of light, air or sight, being the pierced and admitting one; and aperture is thus the narrow and circumscribed opening of a thing, the small and definite gap in a solid body, and the admitting mouth through which light, air or the eye may pass."),
+    "cleft": ("Cleft is the division and the parted state of a thing that was whole, the narrow and deep split which sunders one substance into two portions still joined below, and the confirming trace of a former oneness now visibly parted; and it is the cleft of a rock that has been riven by the frost, of a cliff face that has opened along an ancient seam, and of the ground that has been rent asunder in an earthquake, being the parted and sundered division, and it differs from a fissure, which is the crack made by a strain, in being the deep and acknowledged parting of the substance itself, being the sundered and divided state, and it differs from a cavity, which is a hollow enclosed, in being a division rather than a void, being the split and separated form; and it is the cleft which, whether in stone, in earth or in living tissue, is the visible witness that one body has been parted into two, being the riven and divided line; and a thing shows a cleft when the substance of it is split asunder and stands divided on either hand, being the parted and sundered one; and cleft is thus the division and the parted state of a thing that was whole, the narrow and deep split which sunders a substance in two, and the trace of a former oneness now visibly parted."),
+    "fissure": ("Fissure is the narrow and irregular crack or the slender line of division produced in a substance by strain, by drought or by the slow yielding of its parts, the thin and deep rent which mars a continuous surface without wholly parting it, and the hair-like breach where the fabric of a thing begins to give way; and it is the fissure of a wall that settles, of the baked earth of a summer field, and of a bone that has been overstrained, being the fine and straining crack, and it differs from a cleft, which is a deep and acknowledged parting, in being the slender and gradual breach, being the thin and hair-like division, and it differs from an aperture, which is an opening made and admitted, in being the breach that no hand intended, being the yielding and unlooked-for split; and it is the fissure which, whether of stone, of timber or of metal, is the first and tremulous sign of decay, being the fine and widening breach; and a substance is subject to a fissure when, under strain or drought, its parts begin to part in a narrow and irregular line, being the strained and yielding one; and fissure is thus the narrow and irregular crack produced in a substance by strain, the thin and deep rent that mars a continuous surface, and the hair-like breach where the fabric begins to give way."),
+    "cavity": ("Cavity is the hollow space or the enclosed void within a solid body, the empty room or the spacious hollowness such as lies hid in the heart of a bone, a tooth or a stone, and the dark and shut place which is bounded on every side by the substance that contains it; and it is the cavity of a hollow tree, of a cavern in the side of a hill, and of the chest within the human frame, being the hollow and enclosed space, and it differs from a recess, which is a shallow niche set back from an open surface, in being the deep and wholly enclosed void, being the shut and hollow space, and it differs from a fissure, which is a crack, in being a room and not a breach, being the spacious and contained emptiness; and it is the cavity which, whether of stone, of wood or of living flesh, is the room within the wall of a thing, being the hollow and enclosed room; and a body contains a cavity when there is a hollow within it that is shut about on all sides, being the hollowed and enclosing one; and cavity is thus the hollow space or the enclosed void within a solid body, the empty room such as lies hid in the heart of bone or stone, and the accessible hollowness which is bounded by the substance that contains it."),
+    "recess": ("Recess is the shallow niche or the retired alcove set back within a surface, the small and sheltered hollow cut into a wall, a room or a shore and admitting a thing into its depth, and the quiet and withdrawn place which is neither wholly open nor wholly shut; and it is the recess of a fireplace in the wall of a chamber, of a bay in the line of a cliff, and of a niche behind a curtain, being the set-back and sheltered hollow, and it differs from a cavity, which is an enclosed void, in being the part that is merely withdrawn and not shut round, being the shallow and retired hollow, and it differs from an aperture, which is a passage cut through, in being of depth and not of passage, being the ending and sheltered hollow; and it is the recess which, whether of wall, of land or of sea, is the nook that receives what it holds into a depth of shadow, being the retired and receiving hollow; and a wall or a coast has a recess when a portion of it is set back to make a shallow and sheltered hollow, being the set-back and receiving one; and recess is thus the shallow niche or the retired alcove set back within a surface, the small and sheltered hollow cut into wall or shore, and the quiet and withdrawn place neither wholly open nor wholly shut."),
+    "ascent": (
+        "Ascent is the act or the state of rising upward, the mounting of a thing "
+        "toward a higher place, and the upward course and the climbing motion by which "
+        "a body gains a greater height than that from which it set out; and "
+        "it is the ascent of a pilgrim upon a stony height, of a smoke and a vapour into "
+        "the roof of the sky, and of a soul toward the things that are above it, being "
+        "the rising and the climbing course, and it differs from a descent, which is the "
+        "going down, in being the mounting upward against the weight and the "
+        "pull of the earth, being the rising and the uplifted course, and it differs also "
+        "from an elevation, which is the height itself, and from an inclination and a "
+        "steepness, which are the slant of the ground and the sharpness of that slant, in "
+        "being the motion that climbs rather than the measure or the quality of the slope, "
+        "being the mounting and upward going, and it is the ascent which, taken in hand "
+        "with patience, is at once the labour of the limbs and the lifting of the spirit, "
+        "being the slow and upward winning of height; and a person makes an ascent when he "
+        "climbs a steep way and comes at last to a higher place, being "
+        "the climbing and upward laboring one; and ascent is thus the act or the state of "
+        "rising upward, the mounting of a thing toward a higher place, and the upward course "
+        "and climbing motion by which height is gained."
+    ),
+    "descent": (
+        "Descent is the act or the state of going down, the passage of a thing from a higher "
+        "place to a lower one, and the downward course and the falling motion by which a body "
+        "comes to a lesser height than that whereon it stood; and it is the descent "
+        "of a traveller from a mountain into the valley, of a stone that is loosed from the "
+        "hand toward the earth, and of a house or a family from its former honour, being the "
+        "going down and downward course, and it differs from an ascent, which is the mounting "
+        "upward against the weight of the body, in being the yielding to the pull of the earth "
+        "and the passing from the greater to the lesser height, being the downward and lowered "
+        "course, and it differs also from an elevation, the height itself, and from an "
+        "inclination and a steepness, the slant and its sharpness, in being the moving downward rather than the slope itself, being the going down and the lowering passage, and it is the descent which, "
+        "once begun upon a steep way, is at once the swift and the fearful thing to the walker "
+        "thereon, being the downward and perilous going; and a person makes a descent when he "
+        "goes down a steep way and comes at last to a lower place, being "
+        "the going down and downward moving one; and descent is thus the act or the state of "
+        "going down, the passage of a thing from a higher place to a lower, and the falling "
+        "course and falling motion by which a lesser height is reached."
+    ),
+    "elevation": (
+        "Elevation is the height to which a thing is raised above a given level, the measured "
+        "loftiness of a place, a point or a body above the ground or the sea, and the raising "
+        "up of a thing to a higher station by which it stands above that which lies beneath it; "
+        "and it is the elevation of a tower above the roofs of a city, of a village upon a "
+        "gentle rise, and of a mind above the common cares of the day, being the loftiness and "
+        "the height measure, and it differs from an ascent, which is the act of climbing, and "
+        "from a descent, which is the act of going down, in being the height itself that remains "
+        "when the climbing is done, being the standing and measured loftiness, and it differs "
+        "also from an inclination and a steepness, which are the slant of the ground and the "
+        "sharpness of that slant, in being the standing height rather than the pitch of the "
+        "side, being the level and the lifted measure, and it is the elevation which, spoken of "
+        "a place or a person alike, is at once a matter of the earth and of the inward station, "
+        "being the lifted and measured height; and a place or a person is of a notable elevation "
+        "when it stands high above the common level of things about it, being the high and "
+        "lifted one; and elevation is thus the height to which a thing is raised above a given "
+        "level, the measured loftiness of a place or a point above the ground, and the raising "
+        "up of a thing to a higher station."
+    ),
+    "inclination": (
+        "Inclination is the slant of a thing from the upright or the level, the bending aside "
+        "of a surface or a line toward the horizon, and the gentle or the great leaning by "
+        "which a thing that should stand straight is set aslant; and it is the inclination of a "
+        "roof toward the rain, of a meadow that falls away toward the river, and of a head that "
+        "is bowed in sorrow or attention, being the leaning and the slanted set, and it differs "
+        "from an ascent, which is the act of climbing upward, and from a descent, which is the "
+        "act of going down, in being the fixed slant of the thing itself rather than the journey "
+        "taken upon it, being the settled and leaning posture, and it differs also from an "
+        "elevation, which is the height itself, and from a steepness, which is the sharpness of "
+        "the rise, in being the angle of the leaning rather than the height attained or the "
+        "degree of its violence, being the slanted and the leaning cast, and it is the "
+        "inclination which, whether of a surface or of a temper, is at once a matter of the "
+        "earth and of the mind, being the leaning and the disposed set; and a thing has an "
+        "inclination when it is set aslant from the upright or the level, being the leaning and "
+        "aslant one; and inclination is thus the slant of a thing from the upright or the level, "
+        "the bending aside of a surface or a line toward the horizon, and the leaning by which "
+        "a thing is set aslant."
+    ),
+    "steepness": (
+        "Steepness is the quality or the state of being steep, the sharp and sudden rise of a "
+        "way, a wall or a shore in which a small going forward gains a great deal of height, "
+        "and the violence of the slope by which the foot is strained and the eye is daunted; "
+        "and it is the steepness of a cliff above the sea, of a mountain stair cut in the rock, "
+        "and of a roof that lifts against the sky, being the sharp and sudden rise, and it "
+        "differs from an ascent, which is the act of climbing, and from a descent, which is the "
+        "act of going down, in being the quality of the ground over which the going is made "
+        "rather than the going itself, being the sharp and severe rise, and it differs also from "
+        "an elevation, which is the height itself, and from an inclination, which is the bare "
+        "slant from the level, in being the degree of that slant carried to its sharp and trying "
+        "extreme, being the severe and forbidding pitch thereof, and it is the steepness which, "
+        "in a way or in a matter of the spirit, is at once an obstacle to the body and a trial of "
+        "the will, being the sharp and the arduous rise; and a way or a place has steepness when "
+        "it rises so sharply that the going thereon is hard and the footing is unsure, being the "
+        "sharp and arduous one; and steepness is thus the quality of being steep, the sharp and "
+        "sudden rise of a way or a shore, and the violence of the slope by which the going is "
+        "made hard."
+    ),
+    "viscosity": (
+        "Viscosity is the state of being viscous, the thick and clinging and slow-flowing "
+        "character of a substance, the tenacious and resisting hold which the parts of a "
+        "thing keep one upon another, and the sluggishness with which a liquid or a soft "
+        "body yields to the pressure that would stir it; and it is the viscosity of tar "
+        "and of thick oil, of honey and of warm resin, and of heavy pitch in the heat of "
+        "the day, being the thick and slow-flowing and tenacious quality, and it differs "
+        "from fluidity, which is the ready and willing yielding of matter to every form, "
+        "in being the stubborn and reluctant yielding, being the clinging and sluggish "
+        "state; and it is the viscosity which, the colder or the thicker the body, the "
+        "less it will run and the more it will cling, being at once a sluggishness and a "
+        "tenacity; and a thing shows viscosity when it pours heavy and slow and adheres "
+        "to the vessel that holds it, being the thick and slow one; and viscosity is thus "
+        "the state of being viscous, the thick and clinging and slow-flowing character of "
+        "a substance, and the sluggish resistance with which matter yields to stirring."
+    ),
+    "fluidity": (
+        "Fluidity is the state of being fluid, the ready and yielding and untroubled "
+        "character of a substance that takes the shape of its vessel, the perfect ease and "
+        "promptness with which the parts of a body slide over one another, and the free "
+        "and wandering motion which belongs to that which will not keep a form of its own; "
+        "and it is the fluidity of water poured from a jug, of milk in a cup, and of air "
+        "that fills any room it enters, being the yielding and wandering and shapeless "
+        "quality, and it differs from viscosity, which is the thick and clinging hold of "
+        "parts upon one another, in being the light and unresisting motion, being the "
+        "yielding and shapeless state, and it differs from elasticity, which is the spring "
+        "of a body into its former shape, in being the absence of any form to return to, "
+        "being the shapeless and wandering state; and it is the fluidity which, once the "
+        "form that contains it is changed, is at once a readiness to take the new form and "
+        "a patience under every shape, being the yielding and prompt motion; and a thing "
+        "shows fluidity when it runs at a touch and takes the figure of the vessel that "
+        "holds it, being the ready and shapeless one; and fluidity is thus the state of "
+        "being fluid, the ready and yielding and untroubled character of a substance that "
+        "takes the shape of its vessel, and the easy sliding of its parts one over another."
+    ),
+    "ductility": (
+        "Ductility is the quality of being ductile, the capacity of a metal or a soft body "
+        "to be drawn out into wire or into fine thread without breach, the patient and "
+        "obedient stretching of a substance under a long and steady pull, and the "
+        "pliant and unbroken yielding of matter to the drawing hand; and it is the "
+        "ductility of gold beaten into leaf and drawn into the finest wire, of silver "
+        "stretched into threads, and of copper pulled by the smith into a long and even "
+        "cord, being the drawn-out and unbroken and obedient quality, and it differs from "
+        "malleability, which is the yielding of a body under the hammer, in being the "
+        "yielding under the long and drawing pull, being the stretched and unbroken state, "
+        "and it differs from brittleness, which is the breaking of a body at a blow, in "
+        "being the unbroken and patient stretching, being the yielding and unbroken "
+        "quality; and it is the ductility which, under a long and even strain, is at once "
+        "a yielding and an endurance, being the pliant and unbroken quality; and a thing "
+        "shows ductility when it can be drawn into a long and fine thread without "
+        "breaking, being the drawn and unbroken one; and ductility is thus the quality of "
+        "being ductile, the capacity of a body to be drawn out into wire or thread without "
+        "breach, and the patient and unbroken stretching of a substance under a pull."
+    ),
+    "brittleness": (
+        "Brittleness is the quality of being brittle, the hard and unyielding character of "
+        "a substance which, though firm to the touch and stiff against all bending, will "
+        "break suddenly at a blow and without warning, the stiffness of matter which gives "
+        "way only in a single and final shattering, and the sharp and sudden fracture which "
+        "befalls the hard and rigid thing; and it is the brittleness of glass struck upon "
+        "the table, of dry and seasoned timber in the frost, and of old iron in the winter "
+        "cold, being the hard and sudden and shattering quality, and it differs from "
+        "ductility, which is the patient drawing out of a body into wire without breach, "
+        "in being the sudden and total breaking instead of the yielding, being the hard "
+        "and shattering state, and it differs from elasticity, which is the springing back "
+        "of a body into its former figure, in being the unhappy end of all bending, being "
+        "the rigid and unreturning state; and it is the brittleness which, the harder and "
+        "the stiffer the substance, the more suddenly it fails, being at once a hard "
+        "firmness and a fatal weakness; and a thing shows brittleness when it stands stiff "
+        "and unyielding until it breaks all at once under a light blow, being the hard and "
+        "unforgiving one; and brittleness is thus the quality of being brittle, the hard "
+        "and unyielding character of a substance which breaks suddenly at a blow, and the "
+        "fracture of the rigid thing."
+    ),
+    "elasticity": (
+        "Elasticity is the quality or the state of being elastic, the spring of a body "
+        "which, being stretched or pressed and then released, returns of itself into its "
+        "former figure and measure, the lively and recovering force with which matter "
+        "resists and then undoes a strain, and the resilience by which a thing remembers "
+        "its own shape; and it is the elasticity of a bow bent and then loosed, of a "
+        "rubber ball thrown against a wall, and of steel drawn back into its own form "
+        "again, being the recovering and springing and undoing quality, and it differs "
+        "from fluidity, which is the yielding of a body to every shape without any "
+        "return, in being the yielding that is followed by a return, being the springing "
+        "and recovering state, and it differs from brittleness, which is a sudden and "
+        "unforgiving break under strain, in being the patient bending and the comely "
+        "return, being the springing and unbroken state; and it is the elasticity which, "
+        "whether of a bent bow or of a pressed spring, is at once a yielding and a "
+        "recovering, being the springing and returning quality; and a thing shows "
+        "elasticity when it bends under a light force and springs back "
+        "when the force is gone, being the springing and returning one; and elasticity is "
+        "thus the quality of being elastic, the spring of a body which returns into its "
+        "former figure after a strain, and the recovering force which undoes the"
+        " bend and the press."
+    ),
+    "ailment": ("Ailment is the state or the condition of being ailing, the disordered and uneasy working of a body or a mind which has fallen from its sound and accustomed estate, and the light and lingering trouble of health which, though it be not mortal, abides in the frame and robs it of its wonted vigour; and it is the ailment of a man who wakes with a dull and heavy head, of the chronic and recurring complaint that returns with every change of season, and of the slow disorder which the aged bear about them, being the troublesome condition of health; and it differs from an infection, which is the invasion of the frame by a hostile multiplying seed, in being the settled and inward disorder of the body's own estate, being the lingering trouble, and it differs from an inflammation, which is the hot reaction of a part, in being the general condition of the whole, being the abiding trouble; and it is the ailment which, though of small and unregarded moment, is at once a burden upon the night and a shadow upon the day, being the lingering and unquiet disorder; and a person has an ailment when the soundness of his body or his mind is disturbed by a light and abiding trouble, being the disordered and ailing one; and ailment is thus the state of being ailing, the disordered and uneasy working of a body which has fallen from its sound estate, and the light and lingering trouble of health."),
+    "infection": ("Infection is the act or the state of being infected, the entrance and the spreading of a hostile and multiplying seed into a frame that was sound, and the corrupting and contaminating influence which passes from one tainted thing to another and takes possession of the flesh; and it is the infection of a wound that will not close, of a house where the foul air lies heavy, and of a body that yields to a seed too small for the eye to find, being the hostile and multiplying taint; and it differs from an ailment, which is a settled and inward trouble of the body's estate, in being a foreign and invading corruption received from without, being the contagious taint, and it differs from an inflammation, which is the hot reaction of the part, in being the agency of the corruption rather than the body's answer, being the multiplying taint; and it is the infection which, once entered and multiplied, is at once a corruption of the humours and a peril to those who come near, being the hostile and contagious taint; and a thing is under an infection when it has taken into itself a hostile and multiplying seed that spreads and corrupts, being the tainted and infected one; and infection is thus the act of being infected, the entrance and spreading of a hostile seed into a frame, and the corrupting influence that takes possession of the flesh."),
+    "inflammation": ("Inflammation is the state or the act of being inflamed, the hot and swelling and painful kindling of a part of an ailing body, and the angry and inward burning of a tissue which labours to throw off the trouble that besets it; and it is the inflammation of a wounded joint that grows red and heavy, of a fevered throat, and of a small hurt that swells beyond all proportion, being the hot and angry kindling; and it differs from an infection, which is the hostile seed that provokes it, in being the body's own hot and swelling answer, being the angry and laboured kindling, and it differs from a paralysis, which is the sudden loss of motion and of feeling, in being a state of heat and swelling and vivid pain rather than of deadness, being the burning and sensitive kindling; and it is the inflammation which, though a sign of the frame's striving against its enemy, may of itself do much harm, being the hot and labouring reaction; and a part shows an inflammation when it grows hot and red and swollen and painful, being the angry and kindled part; and inflammation is thus the state of being inflamed, the hot and swelling and painful kindling of a part, and the angry and inward burning of a tissue beset by trouble."),
+    "paralysis": ("Paralysis is the state or the act of being paralyzed, the loss or the suspension of motion and of feeling in a limb or in a whole frame, the sudden and dreadful stillness of the flesh which can no longer answer the will, and the deadening of a part by which it is severed from the living service of the body; and it is the paralysis of a stroke-stricken side, of a limb that hangs witless and limp, and of a terror that strikes a man motionless upon the spot, being the lost and suspended power of motion; and it differs from an inflammation, which is a hot and swelling and painful kindling, in being a cold and silent deadness without heat or lively pain, being the still and unanswering state, and it differs from an exhaustion, which is a general draining of strength after long toil, in being the sudden and local loss of power rather than a slow wearing away, being the deadened power; and it is the paralysis which, whether of a member or of the mind's resolve, is at once a bodily silence and a helpless captivity, being the lost and suspended command; and a person suffers a paralysis when a part of his body will no longer move or feel at his will, being the still and helpless one; and paralysis is thus the state of being paralyzed, the loss of motion and of feeling in a limb or a whole frame, and the deadening of a part severed from the body's living service."),
+    "exhaustion": ("Exhaustion is the state or the act of being exhausted, the total draining away of the strength and the spirits of a frame by toil, by want, by a burning disorder or by long and heavy care, and the utter deadness of weariness which leaves nothing to be spent; and it is the exhaustion of a labourer at the end of a long and parching day, of a body wasted by a wasting sickness, and of a mind emptied by grief or by sleepless and anxious nights, being the spent and drained estate; and it differs from a paralysis, which is the sudden loss of motion and of feeling in a part, in being a universal and creeping spending of strength rather than a sudden silence of one member, being the drained and spent estate, and it differs from an ailment, which is a light and abiding trouble of health, in being the utter end of reserve after long and heavy demand, being the spent and unleft estate; and it is the exhaustion which, whether of the body or of the mind, is at once a refusal of further service and a cry for rest, being the utterly spent state; and a person is in exhaustion when his strength and his spirits have been all consumed and nothing remains to be spent, being the spent and worn one; and exhaustion is thus the state of being exhausted, the draining away of strength and spirits by toil or disorder, and the utter weariness which leaves nothing to be spent."),
+    "hyperbole": (
+        "Hyperbole is the quality of speech which overstates a thing beyond the measure of its truth, "
+        "the bold and deliberate heightening of a statement past the bounds of the literal, and the "
+        "figurative magnitude which a speaker lends to a matter that its weight be felt rather "
+        "than counted; and it is the hyperbole of the man who declares that he has told a thing a thousand "
+        "times, of the lover who swears that his beloved outshines the sun, and of the orator who calls a "
+        "single hour of reckoning an age of darkness, being the figurative heightening of speech; "
+        "and it differs from verbosity, which is the swelling of words beyond the need, "
+        "in being the swelling of the saying itself and not of its length, and from emphasis, which is the "
+        "laying of weight upon a word that is already true, in being the falsification of the measure, "
+        "being the figurative and exceeding magnification; and it is the hyperbole "
+        "which, spoken in jest or in passion, is at once a pleasant ornament and a perilous untruth, being "
+        "the bold exaggeration; and a person shows hyperbole when he speaks of a trifle as "
+        "though it were a marvel and of a hardship as though it were a ruin, being the willing and figurative "
+        "exceeder of measure; and hyperbole is thus the overstating of a thing beyond the measure of its "
+        "truth, the deliberate heightening of a statement, and the figurative magnitude lent to a matter "
+        "that its weight be felt."
+    ),
+    "verbosity": (
+        "Verbosity is the quality or the state of being verbose, the habit of pouring forth a multitude of "
+        "words beyond what the matter requires, and the copious and unwieldy abundance of speech in which the "
+        "sense is buried beneath the sound; and it is the verbosity of the counsellor who speaks an hour upon "
+        "a simple point, of the letter that runs to many pages for a single request, and of the sermon that "
+        "strains a brief text through a long and winding discourse, being the copious and needless multitude "
+        "of words; and it differs from hyperbole, which is the overstating of the matter itself, in being the "
+        "overgrowing of the words about an honest matter, and from brevity, which is the cutting away of all "
+        "that may be spared, in being the withholding of nothing and the sparing of no word, being the "
+        "copious and unmeasured plenty of speech; and it is the verbosity which, whether in a treatise or in "
+        "a talk, is at once a fullness of language and a poverty of meaning, being the copious and needless "
+        "overflow; and a person shows verbosity when he circles a plain thing with many words and comes to it "
+        "at the last, being the copious and lingering speaker; and verbosity is thus the quality of being "
+        "verbose, the pouring forth of words beyond the need of the matter, and the copious abundance in "
+        "which the sense is buried beneath the sound."
+    ),
+    "ambiguity": (
+        "Ambiguity is the quality or the state of being ambiguous, the doubleness of sense in a word, a "
+        "phrase or a writing whereby more than one meaning may honestly be taken from it, and the uncertain "
+        "and divided signification which leaves the hearer in doubt as to which of the senses was meant; "
+        "and it is the ambiguity of the oracle that may be read in two ways, of the compact that binds the "
+        "parties to different readings, and of the sentence whose grammar will bear either of two "
+        "constructions, being the divided and uncertain signification; and it differs from hyperbole, which "
+        "is the overstating of a single sense, in being the doubting between two senses, and from emphasis, "
+        "which is the fixing of attention upon one sense, in being the leaving of the sense unfixed, being "
+        "the doubtful and double signification; and it is the ambiguity which, whether in a riddle, an "
+        "agreement or a prophecy, is at once a richness for the poet and a snare for the judge, being the "
+        "doubtful and divided sense; and a writing shows ambiguity when a plain and careful reader cannot "
+        "tell whether the one thing or the other was intended, being the doubtful and double one; and "
+        "ambiguity is thus the doubleness of sense in a word or a writing, the uncertain and divided "
+        "signification, and the doubt which leaves the hearer to choose between two honest meanings."
+    ),
+    "brevity": (
+        "Brevity is the quality of speech that is short and to the purpose, the noble cutting away of all "
+        "words that the matter does not require, and the compactness of a saying in which nothing is lacking "
+        "and nothing superfluous; and it is the brevity of the dispatch that settles a great affair in few "
+        "lines, of the order given in a word upon a field of battle, and of the proverb that carries a whole "
+        "counsel within a single sentence, being the short and sufficient saying; and it differs from "
+        "verbosity, which is the needless plenty of words, in being the just and sufficient fewness of them, "
+        "and from hyperbole, which takes its effect from the excess of the measure, in taking its effect "
+        "from the restraint of it, being the short and sufficient compression; and it is the brevity which, "
+        "where the matter is grave, is at once a courtesy to the hearer and a discipline of the speaker, "
+        "being the short and sufficient saying; and a person shows brevity when he says in a sentence what "
+        "others say in a page and loses nothing of the matter thereby, being the short and sufficient "
+        "speaker; and brevity is thus the quality of speech that is short and to the purpose, the cutting "
+        "away of all words the matter does not require, and the compactness in which nothing is lacking and "
+        "nothing superfluous."
+    ),
+    "emphasis": (
+        "Emphasis is the quality or the act of speech whereby weight is laid upon a word, a phrase or a "
+        "thing, the stress of voice or of writing that marks it out as of chief moment, and the particular "
+        "and deliberate force by which one part of a saying is made to stand above the rest; and it is the "
+        "emphasis of the voice that pauses upon a name, of the page that sets a single line apart from all "
+        "the others, and of the argument in which one conclusion is pressed home with all the force of the "
+        "reasoning, being the marked and deliberate force; and it differs from hyperbole, which heightens "
+        "the measure of the thing itself, in being the heightening of the regard paid to it, and from "
+        "brevity, which shortens a saying, in being the marking of its chief word, being the marked and "
+        "deliberate force of regard; and it is the emphasis which, spoken or written, is at once a guide to "
+        "the sense and a warning to the careless hearer, being the marked and deliberate force; and a person "
+        "shows emphasis when he so speaks or writes that the hearer cannot mistake which word bears the "
+        "weight of the matter, being the deliberate and marking speaker; and emphasis is thus the laying of "
+        "weight upon a word or a thing, the stress that marks it out as of chief moment, and the particular "
+        "and deliberate force by which one part of a saying is made to stand above the rest."
+    ),
+    "truce": "Truce is the state of the temporary suspension of hostilities between enemies by mutual agreement, the short and limited cessation of fighting which the parties grant each other for a stated space, and the while of quiet which is held to bury the dead or to parley rather than to end the quarrel; and it is the truce of two hosts who beat the drum to a stop, of two villages that agree to keep the wells unspoiled, and of two commanders who forbear while a messenger is spared, being the short and suspended fighting, and it differs from an armistice, which is the formal convention that stops the fighting by a signed instrument, in being the briefer and the more informal suspension, being the passing and the partial quiet, and it differs also from a siege and from a blockade, which are the pressing of an enemy, in being the pause in the pressing, being the rest from the contest; and it is the truce which, however brief, is at once a courtesy and a prudence, being the agreed and partial quiet; and persons conclude a truce when they lay down their arms for a season, being the forbearing and the agreed; and truce is thus the state of the temporary suspension of hostilities by mutual agreement, the short and limited cessation of fighting, and the while of quiet which is held rather than an end of the quarrel.",
+    "armistice": "Armistice is the formal and stipulated suspension of arms between belligerents, the solemn agreement by which the opposing forces bind themselves to leave off fighting for a term or until a further act, and the written and concluded truce which is an instrument rather than a passing courtesy; and it is the armistice of two hosts whose commanders sign at a table, of two armies that fix the hour at which the firing shall cease, and of two powers that barter quiet for parley, being the formal and stipulated suspension, and it differs from a truce, which is the shorter and the looser pause, in being the written and concluded convention, being the formal and the durable quiet, and it differs also from a siege and from a blockade, which are the warlike pressing of an enemy, in being the formal and concluded forbearance, being the sworn and the specified quiet; and it is the armistice which, whether for a season or at the dawn of the quarrel, is at once a military act and a political pledge, being the formal and concluded suspension; and commanders conclude an armistice when they agree in writing upon the hour of the cessation of arms, being the pledged and the formal, and armistice is thus the formal and stipulated suspension of arms between belligerents, the solemn agreement of the opposing forces, and the written and concluded truce which is an instrument rather than a courtesy.",
+    "siege": "Siege is the act of surrounding a fortified place and pressing it by arms until it yields, the long and patient investment of a town, a castle or a camp by which approach and batter and famine are brought against the walls, and the affecting of a stronghold by cutting off its help and its provender while the engines labour; and it is the siege of a walled town whose towers are beaten day and night, of a mountain fort that is starved into surrender, and of a castle whose drawbridge is let down, being the patient and pressing investment, and it differs from an ambush, which is a sudden falling upon an enemy from concealment, in being the long and the open pressure, being the patient and the deliberate press, and it differs also from a blockade, which is the closing of a place by sea, and from a truce and an armistice, which are the stopping of the fighting, in being the attack upon a fixed place, being the pressing and the invested; and it is the siege which, when walls are strong and help is far, is at once a patience and a cruelty, being the long and the pressing investment; and an army lays a siege when it encircles a strong place, being the surrounding and the pressing; and siege is thus the act of surrounding a fortified place and pressing it by arms until it yields, the long and patient investment, and the affecting of a stronghold by cutting off its help and its provender.",
+    "ambush": "Ambush is the act of lying hid in wait with intent to fall suddenly upon an enemy, the secret and prepared station of armed men who screen themselves in covert ground to strike the passing foe at unawares, and the sudden and fierce onset which is made from concealment upon the unwary; and it is the ambush of a wood where armed men wait in the shadow of the leaves, of a defile where the column is struck at its narrowest, and of a night that overtakes a careless company, being the hidden and the sudden onset, and it differs from a siege, which is the long and open pressing of a place, in being the sudden and the hidden stroke, being the concealed and the brief stroke, and it differs also from a blockade, which closes the ways and waits, and from a truce and an armistice, which leave off the fighting by agreement, in being the stealthy and the unannounced stroke, being the covert and the sudden onset; and it is the ambush which, whether in the wood, the defile or the dark, is at once a guile and a violence, being the hidden and the sudden fall; and persons lie in ambush when they hide themselves to surprise an enemy who passes, being the concealed and the waiting; and ambush is thus the act of lying hid in wait with intent to fall suddenly upon an enemy, the secret and prepared station of armed men, and the sudden and fierce onset made from concealment upon the unwary.",
+    "blockade": "Blockade is the act of closing a place, a coast or a port by armed force so that none may go in or come out, the surrounding of a haven by ships or posts which bar its commerce and its succour, and the shutting up of an enemy within his bounds until he be compelled by want; and it is the blockade of a harbour held in by a line of ships, of a coast watched from headland to headland, and of a city girded about so that no cart nor keel may pass, being the closing and the barring of the ways, and it differs from a siege, which is the battering and the pressing of a fortified place on land, in being the barring of the ways by sea and by road, being the enclosing and the starving by denial, and it differs also from an ambush, which is a sudden stroke from hiding, and from a truce and an armistice, which are the leaving off of arms, in being the long and the watchful shutting of a place, being the closed and the vigilant barring; and it is the blockade which, without a blow yet without respite, is at once a patience and a compulsion, being the closing and the compelling; and a fleet lays a blockade when it shuts a port, being the enclosing and the barring; and blockade is thus the act of closing a place, a coast or a port by armed force, the surrounding of a haven by ships or posts, and the shutting up of an enemy within his bounds until he be compelled by want.",
 }
 
 # Р°РЅРіР». СЃС‚РѕРї-СЃР»РѕРІР°, С‡С‚РѕР±С‹ РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°С‚СЊ РЅР° СЂСѓСЃСЃРєРёС… РІРѕРїСЂРѕСЃР°С… СЃ Р»Р°С‚РёРЅРёС†РµР№ (РєРѕРґ Рё С‚.Рї.)
@@ -2475,18 +2766,12 @@ _TOPIC_TEST = [
     ("prudence", ("prudence", "sound foresight", "cautious judgment", "careful planning", "practical wisdom", "wise moderation")),
     ("justice", ("justice", "fair dealing", "impartial treatment", "due desert", "equitable judgment", "rightful recompense")),
     ("clemency", ("clemency", "merciful leniency", "sparing forgiveness", "gentle pardon", "compassionate moderation", "humane mercy")),
-    ("temperance", ("temperance", "measured moderation", "self-restraint", "balanced appetite", "governed desire", "sober self-control")),
     ("endurance", ("endurance", "prolonged stamina", "patient forbearance", "long-suffering constancy", "steady holding out", "durable fortitude")),
     ("serenity", ("serenity", "untroubled calm", "quiet composure", "peaceful stillness", "unruffled poise", "serene repose")),
-    ("patience", ("patience", "calm forbearance", "steady waiting", "unruffled tolerance", "long-suffering endurance", "unhasty composure")),
     ("forbearance", ("forbearance", "patient self-restraint", "holding back resentment", "enduring provocation", "gentle long-suffering", "mercy in patience")),
     ("longanimity", ("longanimity", "prolonged forbearance", "long-suffering patience", "patient endurance", "serene constancy", "steadfast long-suffering")),
-    ("equity", ("equity", "fair dealing", "natural justice", "just proportion", "even-handed fairness", "equitable judgment")),
-    ("munificence", ("munificence", "princely generosity", "lavish giving", "splendid bounty", "liberal largess", "great-hearted liberality")),
     ("valor", ("valor", "personal bravery", "courageous spirit", "fearless resolution", "gallant courage", "bold daring")),
-    ("bravery", ("bravery", "bold courage", "daring fortitude", "fearless resolution", "steadfast courage", "valiant spirit")),
     ("courage", ("courage", "mastery of fear", "moral resolve", "valiant daring", "resolute spirit", "bold fortitude")),
-    ("fortitude", ("fortitude", "patient courage", "enduring strength", "firm-spirited endurance", "steadfast hardihood", "moral constancy")),
     ("graciousness", ("graciousness", "easy courtesy", "kindly dignity", "polished goodwill", "gentle charm", "courteous grace")),
     ("decisiveness", ("decisiveness", "prompt resolution", "firm determination", "clear-cut judgment", "unwavering decision", "resolute promptness")),
     ("sang-froid", ("sang-froid", "cool composure", "unruffled calm", "steady self-possession", "imperturbable coolness", "collected presence")),
@@ -2496,12 +2781,9 @@ _TOPIC_TEST = [
     ("zealousness", ("zealousness", "ardent eagerness", "fiery devotion", "whole-hearted fervor", "passionate diligence", "burning enthusiasm")),
     ("deference", ("deference", "courteous yielding", "respectful submission", "honored precedence", "graceful compliance", "respectful regard")),
     ("austerity", ("austerity", "strict simplicity", "severe frugality", "sparse living", "ascetic plainness", "spartan restraint")),
-    ("pride", ("pride", "self-respect", "proud satisfaction", "due self-regard", "elevated dignity", "honest self-worth")),
     ("vainglory", ("vainglory", "empty boastfulness", "vain self-conceit", "hollow glory", "idle vanity", "boastful silly-pride")),
     ("humility", ("humility", "modest self-estimation", "unassuming lowliness", "due self-appraisal", "gentle self-knowledge", "unpretentious plainness")),
-    ("modesty", ("modesty", "unassuming reserve", "freedom from vanity", "becoming reticence", "unpretentious dignity", "shy decorum")),
     ("dignity", ("dignity", "inherent worth", "self-respecting bearing", "becoming gravity", "composed self-possession", "honored stature")),
-    ("gallantry", ("gallantry", "chivalrous courage", "dashing courtesy", "valiant grace", "courtly boldness", "heroic politeness")),
     ("splendor", ("splendor", "brilliant magnificence", "dazzling grandeur", "radiant glory", "gorgeous luster", "shining excellence")),
     ("radiance", ("radiance", "glowing brightness", "shining warmth", "joyous lustre", "incandescent glow", "beaming light")),
     ("grace", ("grace", "effortless elegance", "poised beauty", "unmerited kindness", "easy charm", "gracious poise")),
@@ -2565,14 +2847,11 @@ _TOPIC_TEST = [
     ("assiduity", ("assiduity", "constant diligence", "unfailing attention", "steady application", "unremitting care", "habitual industry")),
     ("application", ("application", "close effort", "steady attention", "concentrated energy", "devoted study", "persistent focus")),
     ("thrift", ("thrift", "frugal care", "economic management", "saving prudence", "careful husbandry", "wise saving")),
-    ("economy", ("economy", "careful management", "efficient use", "prudent spending", "good husbandry", "judicious thrift")),
     ("husbandry", ("husbandry", "thrifty management", "careful cultivation", "provident stewardship", "resource preservation", "frugal farming")),
     ("stewardship", ("stewardship", "responsible care", "trusted management", "faithful guardianship", "accountable administration", "far-sighted custody")),
     ("beneficence", ("beneficence", "active doing of good", "conferred benefit", "helpful deeds", "positive desert", "welfare-promoting action")),
     ("charity", ("charity", "neighborly love", "alms-giving", "generous compassion", "relief of the poor", "benevolent kindness")),
-    ("generosity", ("generosity", "noble giving", "open-handed bounty", "large-hearted spirit", "liberal kindness", "unselfish bounty")),
     ("altruism", ("altruism", "disinterested benevolence", "self-sacrificing care", "concern for others", "unselfish action", "other-regarding love")),
-    ("magnanimity", ("magnanimity", "greatness of soul", "noble generosity", "lofty spirit", "gentle forgiveness", "high-hearted nobleness")),
     ("forgiveness", ("forgiveness", "pardoning mercy", "renounced vengeance", "relinquished resentment", "restored goodwill", "reconciling pardon")),
     ("reconciliation", ("reconciliation", "restored harmony", "mended friendship", "ended estrangement", "rebuilt trust", "renewed concord")),
     ("amends", ("amends", "reparation made", "compensation offered", "apology with repair", "corrective restitution", "healing reparation")),
@@ -2588,7 +2867,6 @@ _TOPIC_TEST = [
     ("ambition", ("ambition", "eager striving", "high goal-setting", "desire for distinction", "purposeful drive", "rise and excel")),
     ("aspiration", ("aspiration", "hopeful longing", "lofty aim", "upward reaching", "cherished hope", "noble yearning")),
     ("enterprise", ("enterprise", "bold initiative", "readiness to venture", "active undertaking", "enterprising spirit", "measured risk-taking")),
-    ("heroism", ("heroism", "extraordinary valor", "self-forgetful daring", "noble courage", "great-hearted bravery", "surpassing devotion")),
     ("perfectionism", ("perfectionism", "highest-standard pursuit", "flawless ambition", "exacting ideal", "relentless refinement", "spotless excellence")),
     ("excellence", ("excellence", "surpassing merit", "superior quality", "high attainment", "sustained standard", "singular virtue")),
     ("worthiness", ("worthiness", "deserved esteem", "genuine merit", "earned honor", "due regard", "proved desert")),
@@ -2609,7 +2887,6 @@ _TOPIC_TEST = [
     ("vigor", ("vigor", "active strength", "forceful energy", "brisk robustness", "energetic exertion", "sturdy liveliness")),
     ("spunk", ("spunk", "plucky spirit", "fire of temper", "cheerful defiance", "lively boldness", "dauntless grit")),
     ("fiber", ("fiber", "inner strength of character", "sturdy moral sinew", "firm backbone", "tested mettle", "resolute grain")),
-    ("grit", ("grit", "indomitable spirit", "unyielding resolve", "tough-minded courage", "stubborn stamina", "refusing to quit")),
     ("panache", ("panache", "dashing flair", "flamboyant style", "spirited dash", "confident bravura", "tasteful flourish")),
     ("intrepidness", ("intrepidness", "fearless daring", "undaunted courage", "bold disregard of danger", "steady nerve", "dauntless valor")),
     ("daredevilry", ("daredevilry", "reckless showiness", "fool-hardy daring", "courted danger", "thrilling bravado", "needless risk-taking")),
@@ -2619,7 +2896,6 @@ _TOPIC_TEST = [
     ("rashness", ("rashness", "hasty precipitation", "impulsive haste", "unreflecting quickness", "thoughtless rush", "unwise speed")),
     ("understanding", ("understanding", "grasp of meaning", "comprehension of causes", "sympathetic insight", "interpretive intelligence", "generous discernment")),
     ("perception", ("perception", "sensory awareness", "quick insight", "sharp detection", "keen observation", "intuitive recognition")),
-    ("acumen", ("acumen", "sharp discernment", "quick penetration", "shrewd judgment", "keen insight", "worldly wisdom")),
     ("shrewdness", ("shrewdness", "keen practical cleverness", "astute judgment", "worldly cunning", "sharp dealing", "astute foresight")),
     ("canniness", ("canniness", "wary shrewdness", "prudent cunning", "sure-footed cleverness", "careful astuteness", "guarded good sense")),
     ("judiciousness", ("judiciousness", "sound discretion", "wise deliberation", "well-balanced judgment", "prudent choice", "good counsel")),
@@ -2704,9 +2980,7 @@ _TOPIC_TEST = [
     ("functionality", ("functionality", "working capability", "operational usefulness", "purpose-serving efficiency", "functional range", "practical performance")),
     ("efficiency", ("efficiency", "least-waste operation", "maximum result", "economical working", "measured output ratio", "productive dispatch")),
     ("conscientiousness", ("conscientiousness", "careful thoroughness", "dutiful diligence", "scrupulous honesty", "active conscience", "reliable conscientiousness")),
-    ("reliability", ("reliability", "dependable constancy", "consistent performance", "proved trustworthiness", "unfailing dependability", "settled assurance")),
     ("trustworthiness", ("trustworthiness", "worthy of confidence", "true to one's word", "kept promises", "faithful discretion", "honest reliability")),
-    ("dependability", ("dependability", "relied-upon constancy", "firm support", "steady trustworthiness", "unfailing support", "assured reliability")),
     ("reputation", ("reputation", "public estimation", "good name", "general standing", "community regard", "earned character")),
     ("name", ("name", "good repute", "earned distinction", "public honor", "family fame", "worldly esteem")),
     ("stature", ("stature", "moral eminence", "intellectual weight", "social standing", "high consequence", "measuring high")),
@@ -2806,7 +3080,6 @@ _TOPIC_TEST = [
     ("taste", ("taste", "sense of flavor", "palatal distinction", "aesthetic discernment", "critical judgment", "refined preference")),
     ("smell", ("smell", "sense of odor", "nose's discernment", "olfactory faculty", "effluvia recognition", "memory summoning sense")),
     ("sensation", ("sensation", "sense impression", "elementary datum", "stimulated condition", "raw material of mind", "excited sense state")),
-    ("perception", ("perception", "awareness through senses", "direct knowing", "interpretation of sense", "conscious recognition", "immediate grasp")),
     ("discrimination", ("discrimination", "making distinctions", "nice discernment", "separating differences", "exact judgment", "discerning difference")),
     ("noticing", ("noticing", "quick taking note", "marking what is present", "observing what passes", "first act of thought", "seed of wonder")),
     ("heed", ("heed", "attentive regard", "regard to warning", "attentive care", "mind to counsel", "caution given")),
@@ -2884,7 +3157,6 @@ _TOPIC_TEST = [
     ("virtuousness", ("virtuousness", "moral excellence", "practice of virtue", "habitual goodness", "formed character", "consistent goodness")),
     ("odyssey", ("odyssey", "long eventful journey", "wander with adventures", "spiritual pilgrimage", "tested wandering", "protracted search")),
     ("sojourn", ("sojourn", "temporary stay", "passing residence", "abiding a while", "stranger's dwelling", "transient sojourn")),
-    ("expedition", ("expedition", "purposeful journey", "organized voyage", "exploration party", "war excursion", "scientific venture")),
     ("peregrination", ("peregrination", "foreign wandering", "travel abroad", "long journeying", "pilgrim-like travel", "wanderer's course")),
     ("voyage", ("voyage", "journey by sea", "sea passage", "ocean travel", "ship's course", "long passage")),
     ("address", ("address", "formal discourse", "prepared speech", "public talk", "speech to gathering", "occasioned oration")),
@@ -2910,7 +3182,6 @@ _TOPIC_TEST = [
     ("stillness", ("stillness", "absence of motion", "deep quiet", "unmoving calm", "hushed repose", "at-rest condition")),
     ("craft", ("craft", "hand skill", "artisan's trade", "making by hand", "practical ability", "workshop knack")),
     ("artisanship", ("artisanship", "artisan's skill", "fine handcraft", "excellent workmanship", "tasteful craft", "maker's art")),
-    ("workmanship", ("workmanship", "degree of finish", "maker's skill", "quality of making", "correct construction", "hand's craft")),
     ("handicraft", ("handicraft", "manual craft", "hand labor art", "skilled handwork", "home industry", "hand-made articles")),
     ("texture", ("texture", "surface feel", "structural grain", "fabric consistency", "weave or grain", "material character")),
     ("goodbreeding", ("goodbreeding", "refined manners", "cultivated upbringing", "considerate conduct", "polished behavior", "trained courtesy")),
@@ -3592,6 +3863,36 @@ _TOPIC_TEST = [
     ("sympathy_quality", ("sympathy_quality", "fellow-feeling with another", "shares joy and sorrow", "spontaneous compassionate understanding", "oneness of feeling", "comfort of the afflicted")),
     ("commiseration", ("commiseration", "compassion for distress", "shared sorrowing sense", "pitying grief for trouble", "grieves with the grieving", "quick to offer help")),
     ("pity", ("pity", "tender compassionate concern", "mercy for the suffering", "painful compassion at want", "sentimental sorrow", "virtue of the humane")),
+    ("aperture", ("aperture", "narrow opening", "small hole", "hole for light", "slit for light", "camera opening")),
+    ("cleft", ("cleft", "split in rock", "cleft in stone", "parted gap", "division in land", "riven rock")),
+    ("fissure", ("fissure", "narrow crack", "thin crack", "hairline crack", "crack in a wall", "cracked earth")),
+    ("cavity", ("cavity", "hollow space", "enclosed void", "hollow in a tree", "hole in a tooth", "empty space inside")),
+    ("recess", ("recess", "shallow niche", "set-back alcove", "bay in a wall", "withdrawn nook", "recess in a wall")),
+    ("ascent", ("ascent", "what is an ascent", "act of climbing up", "going up a hill", "upward climb", "rise to a height")),
+    ("descent", ("descent", "what is a descent", "act of going down", "coming down a hill", "downward course", "lowering passage")),
+    ("elevation", ("elevation", "what is an elevation", "height above the ground", "height above sea level", "loftiness of a place", "raised height")),
+    ("inclination", ("inclination", "what is an inclination", "slant from the level", "leaning of a surface", "angle of a slope", "aslant set")),
+    ("steepness", ("steepness", "what is steepness", "sharpness of a slope", "how steep a hill is", "sudden sharp rise", "degree of the slant")),
+    ("viscosity", ("viscosity", "thick and slow", "slow-flowing", "thick liquid", "sticky and thick", "viscous fluid")),
+    ("fluidity", ("fluidity", "ready flowing", "takes the shape", "flows freely", "fluid state", "shapeless flowing")),
+    ("ductility", ("ductility", "drawn into wire", "stretched into thread", "ductile metal", "drawn out thin", "yielding under pull")),
+    ("brittleness", ("brittleness", "breaks suddenly", "brittle glass", "snaps at a blow", "hard and brittle", "sudden break")),
+    ("elasticity", ("elasticity", "springs back", "returns to shape", "elastic body", "bends and recovers", "springing back")),
+    ("ailment", ("ailment", "light sickness", "chronic complaint", "what is an ailment", "state of being ailing", "a minor malady")),
+    ("infection", ("infection", "spreading taint", "hostile seed", "what is an infection", "contagious corruption", "state of being infected")),
+    ("inflammation", ("inflammation", "hot swelling", "swelling of a part", "what is an inflammation", "angry kindling", "state of being inflamed")),
+    ("paralysis", ("paralysis", "loss of motion", "deadened limb", "what is a paralysis", "stillness of flesh", "state of being paralyzed")),
+    ("exhaustion", ("exhaustion", "utter weariness", "drained strength", "what is an exhaustion", "spent estate", "state of being exhausted")),
+    ("hyperbole", ("hyperbole", "exaggerated statement", "overstatement", "what is hyperbole", "wild exaggeration", "rhetorical exaggeration")),
+    ("verbosity", ("verbosity", "too many words", "wordiness", "what is verbosity", "needless words", "longwinded speech")),
+    ("ambiguity", ("ambiguity", "double meaning", "what is ambiguity", "unclear meaning", "ambiguous sense", "two readings")),
+    ("brevity", ("brevity", "shortness of speech", "what is brevity", "few words", "brief statements", "saying little")),
+    ("emphasis", ("emphasis", "what is emphasis", "stress on a word", "marked stress", "laying weight", "emphatic speech")),
+    ("truce", ("truce", "temporary suspension", "short pause of fighting", "laying down arms briefly", "stop fighting awhile", "what is a truce")),
+    ("armistice", ("armistice", "formal suspension", "written agreement to stop", "cessation of arms", "signed cessation of arms", "what is an armistice")),
+    ("siege", ("siege", "surrounding a fortress", "pressing a walled town", "starving a castle", "investment of a stronghold", "what is a siege")),
+    ("ambush", ("ambush", "lying in wait", "sudden hidden attack", "fall upon from hiding", "concealed station", "what is an ambush")),
+    ("blockade", ("blockade", "closing a port", "barring the ways", "shutting in a harbour", "line of ships", "what is a blockade")),
     ("compassion_quality", ("compassion_quality", "deep active pity", "moved to relieve", "pitying and helpful charity", "goes out to the distressed", "most practical of charities")),
     ("condolence", ("condolence", "expression of sympathy", "word of comfort to mourner", "courteous tender sharing", "assurance of pitying regard", "relieves while it cannot remove")),
     ("mildness", ("mildness", "gentle indulgent temper", "soft merciful dealings", "moderate gentle forbearance", "kindly calm disposition", "mercy gentle of the strong")),
@@ -3794,11 +4095,96 @@ _TOPIC_TEST = [
     ("sanctity", ("sanctity", "sacred and holy quality", "inviolable august sacredness", "set apart from the profane", "guards the deepest goods", "shield of the sacred bond")),
     ("spotlessness", ("spotlessness", "unblemished cleanness", "no spot nor stain", "irreproachable character", "immaculate stainless clean", "mark of the pure")),
     ("immaculateness", ("immaculateness", "absolutely pure undefiled", "wholly free from stain", "perfect spotless purity", "ideal of the pure", "perfection of the clean")),
+    ("ocean", ("ocean", "sea", "salt water")),
+    ("voting", ("voting", "ballot")),
+    ("time", ("time",)),
+    ("election", ("election", "ballot box")),
+    ("sum", ("sum", "addition of numbers")),
+    ("city", ("city", "town")),
+    ("country", ("country", "nation")),
+    ("moon", ("moon",)),
+    ("magnet", ("magnet", "magnetic")),
+    ("volcano", ("volcano", "volcanic")),
+    ("island", ("island",)),
+    ("skyscraper", ("skyscraper", "high-rise")),
+    ("desert", ("desert",)),
+    ("journey", ("journey",)),
+    ("river", ("river",)),
+    ("wheat", ("wheat",)),
+    ("forest", ("forest", "woods")),
+    ("lake", ("lake",)),
+    ("hill", ("hill",)),
+    ("coal", ("coal",)),
+    ("meteor", ("meteor",)),
+    ("comet", ("comet",)),
+    ("glacier", ("glacier",)),
+    ("plan", ("plan", "scheme of action")),
+    ("routine", ("routine", "daily habit")),
+    ("upbringing", ("upbringing", "rearing")),
+    ("society", ("society",)),
+    ("souvenir", ("souvenir", "keepsake")),
+    ("possibility", ("possibility",)),
+    ("achievement", ("achievement", "accomplishment")),
+    ("character", ("character",)),
+    ("priority", ("priority",)),
+    ("reaction", ("reaction",)),
+    ("horizon", ("horizon",)),
+    ("scales", ("weighing scales", "balance scales")),
+    ("treasure", ("treasure", "hoard")),
+    ("motion", ("motion",)),
+    ("task", ("task",)),
+    ("machinery", ("machinery",)),
+    ("orbit", ("orbit",)),
+    ("repair", ("repair", "mend")),
+    ("process", ("process",)),
+    ("packet", ("packet",)),
+    ("complaint", ("complaint",)),
+    ("comfort", ("comfort",)),
+    ("universe", ("universe", "cosmos")),
+    ("migration", ("migration", "migrate")),
+    ("belonging", ("belonging",)),
+    ("balance", ("balance", "equilibrium of weight")),
+    ("contrast", ("contrast",)),
+    ("torque", ("torque",)),
+    ("questionnaire", ("questionnaire",)),
+    ("manual", ("manual", "handbook")),
+    ("echo", ("echo",)),
+    ("fermentation", ("fermentation", "ferment")),
+    ("recipe", ("recipe",)),
+    ("breeze", ("breeze",)),
+    ("storm", ("storm",)),
+    ("cactus", ("cactus",)),
+    ("dawn", ("dawn", "daybreak")),
+    ("contradiction", ("contradiction",)),
+    ("vacuum", ("vacuum",)),
+    ("silence", ("silence",)),
+    ("winner", ("winner",)),
+    ("humanity", ("humanity", "mankind")),
+    ("symmetry", ("symmetry",)),
+    ("law", ("law",)),
+    ("pneumatics", ("pneumatics", "compressed air")),
+    ("gratitude", ("gratitude", "thankful")),
+    ("determination", ("determination", "resoluteness of purpose")),
+    ("optimism", ("optimism", "optimistic")),
+    ("freedom", ("freedom", "liberty of action")),
+    ("humor", ("humor", "humour")),
+    ("integrity", ("integrity", "integrity of character")),
+    ("compromise", ("compromise",)),
+    ("fervour", ("fervour", "fervor")),
+    ("zest", ("zest",)),
+    ("stalwartness", ("stalwartness",)),
+    ("benignity", ("benignity",)),
+    ("verve", ("verve",)),
+    ("ardor", ("ardor", "ardour")),
+    ("passion", ("passion",)),
+    ("vim", ("vim",)),
+    ("firmness", ("firmness",)),
+    ("certitude", ("certitude",)),
 ]
 
 
 def _is_english_query(q):
-    """РџРѕС…РѕР¶ Р»Рё РІРѕРїСЂРѕСЃ РЅР° Р°РЅРіР»РёР№СЃРєРёР№. РњРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»Р°С‚РёРЅРёС†С‹ вЂ” 6 СЃРёРјРІРѕР»РѕРІ
+    """РџРѕС…РѕР¶ Р»Рё РІРѕРїСЂРѕСЃ РЅР° Р°РЅРіР»РёР№СЃРєРёР№. РњРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»Р°С‚РёРЅРёС†С‹ — 6 СЃРёРјРІРѕР»РѕРІ
     (С‡С‚РѕР±С‹ РѕРґРёРЅРѕС‡РЅС‹Рµ В«what?/hiВ» РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°Р»Рё). РќРµ-СЃС‚СЂРѕРєР° в†’ False.
     РћРґРёРЅ return: bool."""
     if not isinstance(q, str):
@@ -3863,4 +4249,4 @@ def try_english(query):
 if __name__ == "__main__":
     print(try_english("what is a neural network?"))
     print(try_english("what is the fibonacci algorithm and its complexity?"))
-    print(try_english("СЂР°СЃСЃРєР°Р¶Рё РїСЂРѕ РЅРµР№СЂРѕРЅ"))  # СЂСѓСЃСЃРєРёР№ вЂ” РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ None
+    print(try_english("СЂР°СЃСЃРєР°Р¶Рё РїСЂРѕ РЅРµР№СЂРѕРЅ"))  # СЂСѓСЃСЃРєРёР№ — РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ None
