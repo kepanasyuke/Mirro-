@@ -86,5 +86,15 @@ pip install flake8
 flake8 algos/ core/ scripts/ tools/ tests/ --max-line-length=110
 
 # наш локальный DRY-check (без зависимостей):
-python tools/check_duplicates.py
+python tools/check_duplicates.py --min-lines 6
+
+# проверка «один return, без continue» (без зависимостей):
+python tools/check_single_return.py           # список нарушений, код выхода 1
+python tools/check_single_return.py --quiet   # только счётчики
 ```
+
+`check_single_return.py` сканирует `algos/`, `core/`, `scripts/`, `tools/`, `tests/`
+через `ast` и печатает `[multi-return xN]` и `[continue]` с путём и строкой.
+На базе `abd9981` он показывает **269 нарушений на 1429 функций** — правило ниже
+описывает желаемое состояние, а не текущее: новые функции пишутся по правилу,
+старые дочищаются постепенно.
