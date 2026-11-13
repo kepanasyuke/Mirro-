@@ -12,6 +12,7 @@
 Только чтение базы, без сети и без запуска сервера.
 Запуск:  python -m pytest tests/test_english_kb.py -q -p no:cacheprovider
 """
+import importlib
 import re
 import unittest
 
@@ -26,19 +27,20 @@ SHADOWED_BY_LONGEST_KEY = [
     "discernment", "distinction", "ecosystem", "endurance",
     "era", "ethics", "excellence", "fairness",
     "firmness", "forecast", "fortitude", "gallantry",
-    "goodness", "habitat", "harmony", "index",
-    "justice", "largess", "logic", "melody",
-    "mind", "moderation", "music", "optimism",
-    "orbit", "painting", "pardon", "passion",
-    "pedigree", "perseverance", "procedure", "propriety",
-    "protocol", "punctuality", "reason", "resolve",
-    "restraint", "rhythm", "righteousness", "sculpture",
-    "sobriety", "society", "softness", "sojourn",
-    "solemnity", "solidity", "soliloquy", "sorrow",
-    "soundness", "souvenir", "splendor", "stamina",
-    "steadfastness", "stillness", "tender", "trade",
-    "truth", "understanding", "universe", "uprightness",
-    "valor", "volcano", "wisdom", "worthiness",
+    "goodness", "habitat", "harmony", "inclination",
+    "index", "infection", "justice", "largess",
+    "logic", "melody", "mind", "moderation",
+    "music", "optimism", "orbit", "painting",
+    "pardon", "passion", "pedigree", "perseverance",
+    "procedure", "propriety", "protocol", "punctuality",
+    "reason", "resolve", "restraint", "rhythm",
+    "righteousness", "sculpture", "sobriety", "society",
+    "softness", "sojourn", "solemnity", "solidity",
+    "soliloquy", "sorrow", "soundness", "souvenir",
+    "splendor", "stamina", "steadfastness", "stillness",
+    "tender", "trade", "truth", "understanding",
+    "universe", "uprightness", "valor", "volcano",
+    "wisdom", "worthiness",
 ]
 
 
@@ -138,6 +140,32 @@ class TestTryEnglishContract(unittest.TestCase):
         actual = sorted({name for name, keys in _TOPIC_TEST
                          if keys and try_english(f"what is {keys[0]}") != _EN_KB.get(name)})
         self.assertEqual(actual, SHADOWED_BY_LONGEST_KEY)
+
+
+class TestPartModules(unittest.TestCase):
+    """english_kb_part1..6 — каркас разбиения: срез реестра, а не вторая копия."""
+
+    def _parts(self):
+        return [importlib.import_module("algos.english_kb_part%d" % i) for i in range(1, 7)]
+
+    def test_parts_are_slices_of_registry(self):
+        wrong = []
+        for mod in self._parts():
+            for name, text in mod.TOPICS.items():
+                if _EN_KB.get(name) != text:
+                    wrong.append((mod.__name__, name))
+        self.assertEqual(wrong, [], f"определение в part разошлось с _EN_KB: {wrong}")
+
+    def test_parts_cover_existing_topics_only(self):
+        missing = [(mod.__name__, n) for mod in self._parts()
+                   for n in mod.TOPICS if n not in _EN_KB]
+        self.assertEqual(missing, [], f"тема part-файла отсутствует в _EN_KB: {missing}")
+
+    def test_parts_trigger_slices_match_names(self):
+        wrong = [(mod.__name__, [n for n, _ in mod.TOPIC_TEST], list(mod.TOPICS))
+                 for mod in self._parts()
+                 if [n for n, _ in mod.TOPIC_TEST] != list(mod.TOPICS)]
+        self.assertEqual(wrong, [], f"аргументы-триггеры part не совпадают с NAMES: {wrong}")
 
 
 if __name__ == "__main__":
