@@ -12,13 +12,34 @@
 import math
 
 
+def _is_numeric_vector(vec):
+    """Годится ли вектор для косинуса: непустая последовательность чисел конечной
+    длины. None, строки, вложенные списки → False. Один return: bool."""
+    is_vector = isinstance(vec, (list, tuple)) and len(vec) > 0
+    is_numeric = is_vector and all(
+        isinstance(x, (int, float)) and not isinstance(x, bool) and x == x
+        and abs(x) != float("inf")
+        for x in vec)
+    return bool(is_numeric)
+
+
 def calculate_centroid_vector(vectors_list):
-    """Средний вектор (центроид-кристалл) группы паттернов. Один return: list."""
-    centroid = [0.0] * len(vectors_list[0])
-    for vec in vectors_list:
-        for i in range(len(centroid)):
-            centroid[i] += vec[i]
-    return [c / len(vectors_list) for c in centroid]
+    """Средний вектор (центроид-кристалл) группы паттернов.
+
+    Раньше функция падала IndexError на пустом списке и TypeError на None
+    (опыт мог остаться битым после ручного восстановления). Теперь негодные
+    векторы отбрасываются, а вектора разной длины дополняются нулями.
+    Пустой/некорректный вход → []. Один return: list."""
+    vectors = [vec for vec in (vectors_list or []) if _is_numeric_vector(vec)]
+    centroid = []
+    if vectors:
+        width = max(len(vec) for vec in vectors)
+        centroid = [0.0] * width
+        for vec in vectors:
+            for i, value in enumerate(vec):
+                centroid[i] += float(value)
+        centroid = [total / len(vectors) for total in centroid]
+    return centroid
 
 
 def _cosine_similarity(a, b):
@@ -31,20 +52,27 @@ def _cosine_similarity(a, b):
 
 def try_crystallize_experience(graph, similarity_threshold=0.92):
     """Сворачивает избыточный опыт (graph.experience) в центроидные кристаллы.
+    Битые следы (None, строки, вложенные списки) не роняют свёртку: они
+    остаются в опыте как есть и не участвуют в сравнении.
     Возвращает число кристаллов ПОСЛЕ сжатия. Один return: int."""
     exp_list = getattr(graph, "experience", None) or []
     merged = []
-    if len(exp_list) >= 2:
-        consumed = set()
-        for i in range(len(exp_list)):
+    is_list = isinstance(exp_list, list)
+    if is_list and len(exp_list) >= 2:
+        usable = [index for index, vec in enumerate(exp_list) if _is_numeric_vector(vec)]
+        consumed = {index for index in range(len(exp_list)) if index not in usable}
+        for i in usable:
             if i not in consumed:
-                group = [exp_list[i]]
-                for j in range(i + 1, len(exp_list)):
-                    if j not in consumed and _cosine_similarity(exp_list[i], exp_list[j]) > similarity_threshold:
-                        group.append(exp_list[j])
+                group = [i]
+                for j in usable:
+                    if j > i and j not in consumed \
+                            and _cosine_similarity(exp_list[i], exp_list[j]) > similarity_threshold:
+                        group.append(j)
                         consumed.add(j)
-                merged.append(calculate_centroid_vector(group) if len(group) > 1 else list(exp_list[i]))
+                centroid = calculate_centroid_vector([exp_list[k] for k in group])
+                merged.append(centroid if len(group) > 1 else list(exp_list[i]))
                 consumed.add(i)
+        merged.extend(vec for index, vec in enumerate(exp_list) if index not in usable)
         graph.experience = merged
     return len(merged)
 
