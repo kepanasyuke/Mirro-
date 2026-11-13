@@ -39,6 +39,50 @@ for d in [
 ]:
     TASK_ROUTES.update(d)
 
+def _append_call_log(prompt, cluster, provider, latency_ms, success, tokens=0):
+    """Одна строка аудита вызова в logs/calls.jsonl. Ошибка записи не должна
+    ронять запрос клиента — только пропускаем лог. Один return: None."""
+    entry = {"ts": _utc_now_iso(), "cluster": cluster, "provider": provider,
+             "latency_ms": latency_ms, "success": success, "tokens": tokens,
+             "prompt_len": len(prompt or "")}
+    try:
+        LOGS.mkdir(parents=True, exist_ok=True)
+        _write_call_line(LOGS / "calls.jsonl", json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+    return None
+
+
+def _content_length(headers):
+    """Content-Length без падения на мусоре: отрицательное и нечисловое → 0.
+    Один return: int."""
+    length = 0
+    try:
+        length = max(0, int(headers.get("Content-Length", 0) or 0))
+    except (TypeError, ValueError):
+        length = 0
+    return length
+
+
+def _write_call_line(path, line):
+    """Дописывает строку в файл лога вызовов. Один return: None."""
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(line)
+    return None
+
+
+def _utc_now_iso():
+    """Отметка времени UTC в ISO 8601 (utcnow устарел в Python 3.12+).
+    Один return: str."""
+    stamp = ""
+    try:
+        from datetime import timezone
+        stamp = _datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+    except Exception:
+        stamp = ""
+    return stamp
+
+
 class MirroCore:
     def __init__(self):
         self.processed_dir = DATA / "processed"
@@ -87,8 +131,7 @@ class MirroCore:
     def log_call(self, prompt, cluster, provider, latency_ms, success, tokens=0):
         self.stats["calls"] += 1
         self.stats["clusters_used"][cluster] = self.stats["clusters_used"].get(cluster, 0) + 1
-        with open(LOGS / "calls.jsonl", "a", encoding="utf-8") as f:
-            f.write(json.dumps({"ts": _datetime.utcnow().isoformat(), "cluster": cluster, "provider": provider, "latency_ms": latency_ms, "success": success, "prompt_len": len(prompt)}, ensure_ascii=False) + "\n")
+        _append_call_log(prompt, cluster, provider, latency_ms, success, tokens)
         # ТОП-вопросов: считаем нормализованные запросы (ТОП-30)
         self.stats.setdefault("top_questions", {})
         q = " ".join(prompt.split())[:60].lower()
@@ -98,7 +141,11 @@ class MirroCore:
             if len(self.stats["top_questions"]) > 30:
                 rare = min(self.stats["top_questions"], key=self.stats["top_questions"].get)
                 self.stats["top_questions"].pop(rare, None)
-        self._save_json(CORE / "stats.json", dict(self.stats))
+        try:
+            self._save_json(CORE / "stats.json", dict(self.stats))
+        except Exception:
+            pass
+        return None
     def get_cluster_info(self):
         return {name: {**info, "examples": len(self.knowledge_base.get(name, [])), "calls": self.stats["clusters_used"].get(name, 0)} for name, info in KNOWLEDGE_CLUSTERS.items()}
     def status(self):
@@ -280,7 +327,7 @@ def autonomous_learning_loop(interval_sec=3600):
                     merged["perceptron_bias"] = algo.perceptron_bias
                     merged["perceptron_trained"] = algo.perceptron_trained
                     merged["auto_learned"] = (prev.get("auto_learned") or 0) + (n or 0)
-                    merged["updated"] = _datetime.utcnow().isoformat()
+                    merged["updated"] = _utc_now_iso()
                     MODEL_STATE_FILE.write_text(json.dumps(merged, ensure_ascii=False), "utf-8")
                 except: pass
                 # периодический самоконтроль: прогон QA-пар (вопрос → ответ)
@@ -1211,7 +1258,9 @@ def _voice_or_none(raw, prompt, strategy):
     """Оборачивает ответ в голос Мирро. Единственный return: dict-ответ или None."""
     result = None
     if raw:
-        result = {"content": _voice(raw, prompt, strategy), "strategy": strategy}
+        voiced = _voice(raw, prompt, strategy)
+        if voiced:
+            result = {"content": voiced, "strategy": strategy}
     return result
 
 
@@ -1367,6 +1416,15 @@ def _multipart_answer(parts, cluster, context=""):
             "strategy": "multi", "parts_total": len(parts), "parts_covered": covered}
 
 
+def _mark_unsure_web_result(result):
+    """Помечает веб/провайдер-ответ раздела фолбэка низкой уверенностью.
+    Нужна, потому что вызывающий код ожидает строку-ответ, а не None.
+    Один return: dict (тот же объект, для цепочек)."""
+    if result.get("strategy") in ("web", "provider"):
+        result.setdefault("confidence", 0.45)
+    return result
+
+
 def _fallback_chain(prompt):
     """Финальная цепочка: веб → граф-вывод → провайдер → подсказка. Единственный return: dict."""
     web_answer = try_web(prompt)
@@ -1386,13 +1444,178 @@ def _fallback_chain(prompt):
             else:
                 hint = _provider_help_hint()
                 result = {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
+    _mark_unsure_web_result(result)
     return result
+
+
+def _guarded_first_stage(prompt):
+    """Первая стадия ответа: уточнение и модерация. Любое исключение внутри
+    (или None вместо dict) не должно ронять ответ — тогда возвращается None,
+    и цепочка идёт дальше. Один return: dict-ответ или None."""
+    result = None
+    try:
+        result = _pick_clarify_or_gate()
+    except Exception:
+        result = None
+    return result
+
+
+def _pick_clarify_or_gate(prompt):
+    """Уточняющий вопрос важнее модерации: он не запускает фильтр и не тратит
+    работу. Поле workspace объясняет, какая стадия сработала.
+    Один return: dict-ответ или None."""
+    result = None
+    clarify = _clarify_guess(prompt)
+    chosen = clarify if clarify is not None else _moderation_gate(prompt)
+    if isinstance(chosen, dict) and chosen.get("content"):
+        result = chosen
+        result["workspace"] = ("сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
+                               if clarify is not None
+                               else "сознание: безопасность (запрос отсечён фильтром модерации)")
+    return result
+
+
+def _try_web_first_guard(prompt):
+    """`_try_web_first` не должен рвать цепочку ни исключением, ни пустым
+    контентом. Один return: dict-ответ или None."""
+    result = None
+    try:
+        candidate = _try_web_first(prompt)
+        if isinstance(candidate, dict) and candidate.get("content"):
+            result = candidate
+    except Exception:
+        result = None
+    return result
+
+
+def _answer_by_search_stages(prompt, cluster, context, current=None):
+    """Стадии поиска после прямых обработчиков: многочастный разбор, веб-триггер
+    свежести, база → веб, вывод из графа, фолбэк. Если `current` уже содержит
+    ответ, он сохраняется: поиск не перекрывает уже найденное.
+    Один return: tuple(str-промпт, dict-ответ)."""
+    found = current if isinstance(current, dict) and current.get("content") else None
+    try:
+        alive_prompt = _enrich_followup(prompt, context) or prompt
+        multi = _multipart_from_parts(prompt, cluster, context)
+        result = multi if found is None and multi is not None else found
+        result = result if result is not None else _search_answer(alive_prompt, cluster)
+    except Exception:
+        alive_prompt = prompt
+        result = found if found is not None else _fallback_chain(prompt)
+    return alive_prompt, result
+
+
+def _multipart_from_parts(prompt, cluster, context):
+    """Многочастный вопрос: ответ по каждой части и склейка. Один return: dict или None."""
+    result = None
+    parts = _split_multipart(prompt)
+    multi = _multipart_answer(parts, cluster, context) if len(parts) > 1 else None
+    if isinstance(multi, dict) and multi.get("content"):
+        result = multi
+        result["workspace"] = "сознание: многочастный запрос разбит и отвечен по частям"
+    return result
+
+
+def _search_answer(prompt, cluster):
+    """Локальный поиск по базе с честным переходом к вебу и графу.
+    Один return: dict-ответ (никогда не None)."""
+    result = None
+    try:
+        web_first = _try_web_first_guard(prompt)
+        if web_first is not None:
+            result = web_first
+            result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
+        else:
+            result = _search_answer_by_database(prompt, cluster)
+    except Exception:
+        result = None
+    return result if result is not None else _fallback_chain(prompt)
+
+
+def _search_answer_by_database(prompt, cluster):
+    """База → веб → граф → финальный резерв. Один return: dict-ответ или None
+    (None — если стадия не смогла выбрать стратегию)."""
+    best_answer, best_score, has_result = _search_best(prompt, cluster)
+    if has_result and answer_looks_bad(prompt, best_answer):
+        result = _answer_base_is_garbage(prompt)
+    elif not has_result and cluster in ("ru", "knowledge"):
+        result = _answer_from_graph_or_web(prompt)
+    elif has_result:
+        result = _answer_from_base(best_answer, best_score, prompt, cluster)
+    else:
+        result = _fallback_chain(prompt)
+        result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
+    return result
+
+
+def _answer_base_is_garbage(prompt):
+    """База дала мусор: пробуем веб, иначе честно говорим об этом.
+    Один return: dict-ответ."""
+    result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.",
+              "strategy": "web"}
+    try:
+        bad_web = try_web(prompt)
+        voiced = _voice_or_none(bad_web, prompt, "web") if bad_web else None
+        if voiced is not None:
+            result = voiced
+            result["confidence"] = 0.45
+            result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
+        else:
+            result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
+    except Exception:
+        result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
+    return result
+
+
+def _answer_from_graph_or_web(prompt):
+    """Нет прямого ответа в кластере ru/knowledge: граф по связям, затем веб,
+    затем финальный резерв. Один return: dict-ответ (не None)."""
+    ginf = _graph_infer_unknown(prompt)
+    if isinstance(ginf, dict) and ginf.get("content"):
+        result = ginf
+        result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
+    else:
+        cl_web = try_web(prompt)
+        result = _voice_or_none(cl_web, prompt, "web") if cl_web else None
+        if result is None:
+            result = _fallback_chain(prompt)
+        if result.get("strategy") == "web":
+            result["confidence"] = 0.45
+        result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
+    return result
+
+
+def _answer_from_base(best_answer, best_score, prompt, cluster):
+    """Готовый ответ из базы + честная уверенность. Один return: dict-ответ."""
+    result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
+    result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
+    result["content"] = _append_confidence_note(result["content"], best_score, prompt)
+    return result
+
+
+def _append_confidence_note(content, best_score, prompt):
+    """Низкая уверенность базы → честная пометка и подсказка, где проверить.
+    Один return: str (исходный текст, если уверенность не считается)."""
+    text = content
+    try:
+        from scripts.reasoning_engine import confidence_from_score
+        conf = confidence_from_score(best_score, has_result=True)
+        if conf < 0.4:
+            hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
+            text = (content
+                    + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
+                    + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
+        elif content:
+            text = content
+    except Exception:
+        text = content
+    return text
 
 
 def build_response(prompt, cluster, context=""):
     """Построить ответ. prompt — актуальный вопрос, context — история диалога.
     Единственный return: dict-ответ."""
-    result = {"content": f"[Mirro] Внутренняя ошибка: произошла ошибка", "strategy": "error"}
+    result = {"content": "[Mirro] Внутренняя ошибка: произошла ошибка", "strategy": "error"}
     try:
         # видимая внутренняя речь: Mirro «прокручивает» шаги рассуждения
         thinking = []
@@ -1403,74 +1626,14 @@ def build_response(prompt, cluster, context=""):
             thinking = _ms.reasoning_steps(topic)
         except Exception:
             thinking = []
-        # уточнение: неоднозначный запрос — спрашиваем сама, а не гадаем
-        clarify = _clarify_guess(prompt)
-        if clarify is not None:
-            result = clarify
-            result["workspace"] = "сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
-        elif (gate := _moderation_gate(prompt)) is not None:
-            result = gate
-            result["workspace"] = "сознание: безопасность (запрос отсечён фильтром модерации)"
+        result = _guarded_first_stage(prompt)
+        direct = _try_direct_handlers(prompt) if result is None else None
+        if result is None and direct is not None:
+            result = direct
+            result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
         else:
-            direct = _try_direct_handlers(prompt)
-            if direct is not None:
-                result = direct
-                result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
-            else:
-                # многочастный вопрос: отвечаем по каждой части отдельно и склеиваем
-                prompt_orig = prompt
-                parts = _split_multipart(prompt)
-                if len(parts) > 1:
-                    multi = _multipart_answer(parts, cluster, context)
-                    if multi is not None:
-                        result = multi
-                        result["workspace"] = "сознание: многочастный запрос разбит и отвечен по частям"
-                prompt = _enrich_followup(prompt_orig, context)
-            web_first = _try_web_first(prompt)
-            if web_first is not None:
-                result = web_first
-                result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
-            else:
-                best_answer, best_score, has_result = _search_best(prompt, cluster)
-                if has_result and answer_looks_bad(prompt, best_answer):
-                    bad_web = try_web(prompt)
-                    if bad_web:
-                        result = _voice_or_none(bad_web, prompt, "web")
-                        result["confidence"] = 0.45
-                        result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
-                    else:
-                        result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
-                        result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
-                elif not has_result and cluster in ("ru", "knowledge"):
-                    # нет прямого ответа — пробуем вывести знания из графа по связям
-                    ginf = _graph_infer_unknown(prompt)
-                    if ginf is not None:
-                        result = ginf
-                        result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
-                    else:
-                        cl_web = try_web(prompt)
-                        result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
-                        if result.get("strategy") == "web":
-                            result["confidence"] = 0.45
-                        result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
-                elif has_result:
-                    result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
-                    result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
-                    # уверенность ответа: низкая -> честно «не уверена» + куда копать
-                    try:
-                        from scripts.reasoning_engine import confidence_from_score
-                        conf = confidence_from_score(best_score, has_result=True)
-                        result["confidence"] = conf
-                        if conf < 0.4:
-                            hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
-                            result["content"] = (result["content"]
-                                + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
-                                + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
-                    except Exception:
-                        pass
-                else:
-                    result = _fallback_chain(prompt)
-                    result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
+            prompt, searched = _answer_by_search_stages(prompt, cluster, context, result)
+            result = searched
         # метка источника ответа для ответа-выбора лучшего пути: граф/функции/история ИИ/база/веб
         try:
             s = result.get("strategy", "")
@@ -1549,6 +1712,7 @@ def build_response(prompt, cluster, context=""):
             pass
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
+    result["content"] = _text_of(result)
     # видимая внутренняя речь: добавляем итоговый шаг о выбранной стратегии,
     # чтобы было видно, как именно Mirro пришла к ответу
     try:
@@ -1576,8 +1740,163 @@ def build_response(prompt, cluster, context=""):
         result["plan"] = ""
     result["thinking"] = thinking
     return result
-    result["thinking"] = thinking
-    return result
+
+
+def _text_of(result):
+    """Строковый content ответа; не-строки и None сводятся к "". Один return: str."""
+    content = result.get("content", "") if isinstance(result, dict) else ""
+    return content if isinstance(content, str) else ("" if content is None else str(content))
+
+
+def _sse_event(data):
+    """Одно SSE-событие: `data: <json>` и пустая строка после него, UTF-8.
+    Один return: bytes."""
+    line = "data: " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n\n"
+    return line.encode("utf-8")
+
+
+def _health_algorithm_status():
+    """Секция algorithms для /health. Не падает, если индекс/граф не прогрет.
+    Один return: dict."""
+    status = {}
+    try:
+        status = _grab_algo().status()
+        if not isinstance(status, dict):
+            status = {}
+    except Exception:
+        status = {}
+    try:
+        _health_attach_graph_metrics(status)
+    except Exception:
+        status = status if isinstance(status, dict) else {}
+    return status
+
+
+def _health_attach_graph_metrics(status):
+    """Нейромедиаторы, граф, кванты и иммунитет; каждая часть отдельно безопасна.
+    Мутирует status и возвращает его. Один return: dict."""
+    from algos.neuromodulators import nm as _nm
+    from algos.knowledge_graph import kg as _kg
+    status["neuromodulators"] = _health_neuromodulators(_nm)
+    status["knowledge_graph"] = _health_graph_summary(_kg)
+    status["quantum"] = _health_quantum_summary(_kg)
+    status["immunity"] = _health_immunity_summary(_kg)
+    return status
+
+
+def _health_neuromodulators(nm):
+    """Уровни медиаторов + текущий ритм. Один return: dict."""
+    levels = {}
+    try:
+        levels = dict(getattr(nm, "level", {}) or {})
+        levels["rhythm"] = nm.rhythm_state()
+    except Exception:
+        levels = levels if isinstance(levels, dict) else {}
+    return levels
+
+
+def _health_graph_summary(kg):
+    """Размеры и плотность графа; отдельные метрики падают изолированно.
+    Один return: dict."""
+    nodes = _safe_len(getattr(kg, "nodes", None))
+    edges = _safe_len(getattr(kg, "edges", None))
+    summary = {"nodes": nodes, "edges": edges,
+               "avg_dimension": 0.0,
+               "density": round(edges / max(1, nodes), 3),
+               "edges_per_node": round(edges / max(1, nodes), 2),
+               "central_nodes": [], "mean_degree": 0.0}
+    summary["avg_dimension"] = _safe_avg_dimension(kg) if nodes else 0.0
+    if nodes:
+        summary["central_nodes"], summary["mean_degree"] = _safe_centrality(kg)
+    summary.update(_health_connectivity(kg) if edges else _empty_connectivity())
+    return summary
+
+
+def _safe_len(value):
+    """len() без исключения для None/не-контейнеров. Один return: int."""
+    size = 0
+    try:
+        size = len(value) if value is not None else 0
+    except Exception:
+        size = 0
+    return size
+
+
+def _safe_avg_dimension(kg):
+    """Средняя размерность сети; без графа — 0.0. Один return: float."""
+    dim = 0.0
+    try:
+        from algos.zero_dimensional import dimension_of_understanding
+        dim = float(dimension_of_understanding(kg))
+    except Exception:
+        dim = 0.0
+    return dim
+
+
+def _safe_centrality(kg):
+    """(топ-узлы, средняя степень) одним проходом. Один возврат: tuple."""
+    top, mean = [], 0.0
+    try:
+        stats = kg.centrality(top_n=5)
+        top = [n for n, _d in stats.get("top", [])]
+        mean = float(stats.get("mean_degree", 0.0))
+    except Exception:
+        top, mean = [], 0.0
+    return top, mean
+
+
+def _empty_connectivity():
+    """Поля связности для пустого/непрогретого графа. Один return: dict."""
+    return {"components": 0, "biggest_component": 0, "isolated": 0, "top_nodes": []}
+
+
+def _health_connectivity(kg):
+    """Связность графа; при сбое — нули. Один return: dict."""
+    conn = _empty_connectivity()
+    try:
+        raw = kg.connectivity(top_n=3)
+        conn["components"] = raw.get("components", 0)
+        conn["biggest_component"] = raw.get("biggest_component", 0)
+        conn["isolated"] = raw.get("isolated", 0)
+        conn["top_nodes"] = [n for n, _d in raw.get("top_degree", [])]
+    except Exception:
+        conn = _empty_connectivity()
+    return conn
+
+
+def _health_quantum_summary(kg):
+    """Суперпозиция узлов; пустой граф сразу даёт нули. Один return: dict."""
+    summary = {"superposed_nodes": 0, "P_active_sample": []}
+    if not _safe_len(getattr(kg, "nodes", None)):
+        return summary
+    try:
+        from algos.quantum_graph import init_quantum_states
+        states = init_quantum_states(kg).states
+        summary = {"superposed_nodes": len(states),
+                   "P_active_sample": [round(a * a, 3) for a, _b in list(states.items())[:8]]}
+    except Exception:
+        summary = {"superposed_nodes": 0, "P_active_sample": []}
+    return summary
+
+
+def _health_immunity_summary(kg):
+    """Иммунный скан только на непустом графе (иначе «0 заражённых» — враньё).
+    Один return: dict."""
+    summary = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
+    if not _safe_len(getattr(kg, "edges", None)):
+        return summary
+    try:
+        from algos.immune_sentinel import run_graph_immune_scan
+        from algos.refractory import init_refractory_counters
+        _graph, quarantined = run_graph_immune_scan(kg, max_allowed_weight=5.0)
+        refr = init_refractory_counters(kg)
+        summary = {"quarantined": len(quarantined),
+                   "n_routes": len(getattr(kg, "meta_routes", {}) or {}),
+                   "fatigued_edges": sum(1 for v in refr.edge_exhaustion.values() if v > 0.0)}
+    except Exception:
+        summary = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
+    return summary
+
 
 def try_ai_history(prompt):
     """Справочник «рост понимания: нейрочеловек и ИИ» (Тьюринг, Шеннон, Питтс,
@@ -1603,8 +1922,15 @@ class MirroAPI(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers(); self.wfile.write(body)
     def _read(self):
-        length = int(self.headers.get("Content-Length", 0))
-        return json.loads(self.rfile.read(length).decode("utf-8"))
+        """Тело POST как dict. Нестандартные длительности сводятся к нулю, битый
+        JSON — к None (клиент получает 400), не-UTF8 — к ошибке декодирования.
+        Один return: dict или None."""
+        data = None
+        length = _content_length(self.headers)
+        if length:
+            raw = self.rfile.read(length) or b""
+            data = json.loads(raw.decode("utf-8"))
+        return data
     def _serve_file(self, path, ctype):
         served = False
         if path.exists():
@@ -1671,60 +1997,7 @@ class MirroAPI(BaseHTTPRequestHandler):
         handled = True
         if route == "/health":
             status = core.status()
-            try:
-                status["algorithms"] = _grab_algo().status()
-            except Exception:
-                status["algorithms"] = {}
-            try:
-                from algos.neuromodulators import nm as _nm
-                from algos.knowledge_graph import kg as _kg
-                from algos.zero_dimensional import dimension_of_understanding as _dimen
-                st = status.get("algorithms", {})
-                st["neuromodulators"] = dict(_nm.level)
-                st["neuromodulators"]["rhythm"] = _nm.rhythm_state()
-                st["knowledge_graph"] = {
-                    "nodes": len(_kg.nodes), "edges": len(_kg.edges),
-                    "avg_dimension": _dimen(_kg),
-                    "density": round(len(_kg.edges) / max(1, len(_kg.nodes)), 3),
-                    "edges_per_node": round(len(_kg.edges) / max(1, len(_kg.nodes)), 2),
-                    "central_nodes": [n for n, _d in _kg.centrality(top_n=5)["top"]],
-                    "mean_degree": _kg.centrality(top_n=2)["mean_degree"],
-                }
-                try:
-                    _conn = _kg.connectivity(top_n=3)
-                    st["knowledge_graph"]["components"] = _conn["components"]
-                    st["knowledge_graph"]["biggest_component"] = _conn["biggest_component"]
-                    st["knowledge_graph"]["isolated"] = _conn["isolated"]
-                    st["knowledge_graph"]["top_nodes"] = [n for n, _d in _conn["top_degree"]]
-                except Exception:
-                    pass
-                try:
-                    from algos.quantum_graph import init_quantum_states
-                    qst = init_quantum_states(_kg)
-                    n_sup = len(qst.states)
-                    p_active = []
-                    for _n, (a, _b) in list(qst.states.items())[:8]:
-                        p_active.append(round(a * a, 3))
-                    st["quantum"] = {"superposed_nodes": n_sup,
-                                     "P_active_sample": p_active}
-                except Exception:
-                    st["quantum"] = {"superposed_nodes": 0, "P_active_sample": []}
-                try:
-                    from algos.immune_sentinel import run_graph_immune_scan
-                    from algos.refractory import init_refractory_counters
-                    _g, quarantined = run_graph_immune_scan(_kg, max_allowed_weight=5.0)
-                    refr = init_refractory_counters(_kg)
-                    n_fatigued = sum(1 for v in refr.edge_exhaustion.values() if v > 0.0)
-                    st["immunity"] = {
-                        "quarantined": len(quarantined),
-                        "n_routes": len(getattr(_kg, "meta_routes", {})),
-                        "fatigued_edges": n_fatigued,
-                    }
-                except Exception:
-                    st["immunity"] = {"quarantined": 0, "n_routes": 0, "fatigued_edges": 0}
-                status["algorithms"] = st
-            except Exception:
-                pass
+            status["algorithms"] = _health_algorithm_status()
             self._json(status)
         elif route == "/v1/models":
             t = int(time.time())
@@ -2001,9 +2274,9 @@ class MirroAPI(BaseHTTPRequestHandler):
         return report
     def _chat_payload(self, messages, model, response, prompt):
         """Формирует итоговый JSON-ответ (не-SSE). Единственный return: dict."""
-        content = response.get("content", "") if response else "Ошибка"
+        content = _text_of(response) if response else "Ошибка"
         # видимая внутренняя речь: шаги рассуждения из mindstream, затем квантовая сноска
-        thinking = response.get("thinking", []) or []
+        thinking = (response.get("thinking") or []) if isinstance(response, dict) else []
         reasoning = ""
         try:
             steps = "\n".join(f"• {s}" for s in thinking)
@@ -2016,25 +2289,27 @@ class MirroAPI(BaseHTTPRequestHandler):
                 "choices": [{"index": 0, "message": {"role": "assistant",
                              "content": content,
                              "reasoning_content": reasoning,
-                             "plan": response.get("plan", ""),
-                             "source": response.get("source", ""),
+                             "plan": _text_of({"content": response.get("plan", "")}) if isinstance(response, dict) else "",
+                             "source": _text_of({"content": response.get("source", "")}) if isinstance(response, dict) else "",
                              "confidence": response.get("confidence", None)}}]}
 
     def _handle_chat(self, body):
         """Обрабатывает POST /v1/chat/completions. Единственный return: None.
 
         Пишет ответ клиенту (SSE или JSON) внутри. Не возвращает значение."""
-        messages = body.get("messages", [])
-        model = body.get("model", "mirro/default")
-        stream = body.get("stream", False)
-        if not messages:
+        messages = body.get("messages", []) if isinstance(body, dict) else []
+        model = body.get("model", "mirro/default") if isinstance(body, dict) else "mirro/default"
+        stream = body.get("stream", False) if isinstance(body, dict) else False
+        if not isinstance(messages, list) or not messages:
             self._json({"error": "no messages"}, 400)
         else:
             conversation = []
             last_user = ""
             for m in messages:
-                role = (m.get("role") or "").lower()
-                content = (m.get("content") or "").strip()
+                if not isinstance(m, dict):
+                    continue
+                role = str(m.get("role") or "").lower()
+                content = str(m.get("content") or "").strip()
                 if content:
                     conversation.append(f"{'Пользователь' if role in ('user','human') else 'Mirro'}: {content}")
                     if role in ("user", "human"):
@@ -2081,7 +2356,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                 pass
             if response:
                 core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
-            content = response.get("content", "") if response else "Ошибка"
+            content = _text_of(response) or "Ошибка"
             # темпераментный стилизатор: характер «мозга» формирует оформление ответа
             try:
                 from algos.voice_temperament import determine_voice_temperament, try_apply_temperament_filters
@@ -2099,7 +2374,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Cache-Control", "no-cache"); self.end_headers()
                 for chunk in content.split("\n"):
-                    self.wfile.write(f"data: {json.dumps({'choices':[{'delta':{'content':chunk+chr(10)}}]}, separators=(',',':'))}\n\n".encode())
+                    self.wfile.write(_sse_event({'choices': [{'delta': {'content': chunk + "\n"}}]}))
                     self.wfile.flush()
                 self.wfile.write(b"data: [DONE]\n\n")
             else:
