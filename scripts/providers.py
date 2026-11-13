@@ -16,6 +16,7 @@ Mirro сначала ищет ответ в своей базе (TF-IDF), кор
 
 import json
 import os
+import socket
 from pathlib import Path
 import urllib.request
 import urllib.error
@@ -89,17 +90,48 @@ def _call_provider(provider, messages, timeout=DEFAULT_TIMEOUT):
         )
         try:
             with urllib.request.urlopen(req, timeout=timeout) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-            out = data["choices"][0]["message"]["content"].strip()
+                status = getattr(resp, "status", 200)
+                raw = resp.read()
+            # HTTP-ошибки urllib бросает исключением, но прокси и совместимые
+            # шлюзы умеют отдавать 2xx с телом-ошибкой: проверяем и статус, и тело.
+            if not 200 <= int(status or 0) < 300:
+                out = f"[провайдер {provider}: ошибка {status}]"
+            else:
+                out = _parse_completion(raw, provider)
         except urllib.error.HTTPError as e:
-            try:
-                detail = e.read().decode("utf-8")[:200]
-            except Exception:
-                detail = str(e)
-            out = f"[провайдер {provider}: ошибка {e.code}] {detail}"
-        except Exception:
+            out = f"[провайдер {provider}: ошибка {e.code}] {_error_detail(e)}"
+        except (socket.timeout, TimeoutError):
+            out = f"[провайдер {provider}: таймаут {timeout}с]"
+        except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError,
+                TypeError, UnicodeDecodeError):
             out = None
     return out
+
+
+def _error_detail(err):
+    """Тело HTTP-ошибки для сообщения. Один return: str."""
+    detail = str(err)
+    try:
+        detail = err.read().decode("utf-8", errors="replace")[:200]
+    except (OSError, AttributeError, ValueError):
+        pass
+    return detail
+
+
+def _parse_completion(raw, provider):
+    """Достаёт текст ответа из OpenAI-совместимого JSON. Один return: str|None.
+
+    Пустой content и отсутствие choices дают None (раньше возвращалась
+    пустая строка, и вызывающий код считал это успешным ответом).
+    """
+    text = None
+    try:
+        data = json.loads(raw.decode("utf-8"))
+        content = data["choices"][0]["message"]["content"]
+        text = content.strip() if isinstance(content, str) else None
+    except (ValueError, KeyError, IndexError, TypeError):
+        text = None
+    return text or None
 
 
 def deepseek(prompt, system=None, timeout=DEFAULT_TIMEOUT):
