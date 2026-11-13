@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Mirro English KB — базовый английский режим.
+"""Mirro English KB вЂ” Р±Р°Р·РѕРІС‹Р№ Р°РЅРіР»РёР№СЃРєРёР№ СЂРµР¶РёРј.
 
-Распознаёт англоязычный вопрос (подавляющее большинство букв — латиница,
-есть англ. стоп-слово) и отвечает из мини-справочника базовых понятий
-(нейросеть, алгоритм, память, граф, ДНК и т.п.) на английском.
-Если понятия нет в справочнике — отвечает нейтральной фразой-переходом.
+Р Р°СЃРїРѕР·РЅР°С‘С‚ Р°РЅРіР»РѕСЏР·С‹С‡РЅС‹Р№ РІРѕРїСЂРѕСЃ (РїРѕРґР°РІР»СЏСЋС‰РµРµ Р±РѕР»СЊС€РёРЅСЃС‚РІРѕ Р±СѓРєРІ вЂ” Р»Р°С‚РёРЅРёС†Р°,
+РµСЃС‚СЊ Р°РЅРіР». СЃС‚РѕРї-СЃР»РѕРІРѕ) Рё РѕС‚РІРµС‡Р°РµС‚ РёР· РјРёРЅРё-СЃРїСЂР°РІРѕС‡РЅРёРєР° Р±Р°Р·РѕРІС‹С… РїРѕРЅСЏС‚РёР№
+(РЅРµР№СЂРѕСЃРµС‚СЊ, Р°Р»РіРѕСЂРёС‚Рј, РїР°РјСЏС‚СЊ, РіСЂР°С„, Р”РќРљ Рё С‚.Рї.) РЅР° Р°РЅРіР»РёР№СЃРєРѕРј.
+Р•СЃР»Рё РїРѕРЅСЏС‚РёСЏ РЅРµС‚ РІ СЃРїСЂР°РІРѕС‡РЅРёРєРµ вЂ” РѕС‚РІРµС‡Р°РµС‚ РЅРµР№С‚СЂР°Р»СЊРЅРѕР№ С„СЂР°Р·РѕР№-РїРµСЂРµС…РѕРґРѕРј.
 
-Чистый Python, атомарные функции (одни return), по LINTER.md.
+Р§РёСЃС‚С‹Р№ Python, Р°С‚РѕРјР°СЂРЅС‹Рµ С„СѓРЅРєС†РёРё (РѕРґРЅРё return), РїРѕ LINTER.md.
 """
 import re as _re
 
-# мини-справочник: английский вопрос -> связный английский ответ
+# РјРёРЅРё-СЃРїСЂР°РІРѕС‡РЅРёРє: Р°РЅРіР»РёР№СЃРєРёР№ РІРѕРїСЂРѕСЃ -> СЃРІСЏР·РЅС‹Р№ Р°РЅРіР»РёР№СЃРєРёР№ РѕС‚РІРµС‚
 _EN_KB = {
     "neural": ("Neural networks learn by adjusting weights through training. "
                "A simple one, a perceptron, sums weighted inputs and passes them "
@@ -37,7 +37,7 @@ _EN_KB = {
     "internet": ("The internet is a global network connecting computers. Data moves "
                  "in packets routed by protocols like TCP/IP between connected devices."),
     "energy": ("Energy is the ability to do work. It can be kinetic (motion), "
-               "potential (stored), thermal, electrical. Energy is conserved — it "
+               "potential (stored), thermal, electrical. Energy is conserved вЂ” it "
                "changes form but is never lost."),
     "database": ("A database stores data in an organized way and lets you retrieve "
                  "it quickly. Tables hold records; SQL queries read and update them. "
@@ -610,7 +610,7 @@ _EN_KB = {
                   "of authentic relationships and honest communication."),
     "zeal": ("Zeal is eager and energetic devotion to a cause, activity or pursuit. It is the passionate "
              "drive that makes work feel like a calling rather than a chore. Zeal can be a tremendous force "
-             "for good — pushing people to achieve great things — but it must be guided by wisdom and truth, "
+             "for good вЂ” pushing people to achieve great things вЂ” but it must be guided by wisdom and truth, "
              "for unchecked zeal can become fanaticism."),
     "assiduousness": ("Assiduousness is the quality of applying oneself with constant and unremitting care "
                       "to one's tasks. An assiduous worker is steady, thorough and persistent, giving close "
@@ -634,7 +634,7 @@ _EN_KB = {
                   "A quiet mind is better able to think clearly, listen deeply and act with intention. "
                   "In a noisy world, cultivating quietness is a strength that fosters focus and peace."),
     "hardihood": ("Hardihood is the quality of being bold and fearless in daring undertakings, combined "
-                  "with enough strength to endure hardship. It is a blend of audacity and endurance — the "
+                  "with enough strength to endure hardship. It is a blend of audacity and endurance вЂ” the "
                   "courage to attempt difficult things and the toughness to see them through. Hardiness of "
                   "spirit lets a person step beyond comfort to attempt what others would not dare."),
 "fellowship": ("Fellowship is a feeling of shared interest and mutual support among people who work, "
@@ -654,12 +654,12 @@ _EN_KB = {
                "not occasionally by chance."),
     "benevolence": ("Benevolence is the disposition to do good and the desire to promote the happiness of "
                     "others. It is kindness translated into action, a readiness to help that asks for nothing "
-                    "in return. Benevolence differs from mere generosity in its motivation — it is not about "
+                    "in return. Benevolence differs from mere generosity in its motivation вЂ” it is not about "
                     "giving things but about wishing others well and acting on that wish. It is one of the most "
                     "practical forms of love."),
     "largess": ("Largess is generous bestowal of gifts or money, usually to those in need or for public good. "
                 "It carries a sense of nobility and abundance, as when a king grants lands to a loyal servant "
-                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show — "
+                "or a wealthy patron endows a school. While largess is lavish, it should never be merely for show вЂ” "
                 "true largess seeks to do real good and to lift others up."),
     "civility": ("Civility is the practice of behaving in a polite, respectful and courteous manner toward "
                  "others, even toward those with whom one disagrees. It is the basic glue of a functioning "
@@ -668,30 +668,30 @@ _EN_KB = {
                  "treat every person with basic dignity."),
     "moderation": ("Moderation is the avoidance of excess and the practice of keeping everything in its proper "
                    "measure. It is the golden mean between deficiency and excess that guides sound living in all "
-                   "things — eating, working, speaking, spending and even in showing emotion. Moderation is not "
+                   "things вЂ” eating, working, speaking, spending and even in showing emotion. Moderation is not "
                    "timidity or mediocrity; it is the disciplined wisdom that gives a person balance and self-control."),
     "tranquility": ("Tranquility is a state of quiet peacefulness and calm, free from agitation or disturbance. "
                     "It is the serene stillness of a lake at dawn or the settled ease of a mind at rest. "
                     "Achieving tranquility often requires turning inward and letting go of racing thoughts. In a "
                     "hurried world, it is a precious state that restores clarity, health and perspective."),
-    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another — "
+    "nurturance": ("Nurturance is the act of caring for and encouraging the growth and well-being of another вЂ” "
                    "of a child, a student, a partner or an idea. It combines patience, gentleness and attentive "
                    "love, giving what is needed for someone to thrive. The nurturing person does not dominate or "
                    "smother, but creates the safe conditions in which growth can naturally unfold."),
     "serendipity": ("Serendipity is the happy faculty of discovering valuable or pleasant things by chance. "
                     "It is the unexpected good fortune that comes when a fortunate accident meets a prepared mind. "
-                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill — "
+                    "While the event itself is a matter of luck, recognizing and capitalizing on it is a skill вЂ” "
                     "curious, observant people are the ones most likely to turn a lucky break into an opportunity."),
     "warmth": ("Warmth is the quality of being friendly, affectionate and genuinely welcoming toward others. "
                "It is the human glow that makes people feel at ease, accepted and valued in your presence. "
                "Warmth is often underestimated because it is quiet, yet it is one of the most powerful forces "
-               "for connection — it melts reserve, softens conflict and opens the door to trust."),
+               "for connection вЂ” it melts reserve, softens conflict and opens the door to trust."),
 "magnificence": ("Magnificence is the quality of being grand in scale, impressive in beauty or generous in "
                      "display, without sacrificing dignity. It is seen in architecture, ceremony and the works "
                      "of art or nature that leave people in awe. True magnificence is not empty ostentation; it "
                      "combines noble ambition with impeccable taste, so that grandeur serves beauty rather than "
                      "garish display."),
-    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection — the kind of hard-won "
+    "sageness": ("Sageness is the wisdom that comes from long experience and deep reflection вЂ” the kind of hard-won "
                  "sense that belongs to a mature and judicious mind. It is what separates the merely clever from the "
                  "truly wise. A sage does not merely know facts; they know how to apply knowledge to real life, and "
                  "their counsel is valued precisely because it has been tested by seasons of trial and error."),
@@ -701,7 +701,7 @@ _EN_KB = {
                   "person's mind or move a crowd to action. It is the crowning skill of the capable communicator."),
     "wit": ("Wit is the quick, clever humor that springs from intelligence and sharp perception. A witty remark "
             "joins amusing ideas in a surprising way, delighting the listener with its truth and timing. Wit is "
-            "more than the ability to tell jokes; it is a way of thinking — agile and associative — that sees "
+            "more than the ability to tell jokes; it is a way of thinking вЂ” agile and associative вЂ” that sees "
             "unexpected connections others miss. In the right hands, wit disarms hostility, eases tension and makes "
             "company delightful."),
     "charisma": ("Charisma is an attractive quality in a person that inspires devotion, trust and enthusiasm in "
@@ -721,7 +721,7 @@ _EN_KB = {
               "person of honor would rather suffer loss than betray their word."),
     "decorum": ("Decorum is behavior in keeping with good taste, propriety and the accepted standards of polite "
                 "society. It is the outward expression of an inward respect for others and for oneself. Acting with "
-                "decorum means knowing what is appropriate in any situation — when to speak, when to be silent, when to "
+                "decorum means knowing what is appropriate in any situation вЂ” when to speak, when to be silent, when to "
                 "act and when to hold back. Far from being mere etiquette, decorum is a form of kindness that makes people "
                 "around one comfortable and respected."),
 "finesse": ("Finesse is refined and delicate skill in handling a difficult or delicate task with ease and subtlety. "
@@ -771,19 +771,19 @@ _EN_KB = {
                  "that desire."),
     "kindred spirit": ("A kindred spirit is a person whose nature, tastes or sensibilities are very similar to your own, so that "
                        "understanding between you is immediate and deep. Meeting a kindred spirit is rare enough to feel like a small "
-                       "miracle — someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
+                       "miracle вЂ” someone who intuits what you mean before you finish speaking, who laughs at the same things and values "
                        "the same truths. Such connections are the heart of friendship, offering the comfort of being truly known and the "
                        "rare joy of finding a companion for the road of life."),
     "amiability": ("Amiability is the quality of being pleasant, good-natured and easy to get along with. An amiable person has a "
                    "sweet and agreeable disposition that makes others comfortable in their presence. It is a quieter and more passive "
-                   "form of warmth than affability — where the affable person actively reaches out to others, the amiable person's very "
+                   "form of warmth than affability вЂ” where the affable person actively reaches out to others, the amiable person's very "
                    "nature is mild, gentle and likable. Amiability smooths everyday interactions and is one of the most endearing of "
                    "human qualities."),
     "stalwartness": ("Stalwartness is stubborn and hearty loyalty combined with physical or moral strength. A stalwart supporter "
                      "is one who can be relied upon completely, in good times and in bad, without wavering. The word conjures the image of "
                      "a robust and resolute figure who stands firm against the storm. Stalwartness is the quality of the friend who never "
                      "deserts you, the employee who stays loyal through adversity, and the soldier who holds the line when it matters most."),
-    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom — the ability to think about how and why one "
+    "phronesis": ("Phronesis is the ancient Greek virtue of practical wisdom вЂ” the ability to think about how and why one "
                   "should act in order to achieve a good life. Unlike theoretical knowledge, phronesis is concerned with action "
                   "in particular situations and with what is good and bad for humans. It is the wisdom of the experienced "
                   "statesman, the skilled artisan and the mature counselor, embodying good judgment in everyday decision-making."),
@@ -810,7 +810,7 @@ _EN_KB = {
     "warmheartedness": ("Warmheartedness is the quality of being kind, affectionate and genuinely caring toward others. A warmhearted "
                         "person feels deep concern for the welfare of people and lets that concern show through in spontaneous kindness. "
                         "It is closeness kin to compassion and brotherly love, expressed both in warm words and in tangible acts of help. "
-                        "What distinguishes the warmhearted is the readiness of their affection — they do not wait to be asked, but reach out "
+                        "What distinguishes the warmhearted is the readiness of their affection вЂ” they do not wait to be asked, but reach out "
                         "freely, making the lonely feel remembered and the hurting feel cared for."),
 "perspicacity": ("Perspicacity is the quality of showing keen mental discernment and penetrating insight into things. A perspicacious "
                      "person sees quickly and clearly to the heart of a matter, catching implications and possibilities that escape slower or "
@@ -1660,7 +1660,7 @@ _EN_KB = {
     "calling": ("A calling is a summons or a vocation, the act of calling, and the profession, trade or business to which a person is called, the occupation that engages the energy and the life; and it is the divine or inner summons that directs a person to a work, and it is the employment by which one is known, as the calling of a carpenter or a teacher. It is the trade or profession that one follows, and it carries the sense of a summons to service, whether from God, from a people or from one's own gifts and nature, and it is the work that claims the man; and the calling is thus the vocation in its active and personal sense, the occupation that is felt to be a summons and a duty, and it is the business of one's life, being the work to which a person is drawn by aptitude and by conscience, and in which he finds both his livelihood and his meaning."),
     "occupation": ("An occupation is the act of occupying, of taking possession or spending one's time, and the employment in which one's time is passed, the business, vocation or trade by which a person earns his living; and it is the state of being occupied, the activity that fills the hours, and the class or kind of such employment, as the occupations of the people. It is the trade or profession that a person follows, the business in which he is engaged, and it is the manner in which time is filled, whether by work or by study or by any pursuit, and it is at once the source of livelihood and the occupation of the mind; and an occupation is thus the employment of the time and the talent, the particular work by which a person is occupied and supported, and it is the settled business of a life, being the received and steady employment of the day and the years."),
     "profession": ("A profession is a calling or vocation, the occupation or pursuit which is professed, and especially a vocation that requires advanced learning, as the profession of law, medicine or divinity, and the body of persons engaged in such a calling. It is the vocation in which one professes to have acquired special learning and to follow its practice, and it is the learned calling whose members are joined by a common training, a common standard and a common obligation of service; and a profession differs from a trade in requiring a liberal education and in being pursued less for gain than from a sense of vocation and a professional duty, and the professional is one who professes a settled calling and serves it with honor. The profession is thus the learned and honorable calling, whether in law, medicine, the church, the army or teaching, and it is the vocation that carries with it a body of knowledge, a code of duty and a place in the service of the community."),
-    "metier": ("A métier is a vocation, trade or calling, the occupation to which a person is suited, and one's line of work, the pursuit for which one has a natural gift or aptitude; and it is the sphere in which one works most naturally and best. It is the French word for a trade or occupation, taken into English for the occupation or skill that suits a person's bent, the work that he does with ease and distinction because it is his métier; and to find one's métier is to find the work for which one was made, and to be in one's métier is to be at one's best, doing the thing one does best; and the métier is thus the natural and fitting line of work, the calling that matches the gifts, being the craft or the profession in which a person is most at home and most himself, and it is the word for the work that is both familiar and right."),
+    "metier": ("A mГ©tier is a vocation, trade or calling, the occupation to which a person is suited, and one's line of work, the pursuit for which one has a natural gift or aptitude; and it is the sphere in which one works most naturally and best. It is the French word for a trade or occupation, taken into English for the occupation or skill that suits a person's bent, the work that he does with ease and distinction because it is his mГ©tier; and to find one's mГ©tier is to find the work for which one was made, and to be in one's mГ©tier is to be at one's best, doing the thing one does best; and the mГ©tier is thus the natural and fitting line of work, the calling that matches the gifts, being the craft or the profession in which a person is most at home and most himself, and it is the word for the work that is both familiar and right."),
     "elbowgrease": ("Elbow-grease, in its homely and common phrase, is hard rubbing labor, vigorous physical effort, the strenuous working of the arms and the body, and the industrious application of strength to a task, the hard work that no machine can spare; and it is the good honest toil of the hands and the arms, the sweat-and-strength labor that gets the shine upon the brass and the dirt out of the floor. It is the colloquial name for the physical exertion demanded by manual work, and by extension the steady and energetic effort of any kind, the elbow-grease that is needed to get a thing really done, and it is the companion of all practical work that requires more than talk; and elbow-grease, for all its homeliness, is one of the realities of achievement, being the hard, steady muscular effort that, with the other virtues, turns intention into finished work and theory into practice."),
     "assemblage": ("An assemblage is a gathering of persons, a collection of things, the act of assembling or the state of being assembled, and a collection or a number of things gathered together. It is a company of persons met together, an assembly, and a putting together of parts to make a whole, and it is the bringing together of persons or things, whether the assemblage of a crowd, the assemblage of a machine or the assemblage of an exhibition of works of art; and it is, in the strict sense, the whole that is made by the joining of its parts. The assemblage is thus the gathering of many into one, whether of people into a company or of parts into a whole, and it is the collective result of the act of assembling, being the number or the thing formed by bringing the units together, and it is the word that names the meeting of the many in person or in part."),
     "conglomeration": ("A conglomeration is a gathering or a heaping together of separate things, a mass of miscellaneous material gathered into one heap, and the state of being formed into a clustered mass; and it is a collection of things of various kinds, a heterogeneous mixture lumped together, and the act of conglomerating. It is the bringing together of diverse parts into a round or clustered mass, as the stones of a conglomerate rock are cemented into one, and it is the accumulation of shifting and varied elements into one loose whole, whether the conglomeration of peoples in a city or of businesses in a combine; and the word carries a sense of variety without order, the heap of many things not yet made one. The conglomeration is thus the loose and varied collection, the mass formed of unlike parts, and it is the name for the gathering that is many-fold and mixed, being the heap of the catch-all and the melting-pot."),
@@ -1688,15 +1688,19 @@ _EN_KB = {
     "grounds": ("Grounds, in the sense of the reasons or basis of a thing, are the foundation or justification on which a belief, claim or action rests, the arguments or facts that give it support, and the reason, cause or motive for a thing; and grounds are the premises from which a conclusion is drawn and the facts on which a decision is based. They are the sufficient reason or the justifiable basis for an act, as grounds for hope or grounds for suspicion, and they are the solid foundation on which a position stands, being the reasons that make a conclusion reasonable and a charge valid; and to have good grounds is to have the evidence and the reason that justify, while to be without grounds is to rest on nothing, and the grounds of a judgment are the very facts and principles that support it. Grounds are thus the foundation of a belief or an action, the basis in reason and fact, and they are the just and sufficient cause, being the reasons and the evidence on which a person or a court may securely act, and the word is the name for the firm foundation that underlies a conclusion or a claim."),
     "arguing": ("Arguing is the act of giving reasons for or against a thing, the offering of arguments, the setting forth of reasons with a view to persuade, and the disputing or contending in words; and it is the process of reasoning by which we prove or disprove a proposition. It is the exchange of reasons in debate, the presenting of an argument to convince another, and it is the natural and constant work of the reasonable mind, which gives and weighs reasons for its conclusions, and it may be the calm and orderly marshalling of a case or the heated wrangle of a quarrel; and arguing well is the art of reasoning pertinently and convincingly, while arguing perversely is the fault of the contentious, who dispute for victory rather than for truth. Arguing is thus the giving and weighing of reasons, the reasoning in words that seeks to establish or to refute, and it is the very exercise of the reason in the social field, being the discourse of proof and disproof by which men test and convey their beliefs."),
     "impulse": ("Impulse is the act of impelling, the force communicated by a blow or a push, and the sudden and involuntary tendency to action incited by a stimulus, the prompting of a sudden feeling or motive; and it is the spring of action, the sudden force that moves the will apart from reflection. It is the push that sets a body in motion and the inner push that drives the mind to act, the sudden prompting that moves us to speak or to do before we can weigh, and it is the hasty and instinctive urge of the moment that acts at once, whether the impulse to help the fallen or the impulse of anger or of love; and impulse is the foe of reflection when it hurries to a rash act, yet the friend of quickness when the instant call for action comes, being the unreflective prompting of the nature; and the wise govern their impulses while they use the quickening they bring. Impulse is thus the sudden spring of action, the unconsidered prompting, and it is the immediate and natural incitement to a deed, being the force that acts before deliberation, and the control of impulse is one of the first duties of a formed character."),
-    "comrade": ("A comrade is a companion or mate, one who shares in an enterprise or a common service, a fellow-soldier or a fellow-worker, and one who stands by another in fellowship; and it is the familiar companion of the same craft, company or cause. It is the fellow of the camp and the field, the mate of the workshop and the road, and it is the word of the soldier for his fellow in arms and of the worker for his fellow at the bench, and it implies the equality and the loyalty of those who share a common lot; and a comrade is the one with whom one shares hardship and duty and the plain trust of the common cause, being more than an acquaintance and less ceremonious than a friend, and the bond of comradeship is the loyalty of the shared enterprise. A comrade is thus the fellow of the common company and the shared service, being the companion in arms or in labor, and the word is the old and warm name of the fellow who stands beside one in the ranks of a common undertaking, the comrade of the road, the trench and the workshop."),
-    "aging": ("Aging, growing old, is the process of growing old, the passage of the years by which a person or a thing moves from youth to age, and the change that time works upon the living body and the mind; and it is the gradual ripening and decay of the frame as the years accumulate, and the state of being aged, and by extension the maturing of anything with time, as the aging of wine or of a judgment. It is the natural and universal process of time, which stiffens the limb, whitens the hair and deepens the experience, and it brings at once the decline of the body and the wisdom of the years, and it is the aging that men both fear and respect, being the slow and inevitable passage of all living things toward their season: and aging is at once a physical fact and a symbol of the human lot, being the growing old that cannot be stayed, and the wise have always sought to age gracefully, carrying the years with dignity and using the wisdom they bring, while the foolish mourn the lost youth they cannot recover."),
+    "youth": ("Youth is the state or quality of being young, the period of life between childhood and adult age, the early part of life, and the fresh and vigorous condition of the young; and it is the young men and women of a community, the rising generation, as the youth of a nation, and the early years of anything, as the youth of a movement or of an art. It is the season of vigor, hope and growth, the time of learning and of dreams, and it is the springtime of life, when the body is strong and the spirit is eager and the future stretches open, being the seed-time of all that follows and the age of best promise; and youth is prized for its energy, its freshness and its idealism, yet it is impatient, unsteady and unwise, and the wisdom of life lies in using its fire without wasting it, in enjoying and employing the springtime while it lasts. Youth is thus the early and vigorous season of life, the spring of the powers, and it is the name both of that season and of the generation that is passing through it, being the time of hope and of the making of the future."),
+"diligence_steady": ("Diligence is the steady and careful application to one's work or duty, the earnest and constant effort to accomplish a task, and the quality of being diligent, of attending closely and persevering; and it is the careful and industrious prosecution of what is undertaken, being the quiet steadiness that neither hurries nor slackens. It is the faithfulness and attention to duty that works on steadily and thoroughly, neither idling nor scamping the work, and it is the constant and painstaking application that carries a task through to its end, being the very partner of care and the enemy of neglect and of slovenly haste; and diligence is the practical and unassuming virtue of the worker, the student and the servant, and it is one of the surest roads to success, since the diligent are those who do the duty that lies before them thoroughly and never let it pass undone, and diligence, though it makes no boast, accomplishes more than the flashier talents. Diligence is thus the steady and constant application to one's work, the careful and assiduous prosecution of it, and it is the quality of the faithful and the industrious, being the sure and quiet companion of every solid achievement."),
+    "perseverance_steady": ("Perseverance is the steady and continued pursuit of a purpose or course, the constant and patient continuance in an endeavor in spite of difficulty, delay or discouragement, and the strength of will that holds on to the end; and it is the quality of not giving up, of continuing steadily and hopefully in the face of obstacles. It is the virtue of the one who keeps at the task, who tries again after failure and does not despair in the long delay, and it is the power of endurance of purpose that outlasts the difficulty and wins through in the end, being the quality of the runner who keeps the pace to the finish and of the searcher who will not give over the search; and perseverance, joined with patience and with judgment, is one of the most certain of the roads to success, for the persistent are those who are, by their very holding on, the ones who at last attain, and perseverance is the choice and steady virtue of the achiever. Perseverance is thus the steady continuance in a course, the firm and patient holding on, and it is the virtue that triumphs over difficulty by refusing to be turned back, being the quality of the strong and the faithful will."),
+    "resolution_firm": ("Resolution is the act or state of resolving, the determination and firmness of a mind that has made up its purpose, and the fixed intention or the resolve adopted; and it is the formal decision or the motion approved, as a legislative resolution, and the settling of a doubt or the determination of a question. It is the firmness of purpose and the strength of will that carry a resolve into effect, and it is the fixing of the mind upon a course from which it will not be moved, being the determination that overcomes hesitation and the strength that holds to the undertaken end; and resolution is the very backbone of the resolute, who set their purpose and are not turned aside, and it is the difference between the man who means to do a thing and the man who does it, being the settled and unshaken will. Resolution is thus the firm determination of a settled mind, the fixed purpose and the strength that executes it, and it is the quality of the decided and the resolute, being the determination that turns intention into action and will into deed."),
+    "tenacity_of_grip": ("Tenacity is the quality of holding fast, the firmness with which a person holds to a purpose, opinion or grip, and the not letting go, whether of a physical hold or of a mental or moral purpose; and it is the strength of the hold by which a thing clings or a person persists. It is the firm and unyielding persistence that does not relax its grasp, whether the tenacity of the bulldog's jaw, of the climber's hold or of the reformer's adherence to his cause, and it is the quality of those who will not let go, who hold on through strain and difficulty to the end, being the persistent grip of the will and the unchanging firmness of the resolved; and tenacity is the virtue allied to perseverance and resolution, being the holding power of the purpose or the faith, and it is the quality that, together with judgment, carries a person or a cause through to victory, being the firm and unbroken grip by which a purpose is held to its accomplishment. Tenacity is thus the firm holding on, the unyielding persistence, and it is the strength of the grip that does not let go, being the quality of the persistent and the resolved, and it is the virtue of the iron will that holds fast to the end."),
+"fortitude_steady": ("Fortitude, in its sense of the steady enduring strength of the soul, is the courage to bear pain, misfortune or adversity with firmness and patience, the calm strength that endures and does not give way, and the moral strength that sustains the mind under trial; this word has been treated fully in this list as a cardinal virtue; and this entry stresses the steady and enduring character of fortitude, for it is the strength that is shown not in the single rush of courage but in the long patience of endurance, the quality of the sufferer and the martyr and the oppressed, who bear their burden without complaint and without breaking; and fortitude is the courage of the long haul, the strength of the soul that is equal to the slow and heavy trial, and it is the virtue of those who hold firm and do not flinch through the years of difficulty, being the steady courage of the enduring heart. Fortitude is thus the patient and calm endurance of suffering, the firm strength of the soul under trial, and it is the cardinal virtue of the sufferer and the brave, being the unyielding courage of those who bear and who endure to the end."),
+    "aging": ("Aging, growing old, is the process of growing old, the passage of the years by which a person or a thing moves from youth to age, and the change that time works upon the living body and the mind; and it is the gradual ripening and decay of the frame as the years accumulate, and the state of being aged, and by extension the maturing of anything with time, as the aging of wine or of a judgment. It is the natural and universal process of time, which stiffens the limb, whitens the hair and deepens the experience, and it brings at once the decline of the body and the wisdom of the years, and it is the aging that men both fear and respect, being the slow and inevitable passage of all living things toward their season; and aging is at once a physical fact and a symbol of the human lot, being the growing old that cannot be stayed, and the wise have always sought to age gracefully, carrying the years with dignity and using the wisdom they bring, while the foolish mourn the lost youth they cannot recover."),
     "adolescence": ("Adolescence is the period of growing up, the age between childhood and full maturity, the years of youth in which the child is passing into the man or the woman, and the state of being adolescent, of being in the period of bodily and mental growth that follows childhood; and it is the teenage years, the time of rapid change, of the dawning powers and passions, and of the forming of character. It is the age of growth and of ferment, when the body matures and the mind awakens, when the young dream, rebel, love and resolve, and when the foundations of adult life are laid, being the critical and impetuous season of life that stretches from the child to the adult; and adolescence is the time of promise and of peril, the years in which guidance and understanding matter most, and it is the stormy and shining passage from the dependence of childhood to the self-command of maturity, being the springtime and the testing time of the character."),
     "maturity_of_person": ("Maturity, in its sense of the ripe age of the person, is the state of being fully grown, the years of full and settled manhood or womanhood, and the period of life in which the powers are at their height and the judgment is formed; this word has been treated fully in this list in its sense of the complete development of a thing; and this entry stresses its meaning as the adult season of life, the age of ripeness between youth and old age, in which the body is full grown, the mind is seasoned and the character is settled, being the productive and responsible years when the person is most complete; and maturity is the age that carries the full powers and the full duties, the season of the harvest of the earlier growth, and it is the stage of life at which one is expected to think and to act for oneself, to bear responsibility and to persist in purpose; and maturity is thus the ripe and settled age of the fully grown person, being the middle years of power, judgment and responsibility, and it is the attainment of the fullness of the powers that childhood and youth were spent in forming."),
     "senescence": ("Senescence is the condition or process of growing old, the state of being senescent, of becoming old, and the decline of the powers that comes with the later years of life; and it is the aging of an organism, the slow dwindling of vitality and the gradual failing of the bodily and mental powers in old age. It is the technical and scientific name for growing old, the senescence of the body as distinct from the growth of the child or the maturity of the adult, and it is the downward and closing phase of life, the period of failing powers, of the quieting of the passions and of the accumulation of the final wisdom, being the natural and universal last stage of the life of every living thing; and senescence is the aging that is the condition of all that lives, the slow and inexorable decline that follows the prime, and the study of senescence is the study of why and how living things grow old, being the science of the closing of the span of life."),
-    "youth": ("Youth is the state or quality of being young, the period of life between childhood and adult age, the early part of life, and the fresh and vigorous condition of the young; and it is the young men and women of a community, the rising generation, as the youth of a nation, and the early years of anything, as the youth of a movement or of an art. It is the season of vigor, hope and growth, the time of learning and of dreams, and it is the springtime of life, when the body is strong and the spirit is eager and the future stretches open, being the seed-time of all that follows and the age of best promise; and youth is prized for its energy, its freshness and its idealism, yet it is impatient, unsteady and unwise, and the wisdom of life lies in using its fire without wasting it, in enjoying and employing the springtime while it lasts. Youth is thus the early and vigorous season of life, the spring of the powers, and it is the name both of that season and of the generation that is passing through it, being the time of hope and of the making of the future."),
 }
 
-# англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
+# Р°РЅРіР». СЃС‚РѕРї-СЃР»РѕРІР°, С‡С‚РѕР±С‹ РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°С‚СЊ РЅР° СЂСѓСЃСЃРєРёС… РІРѕРїСЂРѕСЃР°С… СЃ Р»Р°С‚РёРЅРёС†РµР№ (РєРѕРґ Рё С‚.Рї.)
 _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are",
               "the", "a", "an", "of", "in", "on", "to", "for", "i", "you", "explain",
               "tell", "about", "that", "do", "does", "can", "please", "me", "my",
@@ -1710,7 +1714,7 @@ _EN_COMMON = ("what", "which", "how", "why", "who", "when", "where", "is", "are"
 
 _EN_MARKER_SET = frozenset(_EN_COMMON)
 
-# тема -> ключевые англ. слова (основа)
+# С‚РµРјР° -> РєР»СЋС‡РµРІС‹Рµ Р°РЅРіР». СЃР»РѕРІР° (РѕСЃРЅРѕРІР°)
 _TOPIC_TEST = [
     ("neural", ("neural", "network", "perceptron", "machine learn", "deep learn", "neuron", "gradient", "backprop")),
     ("algorithm", ("algorithm", "sort", "complexity", "procedure", "bubble", "search", "data structure")),
@@ -2611,14 +2615,19 @@ _TOPIC_TEST = [
     ("adolescence", ("adolescence", "growing-up years", "between child and adult", "teenage years", "formative youth", "season of ferment")),
     ("maturity_of_person", ("maturity_of_person", "fully grown state", "seasoned adult years", "ripe age", "harvest of youth", "settled manhood")),
     ("senescence", ("senescence", "process of growing old", "declining old age", "aging of the body", "late decline", "scientific old age")),
-    ("youth", ("youth", "early season of life", "spring of the powers", "rising generation", "vigorous years", "time of hope")),
+("youth", ("youth", "early season of life", "spring of the powers", "rising generation", "vigorous years", "time of hope")),
+    ("diligence_steady", ("diligence_steady", "steady application", "earnest constant effort", "painstaking attendance", "faithful continuance", "careful industry")),
+    ("perseverance_steady", ("perseverance_steady", "steady continuation", "patient holding on", "contined pursuit", "enduring to the end", "unrelenting steadiness")),
+    ("resolution_firm", ("resolution_firm", "firm determination", "settled purpose", "fixed intent", "unshakable will", "decided resolve")),
+    ("tenacity_of_grip", ("tenacity_of_grip", "holding fast", "unyielding persistence", "firm grasp", "unbroken grip", "clinging strength")),
+    ("fortitude_steady", ("fortitude_steady", "patient endurance", "calm strength under trial", "courage of the long haul", "firm suffering", "steadfast bearing")),
 ]
 
 
 def _is_english_query(q):
-    """Похож ли вопрос на английский. Минимальная длина латиницы — 6 символов
-    (чтобы одиночные «what?/hi» не срабатывали). Не-строка → False.
-    Один return: bool."""
+    """РџРѕС…РѕР¶ Р»Рё РІРѕРїСЂРѕСЃ РЅР° Р°РЅРіР»РёР№СЃРєРёР№. РњРёРЅРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° Р»Р°С‚РёРЅРёС†С‹ вЂ” 6 СЃРёРјРІРѕР»РѕРІ
+    (С‡С‚РѕР±С‹ РѕРґРёРЅРѕС‡РЅС‹Рµ В«what?/hiВ» РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°Р»Рё). РќРµ-СЃС‚СЂРѕРєР° в†’ False.
+    РћРґРёРЅ return: bool."""
     if not isinstance(q, str):
         return False
     q = (q or "").strip()
@@ -2627,21 +2636,21 @@ def _is_english_query(q):
     latin = sum(1 for c in q if 'a' <= c.lower() <= 'z')
     cyr = sum(1 for c in q if '\u0400' <= c <= '\u04FF')
     words = q.split()
-    # англ-вопрос: заметная доля латиницы (>=6), нет кириллицы, есть англ. маркер.
-    # Одиночное «what?/hi» игнорируются (нет латинских слов повсюду ≥4)
+    # Р°РЅРіР»-РІРѕРїСЂРѕСЃ: Р·Р°РјРµС‚РЅР°СЏ РґРѕР»СЏ Р»Р°С‚РёРЅРёС†С‹ (>=6), РЅРµС‚ РєРёСЂРёР»Р»РёС†С‹, РµСЃС‚СЊ Р°РЅРіР». РјР°СЂРєРµСЂ.
+    # РћРґРёРЅРѕС‡РЅРѕРµ В«what?/hiВ» РёРіРЅРѕСЂРёСЂСѓСЋС‚СЃСЏ (РЅРµС‚ Р»Р°С‚РёРЅСЃРєРёС… СЃР»РѕРІ РїРѕРІСЃСЋРґСѓ в‰Ґ4)
     has_full_word = any(len(w) >= 4 for w in words if w.isalpha())
     enough_latin = latin >= 6 and has_full_word
-    # англ. маркер должен быть отдельным словом, а не частью большего
-    # (снимаем хвостовую пунктуацию, чтобы «why?» матчилось как «why»)
+    # Р°РЅРіР». РјР°СЂРєРµСЂ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚РґРµР»СЊРЅС‹Рј СЃР»РѕРІРѕРј, Р° РЅРµ С‡Р°СЃС‚СЊСЋ Р±РѕР»СЊС€РµРіРѕ
+    # (СЃРЅРёРјР°РµРј С…РІРѕСЃС‚РѕРІСѓСЋ РїСѓРЅРєС‚СѓР°С†РёСЋ, С‡С‚РѕР±С‹ В«why?В» РјР°С‚С‡РёР»РѕСЃСЊ РєР°Рє В«whyВ»)
     toks = {w.strip(".,!?;:'\"()") for w in q.lower().split()}
     has_marker = bool(toks & _EN_MARKER_SET)
     return (enough_latin and cyr == 0 and has_marker)
 
 
 def try_english(query):
-    """Точка входа: отвечает по-английски, если вопрос английский.
-    Пустой/не-строковый/слишком короткий запрос → None. Один return: str/None.
-    None = вопрос не англ. (нужно другое)."""
+    """РўРѕС‡РєР° РІС…РѕРґР°: РѕС‚РІРµС‡Р°РµС‚ РїРѕ-Р°РЅРіР»РёР№СЃРєРё, РµСЃР»Рё РІРѕРїСЂРѕСЃ Р°РЅРіР»РёР№СЃРєРёР№.
+    РџСѓСЃС‚РѕР№/РЅРµ-СЃС‚СЂРѕРєРѕРІС‹Р№/СЃР»РёС€РєРѕРј РєРѕСЂРѕС‚РєРёР№ Р·Р°РїСЂРѕСЃ в†’ None. РћРґРёРЅ return: str/None.
+    None = РІРѕРїСЂРѕСЃ РЅРµ Р°РЅРіР». (РЅСѓР¶РЅРѕ РґСЂСѓРіРѕРµ)."""
     if not isinstance(query, str) or len(query.strip()) < 6:
         return None
     if len(query) > 5000:
@@ -2652,8 +2661,8 @@ def try_english(query):
         return None
     q_low = (query or "").lower()
     answer = None
-    # поиск темы по ключевым словам; при нескольких совпадениях выбираем тему с
-# самым длинным совпавшим ключом (чтобы «stem cell» не съедала «cell»)
+    # РїРѕРёСЃРє С‚РµРјС‹ РїРѕ РєР»СЋС‡РµРІС‹Рј СЃР»РѕРІР°Рј; РїСЂРё РЅРµСЃРєРѕР»СЊРєРёС… СЃРѕРІРїР°РґРµРЅРёСЏС… РІС‹Р±РёСЂР°РµРј С‚РµРјСѓ СЃ
+# СЃР°РјС‹Рј РґР»РёРЅРЅС‹Рј СЃРѕРІРїР°РІС€РёРј РєР»СЋС‡РѕРј (С‡С‚РѕР±С‹ В«stem cellВ» РЅРµ СЃСЉРµРґР°Р»Р° В«cellВ»)
     topics_test = _TOPIC_TEST if isinstance(_TOPIC_TEST, (list, tuple)) else []
     best_len = -1
     for topic, keys in topics_test:
@@ -2661,7 +2670,7 @@ def try_english(query):
             if isinstance(k, str) and k and k in q_low and len(k) > best_len:
                 best_len = len(k)
                 answer = _EN_KB.get(topic)
-    # fallback: прямое вхождение ключа-темы как отдельного слова
+    # fallback: РїСЂСЏРјРѕРµ РІС…РѕР¶РґРµРЅРёРµ РєР»СЋС‡Р°-С‚РµРјС‹ РєР°Рє РѕС‚РґРµР»СЊРЅРѕРіРѕ СЃР»РѕРІР°
     if not answer:
         q_toks = set()
         for t in q_low.replace("-", " ").split():
@@ -2681,4 +2690,4 @@ def try_english(query):
 if __name__ == "__main__":
     print(try_english("what is a neural network?"))
     print(try_english("what is the fibonacci algorithm and its complexity?"))
-    print(try_english("расскажи про нейрон"))  # русский — должно быть None
+    print(try_english("СЂР°СЃСЃРєР°Р¶Рё РїСЂРѕ РЅРµР№СЂРѕРЅ"))  # СЂСѓСЃСЃРєРёР№ вЂ” РґРѕР»Р¶РЅРѕ Р±С‹С‚СЊ None
