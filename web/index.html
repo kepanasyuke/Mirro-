@@ -810,10 +810,14 @@ function errorText(e) {
 /* ===== Навигация ===== */
 document.querySelectorAll('.nav-item').forEach(b => {
   b.onclick = () => {
+    /* Без проверки на null опечатка в data-v ломала обработчик молча:
+       вкладка не открывалась и ошибок в консоли-подсказке не было. */
+    const view = document.getElementById('v-' + b.dataset.v);
+    if (!view) return;
     document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
     b.classList.add('active');
-    document.getElementById('v-' + b.dataset.v).classList.add('active');
+    view.classList.add('active');
     if (b.dataset.v === 'stats') loadStats();
     if (b.dataset.v === 'clusters') loadClusters();
   };
