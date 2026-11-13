@@ -21,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from knowledge_graph import KnowledgeGraph
 from refractory import init_refractory_counters, update_refractory_states, apply_fatigue_to_weights
 
+MAX_PHYSICS_LOSS = 1e6   # штраф за бесконечно разогнанное ребро (а не inf в ответе)
+
 
 # по-босовски: ток идёт по «проводу-связи», если «напряжение» выше порога
 def _threshold_for(e, base=0.5, dip=0.15, ser=0.15, nor=0.2):
@@ -267,13 +269,37 @@ def _sample_triples():
 #  на РЕАЛЬНОМ KnowledgeGraph: edges[(src, pred, dst)] -> weight.
 #  Биометрия → модулированные рёбра → роу-импульсы → физика → опыт.
 # ============================================================
+def _is_edge_key(key):
+    """Ключ ребра — тройка непустых строк (src, pred, dst). Один return: bool."""
+    is_key = (isinstance(key, (tuple, list)) and len(key) == 3
+              and all(isinstance(part, str) and part for part in key))
+    return bool(is_key)
+
+
+def _safe_weight(value):
+    """Вес ребра как конечное число; строки/NaN/inf/None → 0.0. Один return: float."""
+    try:
+        weight = float(value)
+    except (TypeError, ValueError):
+        weight = 0.0
+    is_finite = weight == weight and abs(weight) != float("inf")
+    return weight if is_finite else 0.0
+
+
 def compute_modulated_edges(graph, ach=1.0, serotonin=1.0, dopamine=0.0):
     """Проводимость рёбер как функция нейромедиаторов. Возвращает dict
     edge_key -> active_weight (не мутирует граф — чистая функция).
+    Битые веса (строка/NaN/inf) дают 0, а не роняют весь пайплайн.
     Один return: dict {(src,pred,dst): float}."""
     out = {}
-    for key, w in list(graph.edges.items()):
-        active = (w * ach * serotonin) + dopamine
+    edges = getattr(graph, "edges", None)
+    if not isinstance(edges, dict):
+        return out
+    for key, w in list(edges.items()):
+        if not _is_edge_key(key):
+            continue
+        active = (_safe_weight(w) * _safe_weight(ach) * _safe_weight(serotonin)) \
+            + _safe_weight(dopamine)
         out[key] = active
     return out
 
@@ -292,11 +318,31 @@ def _edge_overlap_targets(edge_key, edges):
 def add_meta_route(graph, from_edge, to_edge, mod=1.0):
     """Регистрирует роу-ссылку «ребро→ребро» с коэффициентом модуляции.
     Отрицательный mod = подавление (каша гасится), положительный = усиление.
-    Один return: int — число зарегистрированных роу-ссылок."""
-    if not hasattr(graph, "meta_routes"):
+    Некорректные рёбра (не тройки строк) и non-finite mod (None/NaN/inf/строка)
+    не регистрируются: иначе NaN протекает в propagate_meta_impulses и
+    отравляет все проводимости кадра.
+    Один return: int — размер meta_routes после регистрации."""
+    if not (hasattr(graph, "meta_routes") or hasattr(graph, "__dict__")):
+        return 0
+    if not hasattr(graph, "meta_routes") or not isinstance(graph.meta_routes, dict):
         graph.meta_routes = {}
-    graph.meta_routes[(from_edge, to_edge)] = float(mod)
+    is_registerable = (_is_edge_key(from_edge) and _is_edge_key(to_edge)
+                       and _has_numeric_mod(mod))
+    if is_registerable:
+        graph.meta_routes[(tuple(from_edge), tuple(to_edge))] = float(mod)
     return len(graph.meta_routes)
+
+
+def _has_numeric_mod(mod):
+    """Годится ли mod в роу-ссылку: конечное число, не None и не строка.
+    Нулевой mod допустим (явное «нейтрально»). Один return: bool."""
+    try:
+        value = float(mod)
+    except (TypeError, ValueError):
+        value = None
+    is_number = isinstance(mod, (int, float)) and not isinstance(mod, bool)
+    is_finite = value is not None and value == value and abs(value) != float("inf")
+    return bool(is_number and is_finite)
 
 
 def _meta_route_mod(graph, from_edge, to_edge):
@@ -318,9 +364,10 @@ def propagate_meta_impulses(graph, active_weights):
     if meta:
         # с явными роу-ссылками: применяем модуляцию (усиление/подавление)
         for (fkey, tkey), mod in list(meta.items()):
-            f_act = active_weights.get(fkey, 0.0)
+            f_act = _safe_weight(active_weights.get(fkey, 0.0))
+            mod_value = _safe_weight(mod)
             if f_act > 0 and tkey in out:
-                out[tkey] = out[tkey] + f_act * mod
+                out[tkey] = _safe_weight(out[tkey]) + f_act * mod_value
     else:
         # без явных роу-ссылок — топологическое усиление (обратная совместимость)
         for key, act in list(active_weights.items()):
@@ -339,13 +386,35 @@ def key_meta_mod(edge_key, active_weights):
 
 def calculate_physics_loss(graph, target_energy=0.6):
     """PINN-фильтр: отклонение средней квадратичной энергии рёбер от константы.
-    Один return: float (0 = физично)."""
+    Битые веса (строка/NaN) не участвуют; inf-веса трактуются как максимум
+    нарушения, а не как бесконечность в ответе. Один return: float (0 = физично)."""
     loss = 0.0
-    vals = list(graph.edges.values())
+    edges = getattr(graph, "edges", None)
+    vals = list(edges.values()) if isinstance(edges, dict) else []
     if vals:
-        mean_energy = sum(w * w for w in vals) / len(vals)
-        loss = abs(mean_energy - target_energy)
+        try:
+            target = float(target_energy)
+        except (TypeError, ValueError):
+            target = 0.6
+        safe = [_safe_weight(w) for w in vals if _is_edge_key_weight(w)]
+        has_inf = any(_is_infinite(w) for w in vals if _is_edge_key_weight(w))
+        if safe:
+            mean_energy = sum(w * w for w in safe) / len(safe)
+            loss = abs(mean_energy - target)
+        # разогнанное ребро (inf) обязано считаться нарушением физики
+        loss = max(loss, MAX_PHYSICS_LOSS) if has_inf else loss
     return loss
+
+
+def _is_edge_key_weight(value):
+    """Годится ли значение веса в физическую статистику (число, а не мусор).
+    Один return: bool."""
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _is_infinite(value):
+    """Бесконечный ли вес ребра. Один return: bool."""
+    return float(value) in (float("inf"), float("-inf"))
 
 
 def path_active_energies(graph, path_nodes):
@@ -415,15 +484,17 @@ def try_route_pipeline(graph, user_query, chemistry=None, session_pulse=0.75,
     loss = calculate_physics_loss(graph, target_energy)
     norm_scale = 1.0
     if graph.edges:
-        mean_w = sum(w for w in graph.edges.values()) / len(graph.edges)
-        mean_energy = sum(w * w for w in graph.edges.values()) / len(graph.edges)
+        safe_weights = [_safe_weight(w) for w in graph.edges.values()]
+        mean_w = sum(safe_weights) / len(safe_weights) if safe_weights else 0.0
+        mean_energy = (sum(w * w for w in safe_weights) / len(safe_weights)
+                       if safe_weights else 0.0)
         norm_scale = max(1.0, mean_energy, mean_w * mean_w)
-    rel_loss = loss / norm_scale
+    rel_loss = loss / norm_scale if norm_scale > 0 else 0.0
     physics_ok = rel_loss <= 0.4
     # ответ = средневзвешенный сигнал проводимостей маршрута
     avg = 0.0
     if routed:
-        avg = sum(w for w in routed.values()) / len(routed)
+        avg = sum(_safe_weight(w) for w in routed.values()) / len(routed)
     signal = math.tanh(avg) * (0.5 + bio["pulse"] * 0.5)
     return {
         "signal": round(signal, 4),
