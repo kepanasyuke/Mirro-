@@ -1211,7 +1211,9 @@ def _voice_or_none(raw, prompt, strategy):
     """Оборачивает ответ в голос Мирро. Единственный return: dict-ответ или None."""
     result = None
     if raw:
-        result = {"content": _voice(raw, prompt, strategy), "strategy": strategy}
+        voiced = _voice(raw, prompt, strategy)
+        if voiced:
+            result = {"content": voiced, "strategy": strategy}
     return result
 
 
@@ -1367,6 +1369,15 @@ def _multipart_answer(parts, cluster, context=""):
             "strategy": "multi", "parts_total": len(parts), "parts_covered": covered}
 
 
+def _mark_unsure_web_result(result):
+    """Помечает веб/провайдер-ответ раздела фолбэка низкой уверенностью.
+    Нужна, потому что вызывающий код ожидает строку-ответ, а не None.
+    Один return: dict (тот же объект, для цепочек)."""
+    if result.get("strategy") in ("web", "provider"):
+        result.setdefault("confidence", 0.45)
+    return result
+
+
 def _fallback_chain(prompt):
     """Финальная цепочка: веб → граф-вывод → провайдер → подсказка. Единственный return: dict."""
     web_answer = try_web(prompt)
@@ -1386,13 +1397,169 @@ def _fallback_chain(prompt):
             else:
                 hint = _provider_help_hint()
                 result = {"content": "Не нашла это ни в базе, ни в интернете. Переформулируй вопрос." + hint, "strategy": "unknown"}
+    _mark_unsure_web_result(result)
     return result
+
+
+def _guarded_first_stage(prompt, default=None):
+    """Первая стадия ответа: уточнение и модерация. Любое исключение внутри
+    (или None вместо dict) не должно ронять ответ — тогда возвращается None,
+    и цепочка идёт дальше. Один return: dict-ответ или None."""
+    result = None
+    try:
+        clarify = _clarify_guess(prompt)
+        chosen = clarify if clarify is not None else _moderation_gate(prompt)
+        if isinstance(chosen, dict) and chosen.get("content"):
+            result = chosen
+            result["workspace"] = ("сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
+                                   if clarify is not None
+                                   else "сознание: безопасность (запрос отсечён фильтром модерации)")
+    except Exception:
+        result = None
+    return result
+
+
+def _try_web_first_guard(prompt):
+    """`_try_web_first` не должен рвать цепочку ни исключением, ни пустым
+    контентом. Один return: dict-ответ или None."""
+    result = None
+    try:
+        candidate = _try_web_first(prompt)
+        if isinstance(candidate, dict) and candidate.get("content"):
+            result = candidate
+    except Exception:
+        result = None
+    return result
+
+
+def _answer_by_search_stages(prompt, cluster, context, current=None):
+    """Стадии поиска после прямых обработчиков: многочастный разбор, веб-триггер
+    свежести, база → веб, вывод из графа, фолбэк. Если `current` уже содержит
+    ответ, он сохраняется: поиск не перекрывает уже найденное.
+    Один return: tuple(str-промпт, dict-ответ)."""
+    found = current if isinstance(current, dict) and current.get("content") else None
+    try:
+        alive_prompt = _enrich_followup(prompt, context) or prompt
+        multi = _multipart_from_parts(prompt, cluster, context)
+        result = multi if found is None and multi is not None else found
+        result = result if result is not None else _search_answer(alive_prompt, cluster)
+    except Exception:
+        alive_prompt = prompt
+        result = found if found is not None else _fallback_chain(prompt)
+    return alive_prompt, result
+
+
+def _multipart_from_parts(prompt, cluster, context):
+    """Многочастный вопрос: ответ по каждой части и склейка. Один return: dict или None."""
+    result = None
+    parts = _split_multipart(prompt)
+    multi = _multipart_answer(parts, cluster, context) if len(parts) > 1 else None
+    if isinstance(multi, dict) and multi.get("content"):
+        result = multi
+        result["workspace"] = "сознание: многочастный запрос разбит и отвечен по частям"
+    return result
+
+
+def _search_answer(prompt, cluster):
+    """Локальный поиск по базе с честным переходом к вебу и графу.
+    Один return: dict-ответ (никогда не None)."""
+    result = None
+    try:
+        web_first = _try_web_first_guard(prompt)
+        if web_first is not None:
+            result = web_first
+            result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
+        else:
+            result = _search_answer_by_database(prompt, cluster)
+    except Exception:
+        result = None
+    return result if result is not None else _fallback_chain(prompt)
+
+
+def _search_answer_by_database(prompt, cluster):
+    """База → веб → граф → финальный резерв. Один return: dict-ответ или None
+    (None — если стадия не смогла выбрать стратегию)."""
+    best_answer, best_score, has_result = _search_best(prompt, cluster)
+    if has_result and answer_looks_bad(prompt, best_answer):
+        result = _answer_base_is_garbage(prompt)
+    elif not has_result and cluster in ("ru", "knowledge"):
+        result = _answer_from_graph_or_web(prompt)
+    elif has_result:
+        result = _answer_from_base(best_answer, best_score, prompt, cluster)
+    else:
+        result = _fallback_chain(prompt)
+        result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
+    return result
+
+
+def _answer_base_is_garbage(prompt):
+    """База дала мусор: пробуем веб, иначе честно говорим об этом.
+    Один return: dict-ответ."""
+    result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.",
+              "strategy": "web"}
+    try:
+        bad_web = try_web(prompt)
+        voiced = _voice_or_none(bad_web, prompt, "web") if bad_web else None
+        if voiced is not None:
+            result = voiced
+            result["confidence"] = 0.45
+            result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
+        else:
+            result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
+    except Exception:
+        result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
+    return result
+
+
+def _answer_from_graph_or_web(prompt):
+    """Нет прямого ответа в кластере ru/knowledge: граф по связям, затем веб,
+    затем финальный резерв. Один return: dict-ответ (не None)."""
+    ginf = _graph_infer_unknown(prompt)
+    if isinstance(ginf, dict) and ginf.get("content"):
+        result = ginf
+        result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
+    else:
+        cl_web = try_web(prompt)
+        result = _voice_or_none(cl_web, prompt, "web") if cl_web else None
+        if result is None:
+            result = _fallback_chain(prompt)
+        if result.get("strategy") == "web":
+            result["confidence"] = 0.45
+        result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
+    return result
+
+
+def _answer_from_base(best_answer, best_score, prompt, cluster):
+    """Готовый ответ из базы + честная уверенность. Один return: dict-ответ."""
+    result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
+    result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
+    result["content"] = _append_confidence_note(result["content"], best_score, prompt)
+    return result
+
+
+def _append_confidence_note(content, best_score, prompt):
+    """Низкая уверенность базы → честная пометка и подсказка, где проверить.
+    Один return: str (исходный текст, если уверенность не считается)."""
+    text = content
+    try:
+        from scripts.reasoning_engine import confidence_from_score
+        conf = confidence_from_score(best_score, has_result=True)
+        if conf < 0.4:
+            hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
+            text = (content
+                    + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
+                    + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
+        elif content:
+            text = content
+    except Exception:
+        text = content
+    return text
 
 
 def build_response(prompt, cluster, context=""):
     """Построить ответ. prompt — актуальный вопрос, context — история диалога.
     Единственный return: dict-ответ."""
-    result = {"content": f"[Mirro] Внутренняя ошибка: произошла ошибка", "strategy": "error"}
+    result = {"content": "[Mirro] Внутренняя ошибка: произошла ошибка", "strategy": "error"}
     try:
         # видимая внутренняя речь: Mirro «прокручивает» шаги рассуждения
         thinking = []
@@ -1403,74 +1570,14 @@ def build_response(prompt, cluster, context=""):
             thinking = _ms.reasoning_steps(topic)
         except Exception:
             thinking = []
-        # уточнение: неоднозначный запрос — спрашиваем сама, а не гадаем
-        clarify = _clarify_guess(prompt)
-        if clarify is not None:
-            result = clarify
-            result["workspace"] = "сознание: уточняющий вопрос (запрос неоднозначен — нужна конкретика)"
-        elif (gate := _moderation_gate(prompt)) is not None:
-            result = gate
-            result["workspace"] = "сознание: безопасность (запрос отсечён фильтром модерации)"
+        result = _guarded_first_stage(prompt)
+        direct = _try_direct_handlers(prompt) if result is None else None
+        if result is None and direct is not None:
+            result = direct
+            result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
         else:
-            direct = _try_direct_handlers(prompt)
-            if direct is not None:
-                result = direct
-                result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
-            else:
-                # многочастный вопрос: отвечаем по каждой части отдельно и склеиваем
-                prompt_orig = prompt
-                parts = _split_multipart(prompt)
-                if len(parts) > 1:
-                    multi = _multipart_answer(parts, cluster, context)
-                    if multi is not None:
-                        result = multi
-                        result["workspace"] = "сознание: многочастный запрос разбит и отвечен по частям"
-                prompt = _enrich_followup(prompt_orig, context)
-            web_first = _try_web_first(prompt)
-            if web_first is not None:
-                result = web_first
-                result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
-            else:
-                best_answer, best_score, has_result = _search_best(prompt, cluster)
-                if has_result and answer_looks_bad(prompt, best_answer):
-                    bad_web = try_web(prompt)
-                    if bad_web:
-                        result = _voice_or_none(bad_web, prompt, "web")
-                        result["confidence"] = 0.45
-                        result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
-                    else:
-                        result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
-                        result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
-                elif not has_result and cluster in ("ru", "knowledge"):
-                    # нет прямого ответа — пробуем вывести знания из графа по связям
-                    ginf = _graph_infer_unknown(prompt)
-                    if ginf is not None:
-                        result = ginf
-                        result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
-                    else:
-                        cl_web = try_web(prompt)
-                        result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
-                        if result.get("strategy") == "web":
-                            result["confidence"] = 0.45
-                        result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
-                elif has_result:
-                    result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
-                    result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
-                    # уверенность ответа: низкая -> честно «не уверена» + куда копать
-                    try:
-                        from scripts.reasoning_engine import confidence_from_score
-                        conf = confidence_from_score(best_score, has_result=True)
-                        result["confidence"] = conf
-                        if conf < 0.4:
-                            hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
-                            result["content"] = (result["content"]
-                                + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
-                                + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
-                    except Exception:
-                        pass
-                else:
-                    result = _fallback_chain(prompt)
-                    result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
+            prompt, searched = _answer_by_search_stages(prompt, cluster, context, result)
+            result = searched
         # метка источника ответа для ответа-выбора лучшего пути: граф/функции/история ИИ/база/веб
         try:
             s = result.get("strategy", "")
@@ -1549,6 +1656,7 @@ def build_response(prompt, cluster, context=""):
             pass
     except Exception as e:
         result = {"content": f"[Mirro] Внутренняя ошибка: {e}", "strategy": "error"}
+    result["content"] = _text_of(result)
     # видимая внутренняя речь: добавляем итоговый шаг о выбранной стратегии,
     # чтобы было видно, как именно Mirro пришла к ответу
     try:
@@ -1576,8 +1684,19 @@ def build_response(prompt, cluster, context=""):
         result["plan"] = ""
     result["thinking"] = thinking
     return result
-    result["thinking"] = thinking
-    return result
+
+
+def _text_of(result):
+    """Строковый content ответа; не-строки и None сводятся к "". Один return: str."""
+    content = result.get("content", "") if isinstance(result, dict) else ""
+    return content if isinstance(content, str) else ("" if content is None else str(content))
+
+
+def _sse_event(data):
+    """Одно SSE-событие `data: <json>\\n\\n` в UTF-8. Один return: bytes."""
+    line = "data: " + json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n\n"
+    return line.encode("utf-8")
+
 
 def try_ai_history(prompt):
     """Справочник «рост понимания: нейрочеловек и ИИ» (Тьюринг, Шеннон, Питтс,
@@ -2081,7 +2200,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                 pass
             if response:
                 core.log_call(prompt, cluster, f"mirro-{response.get('strategy','ai')}", int((time.time()-t0)*1000), True)
-            content = response.get("content", "") if response else "Ошибка"
+            content = _text_of(response) or "Ошибка"
             # темпераментный стилизатор: характер «мозга» формирует оформление ответа
             try:
                 from algos.voice_temperament import determine_voice_temperament, try_apply_temperament_filters
@@ -2099,7 +2218,7 @@ class MirroAPI(BaseHTTPRequestHandler):
                 self.send_header("Content-Type", "text/event-stream")
                 self.send_header("Cache-Control", "no-cache"); self.end_headers()
                 for chunk in content.split("\n"):
-                    self.wfile.write(f"data: {json.dumps({'choices':[{'delta':{'content':chunk+chr(10)}}]}, separators=(',',':'))}\n\n".encode())
+                    self.wfile.write(_sse_event({'choices': [{'delta': {'content': chunk + "\n"}}]}))
                     self.wfile.flush()
                 self.wfile.write(b"data: [DONE]\n\n")
             else:
