@@ -1033,10 +1033,14 @@ function renderLearnReport(data) {
     '<div style="margin-top:4px">' + (w || '<span class="mb-note">веса пусты</span>') + '</div>' +
     (h ? '<div style="margin-top:4px">' + h + '</div>' : '') +
     '<div style="margin-top:4px" class="mb-note">кластеры (примеров): ' +
-    Object.entries(data.clusters || {}).map(([k, v]) => k + '=' + v).join(', ') + '</div>';
+    Object.entries(data.clusters || {}).map(([k, v]) => escapeHtml(k) + '=' + fmtNum(v)).join(', ') + '</div>';
 }
 function loadLearnReport() {
-  fetch('http://127.0.0.1:3443/v1/learn-report').then(r => r.json()).then(renderLearnReport)
+  /* Без проверки r.ok тело 401/500 разбиралось как отчёт: страница показывала
+     «обучена: нет», хотя сервер просто не пустил или упал. */
+  fetch('http://127.0.0.1:3443/v1/learn-report')
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => renderLearnReport(d && !d.error ? d : null))
     .catch(() => renderLearnReport(null));
 }
 function runSelfLearn() {
@@ -1091,22 +1095,25 @@ function loadRepoPassport() {
       .then(r => r.ok ? r.json() : null).catch(() => null)
       .then(model => {
         const algoCount = Array.isArray(algos) ? algos.filter(x => x && x.name).length : 0;
-        const commitLines = (commits || []).slice(0, 3).map(c =>
-          '• ' + (c.commit && c.commit.message ? c.commit.message.split("\n")[0] : '') +
-          ' — ' + (c.commit && c.commit.author && c.commit.author.date ? c.commit.author.date.slice(0,10) : '')).join('<br>');
+        /* Описание и сообщения коммитов приходят из GitHub — это внешний текст,
+           вставлять его в innerHTML без экранирования нельзя. */
+        const commitLines = (Array.isArray(commits) ? commits : []).slice(0, 3).map(c =>
+          '• ' + escapeHtml(String((c.commit && c.commit.message) ? c.commit.message.split("\n")[0] : '')) +
+          ' — ' + escapeHtml(String((c.commit && c.commit.author && c.commit.author.date) ? c.commit.author.date.slice(0,10) : ''))).join('<br>');
         const trained = model && model.perceptron_trained ? 'да' : 'нет';
         const acc = model && model.trainer_accuracy != null ? Math.round(model.trainer_accuracy * 100) + '%' : '—';
         const cycles = model && model.trainer_cycles != null ? model.trainer_cycles : '—';
         out.className = 'quiz-feed';
         out.innerHTML =
-          '<b>Паспорт Mirro из репо</b> (github.com/' + REPO + ')<br>' +
-          (repo.description ? '«' + repo.description + '»<br>' : '') +
-          'Ветка: ' + branch +
+          '<b>Паспорт Mirro из репо</b> (github.com/' + escapeHtml(REPO) + ')<br>' +
+          (repo.description ? '«' + escapeHtml(String(repo.description)) + '»<br>' : '') +
+          'Ветка: ' + escapeHtml(String(branch)) +
           ' · алгоритмов в algos/: <b>' + algoCount + '</b><br>' +
           '<b>Отчёт обучения (model_state из репо):</b> обучена=' + trained +
-          ', тренировка циклов=' + cycles + ', точность=' + acc + '<br>' +
+          ', тренировка циклов=' + escapeHtml(String(cycles)) + ', точность=' + acc + '<br>' +
           'Последние коммиты:<br>' + (commitLines || '—');
-      });
+      })
+      .catch(e => { out.className = 'quiz-feed'; out.textContent = 'Не удалось прочитать model_state: ' + String(e.message).split('\n')[0]; });
   })
   .catch(e => { out.className = 'quiz-feed'; out.textContent = 'Не удалось получить репозиторий: ' + String(e.message).split('\n')[0]; });
 }
