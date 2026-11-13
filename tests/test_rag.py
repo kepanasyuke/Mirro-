@@ -109,14 +109,52 @@ class TestSegmentIndex(_RagCase):
         self.assertEqual(data["n_docs"], 3)
         self.assertTrue(data["words"])
 
-    def test_legacy_pickle_without_version_is_rebuilt(self):
+    def test_legacy_pickle_without_version_is_accepted(self):
+        # боевой индекс собран до версионирования: пересборка 4.8 млн строк
+        # недопустима, поэтому формат без поля version читается как есть
         index = self._rag()
-        index.build_segment_index(0)
         pfile = rag_mod.INDEX_DIR / "seg_000000.pkl"
+        rag_mod.INDEX_DIR.mkdir(parents=True, exist_ok=True)
         with open(pfile, "wb") as fh:
-            pickle.dump({"words": {"фантом": {0: 1}}, "n_docs": 1}, fh)
+            pickle.dump({"words": {"старое": {0: 1}}, "n_docs": 3}, fh)
         data = index._load_segment(0)
-        self.assertNotIn("фантом", data["words"])
+        self.assertIn("старое", data["words"])
+
+    def test_pickle_with_wrong_payload_is_rebuilt(self):
+        index = self._rag()
+        pfile = rag_mod.INDEX_DIR / "seg_000000.pkl"
+        rag_mod.INDEX_DIR.mkdir(parents=True, exist_ok=True)
+        with open(pfile, "wb") as fh:
+            pickle.dump({"version": rag_mod.INDEX_VERSION, "global": {}}, fh)
+        data = index._load_segment(0)
+        self.assertEqual(data["n_docs"], 3)
+        self.assertIn("ндс", " ".join(data["words"]))
+
+    def test_future_version_is_rebuilt(self):
+        index = self._rag()
+        pfile = rag_mod.INDEX_DIR / "seg_000000.pkl"
+        rag_mod.INDEX_DIR.mkdir(parents=True, exist_ok=True)
+        with open(pfile, "wb") as fh:
+            pickle.dump({"version": rag_mod.INDEX_VERSION + 1, "words": {"x": {0: 1}},
+                         "n_docs": 1}, fh)
+        data = index._load_segment(0)
+        self.assertNotIn("x", data["words"])
+        self.assertEqual(data["n_docs"], 3)
+
+    def test_legacy_global_index_loads(self):
+        # формат боевого global_index.pkl: {"global": ..., "seg_built": [...]}
+        index = self._rag()
+        rag_mod.INDEX_DIR.mkdir(parents=True, exist_ok=True)
+        with open(rag_mod.INDEX_DIR / "global_index.pkl", "wb") as fh:
+            pickle.dump({"global": {"ндс": [0]}, "seg_built": [0]}, fh)
+        reloaded = self._rag()
+        self.assertEqual(reloaded.global_index, {"ндс": [0]})
+        self.assertEqual(reloaded.seg_built, {0})
+
+    def test_garbage_global_index_is_ignored(self):
+        rag_mod.INDEX_DIR.mkdir(parents=True, exist_ok=True)
+        (rag_mod.INDEX_DIR / "global_index.pkl").write_bytes(b"not a pickle")
+        self.assertEqual(self._rag().global_index, {})
 
     def test_global_index_survives_segment_list_change(self):
         index = self._rag()

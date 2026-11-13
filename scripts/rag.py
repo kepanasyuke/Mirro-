@@ -32,9 +32,22 @@ def _open_pickle(path):
     try:
         with open(path, "rb") as f:
             data = pickle.load(f)
-    except (OSError, EOFError, pickle.UnpicklingError, ValueError):
+    except (OSError, EOFError, pickle.UnpicklingError, ValueError, AttributeError):
         data = None
     return data
+
+
+def _is_index_payload(data, payload_key):
+    """Годится ли pickle как индекс: поле payload_key на месте, формат совпадает.
+
+    Индексы, собранные до версионирования (без поля version), читаются как
+    есть — пересборка боевого индекса на 4.8 млн примеров недопустима.
+    Один return: bool.
+    """
+    is_valid = isinstance(data, dict) and payload_key in data
+    if is_valid:
+        is_valid = data.get("version", INDEX_VERSION) == INDEX_VERSION
+    return is_valid
 
 
 def tokenize(text):
@@ -72,7 +85,7 @@ class MirroRAG:
     def _load_global(self):
         gfile = INDEX_DIR / GLOBAL_INDEX_NAME
         data = _open_pickle(gfile) if gfile.exists() else None
-        if isinstance(data, dict) and data.get("version") == INDEX_VERSION:
+        if _is_index_payload(data, "global"):
             self.global_index = data.get("global") or {}
             self.seg_built = set(data.get("seg_built") or ())
             print(f"  [RAG] глобальный индекс загружен: {len(self.global_index)} слов, "
@@ -145,9 +158,7 @@ class MirroRAG:
     def _load_segment(self, i):
         pfile = INDEX_DIR / f"seg_{i:06d}.pkl"
         data = _open_pickle(pfile) if pfile.exists() else None
-        is_valid = (isinstance(data, dict) and data.get("version") == INDEX_VERSION
-                    and isinstance(data.get("words"), dict))
-        if not is_valid:
+        if not _is_index_payload(data, "words") or not isinstance(data.get("words"), dict):
             self.build_segment_index(i)
             data = _open_pickle(pfile) or {"version": INDEX_VERSION, "words": {}, "n_docs": 0}
         return data
