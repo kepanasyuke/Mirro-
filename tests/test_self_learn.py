@@ -35,9 +35,8 @@ class _LearnCase(unittest.TestCase):
         shutil.rmtree(str(self._tmp), ignore_errors=True)
 
     def _lines(self, path):
-        if not path.exists():
-            return []
-        return [json.loads(x) for x in path.read_text("utf-8").splitlines() if x.strip()]
+        text = path.read_text("utf-8") if path.exists() else ""
+        return [json.loads(x) for x in text.splitlines() if x.strip()]
 
     def _write_logs(self, count=12):
         rows = [{"success": True, "prompt_len": 50, "cluster": "ru", "ts": i,

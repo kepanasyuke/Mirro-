@@ -76,24 +76,31 @@ class MirroAI:
         for f in sorted(self.source_dir.glob("*.jsonl")):
             with open(f, "r", encoding="utf-8", errors="replace") as fh:
                 for line in fh:
-                    if line.strip():
-                        try:
-                            ex = json.loads(line)
-                            inst = ex.get("instruction", ex.get("user", ""))
-                            out = ex.get("output", ex.get("assistant", ""))
-                            if inst and out and len(out) > 20:
-                                self.examples.append((inst, out, f.stem))
-                                words = self._tokenize(inst)
-                                self.term_freq.update(words)
-                                for w in set(words):
-                                    self.doc_freq[w] += 1
-                                total += 1
-                        except (ValueError, TypeError, AttributeError):
-                            continue
+                    is_added = self._add_example(line, f.stem)
+                    total += 1 if is_added else 0
         self.total_docs = max(total, 1)
         self._load_self_questions()
         self._loaded = True
         print(f"  Index: {total} examples, {len(self.term_freq)} unique terms")
+
+    def _add_example(self, line, cluster):
+        """Разбирает одну строку корпуса и добавляет пример в индекс.
+        Один return: bool — добавлен ли пример."""
+        added = False
+        try:
+            ex = json.loads(line)
+            inst = ex.get("instruction", ex.get("user", ""))
+            out = ex.get("output", ex.get("assistant", ""))
+        except (ValueError, TypeError, AttributeError):
+            ex = None
+        if isinstance(ex, dict) and inst and out and len(out) > 20:
+            self.examples.append((inst, out, cluster))
+            words = self._tokenize(inst)
+            self.term_freq.update(words)
+            for w in set(words):
+                self.doc_freq[w] += 1
+            added = True
+        return added
 
     def _tfidf(self, term, doc_count):
         """TF-IDF вес термина в документе. Один return: float."""

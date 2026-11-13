@@ -120,6 +120,23 @@ def append_new_examples(path, examples):
     return added
 
 
+def _log_line_to_example(line):
+    """Превращает строку calls.jsonl в учебный пример. Один return: dict|None."""
+    example = None
+    try:
+        entry = json.loads(line)
+    except ValueError:
+        entry = None
+    if isinstance(entry, dict) and entry.get("success") and entry.get("prompt_len", 0) > 20:
+        example = {
+            "instruction": f"[Mirro self-log] Task: {entry.get('cluster','?')}",
+            "input": f"provider={entry.get('provider','?')} latency={entry.get('latency_ms',0)}ms",
+            "output": f"Call #{entry.get('ts','?')} — cluster: {entry.get('cluster')}, "
+                      f"tokens: {entry.get('tokens',0)}, latency: {entry.get('latency_ms',0)}ms",
+        }
+    return example
+
+
 class SelfLearner:
     """Autonomous learning loop — Mirro grows forever."""
 
@@ -249,19 +266,9 @@ class SelfLearner:
                 # Sample successful calls and save as examples
                 examples = []
                 for line in lines[-100:]:
-                    try:
-                        entry = json.loads(line)
-                        is_useful = (entry.get("success")
-                                     and entry.get("prompt_len", 0) > 20)
-                        if is_useful:
-                            examples.append({
-                                "instruction": f"[Mirro self-log] Task: {entry.get('cluster','?')}",
-                                "input": f"provider={entry.get('provider','?')} latency={entry.get('latency_ms',0)}ms",
-                                "output": f"Call #{entry.get('ts','?')} — cluster: {entry.get('cluster')}, "
-                                          f"tokens: {entry.get('tokens',0)}, latency: {entry.get('latency_ms',0)}ms"
-                            })
-                    except (ValueError, AttributeError):
-                        continue
+                    example = _log_line_to_example(line)
+                    if example:
+                        examples.append(example)
                 if examples:
                     learned = append_new_examples(LEARN_DIR / "selflog_general.jsonl", examples)
         return learned

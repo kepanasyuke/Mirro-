@@ -157,14 +157,23 @@ def _existing_keys():
     try:
         if TARGET.exists():
             for line in TARGET.read_text("utf-8").splitlines():
-                try:
-                    r = json.loads(line)
-                    keys.add(_norm_question(r.get("instruction", "")))
-                except (ValueError, AttributeError):
-                    continue
+                key = _line_key(line)
+                if key:
+                    keys.add(key)
     except OSError:
         keys = set()
     return keys
+
+
+def _line_key(line):
+    """Нормализованный ключ одной строки facts.jsonl. Один return: str."""
+    key = ""
+    try:
+        record = json.loads(line)
+        key = _norm_question(record.get("instruction", ""))
+    except (ValueError, AttributeError):
+        key = ""
+    return key
 
 
 def run(limit=None):
@@ -174,17 +183,17 @@ def run(limit=None):
     existing = _existing_keys()
     TARGET.parent.mkdir(parents=True, exist_ok=True)
     for q, a in FACTS:
+        key = _norm_question(q)
         if limit is not None and added >= limit:
             break
-        key = _norm_question(q)
-        if not key or key in existing:
-            continue
-        rec = {"instruction": q, "input": "", "output": a, "source": "facts"}
-        with open(TARGET, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        existing.add(key)
-        added += 1
+        if key and key not in existing:
+            rec = {"instruction": q, "input": "", "output": a, "source": "facts"}
+            with open(TARGET, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+            existing.add(key)
+            added += 1
     return added
+
 
 
 def main():

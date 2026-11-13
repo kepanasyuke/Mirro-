@@ -41,9 +41,8 @@ class _IngestCase(unittest.TestCase):
 
     def _lines(self, cluster):
         path = ing.PROC / f"{cluster}.jsonl"
-        if not path.exists():
-            return []
-        return [json.loads(x) for x in path.read_text("utf-8").splitlines() if x.strip()]
+        text = path.read_text("utf-8") if path.exists() else ""
+        return [json.loads(x) for x in text.splitlines() if x.strip()]
 
 
 class TestDetectCluster(unittest.TestCase):
