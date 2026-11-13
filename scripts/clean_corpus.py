@@ -51,15 +51,30 @@ def _record_key(rec):
     return inst + "::" + out
 
 
+def _meaningful(text):
+    """Есть ли в коротком поле сигнал. Один return: bool.
+
+    Отсекает вырожденные повторы («аааааа»), но пропускает короткие
+    осмысленные ответы («4», «Налог»), которые терял токенизатор.
+    """
+    stripped = (text or "").strip()
+    letters = [ch for ch in stripped.lower() if ch.isalpha()]
+    degenerate = len(letters) >= 4 and len(set(letters)) <= 2
+    return bool(stripped) and not degenerate
+
+
 def _is_keepable(rec):
     """Проверяет, что пример содержательный. Один return: bool.
 
-    Проверка идёт по сырым полям: раньше токенизатор терял цифры, знаки «=»
-    и формулы, и валидные примеры вида «2+2 → 4» считались мусором.
+    Токенизатор теряет цифры и знаки «=», поэтому валидные примеры вида
+    «2+2 → 4» проверяются по сырым полям. Но одной непустоты мало: строка
+    из повторяющихся букв — мусор, а не короткий ответ.
     """
     inst = (rec.get("instruction") or "").strip()
     out = (rec.get("output") or "").strip()
-    return bool(inst) and bool(out)
+    token_ok = (len(clean_and_tokenize_corpus_line(inst)) >= 2
+                and len(clean_and_tokenize_corpus_line(out)) >= 2)
+    return bool(inst) and bool(out) and (token_ok or (_meaningful(inst) and _meaningful(out)))
 
 
 def _atomic_write(path, rows):
