@@ -13,7 +13,7 @@
 Чистый Python, атомарные функции, один return на функцию.
 Запуск:  python scripts/clean_corpus.py [--self-learned] [--processed] [--apply]
 """
-import argparse, json, re
+import argparse, json, os, re, shutil, tempfile
 from pathlib import Path
 
 MIRRO = Path(r"D:\Mirro")
@@ -52,10 +52,38 @@ def _record_key(rec):
 
 
 def _is_keepable(rec):
-    """Проверяет, что пример содержательный. Один return: bool."""
-    inst_tok = clean_and_tokenize_corpus_line(rec.get("instruction", ""))
-    out_tok = clean_and_tokenize_corpus_line(rec.get("output", ""))
-    return len(inst_tok) >= 2 and len(out_tok) >= 2
+    """Проверяет, что пример содержательный. Один return: bool.
+
+    Проверка идёт по сырым полям: раньше токенизатор терял цифры, знаки «=»
+    и формулы, и валидные примеры вида «2+2 → 4» считались мусором.
+    """
+    inst = (rec.get("instruction") or "").strip()
+    out = (rec.get("output") or "").strip()
+    return bool(inst) and bool(out)
+
+
+def _atomic_write(path, rows):
+    """Пишет jsonl через временный файл и подменяет исходный. Один return: bool.
+
+    Раньше файл открывался на запись сразу: сбой чтения/записи посреди
+    обработки оставлял усечённый корпус.
+    """
+    ok = True
+    tmp = None
+    try:
+        fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp", prefix=".clean_")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            for rec in rows:
+                fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        shutil.copymode(str(path), tmp)
+        os.replace(tmp, str(path))
+        tmp = None
+    except OSError:
+        ok = False
+    finally:
+        if tmp and os.path.exists(tmp):
+            os.remove(tmp)
+    return ok
 
 
 def clean_jsonl(path, apply=False):
@@ -74,10 +102,11 @@ def clean_jsonl(path, apply=False):
                 else:
                     try:
                         rec = json.loads(stripped)
-                    except Exception:
+                    except ValueError:
                         rec = None
-                    key = _record_key(rec) if isinstance(rec, dict) and _is_keepable(rec) else None
-                    if rec is None or not isinstance(rec, dict) or not _is_keepable(rec):
+                    is_record = isinstance(rec, dict) and _is_keepable(rec)
+                    key = _record_key(rec) if is_record else None
+                    if not is_record:
                         removed += 1
                     elif key in seen:
                         removed += 1
@@ -88,12 +117,7 @@ def clean_jsonl(path, apply=False):
     except OSError:
         ok = False
     if ok and apply and out_rows:
-        try:
-            with open(path, "w", encoding="utf-8") as fh:
-                for rec in out_rows:
-                    fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
-        except OSError:
-            ok = False
+        ok = _atomic_write(path, out_rows)
     if not ok:
         kept = 0
         removed = 0
