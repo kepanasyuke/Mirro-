@@ -1414,6 +1414,8 @@ def build_response(prompt, cluster, context=""):
         else:
             direct = _try_direct_handlers(prompt)
             if direct is not None:
+                # прямое срабатывание (приветствие/диалог/юмор/творчество и т.п.) —
+                # ответ готов, поиск по базе не запускаем, чтобы он не перезаписал его
                 result = direct
                 result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
             else:
@@ -1426,51 +1428,51 @@ def build_response(prompt, cluster, context=""):
                         result = multi
                         result["workspace"] = "сознание: многочастный запрос разбит и отвечен по частям"
                 prompt = _enrich_followup(prompt_orig, context)
-            web_first = _try_web_first(prompt)
-            if web_first is not None:
-                result = web_first
-                result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
-            else:
-                best_answer, best_score, has_result = _search_best(prompt, cluster)
-                if has_result and answer_looks_bad(prompt, best_answer):
-                    bad_web = try_web(prompt)
-                    if bad_web:
-                        result = _voice_or_none(bad_web, prompt, "web")
-                        result["confidence"] = 0.45
-                        result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
-                    else:
-                        result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
-                        result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
-                elif not has_result and cluster in ("ru", "knowledge"):
-                    # нет прямого ответа — пробуем вывести знания из графа по связям
-                    ginf = _graph_infer_unknown(prompt)
-                    if ginf is not None:
-                        result = ginf
-                        result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
-                    else:
-                        cl_web = try_web(prompt)
-                        result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
-                        if result.get("strategy") == "web":
-                            result["confidence"] = 0.45
-                        result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
-                elif has_result:
-                    result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
-                    result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
-                    # уверенность ответа: низкая -> честно «не уверена» + куда копать
-                    try:
-                        from scripts.reasoning_engine import confidence_from_score
-                        conf = confidence_from_score(best_score, has_result=True)
-                        result["confidence"] = conf
-                        if conf < 0.4:
-                            hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
-                            result["content"] = (result["content"]
-                                + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
-                                + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
-                    except Exception:
-                        pass
+                web_first = _try_web_first(prompt)
+                if web_first is not None:
+                    result = web_first
+                    result["workspace"] = "сознание: веб-триггер свежести (GNWT: свежая внешняя трансляция)"
                 else:
-                    result = _fallback_chain(prompt)
-                    result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
+                    best_answer, best_score, has_result = _search_best(prompt, cluster)
+                    if has_result and answer_looks_bad(prompt, best_answer):
+                        bad_web = try_web(prompt)
+                        if bad_web:
+                            result = _voice_or_none(bad_web, prompt, "web")
+                            result["confidence"] = 0.45
+                            result["workspace"] = "сознание: база мусорная → веб (GNWT: смена рабочего пространства)"
+                        else:
+                            result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.", "strategy": "web"}
+                            result["workspace"] = "сознание: пустое рабочее пространство (ни база, ни веб)"
+                    elif not has_result and cluster in ("ru", "knowledge"):
+                        # нет прямого ответа — пробуем вывести знания из графа по связям
+                        ginf = _graph_infer_unknown(prompt)
+                        if ginf is not None:
+                            result = ginf
+                            result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
+                        else:
+                            cl_web = try_web(prompt)
+                            result = _voice_or_none(cl_web, prompt, "web") or _fallback_chain(prompt)
+                            if result.get("strategy") == "web":
+                                result["confidence"] = 0.45
+                            result["workspace"] = "сознание: нет в базе — переход к вебу/провайдеру (GNWT: расширение пространства)"
+                    elif has_result:
+                        result = {"content": _voice(best_answer, prompt, "base")[:2500], "strategy": "base"}
+                        result["workspace"] = f"сознание: база знаний (рабочее пространство кластера {cluster}, IIT-связность)"
+                        # уверенность ответа: низкая -> честно «не уверена» + куда копать
+                        try:
+                            from scripts.reasoning_engine import confidence_from_score
+                            conf = confidence_from_score(best_score, has_result=True)
+                            result["confidence"] = conf
+                            if conf < 0.4:
+                                hint_topic = " ".join(_tokenize_for_search(prompt)[:3]) or "эту тему"
+                                result["content"] = (result["content"]
+                                    + f"\n\nЯ не до конца уверена в этом ответе (уверенность {int(conf*100)}%). "
+                                    + f"Лучше проверить «{hint_topic}» в других источниках, если это важно.")
+                        except Exception:
+                            pass
+                    else:
+                        result = _fallback_chain(prompt)
+                        result["workspace"] = result.get("strategy", "unknown") + ": сознание — финальный резерв (провайдер/веб)"
         # метка источника ответа для ответа-выбора лучшего пути: граф/функции/история ИИ/база/веб
         try:
             s = result.get("strategy", "")
