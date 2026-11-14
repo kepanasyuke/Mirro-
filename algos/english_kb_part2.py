@@ -9,8 +9,7 @@ TOPICS = {
         "it is the ascent of a pilgrim upon a stony height, of a smoke and a vapour into "
         "the roof of the sky, and of a soul toward the things that are above it, being "
         "the rising and the climbing course, and it differs from a descent, which is the "
-        "going down, in being the mounting upward against the weight and the "
-        "pull of the earth, being the rising and the uplifted course, and it differs also "
+        "going down, in being the mounting upward, being the rising and the uplifted course, and it differs also "
         "from an elevation, which is the height itself, and from an inclination and a "
         "steepness, which are the slant of the ground and the sharpness of that slant, in "
         "being the motion that climbs rather than the measure or the quality of the slope, "
@@ -37,8 +36,8 @@ TOPICS = {
         "thereon, being the downward and perilous going; and a person makes a descent when he "
         "goes down a steep way and comes at last to a lower place, being "
         "the going down and downward moving one; and descent is thus the act or the state of "
-        "going down, the passage of a thing from a higher place to a lower, and the falling "
-        "course and falling motion by which a lesser height is reached."
+        "going down, the passage of a thing to a lower, and the falling "
+        "course and its motion by which a lesser height is reached."
     ),
     "elevation": (
         "Elevation is the height to which a thing is raised above a given level, the measured "

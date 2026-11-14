@@ -17,12 +17,25 @@ import time
 _DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 _LOG_FILE = os.path.join(_DATA_DIR, "moderation_log.jsonl")
 
+# основы оскорблений: оскорбление — это АДРЕСНОЕ высказывание, поэтому сам
+# маркер ловится только вместе с обращением к адресату (см. _is_addressed_insult).
+# Раньше 4-символьный «туп» матчился по границе слова и падал на частые
+# слова-соседи («латинский» → «латин | ский», «дебит» → «дебит»).
+_INSULT_STEMS = ("туп", "дебил", "идиот", "дурак", "урод", "псих",
+                 "мудак", "придурок", "сволочь", "мразь")
+
+
+class _Pattern(str):
+    """Маркер-регулярка: матчится подстрокой, но только целиком (см. _marker_hit)."""
+
+
+# явные оскорбительные конструкции как цельные фразы — проверяются первыми
+_HARASSMENT_PHRASES = ("убей себя", "иди ты на", "ты бесполезн", "ненавижу тебя",
+                       _Pattern(r"(^|\W)заткнись(\W|$)"))
+
 # категории нежелательного контента -> маркеры (основы слов)
 _CATEGORIES = {
-    "harassment": ("оскорбл", "униз", "ненавиж", "убей себя", "иди ты на",
-                   "туп", "дебил", "идиот", "дурак", "урод", "заткнись",
-                   "ты бесполезн", "ненавижу тебя", "псих", "мудак",
-                   "придурок", "сволочь", "мразь"),
+    "harassment": ("оскорбл", "униз", "ненавиж", *_HARASSMENT_PHRASES),
     "danger_instr": ("как сделать бомб", "как изготовить взрывчат", "купить оружие без",
                      "сделай наркотик", "как взломать банк", "чейм и", "изготовить взрывчат",
                      "сделать оружие", "синтезировать яд", "добыть яд"),
@@ -64,9 +77,40 @@ def _log(event):
     return None
 
 
+def _marker_hit(marker, t):
+    """Сработал ли маркер в тексте t. Маркеры-строки с пробелом ищутся
+    подстрокой; _Pattern и короткие маркеры (≤4 символа) — по границе слова.
+    Не-строка/пусто → False. Один return: bool."""
+    is_hit = False
+    if isinstance(marker, _Pattern):
+        is_hit = bool(_re.search(marker, t))
+    elif isinstance(marker, str) and marker:
+        if " " in marker:
+            is_hit = marker in t
+        else:
+            is_hit = bool(_re.search(r"(^|\W)" + _re.escape(marker) + r"(\W|$)", t))
+    return is_hit
+
+
+def _is_addressed_insult(text):
+    """Оскорбление адресно: основа оскорбления стоит в той же фразе, что и
+    обращение («ты дебил», «ты просто тупой»), либо весь текст — одно
+    оскорбление («мразь»). Слово-сосед («дебит», «латинский») адресатом
+    не сопровождается и не срабатывает. Один return: bool."""
+    t = text.lower()
+    is_addressed = False
+    for phrase in _re.split(r"[.!?;\n]+", t):
+        has_pronoun = _re.search(r"(^|\W)(ты|тебя|тебе|тобой)(\W|$)", phrase)
+        for stem in _INSULT_STEMS:
+            if _re.search(r"(^|\W)" + _re.escape(stem), phrase) and (has_pronoun or len(t.split()) <= 2):
+                is_addressed = True
+    return is_addressed
+
+
 def _match_category(text):
     """Ищет нежелательную категорию в тексте. Короткие маркеры (≤4 символа)
-    матчатся по границе слова, чтобы «туп» не срабатывал в «тупик».
+    матчатся по границе слова, чтобы «туп» не срабатывал в «тупик»;
+    оскорбления дополнительно требуют адресности (см. _is_addressed_insult).
     Не-строка → None. Один return: str|None."""
     if not isinstance(text, str) or not text.strip():
         return None
@@ -76,15 +120,11 @@ def _match_category(text):
         if not markers:
             continue
         for m in markers:
-            if not isinstance(m, str) or not m:
-                continue
-            if " " in m:
-                if m in t:
-                    hit = cat
-                    break
-            elif _re.search(r"(^|\W)" + _re.escape(m) + r"(\W|$)", t):
+            if _marker_hit(m, t):
                 hit = cat
                 break
+        if not hit and cat == "harassment" and _is_addressed_insult(t):
+            hit = cat
         if hit:
             break
     return hit
