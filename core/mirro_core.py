@@ -1110,6 +1110,7 @@ def _try_direct_handlers(prompt):
         return ans
     handlers = [
         ("greeting", try_greetings),
+        ("english", try_english),
         ("learn", try_learn),
         ("think", try_algos_think),
         ("humor", try_humor),
@@ -1136,7 +1137,6 @@ def _try_direct_handlers(prompt):
         ("neuromod", try_neuromod),
         ("neural_elec", try_neural_elec),
         ("user_profile", try_user_profile),
-        ("english", try_english),
         ("empathy_observe", try_empathy),
     ]
     result = None
