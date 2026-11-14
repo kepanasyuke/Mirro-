@@ -1242,18 +1242,6 @@ def _try_web_first(prompt):
     return result
 
 
-def _search_best(prompt, cluster):
-    """TF-IDF → RAG → выбор лучшего кандидата по кластеру.
-    Единственный return: кортеж (best_answer, best_score, has_result)."""
-    results = try_tfidf(prompt, cluster)
-    if not results:
-        results = try_rag(prompt, cluster)
-    _, choose_best, _ = _reasoning()
-    best_answer, best_score, _reason = choose_best(prompt, results, preferred=cluster)
-    has_result = best_answer is not None and best_score > 1.0
-    return best_answer, best_score, has_result
-
-
 def _voice_or_none(raw, prompt, strategy):
     """Оборачивает ответ в голос Мирро. Единственный return: dict-ответ или None."""
     result = None
