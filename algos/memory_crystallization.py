@@ -11,6 +11,28 @@
 """
 import math
 
+_EPS = 1e-8
+
+
+def _is_number(x):
+    """Конечное число (отсекает NaN/inf/строки). Один return: bool."""
+    return isinstance(x, (int, float)) and x == x and x not in (float("inf"), float("-inf"))
+
+
+def _vector_ok(vec):
+    """Вектор пригоден для центроида: непустой, все элементы — конечные числа.
+    Один return: bool."""
+    ok = isinstance(vec, (list, tuple)) and len(vec) > 0
+    if ok:
+        ok = all(_is_number(x) for x in vec)
+    return ok
+
+
+def _is_zero_vector(vec):
+    """Все координаты — нули (центроид такой группы обнулил бы кристалл).
+    Один return: bool."""
+    return _vector_ok(vec) and all(float(x) == 0.0 for x in vec)
+
 
 def _is_numeric_vector(vec):
     """Годится ли вектор для косинуса: непустая последовательность чисел конечной
@@ -47,7 +69,25 @@ def _cosine_similarity(a, b):
     dot = sum(x * y for x, y in zip(a, b))
     na = math.sqrt(sum(x * x for x in a))
     nb = math.sqrt(sum(y * y for y in b))
-    return dot / (na * nb + 1e-8)
+    return dot / (na * nb + _EPS)
+
+
+def _similar(a, b, threshold):
+    """Совпадают ли два вектора по смыслу: одинаковой длины, числовые, не
+    нулевые и косинус выше порога. Нули/NaN/мусор не сворачиваются никогда —
+    иначе центроид группы превратился бы в пустой вектор. Один return: bool."""
+    ok = (_vector_ok(a) and _vector_ok(b) and len(a) == len(b)
+          and not _is_zero_vector(a) and not _is_zero_vector(b))
+    sim = 0.0
+    if ok:
+        sim = _cosine_similarity(a, b)
+    return ok and sim == sim and sim > threshold
+
+
+def _sanitized(exp_list):
+    """Опыт после сжатия: элементы остаются списками, мусор не теряется.
+    Один return: list."""
+    return [list(vec) if isinstance(vec, (list, tuple)) else vec for vec in exp_list]
 
 
 def try_crystallize_experience(graph, similarity_threshold=0.92):
@@ -57,23 +97,24 @@ def try_crystallize_experience(graph, similarity_threshold=0.92):
     Возвращает число кристаллов ПОСЛЕ сжатия. Один return: int."""
     exp_list = getattr(graph, "experience", None) or []
     merged = []
-    is_list = isinstance(exp_list, list)
-    if is_list and len(exp_list) >= 2:
-        usable = [index for index, vec in enumerate(exp_list) if _is_numeric_vector(vec)]
-        consumed = {index for index in range(len(exp_list)) if index not in usable}
-        for i in usable:
+    if isinstance(exp_list, (list, tuple)) and 2 <= len(exp_list) <= 1000:
+        consumed = set()
+        for i in range(len(exp_list)):
             if i not in consumed:
-                group = [i]
-                for j in usable:
-                    if j > i and j not in consumed \
-                            and _cosine_similarity(exp_list[i], exp_list[j]) > similarity_threshold:
-                        group.append(j)
+                group = [exp_list[i]]
+                for j in range(i + 1, len(exp_list)):
+                    if j not in consumed and _similar(exp_list[i], exp_list[j], similarity_threshold):
+                        group.append(exp_list[j])
                         consumed.add(j)
-                centroid = calculate_centroid_vector([exp_list[k] for k in group])
-                merged.append(centroid if len(group) > 1 else list(exp_list[i]))
+                crystal = exp_list[i]
+                if _vector_ok(exp_list[i]):
+                    crystal = list(exp_list[i])
+                if len(group) > 1 and all(_vector_ok(v) for v in group):
+                    crystal = calculate_centroid_vector(group)
+                # не сворачиваем группу в пустоту: центроид обязан быть вектором
+                merged.append(crystal if _vector_ok(crystal) else group[0])
                 consumed.add(i)
-        merged.extend(vec for index, vec in enumerate(exp_list) if index not in usable)
-        graph.experience = merged
+        graph.experience = _sanitized(merged)
     return len(merged)
 
 

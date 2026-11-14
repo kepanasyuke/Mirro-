@@ -214,7 +214,9 @@ def _c_linear(q):
             b_lin = float(m.group(2)) if m.group(2) else 0.0
             rhs = float(m.group(3)) if m.group(3) else 0.0
             if a != 0:
-                out = ("математика", "16_university", "solve_linear", (a, rhs - b_lin),
+                # solve_linear(a, b) решает ax+b=0, поэтому переносим rhs в b.
+                # Раньше сюда шло rhs-b: для 3x+5=20 получалось -5 вместо 5.
+                out = ("математика", "16_university", "solve_linear", (a, b_lin - rhs),
                        f"x = {(rhs - b_lin) / a:.6g}")
     return out
 

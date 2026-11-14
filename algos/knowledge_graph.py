@@ -57,6 +57,34 @@ class KnowledgeGraph:
             return None
         return self.nodes.get(self._norm(name))
 
+    # ---------- пополнение графа из провалов (замыкание цикла рефлексии) ----------
+    def admit_candidate(self, first, second="", weight=0.3, tag="пополнение"):
+        """Принимает в граф понятие, на которое сослалась рефлексия («тема вне
+        графа»). Отсутствующий узел создаётся с меткой tag (а не безликой
+        «понятие»), затем понятия связываются ребром «связано_с». Пустые/
+        не-строковые понятия и петли пропускаются. Один return: dict —
+        что реально изменилось: {nodes_added, edge_added, a, b}."""
+        a = self._norm(first) if isinstance(first, str) else ""
+        b = self._norm(second) if isinstance(second, str) else ""
+        added = 0
+        if a and a not in self.nodes:
+            self.add_node(a, tag=tag)
+            added += 1
+        if b and b not in self.nodes:
+            self.add_node(b, tag=tag)
+            added += 1
+        edge_added = 0
+        if a and b and a != b and not self.has_edge(a, "связано_с", b):
+            self.add_edge(a, "связано_с", b, weight=weight)
+            edge_added = 1
+        return {"nodes_added": added, "edge_added": edge_added, "a": a, "b": b}
+
+    def still_outside(self, first, second=""):
+        """Понятия, которых в графе НЕТ (перепроверка перед записью «кандидат»).
+        Пустые/не-строковые отбрасываются. Один return: list[str]."""
+        names = [n for n in (first, second) if isinstance(n, str) and self._norm(n)]
+        return [self._norm(n) for n in names if self._norm(n) not in self.nodes]
+
     def has_edge(self, src, pred, dst):
         """Есть ли прямая связь между src и dst по предикату pred.
         Некорректные аргументы → False. Один return: bool."""
@@ -369,7 +397,10 @@ class KnowledgeGraph:
         self.add_node(s)
         self.add_node(d)
         key = (s, p, d)
-        self.edges[key] = max(self.edges.get(key, 0.0), weight)
+        old = self.edges.get(key)
+        # нет ребра — берём переданный вес как есть (иначе отрицательная связь
+        # молча становилась бы нулевой через max с 0.0), есть — «сильнее по модулю»
+        self.edges[key] = weight if old is None else max(old, weight, key=abs)
         # синхронизируем вес в индексе соседей (двусторонне)
         self._set_adj_weight(s, p, d, self.edges[key])
         self._set_adj_weight(d, p, s, self.edges[key])
@@ -385,17 +416,26 @@ class KnowledgeGraph:
             return None
         if weight != weight or weight in (float("inf"), float("-inf")):
             return None
-        rows = self._adj.get(from_node, [])
-        found = False
-        for i, row in enumerate(rows):
-            if isinstance(row, (tuple, list)) and len(row) >= 2 \
-                    and row[0] == pred and row[1] == to_node:
-                self._adj[from_node][i] = (pred, to_node, weight)
-                found = True
-                break
-        if not found:
-            # нет в индексе — добавляем
-            self._adj.setdefault(from_node, []).append((pred, to_node, weight))
+        rows = self._adj.setdefault(from_node, [])
+        # предикат в индексе нормализован (add_edge передаёт норму), поэтому
+        # сравниваем с нормой: иначе зеркальный вес не находился при «P»/«p»
+        pred_key = self._norm(pred) if isinstance(pred, str) else pred
+        kept = [row for row in rows
+                if not (isinstance(row, (tuple, list)) and len(row) >= 2
+                        and row[0] == pred_key and row[1] == to_node)]
+        # индекс показывает силу самой связи: максимум по модулю из веса самой
+        # связи и из ОБРАТНОГО ребра (a->b 1.0 при b->a 0.6 даёт 1.0 обоим).
+        # Устаревшее значение этой же строки не учитываем — иначе ослабление
+        # (punish) не доходило бы до edge_weight()
+        candidates = [weight]
+        mirrored = self.edges.get((to_node, pred_key, from_node))
+        own = self.edges.get((from_node, pred_key, to_node))
+        if self._is_num(mirrored):
+            candidates.append(float(mirrored))
+        if self._is_num(own):
+            candidates.append(float(own))
+        kept.append((pred_key, to_node, max(candidates, key=abs)))
+        self._adj[from_node] = kept
         return None
 
     def hebbian_learn(self, node_a, node_b, amount=0.2, depth=0):
@@ -419,7 +459,7 @@ class KnowledgeGraph:
         targets = [b]
         if depth > 0:
             for p, other, _w in self._adj.get(a, [])[:depth]:
-                if other not in targets:
+                if other != b and other not in targets:
                     targets.append(other)
         for tgt in targets:
             for key, w in list(self.edges.items()):
@@ -462,6 +502,7 @@ class KnowledgeGraph:
                 self.edges[key] = nw
                 s, p, d = key
                 self._set_adj_weight(s, p, d, nw)
+                self._set_adj_weight(d, p, s, nw)
                 changed += 1
         return changed
 
@@ -469,6 +510,11 @@ class KnowledgeGraph:
     def _norm(name):
         name = name if isinstance(name, str) else str(name or "")
         return _re.sub(r"\s+", " ", name).strip().lower().rstrip(".!?;")[:200]
+
+    @staticmethod
+    def _is_num(x):
+        """Конечное число (не NaN/inf/строка). Один return: bool."""
+        return isinstance(x, (int, float)) and x == x and x not in (float("inf"), float("-inf"))
 
     def prune_noise(self, noise_preds=None, max_phrase_words=4):
         """Убирает мусор: рёбра с шумовыми предикатами («это», «есть», «если»)

@@ -79,5 +79,108 @@ class TestGraphLearning(unittest.TestCase):
         self.assertTrue(pro_edges, "ожидали ребро про_понятие от узла-фразы к понятию")
 
 
+class TestCandidateAdmission(unittest.TestCase):
+    """Замыкание цикла «тема вне графа → кандидат → граф».
+
+    Раньше scripts/reflection.py на провал писал строку
+    «тема «означает/variance» вне графа — кандидат на пополнение» и НИЧЕГО не
+    добавлял в граф: в data/reflection_log.jsonl 46 таких строк, в
+    data/graph_story.jsonl из 63331 узлов ни одного «кандидата» (см. отчёт
+    2026-11-14/02-graph-memory). Здесь проверяем, что API пополнения реален.
+    """
+
+    def setUp(self):
+        self.kg = KnowledgeGraph()
+
+    def test_unknown_concepts_are_added_with_tag(self):
+        res = self.kg.admit_candidate("пузырьковую", "сортировку")
+        self.assertEqual(res["nodes_added"], 2)
+        self.assertEqual(res["edge_added"], 1)
+        self.assertIn("пузырьковую", self.kg.nodes)
+        self.assertEqual(self.kg.nodes["пузырьковую"].tag, "пополнение")
+
+    def test_known_concept_is_not_duplicated(self):
+        self.kg.add_node("variance")
+        res = self.kg.admit_candidate("variance", "дисперсия")
+        self.assertEqual(res["nodes_added"], 1)
+        self.assertEqual(self.kg.get_node("variance").tag, "понятие")
+
+    def test_admission_is_idempotent(self):
+        self.kg.admit_candidate("a", "b")
+        again = self.kg.admit_candidate("a", "b")
+        self.assertEqual(again["nodes_added"], 0)
+        self.assertEqual(again["edge_added"], 0)
+
+    def test_still_outside_reports_missing_only(self):
+        self.kg.add_node("граф")
+        self.assertEqual(self.kg.still_outside("граф", "сортировку"), ["сортировку"])
+        self.assertEqual(self.kg.still_outside("граф", None), [])
+
+    def test_empty_and_self_pairs_ignored(self):
+        self.assertEqual(self.kg.admit_candidate("", ""), 
+                         {"nodes_added": 0, "edge_added": 0, "a": "", "b": ""})
+        self.assertEqual(self.kg.admit_candidate("граф", "граф")["edge_added"], 0)
+
+
+class TestEdgeWeights(unittest.TestCase):
+    """Знак и границы веса рёбер + Хебб-обновление (reward_sign).
+
+    Найдено при сверке: add_edge() клал max(0.0, weight), поэтому новый узел
+    с отрицательным весом получал 0.0, а _set_adj_weight при рёбрах a→b и b→a
+    оставлял в индексе вес последнего записанного, хотя физически это одно
+    ребро. Оба дефекта — потеря знака/величины.
+    """
+
+    def setUp(self):
+        self.kg = KnowledgeGraph()
+
+    def test_negative_weight_survives_creation(self):
+        self.kg.add_edge("x", "p", "y", weight=-0.5)
+        self.assertEqual(self.kg.get_edge_weight("x", "p", "y"), -0.5)
+
+    def test_existing_edge_keeps_stronger_by_abs(self):
+        self.kg.add_edge("x", "p", "y", weight=-0.9)
+        self.kg.add_edge("x", "p", "y", weight=0.2)
+        self.assertEqual(self.kg.get_edge_weight("x", "p", "y"), -0.9)
+
+    def test_reward_capped_and_punish_floored(self):
+        self.kg.add_edge("a", "p", "b", weight=1.0)
+        for _ in range(20):
+            self.kg.reward("a", "b", 0.2)
+        self.assertEqual(self.kg.get_edge_weight("a", "p", "b"), 2.0)
+        for _ in range(20):
+            self.kg.punish("a", "b", 0.3)
+        self.assertEqual(self.kg.get_edge_weight("a", "p", "b"), 0.15)
+
+    def test_reward_sign_positive_strengthens(self):
+        self.kg.add_edge("m", "p", "n", weight=0.5)
+        self.assertEqual(self.kg.reward_sign("m", "n", 1.0, 0.05), 1)
+        self.assertAlmostEqual(self.kg.get_edge_weight("m", "p", "n"), 0.55)
+
+    def test_reward_sign_negative_weakens_but_keeps_floor(self):
+        self.kg.add_edge("m", "p", "n", weight=0.5)
+        self.assertEqual(self.kg.reward_sign("m", "n", -1.0, 0.1), 1)
+        self.assertAlmostEqual(self.kg.get_edge_weight("m", "p", "n"), 0.4)
+
+    def test_reward_sign_neutral_does_nothing(self):
+        self.kg.add_edge("m", "p", "n", weight=0.5)
+        self.assertEqual(self.kg.reward_sign("m", "n", 0.0, 0.1), 0)
+        self.assertEqual(self.kg.get_edge_weight("m", "p", "n"), 0.5)
+
+    def test_both_directions_do_not_confuse_index(self):
+        self.kg.add_edge("a", "p", "b", weight=1.0)
+        self.kg.add_edge("b", "p", "a", weight=0.6)
+        index_weights = [row[2] for row in self.kg._adj["a"] if row[0] == "p" and row[1] == "b"]
+        self.assertEqual(index_weights, [1.0])
+        self.assertEqual(self.kg.edge_weight("a", "b"), 1.0)
+
+    def test_hebb_depth_does_not_double_charge_target(self):
+        self.kg.add_edge("a", "p", "z", 1.0)
+        self.kg.add_edge("a", "p", "b", 1.0)
+        # depth=1 должен усилить b и одного соседа, но не b дважды
+        self.assertEqual(self.kg.hebbian_learn("a", "b", 0.1, depth=1), 2)
+        self.assertAlmostEqual(self.kg.get_edge_weight("a", "p", "b"), 1.1)
+
+
 if __name__ == "__main__":
     unittest.main()

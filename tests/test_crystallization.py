@@ -56,5 +56,50 @@ class TestMirroMemoryCrystallization(unittest.TestCase):
         self.assertEqual(try_crystallize_experience(g), 0)
 
 
+class TestCrystallizationSafety(unittest.TestCase):
+    """Ни при каких входных данных кристалл не должен становиться пустым
+    вектором и не должен ронять процесс.
+
+    Найдено сверкой: при опыте из нулевых/пустых векторов _cosine_similarity
+    давала 0/1e-8 = 0 (или NaN), центроид группы выходил нулевым или вектор
+    терял длину; на не-числовых данных функция падала TypeError.
+    """
+
+    def test_zero_vectors_are_not_merged_into_zero(self):
+        g = _graph_with_experience([[0.0, 0.0], [0.0, 0.0]])
+        try_crystallize_experience(g, similarity_threshold=0.0)
+        # нулевые векторы не схлопываются в один «пустой кристалл»
+        self.assertEqual(len(g.experience), 2)
+        for vec in g.experience:
+            self.assertEqual(len(vec), 2, "длина вектора не должна меняться")
+
+    def test_zero_vector_never_absorbs_realone(self):
+        g = _graph_with_experience([[0.0, 0.0], [1.0, 0.0]])
+        try_crystallize_experience(g, similarity_threshold=-1.0)
+        self.assertEqual(len(g.experience), 2)
+
+    def test_ragged_vectors_do_not_crash(self):
+        g = _graph_with_experience([[1.0, 2.0], [1.0, 2.0, 3.0]])
+        try_crystallize_experience(g, similarity_threshold=0.5)
+        self.assertEqual(len(g.experience), 2)
+
+    def test_non_numeric_and_empty_entries_survive(self):
+        g = _graph_with_experience([[], ["a", "b"]])
+        try_crystallize_experience(g, similarity_threshold=0.5)
+        self.assertEqual(len(g.experience), 2)
+        self.assertEqual(g.experience[0], [])
+
+    def test_nan_vectors_not_merged(self):
+        g = _graph_with_experience([[float("nan"), 1.0], [float("nan"), 1.0]])
+        try_crystallize_experience(g, similarity_threshold=0.5)
+        self.assertEqual(len(g.experience), 2)
+
+    def test_normal_case_still_compresses(self):
+        g = _graph_with_experience([[1.0, 0.5], [1.0, 0.51], [1.0, 0.52]])
+        try_crystallize_experience(g, similarity_threshold=0.92)
+        self.assertEqual(len(g.experience), 1)
+        self.assertAlmostEqual(g.experience[0][0], 1.0, places=6)
+
+
 if __name__ == "__main__":
     unittest.main()

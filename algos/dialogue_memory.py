@@ -56,6 +56,8 @@ class DialogueMemory:
         self.pos_words = {"спасибо","отлично","круто","здорово","супер","люблю","нравится","помогло","класс","отличн","здоров","радуе"}
         self.neg_words = {"плохо","грустно","злюсь","не работает","ошибка","не получается","жаль","ужас","ненавижу","разочар","сложно"}
         self._persist_path = None
+        self._pending = []                          # реплики, вытесненные deque
+        self._evicted = 0                           # их суммарное число
         self.load()
 
     # ----- персистентность между сессиями -----
@@ -82,8 +84,11 @@ class DialogueMemory:
                     data = json.load(f)
                 self.topics = deque([t for t in (data.get("topics") or []) if isinstance(t, (list, tuple))][-(self.topics.maxlen or 8):],
                                     maxlen=self.topics.maxlen)
-                self.context = deque([c for c in (data.get("context") or []) if isinstance(c, (list, tuple))][-(self.context.maxlen or 30):],
-                                     maxlen=self.context.maxlen)
+                ctx_rows = [c for c in (data.get("context") or []) if isinstance(c, (list, tuple))]
+                keep_from = max(0, len(ctx_rows) - (self.context.maxlen or 30))
+                # старые реплики не выбрасываем молча — очередь на вливание в резюме
+                self._pending = [c for c in ctx_rows[:keep_from] if c and c[0]] + self._pending
+                self.context = deque(ctx_rows[keep_from:], maxlen=self.context.maxlen)
                 try:
                     self.emotion = max(-1.0, min(1.0, float(data.get("emotion") or 0.0)))
                 except Exception:
@@ -91,6 +96,9 @@ class DialogueMemory:
                 summ = data.get("summary", [])
                 self.summary = ([s for s in summ if isinstance(s, str)][-20:]
                                  if isinstance(summ, list) else [])
+                pend = data.get("pending", [])
+                self._pending = ([c for c in pend if isinstance(c, (list, tuple)) and c and c[0]][-60:]
+                                  if isinstance(pend, list) else [])
                 ok = True
         except Exception:
             ok = False
@@ -112,7 +120,9 @@ class DialogueMemory:
             data = {"topics": [[str(x) for x in list(t)] for t in (self.topics or [])],
                     "context": [[str(x) for x in list(c)] for c in (self.context or [])],
                     "emotion": float(self.emotion or 0.0),
-                    "summary": [s for s in (self.summary or []) if isinstance(s, str)]}
+                    "summary": [s for s in (self.summary or []) if isinstance(s, str)],
+                    # вытесненные реплики, ещё не влитые в резюме
+                    "pending": [[str(x) for x in list(c)] for c in (self._pending or [])][-60:]}
             tmp = str(path) + ".tmp"
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False)
@@ -141,12 +151,21 @@ class DialogueMemory:
         neg = sum(w in seg for w in self.neg_words)
         delta = 0.1 if pos > neg else (-0.1 if neg > pos else 0.0)
         self.emotion = max(-1.0, min(1.0, self.emotion + delta))
+        # deque вытеснит самую старую реплику — она должна идти в резюме,
+        # а не исчезать: раньше срез '[:-4]' брался уже ПОСЛЕ вытеснения,
+        # и суть диалога терялась навсегда
+        if self.context.maxlen and len(self.context) >= self.context.maxlen:
+            dropped = self.context[0]
+            if dropped and dropped[0]:
+                self._pending.append(dropped)
+                self._evicted += 1
         self.context.append((kw, _keywords(bot_reply)))
         # резюме-накопление: когда реплик становится много — сжимаем старые ключевые
         # темы в краткое резюме, чтобы долгий диалог не терял суть между сессиями
         try:
             if len(self.context) >= self._summary_target and kw:
-                old = " ".join(" ".join(c[0]) for c in list(self.context)[:-4])
+                old = " ".join(" ".join(c[0]) for c in (list(self._pending) + list(self.context)[:-4]))
+                self._pending = []
                 words = [w for w in _re.findall(r"[а-яёa-z]{4,}", old) if w not in _STOP]
                 if len(words) >= 4:
                     # топ ключевых слов старого диалога — это «суть» прошлой беседы
@@ -155,8 +174,6 @@ class DialogueMemory:
                     if " ".join(top) not in self.summary:
                         self.summary.append(" ".join(top))
                         self.summary = self.summary[-8:]
-                    # оставляем только свежие реплики, чтобы резюме было про «давно»
-                    self.context = deque(list(self.context)[-6:], maxlen=self.context.maxlen)
         except Exception:
             pass
         self.save()
@@ -231,10 +248,14 @@ def _answer_topic(q):
     Один return: str."""
     if not isinstance(q, str) or not q.strip():
         return "О чём именно ты хочешь вспомнить?"
-    topic = dm.topic_context(q) or dm.last_topic()
+    match = dm.topic_context(q)
+    # совпадения нет — НЕ подставляем последнюю тему как «то, о чём ты
+    # спрашивал»: раньше любой вопрос возвращал «Помню: мы говорили про X»
     msg = "Мы ещё не обсуждали это — давай начнём."
-    if topic:
-        msg = "Помню: мы говорили про «" + topic + "»."
+    if match:
+        msg = "Помню: мы говорили про «" + match + "»."
+    elif dm.last_topic():
+        msg = "Похожего в памяти нет. Последнее, что мы обсуждали — «" + dm.last_topic() + "»."
     return msg
 
 
