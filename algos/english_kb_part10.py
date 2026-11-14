@@ -1,28 +1,23 @@
 # -*- coding: utf-8 -*-
-"""English KB part 10: reasoning and its counterfeits (batch)."""
+"""English KB part 10: reasoning and its counterfeits (batch).
 
-TOPICS = {
-    "analogy": (
-        "Analogy is the resemblance of relations between two several pairs of things, the likeness not of the things themselves but of the proportion which binds them, and the act of arguing from a known case to an unknown by the correspondence of their parts; and it is the analogy of the eye to the lens, of a commonwealth to a household, and of the waking life to the dream, being the resemblance of relations; and it differs from a mere similarity, which is a likeness of properties, and from a metaphor, which is a likeness of image, in being the correspondence of relations used for the drawing of an inference, being the reasoned resemblance; and it is the analogy which, when the pairs are truly correspondent and the respects in which they agree are the very respects in question, is at once the warrant of a probable conclusion and the honest form of an uncertain one, being the correspondential resemblance; and a person draws an analogy when he sets two cases in proportion and argues from the one to the other, being the correspondential reasoner; and analogy is thus the resemblance of relations between two pairs of things, the likeness of proportion rather than of property, and the argument from a known case to an unknown by their correspondence."
-    ),
-    "assumption": (
-        "Assumption is the taking of a thing for granted, the act of receiving a proposition into the mind without proof as though it were already established, and the state of a mind that rests upon an unproved and unspoken ground; and it is the assumption of the geometer that his axioms are true, of the advocate that his client speaks honestly, and of the traveller that the road before him continues, being the taking for granted; and it differs from an analogy, which argues from a likeness and shows its proportion, and from a sophistry, which conceals its ground by design, in being the unproved premise held in earnest and often unnoticed, being the tacit and unproved ground; and it is the assumption which, when it is made openly and owned for what it is, is at once the necessary beginning of all reasoning and the honest confession of a limit, being the owned and unproved ground; and a person makes an assumption when he proceeds upon a proposition he has not proved and does not doubt, being the unproved and confident one; and assumption is thus the taking of a thing for granted, the receiving of a proposition as established without proof, and the unproved ground upon which a mind quietly rests."
-    ),
-    "fallacy": (
-        "Fallacy is the fault or the falseness of an argument, the breach of the due form of inference by which a conclusion is made to seem to follow when it does not, and the deceptive and unsound reasoning which wears the countenance of proof; and it is the fallacy of the question that begs its own answer, of the appeal to the crowd, and of the cause assigned to what is but the occasion, being the fault of argument; and it differs from a sophistry, which is the same fault practised by craft and for gain, and from an assumption, which is a ground unproved, in being the error of the reasoning itself, whether committed or suffered, being the unsound and deceptive inference; and it is the fallacy which, when it passes unrecognised, is at once the ruin of the argument and the snare of the hearer, being the unsound and beguiling inference; and an argument is a fallacy when its conclusion does not follow from its premises though it seems to do so, being the seeming and unsound one; and fallacy is thus the fault of an argument, the breach of the due form of inference, and the deceptive appearance of proof where no proof is."
-    ),
-    "sophistry": (
-        "Sophistry is the art of reason made a trade, the dexterous and deliberate use of false reasoning for the winning of a cause rather than the finding of a truth, and the clever and venal argumentation of him who sells his wit to the side that pays; and it is the sophistry of the paid pleader, of the flatterer in the assembly, and of the disputant who will defend either part for a wager, being the craft of false reasoning; and it differs from a fallacy, which may be the honest error of a mind that stumbles, and from scepticism, which doubts in order to test, in being the fault of reasoning committed for gain and with intent, being the cunning and mercenary argument; and it is the sophistry which, when it is answered plainly and in good faith, is at once the defeat of the clever and the vindication of the simple, being the cunning and self-serving argument; and a person practises sophistry when he argues for victory and not for truth, being the crafty and venal disputant; and sophistry is thus the art of reason made a trade, the deliberate use of false reasoning to win, and the cunning and mercenary argumentation of him who argues for the prize and not the truth."
-    ),
-    "scepticism": (
-        "Scepticism is the mind that suspends its assent, the habit of withholding judgment until the grounds of a thing are examined, and the doctrine that certain knowledge is not to be had and that the wise man therefore doubts; and it is the scepticism of the inquirer who will not take the report of the senses unweighed, of the judge who reserves his verdict until the case is heard, and of the philosopher who questions the very ground of his questioning, being the withholding of assent; and it differs from doubt, which is a wavering of the mind between opinions, and from a sophistry, which argues to win and not to find, in being the settled and principled withholding of belief until proof be shown, being the disciplined and principled doubt; and it is the scepticism which, when it is the servant of inquiry and not its master, is at once the guard of the credulous and the scourge of the confident, being the disciplined and principled doubt; and a person shows scepticism when he refuses his assent to what is not proved and holds his judgment in reserve, being the withheld and watchful one; and scepticism is thus the suspending of assent, the habit of withholding judgment until the grounds be examined, and the doctrine that certainty is to be earned and never assumed."
-    ),
-}
+Каркас будущего разбиения базы. Источник правды — algos/english_kb.py:
+здесь только срез реестра по своим темам, чтобы не держать вторую копию
+определений (они уже разошлись с основной базой и не читались никем).
+"""
+from algos.english_kb import _TOPIC_TEST as _ALL_TRIGGERS
+from algos.english_kb import _EN_KB
 
-TOPIC_TEST = [
-    ("analogy", ("analogy", "what is an analogy", "likeness of relations", "argue by analogy", "drawn analogy", "correspondence of relations")),
-    ("assumption", ("assumption", "what is an assumption", "take for granted", "unproved premise", "tacit ground", "assumed premise")),
-    ("fallacy", ("fallacy", "what is a fallacy", "false argument", "unsound inference", "deceptive proof", "logical fault")),
-    ("sophistry", ("sophistry", "what is sophistry", "false reasoning for gain", "clever deceit in argument", "args for victory", "mercenary argument")),
-    ("scepticism", ("scepticism", "what is scepticism", "withhold assent", "suspend judgment", "principled doubt", "philosophical doubt")),
-]
+NAMES = (
+    "analogy",
+    "assumption",
+    "fallacy",
+    "sophistry",
+    "scepticism",
+)
+
+TOPICS = {name: _EN_KB[name] for name in NAMES}
+
+TOPIC_TEST = [(name, keys) for name, keys in _ALL_TRIGGERS if name in NAMES]
+
+del _ALL_TRIGGERS

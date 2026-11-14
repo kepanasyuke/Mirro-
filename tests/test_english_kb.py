@@ -143,10 +143,10 @@ class TestTryEnglishContract(unittest.TestCase):
 
 
 class TestPartModules(unittest.TestCase):
-    """english_kb_part1..6 — каркас разбиения: срез реестра, а не вторая копия."""
+    """english_kb_part1..18 — каркас разбиения: срез реестра, а не вторая копия."""
 
     def _parts(self):
-        return [importlib.import_module("algos.english_kb_part%d" % i) for i in range(1, 7)]
+        return [importlib.import_module("algos.english_kb_part%d" % i) for i in range(1, 19)]
 
     def test_parts_are_slices_of_registry(self):
         wrong = []
