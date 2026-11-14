@@ -1769,6 +1769,10 @@ def _wants_links(q):
 
 _NOISY_PREDICATES = {"связано_с", "связано", "связан", "связь", "-"}
 
+# ниже этого порога «похожесть» двух понятий не озвучивается — иначе в ответ
+# попадает мусор вида «имеют общие понятия, подобие ≈ 0.02»
+SIMILAR_THRESHOLD = 0.25
+
 
 def _is_noisy_predicate(pred):
     """Мусорный ли предикат связи (корпусные связки вроде «связано_с»).
@@ -1924,18 +1928,22 @@ def try_what_links(query):
 
 
 def try_similar(query):
-    """Ищет в запросе два понятия и отвечает про их подобие. Один return: str или None."""
+    """Ищет в запросе два понятия и отвечает про их подобие.
+    Один return: str или None. Слабые совпадения не озвучиваются."""
     ans = None
     q_raw = (query or "").lower()
-    if any(w in q_raw for w in ("общего", "похож", "подоб", "сходств", "чем отлича", "в чём разниц")):
+    is_compare = any(w in q_raw for w in ("общего", "похож", "подоб", "сходств",
+                                          "чем отлича", "в чём разниц"))
+    if is_compare:
         a, b = _pair_from(_clean_q(query))
         if a and b:
             sim = kg.similarity(a, b)
             direct = kg.relation(a, b)
             if direct:
-                ans = f"«{a}» и «{b}» напрямую связаны: " + ", ".join(f"{p}" for p, _ in direct[:3]) + f" (подобие {sim:.2f})."
-            elif sim > 0:
-                ans = f"«{a}» и «{b}» имеют общие понятия, подобие ≈ {sim:.2f}."
+                preds = ", ".join(f"{p}" for p, _ in direct[:3])
+                ans = f"«{a}» и «{b}» напрямую связаны: {preds}."
+            elif sim >= SIMILAR_THRESHOLD:
+                ans = f"«{a}» и «{b}» связаны через общие понятия (близость ≈ {sim:.2f})."
     return ans
 
 
