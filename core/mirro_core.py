@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import json, os, time, random, re as _re, sys
+import json, os, socket, time, random, re as _re, sys
 from pathlib import Path
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from collections import defaultdict, Counter
@@ -2828,8 +2828,27 @@ def _jsonl_to_text(chunk):
     return "\n".join(parts)
 
 
+def _port_is_busy(host, port):
+    """Слушает ли кто-то уже этот порт. Один return: bool.
+
+    На Windows две копии Mirro спокойно биндятся на один порт (SO_REUSEADDR)
+    и начинают делить запросы: часть висит, часть уходит не туда.
+    Поэтому второй экземпляр лучше не запускать вовсе."""
+    check_host = "127.0.0.1" if host in ("0.0.0.0", "", None) else host
+    try:
+        socket.create_connection((check_host, int(port)), timeout=0.5).close()
+        is_busy = True
+    except OSError:
+        is_busy = False
+    return is_busy
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
+    if _port_is_busy(HOST, PORT):
+        print(f"Порт {PORT} уже занят другим экземпляром Mirro — второй не запускаю.")
+        print("  Остановите текущий (mirro_launcher.pyw) или задайте MIRRO_PORT.")
+        sys.exit(2)
     print("MIRRO v0.3 - Единая нейросеть знаний")
     print(f"  API: http://{HOST}:{PORT}")
     print(f"  Загружено: {core.stats['total_examples']} примеров")
