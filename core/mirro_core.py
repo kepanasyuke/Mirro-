@@ -370,6 +370,12 @@ def _reasoning():
     from scripts.reasoning_engine import score_candidate, choose_best, _tokenize
     return score_candidate, choose_best, _tokenize
 
+def _word_in(text, word):
+    """Есть ли слово целиком: «пока» не должно ловиться внутри «покажи».
+    Один return: bool."""
+    return bool(_re.search(r"(?<![а-яёa-z])" + _re.escape(word) + r"(?![а-яёa-z])", text))
+
+
 def try_greetings(query):
     q = query.lower().strip()
     ans = None
@@ -637,7 +643,8 @@ def try_dialog(query):
         ans = _DIALOG_REPLIES["advice"]
     elif any(w in q for w in ["спасибо", "благодарю", "спс"]):
         ans = _DIALOG_REPLIES["thanks"]
-    elif any(w in q for w in ["пока", "до свидания", "до встречи", "прощай"]):
+    elif (any(w in q for w in ["до свидания", "до встречи", "прощай"])
+          or _word_in(q, "пока")):
         ans = _DIALOG_REPLIES["bye"]
     return ans
 
@@ -806,11 +813,15 @@ def answer_looks_bad(query, answer):
                 # Вопрос вида «что такое X / кто такой X» — ответ должен содержать ключевые слова
                 q = query.lower().strip()
                 is_factual = any(p in q for p in ["что такое", "кто такой", "кто такая", "что значит", "расскажи про"])
-                if is_factual:
+                # Сравнение двух понятий: ответ обязан говорить хоть об одном из них,
+                # иначе это случайная строка из корпуса («что общего у кошка и собака»)
+                is_compare = any(p in q for p in ["что общего", "похож", "подоб", "сходств", "отлича"])
+                if is_factual or is_compare:
                     q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
                     a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
                     # Ключевые слова вопроса: убираем стоп-слова
-                    stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или"}
+                    stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или",
+                            "общего", "похож", "похожи", "похожа", "подобны", "подобна", "сходства", "сходство", "отличаются", "отлича", "чем"}
                     key = q_words - stop
                     if key and not key & a_words:
                         bad = True  # ответ вообще не про это
