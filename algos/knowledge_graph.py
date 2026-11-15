@@ -1886,7 +1886,10 @@ def try_full_explanation(query):
             links = []
             # предикаты, которые звучат как определение («есть», «является»)
             definitional = {"есть", "является", "представляет", "это", "это такое"}
-            for p, other, w in ranked[:4]:
+            # только сильные связи годятся для объяснения: слабые рёбра (< 1.0) —
+            # это шум корпусных совпадений («кота связано с смотри») и дают
+            # бессвязные фразы вместо ответа.
+            for p, other, w in [r for r in ranked if r[2] is None or r[2] >= 1.0][:4]:
                 otherc = other.split()[0] if " " in other else other
                 if not otherc or otherc == start:
                     continue
