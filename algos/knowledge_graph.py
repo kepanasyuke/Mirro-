@@ -1674,14 +1674,14 @@ def _answer_path(a, b):
 
 
 def _answer_explain(q):
-    """Объяснение понятия из запроса. Один return: str или None."""
+    """Объяснение понятия из запроса. Один return: str или None.
+    Тема берётся через _extract_topic: иначе первым подходящим узлом
+    оказывается служебное слово вроде «такое»."""
     ans = None
-    for name in kg.nodes:
-        if "объясн" in q and name in q and len(name) > 3:
-            ex = kg.explain(name)
-            if ex:
-                ans = ex
-                break
+    if "объясн" in q:
+        topic = _extract_topic(q)
+        if topic:
+            ans = kg.explain(topic)
     return ans
 
 

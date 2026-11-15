@@ -89,6 +89,7 @@ class MirroCore:
         self.processed_dir.mkdir(exist_ok=True)
         self.stats = self._load_json(CORE / "stats.json") or {"calls": 0, "clusters_used": Counter(), "sources_count": 0, "total_examples": 0}
         self.knowledge_base = defaultdict(list)
+        self.knowledge_counts = {}
         self._load_knowledge()
     def _load_json(self, path):
         value = None
@@ -99,6 +100,8 @@ class MirroCore:
         return value
     def _save_json(self, path, data): path.write_text(json.dumps(data, ensure_ascii=False, indent=2), "utf-8")
     def _load_knowledge(self):
+        # Считаем строки, а не разбираем JSON: содержимое этой базы нигде не читается,
+        # нужны только количества по файлам. Экономит ~1.5 ГБ RAM и десятки секунд старта.
         _lite = os.environ.get("MIRRO_LITE", "").strip().lower() in ("1", "true", "yes", "on")
         cap = 100_000 if _lite else None
         for f in self.processed_dir.glob("*.jsonl"):
@@ -106,12 +109,11 @@ class MirroCore:
             with open(f, "r", encoding="utf-8") as fh:
                 for line in fh:
                     if line.strip():
-                        try: self.knowledge_base[f.stem].append(json.loads(line))
-                        except: pass
                         n += 1
                         if cap and n >= cap:
                             break
-        self.stats["total_examples"] = sum(len(v) for v in self.knowledge_base.values())
+            self.knowledge_counts[f.stem] = n
+        self.stats["total_examples"] = sum(self.knowledge_counts.values())
     def classify_task(self, prompt):
         prompt_lower = prompt.lower(); scores = defaultdict(float)
         for keyword, cluster in TASK_ROUTES.items():
@@ -147,7 +149,7 @@ class MirroCore:
             pass
         return None
     def get_cluster_info(self):
-        return {name: {**info, "examples": len(self.knowledge_base.get(name, [])), "calls": self.stats["clusters_used"].get(name, 0)} for name, info in KNOWLEDGE_CLUSTERS.items()}
+        return {name: {**info, "examples": self.knowledge_counts.get(name, 0), "calls": self.stats["clusters_used"].get(name, 0)} for name, info in KNOWLEDGE_CLUSTERS.items()}
     def status(self):
         try:
             sys.path.insert(0, str(MIRRO_HOME))

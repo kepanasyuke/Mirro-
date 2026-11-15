@@ -5897,14 +5897,6 @@ _TOPIC_TEST = [
     ("wind", ("wind", "moving air", "air in motion", "what is wind", "strong wind", "blowing air")),
     ("sun", ("sun", "light of the day", "what is the sun", "bright body aloft", "sunlight of noon", "shining sun")),
 ]
-# --- shards: new topics live in algos/english_kb_partN.py, not in this file ---
-try:
-    from algos.english_kb_shards import topics as _shard_topics, test_words as _shard_tests
-except ImportError:
-    from english_kb_shards import topics as _shard_topics, test_words as _shard_tests
-
-_EN_KB = {**_shard_topics(), **_EN_KB}
-_TOPIC_TEST = list(_TOPIC_TEST) + [_item for _item in _shard_tests() if _item[0] not in {name for name, _ in _TOPIC_TEST}]
 
 
 def _is_english_query(q):
