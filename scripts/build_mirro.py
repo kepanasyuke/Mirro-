@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import py_compile
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -154,6 +155,21 @@ def check_smoke():
     return ok
 
 
+def check_english_kb():
+    """Части базы знаний остаются срезами реестра. Один return: bool."""
+    script = ROOT / "tools" / "normalize_english_kb.py"
+    ok = script.exists()
+    if ok:
+        proc = subprocess.run([sys.executable, str(script), "--check"],
+                              cwd=str(ROOT), capture_output=True, text=True)
+        report = (proc.stdout or proc.stderr or "").strip().splitlines()
+        ok = proc.returncode == 0
+        print("[kb] part slices:", "OK" if ok else "DRIFT", report[0] if report else "")
+    else:
+        print("[kb] part slices: tools/normalize_english_kb.py missing")
+    return ok
+
+
 def main():
     ap = argparse.ArgumentParser(description="Mirro build / assembly check")
     ap.add_argument("--check", action="store_true", help="only checks, no zip")
@@ -164,6 +180,7 @@ def main():
     ok &= check_files()
     ok &= compile_all()
     ok &= check_smoke()
+    ok &= check_english_kb()
     print("[summary]", "ALL CHECKS PASSED" if ok else "SOME CHECKS FAILED")
     if not args.check and ok:
         build_zip()
