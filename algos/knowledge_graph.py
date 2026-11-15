@@ -711,8 +711,10 @@ class KnowledgeGraph:
             except Exception:
                 ranked = safe_nbrs
             for p, other, w in ranked[:6]:
-                lines.append(f"связано {p} с «{other}» (вес {float(w):.2f})")
-            text = "\n".join(lines)
+                if not _is_noisy_predicate(p):
+                    lines.append(f"связано {p} с «{other}» (вес {float(w):.2f})")
+            has_details = bool(n.facts) or len(lines) > 1
+            text = "\n".join(lines) if has_details else None
         return text
 
     def from_triples(self, triples):

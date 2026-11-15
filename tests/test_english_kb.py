@@ -23,19 +23,8 @@ from algos.english_kb import _EN_KB, _TOPIC_TEST, try_english
 _MOJIBAKE = re.compile("\u0420[\u0400-\u04ff]|\u0421[\u0400-\u04ff]")
 
 SHADOWED_BY_LONGEST_KEY = [
-    "brotherhood", "budget", "civilization", "cognition", "comet", "companionship",
-    "compassion", "comradeship", "courage", "credit", "determination", "dignity",
-    "discernment", "distinction", "ecosystem", "endurance", "era", "ethics",
-    "excellence", "fairness", "firmness", "forecast", "fortitude", "gallantry",
-    "goodness", "habitat", "harmony", "inclination", "index", "infection",
-    "justice", "largess", "logic", "melody", "mind", "moderation", "music",
-    "optimism", "orbit", "painting", "pardon", "passion", "pedigree",
-    "perseverance", "procedure", "propriety", "protocol", "punctuality", "reason",
-    "resolve", "restraint", "rhythm", "righteousness", "sculpture", "splendor",
-    "stamina", "steadfastness", "stillness", "tender", "trade", "truth",
-    "understanding", "universe", "uprightness", "valor", "volcano", "wisdom",
-    "worthiness",
 ]
+# перекрытий не осталось: точное совпадение имени темы выигрывает у синонима
 
 
 def _topic_names():
