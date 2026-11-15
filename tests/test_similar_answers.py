@@ -44,6 +44,11 @@ class SimilarAnswerTest(unittest.TestCase):
         self.graph.add_edge("бета", "отражает", "общее")
         self.assertIsNone(kgm.try_similar("расскажи про альфа"))
 
+    def test_noisy_direct_relation_is_ignored(self):
+        self.graph.add_edge("собака", "связано_с", "кошка", weight=1.0)
+        self.assertIsNone(kgm.try_similar("что общего у кошка и собака"))
+        self.assertIsNone(kgm.try_knowledge_graph("что общего у кошка и собака"))
+
 
 if __name__ == "__main__":
     unittest.main()

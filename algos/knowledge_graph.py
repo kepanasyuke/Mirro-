@@ -1646,10 +1646,11 @@ def _pair_from(q):
 
 
 def _answer_relation(a, b):
-    """Прямая связь между a и b. Один return: str или None."""
+    """Прямая связь между a и b. Один return: str или None.
+    Корпусные связки вроде «связано_с» в ответ не попадают."""
     ans = None
     if a and b:
-        rels = kg.relation(a, b)
+        rels = [r for r in kg.relation(a, b) if not _is_noisy_predicate(r[0])]
         if rels:
             ans = ", ".join(f"«{a}» {p} «{b}»" for p, _w in rels) + "."
     return ans
@@ -1665,11 +1666,15 @@ def _chain_text(path):
 
 
 def _answer_path(a, b):
-    """Вывод через цепочку связей. Один return: str или None."""
+    """Вывод через цепочку связей. Один return: str или None.
+    Цепочка, собранная только из корпусных связок («связано_с»), не озвучивается."""
     path = kg.path(a, b)
     ans = None
     if path:
-        ans = f"Прямой связи нет, но выводится: {_chain_text(path)}."
+        preds = [step[1] for step in path if len(step) > 1]
+        meaningful = [p for p in preds if p and not _is_noisy_predicate(p)]
+        if meaningful:
+            ans = f"Прямой связи нет, но выводится: {_chain_text(path)}."
     return ans
 
 
@@ -1707,6 +1712,11 @@ def try_concept_path(query):
     уверенность. Один return: str|None."""
     ans = None
     q0 = (query or "").lower()
+    # просьба дать определение — это не вопрос про связи; иначе само слово
+    # «связь» в «что такое связь» включает link_intent и съедает определение
+    if any(w in q0 for w in ("что такое", "что значит", "что означает", "объясни",
+                             "определение", "определи")):
+        return ans
     link_intent = any(w in q0 for w in ("связ", "связан", "относит", "цепочк",
                                         "путь", "родит", "похож", "общего",
                                         "как связано", "что общего у"))
@@ -1744,6 +1754,11 @@ _TOPIC_JUNK = {"можно", "смысл", "надеюсь", "понятно", "
                "такой", "такая", "такие", "пример", "связано", "связан",
                "использ", "надо", "нужно", "можно ли", "собственно"}
 
+# слова-обёртки: «понятие граф» — это про граф, а не про понятие.
+# Но «что связано с понятие?» — это про само понятие, поэтому их нельзя
+# выбрасывать насовсем, только уступать другому кандидату.
+_SOFT_STOP = {"понятие", "термин", "определение"}
+
 def _extract_topic(query):
     """Пытается вытащить главное понятие из запроса (узел графа, кроме служебных
     и мусорных узлов-хабов). Один return: str или None."""
@@ -1758,7 +1773,9 @@ def _extract_topic(query):
                   and n.split()[0] not in _TOPIC_JUNK
                   and n in q_words]
     if candidates:
-        topic = max(candidates, key=len)
+        # «понятие граф» → берём «граф»; если других кандидатов нет — само «понятие»
+        primary = [n for n in candidates if n.split()[0] not in _SOFT_STOP]
+        topic = max(primary or candidates, key=len)
     return topic
 
 
@@ -1847,13 +1864,19 @@ def try_full_explanation(query):
     start = topic.split()[0] if " " in topic else topic
     parts = []
     # 1) определение из базы понятий/функций
+    definition = None
     try:
         from algos.module_knowledge import try_definition, try_function_knowledge
         definition = try_definition("что такое " + start) or try_function_knowledge("что такое " + start)
         if definition:
             parts.append(definition.strip())
     except Exception:
-        parts = parts
+        definition = None
+    # точное определение уже отвечает на «что такое X»; дописывать к нему
+    # слабые рёбра графа («X связан с Y, а это влияет на Z») — только шум
+    if definition:
+        spoken = str(definition).strip()
+        return spoken[0].upper() + spoken[1:] if spoken else ans
     # 2) ключевые связи из графа: ДЕКЛАРАТИВНАЯ речь, а не сырые цепочки.
     # Каждая связь превращается в осмысленную фразу: «X — это то, что p к Y,
     # потому что (через Y) связано с Z» — как люди объясняют через ассоциации.
@@ -1940,7 +1963,7 @@ def try_similar(query):
         a, b = _pair_from(_clean_q(query))
         if a and b:
             sim = kg.similarity(a, b)
-            direct = kg.relation(a, b)
+            direct = [r for r in kg.relation(a, b) if not _is_noisy_predicate(r[0])]
             if direct:
                 preds = ", ".join(f"{p}" for p, _ in direct[:3])
                 ans = f"«{a}» и «{b}» напрямую связаны: {preds}."
