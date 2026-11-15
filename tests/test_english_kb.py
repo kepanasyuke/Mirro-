@@ -16,31 +16,25 @@ import importlib
 import re
 import unittest
 
+from pathlib import Path
+
 from algos.english_kb import _EN_KB, _TOPIC_TEST, try_english
 
 _MOJIBAKE = re.compile("\u0420[\u0400-\u04ff]|\u0421[\u0400-\u04ff]")
 
 SHADOWED_BY_LONGEST_KEY = [
-    "brotherhood", "budget", "civilization", "cognition",
-    "comet", "companionship", "compassion", "comradeship",
-    "courage", "credit", "determination", "dignity",
-    "discernment", "distinction", "ecosystem", "endurance",
-    "era", "ethics", "excellence", "fairness",
-    "firmness", "forecast", "fortitude", "gallantry",
-    "goodness", "habitat", "harmony", "inclination",
-    "index", "infection", "justice", "largess",
-    "logic", "melody", "mind", "moderation",
-    "music", "optimism", "orbit", "painting",
-    "pardon", "passion", "pedigree", "perseverance",
-    "procedure", "propriety", "protocol", "punctuality",
-    "reason", "resolve", "restraint", "rhythm",
-    "righteousness", "sculpture", "sobriety", "society",
-    "softness", "sojourn", "solemnity", "solidity",
-    "soliloquy", "sorrow", "soundness", "souvenir",
-    "splendor", "stamina", "steadfastness", "stillness",
-    "tender", "trade", "truth", "understanding",
-    "universe", "uprightness", "valor", "volcano",
-    "wisdom", "worthiness",
+    "brotherhood", "budget", "civilization", "cognition", "comet", "companionship",
+    "compassion", "comradeship", "courage", "credit", "determination", "dignity",
+    "discernment", "distinction", "ecosystem", "endurance", "era", "ethics",
+    "excellence", "fairness", "firmness", "forecast", "fortitude", "gallantry",
+    "goodness", "habitat", "harmony", "inclination", "index", "infection",
+    "justice", "largess", "logic", "melody", "mind", "moderation", "music",
+    "optimism", "orbit", "painting", "pardon", "passion", "pedigree",
+    "perseverance", "procedure", "propriety", "protocol", "punctuality", "reason",
+    "resolve", "restraint", "rhythm", "righteousness", "sculpture", "splendor",
+    "stamina", "steadfastness", "stillness", "tender", "trade", "truth",
+    "understanding", "universe", "uprightness", "valor", "volcano", "wisdom",
+    "worthiness",
 ]
 
 
@@ -143,10 +137,12 @@ class TestTryEnglishContract(unittest.TestCase):
 
 
 class TestPartModules(unittest.TestCase):
-    """english_kb_part1..18 — каркас разбиения: срез реестра, а не вторая копия."""
+    """english_kb_part* — каркас разбиения: срез реестра, а не вторая копия."""
 
     def _parts(self):
-        return [importlib.import_module("algos.english_kb_part%d" % i) for i in range(1, 19)]
+        root = Path(__file__).resolve().parent.parent / "algos"
+        names = sorted(root.glob("english_kb_part*.py"))
+        return [importlib.import_module("algos.%s" % path.stem) for path in names]
 
     def test_parts_are_slices_of_registry(self):
         wrong = []

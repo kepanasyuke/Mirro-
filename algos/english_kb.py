@@ -3028,6 +3028,881 @@ _EN_KB = {
     "babble": ("Babble is the imperfect and gurgling and unformed flow of sound which a very small child utters before speech is mastered, the innocent and broken noise of the mouth that imitates and understands nothing, and the senseless and tumbling sound which a running water or a gathering company makes with no meaning at all; and it is the babble of an infant at its mother's knee, of a brook that falls over small stones, and of a room of strangers each talking at once, being the unformed and gurgling noise, and it differs from stammer, which is speech broken by the tongue, in being easy and unstriven and without effort, and from prattle, which is a fond chatter of formed words, in being made of syllables not yet words, and from whisper, which is the secret breath of speech, in being open and full of sound, and from shout, which is the loud cry of one, in being soft and without purpose, and from murmur, which is a low undertone, in being broken and innocent, being the unformed noise; and it is the babble which, whether of infant or of stream, is at once a noise and the promise of speech; and a person shows babble when he speaks words without sense, being the unformed speaker; and babble is thus the unformed flow of sound which a small child utters, the innocent noise that mocks speech, and the senseless tumbling sound of water or of voices."),
     "stammer": ("Stammer is the halting and divided and laboured utterance wherein the tongue does not obey the will, the speech broken in its beginning and repeated and withheld until it is forced out by strain or by patience, and the painful and reluctant issuing of words from a mouth that would speak and cannot; and it is the stammer of the scholar before the assembly, of the lover who must declare himself, and of the boy who must recite before the master, being the halting utterance, and it differs from babble, which is the easy and unformed flow of a child, in being hindered and full of will, and from whisper, which is the secret breath meant for one hearer, in being the open and struggling word, and from shout, which is the cry of the whole heart, in being faint and broken, and from prattle, which is a fond and endless chatter, in being slow and sparse, and from silence, which is the mere absence of sound, in being a sound that will not come out at once, being the halting and laboured word; and it is the stammer which, whether of fear or of eagerness, is at once a silence and a word; and a person shows a stammer when he would speak and the first sound is repeated until he masters it, being the halting speaker; and stammer is thus the halting and divided utterance wherein the tongue does not obey, the speech broken in its beginning and withheld, and the painful issuing of words."),
     "prattle": ("Prattle is the easy and fond and endless chatter of formed words upon small matters, the light and fluent speech of one who loves to hear himself, and the pleasant shallow running of talk over trifles as a brook runs over pebbles; and it is the prattle of a child to its nurse, of an old man among his memories, and of a roomful of friends, being the light and endless chatter, and it differs from babble, which is the unformed noise of a child, in being formed words of sense, and from stammer, which is speech halted by the tongue, in being smooth and unbroken, and from whisper, which is the secret breath of speech, in being open and addressed to all, and from shout, which is the loud willed cry, in being soft and of no weight, and from verbosity, which is a store of words too great for the matter, in being fond talk upon small things, and from emphasis, which is the stress laid upon something said, in being without weight or design, being the light and endless chatter; and it is the prattle which, whether of child or of old man, is at once talk and a kind of music; and a person shows prattle when he goes on talking pleasantly of little things long after there is nothing more to be said, being the light talker; and prattle is thus the easy and fond chatter of formed words upon small matters, the fluent speech that asks no answer, and the pleasant running of talk over trifles."),
+    "brass": ("Brass is the yellow and shining metal of common use, the bright and golden-hued substance that is beaten into candlesticks and lockplates and rings with a clear high note when it is struck, and the well-known workable metal which takes and keeps a polish and answers sweetly under the tool; and it is the brass of the door-knocker upon the street door, of the telescope tube and the ship's fittings, and of the trumpet whose voice is heard afar, being the shining and serviceable metal; and it differs from copper, which is the red and native metal from which it is made, and from steel, which is the hard and grey metal of the blade, in being the bright and easy and gilded metal of ornament and of common ware, being the yellow and tractable metal; and it is the brass which, being rubbed and kept, is at once the metal of the household and the metal of the music, being the shining and obedient substance; and a thing shows brass when it is made of that yellow metal which gleams like pale gold and rings like a small bell when it is struck, being the sign of a common and honest and polished make; and brass is thus the yellow and shining metal, the bright substance of ware and ornament which takes a polish and gives a clear note, the workable metal of the household. "),
+    "copper": ("Copper is the red and native metal, the soft and ruddy substance that is found already formed in the earth and is beaten into vessels and drawn into wire and rolled into thin sheets, and the warm and yielding metal which the smith bends and the roofer lays and the kettle-maker hammers into shape; and it is the copper of the kitchen pot that grows green in damp and weather, of the roof of the old church that is stained with a living green, and of the long wire that carries a message across the land, being the ruddy and yielding and enduring metal; and it differs from brass, which is the yellow metal made from it, from tin, which is the pale and white and softer metal, and from steel, which is the hard and grey metal of the tool, in being the red and native metal of first and simple use, being the warm and ductile substance; and it is the copper which, being soft and easily wrought and patient under the long drawing, is at once the metal of the humble vessel and the metal of the long journey of a message, being the yielding and widely used substance; and a thing shows copper when it is made of that red metal which takes a dull glow and turns green under the rain, being the warm and honest and ancient make; and copper is thus the red and native metal, the soft and yielding substance of vessel and wire and roofing, the metal of first and simple use. "),
+    "lead": ("Lead is the heavy and dull grey metal, the soft and sombre substance that hangs in the plumb line and weighs down the net and closes the seam of the pane, and the dark and sluggish metal that yields to the knife and takes the impression of the die and stops the ball and the ray; and it is the lead of the plumb-bob that finds the upright of the wall, of the coffin lid that shuts in the dead, and of the roof of the old cathedral that lies heavy and grey against the sky, being the heavy and dull and yielding metal; and it differs from tin, which is the pale and white and lighter metal, from copper, which is the red and lively metal, and from brass and steel, which are the bright and hard metals of use and of war, in being the weighty and sombre and inert metal, being the dull and ponderous substance; and it is the lead which, being soft and weighty and deaf to the spark, is at once the metal of the measure and the metal of the shroud, being the heavy and dull and still substance; and a thing shows lead when it is made of that grey metal which is heavy in the hand and soft to the tool and dim to the eye, being the sombre and weighty make; and lead is thus the heavy and dull grey metal, the soft and ponderous substance that plums the line and seals the seam and roofs the church, the metal of weight and of quiet."),
+    "tin": ("Tin is the white and pale metal, the soft and bright and light metal which is poured into the mould and beaten into thin sheet and drawn into the cup and the plate, and the easy and clean and silent metal which rusts not and keeps its whiteness in the damp; and it is the tin of the pewter plate upon the farmhouse table, of the can that holds the preserved fruit, and of the poor man's spoon and tankard, being the white and clean and yielding metal; and it differs from lead, which is the heavy and dull and dark metal, and from brass and copper and steel, which are the bright and hard metals of weight and edge, in being the pale and light and harmless metal of the table and the kitchen, being the white and soft and clean substance; and it is the tin which, being light and soft and slow to tarnish, is at once the metal of the ever and the metal of the platter, being the white and serviceable and clean substance; and a thing shows tin when it is made of that pale white metal which is light in the hand and dull to the edge and bright in the damp, being the clean and humble make; and tin is thus the white and pale metal, the soft and bright metal of the cup and the can and the platter, the light and clean substance of the kitchen and the table."),
+    "steel": ("Steel is the hard and grey metal, the tempered and powerful substance that is heated and quenched and beaten upon the anvil until it takes an edge and holds it, and the stubborn and faithful metal which bends in the spring and stands in the blade and rings under the hammer; and it is the steel of the sword and the ploughshare, of the great bridge that carries the road across the water, and of the chisel and the pen that are trusted to the hand of the workman, being the hard and tempered and lasting metal; and it differs from brass, which is the yellow and tractable metal of ornament, from copper, which is the red and yielding metal of the vessel, from lead, which is the heavy and dull metal, and from tin, which is the white and soft metal of the table, in being the metal wrought to a high hardness that will not yield without force, being the tempered and formidable substance; and it is the steel which, being heated and quenched and beaten upon the anvil, is at once the edge of the tool and the spring of the machine, being the hard and elastic and lasting substance; and a craftsman shows steel when he draws his blade from the fire and cools it in the water and grinds it to a keen and lasting edge, being the patient and tempered workman; and steel is thus the hard and grey metal, the tempered substance that holds an edge and bears a strain, the metal of the tool and the blade."),
+    "linen": ("Linen is the state or the condition of being of the flax, the plain and wholesome cloth woven from the fibre of that plant, and the smooth and serviceable stuff which is got out of the stalk and made decent by the bleaching of the sun; and it is the linen of a farmer in the summer heat, of a table spread for guests, and of a bride made white for her day, being the plain and sun-whitened cloth, and it differs from woollen, which is the stuff of the fleece, warm and of a rough and hairy nap, in being the cool and the smooth cloth of the stalk, being the plain and cleanly stuff, and it differs from satin and from brocade, which are the lustrous and figured stuffs of show, in being the homely cloth of use and of the plainest decency, being the simple and wholesome stuff, and it is the linen which, laid upon the board or worn against the skin, is at once the cloth of the household and the cloth of the person, being the plain and serviceable stuff; and a thing is of linen when it is made of that smooth and sun-bleached thread which keeps its whiteness and its freshness under the hand, being the woven and noble stuff of the stalk; and linen is thus the plain and wholesome cloth got from the flax, the smooth and cool stuff of household and of person, and the clean and modest array of woven thread."),
+    "satin": ("Satin is the state or the condition of being of the shining face, the smooth and glossy cloth whose surface is left with its threads lying long and close so that the light plays upon it, and the soft and lustrous stuff which falls in the falling fold and shows the sheen of a polished surface; and it is the satin of a wedding gown, of a cushion upon a lady's chair, and of the pale sleeve of a dancer, being the smooth and gleaming cloth, and it differs from velvet, which is the stuff of the standing nap and the soft and deep-piled face, in being the flat and unrisen surface that catches the light with a hard and brilliant shine, being the smooth and lustrous stuff, and it differs from linen and from brocade, which are the plain cloth of use and the figured cloth of picture, in being the stuff of a single gleaming face and of no figure at all, being the plain and shining stuff, and it is the satin which, turning and turning in the light, is at once a deep and a light cloth, being the sleek and deceptive stuff; and a thing is of satin when it is woven of so long a lying thread that its face catches the light in one smooth and unbroken gleam, being the shining and falling stuff; and satin is thus the smooth and glossy cloth of the gleaming face, the soft and lustrous stuff of the falling fold, and the sleek and brilliant array that turns the light upon itself."),
+    "velvet": ("Velvet is the state or the condition of being of the standing nap, the rich and heavy cloth whose surface is raised into a dense and even pile so that it takes the print of the hand and holds it, and the soft and deep-faced stuff which swallows the light instead of giving it back; and it is the velvet of a king's mantle, of a curtain drawn in the dark room, and of a jeweller's little tray, being the piled and shifting cloth, and it differs from satin, which is the flat and smooth stuff of the hard and brilliant shine, in being the soft and unrisen-faced one that drinks the light, being the deep and thick-piled stuff, and it differs from brocade, which is the figured cloth whose picture is wrought into the ground, in being the same rich ground throughout, figured only by the very nap of it, being the plain and sumptuous stuff, and it is the velvet which, pressed one way and another, is at once one cloth and two colours, being the changes and the deep-faced stuff; and a thing is of velvet when its face is so thickly piled that the stroke of the hand leaves a darker path upon it, being the piled and stroked stuff; and velvet is thus the rich cloth of the standing nap and the deep and even pile, the soft and light-drinking stuff of the heavy fold, and the sumptuous array whose colour shifts under the hand."),
+    "woollen": ("Woollen is the state or the condition of being of the fleece, the thick and hairy cloth woven from the carded and twisted yarn of the sheep, and the warm and serviceable stuff whose nap is left upon it and whose body holds the heat against the cold; and it is the woollen of a shepherd's coat in the rain, of a blanket upon a winter bed, and of the cloak of a young man upon the hill, being the warm and thick cloth, and it differs from linen, which is the smooth and cool cloth of the stalk, in being the warm and hairy stuff of the beast, being the thick and comforting cloth, and it differs from velvet, which is the piled cloth of ornament cut to a standing nap, in being the coarse and honest stuff of warmth and wear, being the plain and enduring stuff, and it is the woollen which, breathed for its warmth and worn for its roughness, is at once a poor man's comfort and a rich man's riding-cloak, being the warm and homely cloth; and a thing is of woollen when it is made of such a hairy and compacted thread as keeps the heat and stands the weather, being the stout and warming stuff; and woollen is thus the thick and hairy cloth got from the fleece, the warm and enduring stuff of the cold season, and the honest array that holds the heat of the body against the wind."),
+    "brocade": ("Brocade is the state or the condition of being of the figured stuff, the rich cloth upon whose ground another thread is woven in raised and shining figures so that the stuff carries a picture of its own, and the sumptuous fabric in which flowers and beasts and scrolls are wrought into the very body of the web; and it is the brocade of a priest's vestment, of the cushion of a throne, and of the long coat of a merchant's daughter, being the figured and sumptuous cloth, and it differs from satin, which is the plain and gleaming stuff of the single smooth face, in being the stuff where the gleam is broken and set about into shapes, being the figured and pictured stuff, and it differs from velvet, which is the deep-piled stuff plain throughout, in being the ornament wrought by the treadle and not by the pile, being the wrought and patterned stuff, and it is the brocade which, chained upon the loom with many shuttles, is at once a cloth and a picture, being the figured and gleaming stuff; and a thing is of brocade when its face bears figures raised and shining out of the ground, being the worked and ornate stuff; and brocade is thus the rich and figured cloth of the raised and shining pattern, the sumptuous stuff whose picture is woven into its body, and the gorgeous array that is at once a garment and an ornament."),
+    "net": ("A net is the woven and knotted snare of cord spread across an opening, the meshed fabric whose narrow gaps are made to close about the creature and hold it, and the wide and yielding trap which, being cast over water or over ground, is drawn in again with its catch; and it is the net of the fisher who spreads his mesh over the shallows, of the fowler who closes the snare upon the wing, and of the hunter who casts the spreading web over the thicket, being the woven and yielding snare; and it differs from a hook, which is a single point that holds one, and from a bait, which is the temptation laid in the way, and from a seine, which is a net drawn through the water about the shoal, in being the wide and patient snare which takes by encompassing rather than by striking, and from a haven or a harbour, which are the places of rest and shelter, in being the trap that no creature puts into willingly, being the encompassing and holding snare; and it is the net which, having no point and no tooth, is at once gentle and inescapable, being the soft and closing trap; and a person finds himself in a net when he is so enclosed that his going out is cut off, being the entangled and held one; and a net is thus the woven snare spread to encompass and hold, the meshed instrument of the fisher and the fowler, and the patient and yielding trap whose strength is in wrapping."),
+    "hook": ("A hook is the bent and pointed piece of metal upon which a bait is set and by which the creature is caught, the single and grasping instrument which, once taken into the mouth or the flesh, holds by its own curve and may not be got out again, and the small and cruel hold that is hidden in the midst of a sweet thing; and it is the hook of the fisher who sets the worm in the stream, of the angler whose line runs out and whose barb takes hold, and of the hawk whose talons fasten as a hook upon the dove, being the single and grasping hold; and it differs from a net, which ensnares the whole body by encompassing it, and from a bait, which is the allurement laid upon it, and from a seine, which sweeps many at once and keeps them by its mesh, in being the one sharp point that seizes but one and holds it by pain, being the single and piercing hold; and it is the hook which, being baited and hidden, is at once the gift and the wound, being the concealed and grasping steel; and a person swallows the hook when he takes what is offered and finds that the offering had a barb within it, being the taken and held one; and a hook is thus the bent and pointed thing baited to seize and hold, the single instrument of the fisher, and the small and piercing hold which, being hidden, keeps what it has once bitten."),
+    "bait": ("A bait is the tempting morsel laid upon a hook or within a net to draw the creature to its taking, the allurement set out by the fisher that the fish may come willingly to the place of its capture, and the sweet and offered thing whose purpose is not itself but the snare it serves; and it is the bait of the fisher who sets the worm upon the water, of the fowler who scatters grain before the spreading net, and of the angler whose lure glitters in the stream, being the tempting and offered morsel; and it differs from a hook, which is the steel that holds and hurts, and from a net, which is the mesh that encloses, and from a seine, which is the mesh drawn about the many, in being the gift set before the hidden snare, being the offered and ensnaring gift, and it differs from a lure, which is the brightness that draws the eye, in being the food that draws the appetite; and it is the bait which, being itself eaten, is at once the food and the snare, being the palatable and fatal morsel; and a person takes the bait when he seizes upon an easy profit or a sweet offer and finds the price afterwards, being the taken and deceived one; and a bait is thus the tempting morsel laid to draw the creature to the snare, the offered gift of the fisher and the fowler, and the allurement whose whole sweetness is the promise of the thing that lies beneath it."),
+    "angler": ("An angler is the person who takes fish with the hook and the line, the patient fisher who waits by the water and plies his craft by artifice rather than by force, and the man of the slender tackle whose whole strength is in his patience and his skill at setting the bait; and it is the angler of the quiet river who waits the livelong day, of the sea-rock who casts into the surf at dusk, and of any man who angles after his advantage by slow and cunning means, being the patient and artful fisher; and it differs from a hook, which is his own instrument, and from a bait, which is the morsel he sets, and from a net, which takes by encompassing many, and from a seine, which is the drawn mesh of the many-handed fisher, in being the man himself who waits and works by line and morsel, being the waiting and skilful fisher, and he has no fellowship with the haven, which is a place of rest, but with the open water where the taking is done; and it is the angler who, being slow and still, is at once the hunter and the waiter, being the patient and cunning one; and a person is an angler after some thing when he seeks it not by open force but by long waiting and the setting of a bait for another, being the waiting and artful seeker; and an angler is thus the man who takes fish with hook and line, the patient fisher whose craft is in the bait and the waiting."),
+    "seine": ("A seine is the long and deep net hung with weights below and floats above, which is drawn through the water about a shoal and closes upon it from both sides, the swept and enclosing mesh of the fisher who takes the many at once, and the wide curtain of cord whose ends are hauled away and whose belly gathers up what it has encircled; and it is the seine of the fishers upon the beach who drag it ashore, of the boat that lets it out in a ring about the moving multitude, and of the market carried off in one taking, being the swept and enclosing mesh; and it differs from a net, which is cast and held, and from a hook, which takes but one, and from a bait, which draws to its taking, and from an angler, who waits with line and morsel, in being the net that moves through the water and takes many by one wide sweep, being the drawn and gathering mesh; and it is the seine which, being drawn about the shoal, is at once the wall and the purse, being the enclosing and gathering sweep; and fishers draw a seine when they let the long mesh out about a multitude and haul it in, being the hauling and enclosing many; and a person is taken in a seine when the many about him are swept up together, being the swept and gathered one; and a seine is thus the long weighted net drawn about a shoal, the instrument of the many-handed fisher, and the moving curtain whose closing gathers all into one taking."),
+    "quill": ("Quill is the hollow barrel of a great feather cut and trimmed to a point and dipped in ink, the light and living pen which the hand holds upright between the fingers, and the ancient instrument by whose nib the letters of a page are laid down; and it is the quill of the clerk who saws a new nib at morning, of the scholar whose elbow is stained with ink, and of the lover who writes a line that must not be spoken, being the light and living pen of the feather; and it differs from parchment, which is the skin upon which the hand writes, in being the hand's own cutting tool and not the surface which receives its trace, being the feathered and pointed instrument, and it differs from a tablet, which bears its signs upon a harder and more stubborn face, in being supple and quick and made to follow the smallest turn of the thought, being the light and obedient pen; and it is the quill which, cut fresh and taken in a steady hand, is at once the humblest tool of the writing room and the instrument of the fairest letters, being the feather and the pen in one; and a person shows the use of the quill when he shapes a nib to his own purpose and draws the letters that answer his will, being the patient and skilful scribe; and quill is thus the hollow feather trimmed to a point, the light pen of the old writing, and the instrument by which the hand lays its signs upon the page."),
+    "parchment": ("Parchment is the fine and supple skin of a beast prepared for writing, scraped smooth and stretched upon a frame until it will take the pen, the pale and lasting surface upon which the letters of an old book are laid, and the material which outlasts the paper of a later age; and it is the parchment of a great book whose leaves are turned with care, of a charter folded small, and of a page that has kept its letters through long ages, being the smooth and lasting skin of the scribe; and it differs from a quill, which is the feather that makes the letters, in being the surface that receives them and keeps them, being the stretched and enduring skin, and it differs from a tablet, which is a stiff and small face of clay or wax, in being soft, wide and made to be folded and bound, being the supple and continuous surface; and it is the parchment which, once scraped and smoothed and ruled with faint lines, is at once the plainest sheet and the fairest ground of the illuminated page, being the prepared and yielding skin; and a thing shows the nature of parchment when it takes the ink without blot and holds the mark for many years, being the smooth and lasting surface; and parchment is thus the beast's skin prepared for writing, the pale and enduring surface of the old book, and the material that keeps its letters longer than paper."),
+    "seal": ("Seal is the impression of a sign pressed into soft wax or clay, the fixed and private mark which closes a writing and declares it true, and the little image cut in a hard stone or a ring by which that mark is given; and it is the seal of a letter whose fold must not be opened, of a deed made lawful by its sign, and of a grave mark set beside a name, being the pressed and private sign of truth; and it differs from a quill, which is the hand's instrument for making letters, in being the sign set down at the end, being the closing and the private mark, and it differs from a scroll, which is a writing rolled and tied, in being the wax and the emblem that hold it fast and show whose it is, being the binding and the witness, and it differs from the beast that bears the same name, which is a creature of the sea, in being no living thing at all but a mark pressed into wax, being the sign and the image alone; and it is the seal which, once pressed in hot wax and left to cool, is at once the close of a writing and the promise of him who sent it, being the pressed and private sign; and a person sets his seal when he is bound by the mark that bears his own sign, being the faithful and the bound one; and seal is thus the impression of a sign in soft wax, the private mark that closes a writing and makes it true, and the stone or ring from which that mark is taken."),
+    "scroll": ("Scroll is a writing rolled upon itself, a long and narrow sheet wound about a rod or merely closed in a cylinder and tied, the ancient and open-ended form of the book before the folded leaf, and the roll which is unwound by degrees as the reader goes down it; and it is the scroll of a prophet whose words are read aloud from the high place, of a long and solemn list that hangs from the hand and falls to the ground, and of a message tied and sealed and carried far, being the rolled and continuous writing; and it differs from a tablet, which is a flat and stiff face written and turned over in the hand, in being a long sheet wound and unwound, being the continuous and rolled form, and it differs from parchment, which is the skin itself before it is cut and rolled, in being the writing as it is formed, wound and kept, being the rolled and finished writing; and it is the scroll which, once proper to the old law and the old prophecy, is at once a book and an unfolding act, being the wound and the revealed word; and a person unrolls a scroll when he opens a writing that is long and continuous to read it from the first line to the last, being the patient and unfolding reader; and scroll is thus a writing rolled upon itself, the long sheet wound and tied, and the old form of the book before the folded leaf."),
+    "tablet": ("Tablet is a small and flat face of clay, wax or stone on which signs are cut or pressed, the stiff and heavy leaf that is held in the hand and written upon with a hard point, and the oldest and plainest of all the surfaces of writing; and it is the tablet of a schoolboy who smooths the wax and begins again, of a mason who cuts his reckoning into the stone, and of a keeper of the old law who presses his marks into the clay and bakes them hard, being the stiff and small face of signs; and it differs from parchment, which is a soft skin stretched and folded into a book, in being hard, small and single, being the stubborn and hand-held face, and it differs from a scroll, which is a long sheet rolled and unrolled, in being a flat leaf that is neither wound nor unfolded, being the fixed and single surface; and it is the tablet which, once smoothed and marked, is at once the plainest of all writings and the most enduring of them, being the hard and lasting face; and a person writes upon a tablet when he cuts or presses his signs into a face that will not be bent or folded but must be held and smoothed again, being the patient and the hard-handed writer; and tablet is thus a small flat face of clay or wax for signs, the stiff leaf held in the hand, and the oldest and plainest of all the surfaces of writing."),
+    "mist": ("Mist is the fine and clouded film of suspended water which hangs in the lower air and steeps the near world in a pale and quiet dimness, the soft and floating veil which blots the far hedge and the further hill while the hand before the face is still plain, and the gentle dullness which makes a familiar road strange and the far unknown close; and it is the mist of a valley at daybreak, of a lake upon an autumn evening, and of a warm room breaking into a cold morning, being the low and clinging veil, and it differs from dew, which is water already fallen and laid as beads upon the grass, in being water still aloft and never resting, being the floating and unhoused dampness, and it differs from haze, which is a thin and golden drift of the upper air that softens the sun, in being low, thick and close about the ground, being the nearer and the denser veil; and it is the mist which, rising from wet ground or drawn from warm water in the cold, is at once a hiding of the land and a moistening of it, being the veiling and yielding breath; and a person walks in mist when the air about him is white and uncertain and every distance is guessed rather than seen, being the veiled and cautious one; and mist is thus the low film of suspended water that hangs in the air, the soft veil which dims the near world, and the gentle dullness that hides the distance and wets the cheek."),
+    "dew": ("Dew is the small and clear moisture which the cool of night gathers out of the air upon the grass, the leaf, the stone and the spider's thread, the bright and beaded sweat of a world that has breathed out its warmth and is repaid in drops, and the gentle and freshly fallen wetness which the first sun finds and slowly takes again; and it is the dew of a summer meadow at dawn, of a pane of glass upon a chilly morning, and of a garden path where the runner leaves his print, being the resting and beaded moisture, and it differs from mist, which is moisture still floating and veiling the air, in being that moisture brought down and set upon the surfaces of things, being the settled and shining deposit, and it differs from thaw, which is a softening of the air that loosens what is frozen, in being a small and quiet moisture laid down without noise, being the gentle and silent gathering; and it is the dew which, shed upon a land by a clear and cooling night, is at once a blessing to the dry herb and a sign of the morning, being the refreshing and the quiet sign; and a field is wet with dew when the grass at daybreak is heavy with clear and separate drops, being the cool and beaded one; and dew is thus the small clear moisture gathered by the night air upon grass and leaf, the beaded sweat of a cooling world, and the gentle wetness which the dawn finds and the sun takes away."),
+    "thaw": ("Thaw is the softening and yielding of the frozen world when a milder air comes over it, the slow and dripping change in which the ice gives up its hardness, the snow loses its stiffness and the river finds its voice again, and the gentle loosening which turns the hard white ground to a black and sighing one; and it is the thaw of a late February wind, of a frozen pond breaking into water at noon, and of a road once ringing under the foot and now silent with mud, being the yielding of the cold, and it differs from dew, which is a fresh and quiet moisture laid by night upon living grass, in being the undoing of an older and harder cold, being the melting and releasing change, and it differs from sleet, which is a mean and stinging fall of half-frozen water, in being the giving up of the frost rather than a new and mixed descent from the sky, being the softened and dripping release; and it is the thaw which, coming upon a land locked hard for a season, is at once a promise of the earth's return and a muddy and uncertain hour, being the yielding and hopeful change; and a day is one of thaw when the air is mild and dripping and the ice gives way underfoot, being the mild and releasing one; and thaw is thus the slow softening of the frozen world under a milder air, the dripping change in which ice and snow yield, and the release that turns the hard white ground to soft and black."),
+    "sleet": ("Sleet is the mean and stinging fall of half-frozen water which is neither rain nor snow, the sharp and mixed descent of cold water that strikes the cheek and whitens upon the roof, and the raw and grudging weather which lashes the hillside and leaves nothing plainly one kind or the other; and it is the sleet of a March evening in a narrow street, of a mountain pass in early spring, and of a sea wind driving inland upon a fishing town, being the sharp and mixed fall, and it differs from thaw, which is the old cold giving way in mildness and drip, in being a new and hostile descent of water still half frozen, being the falling and stinging change, and it differs from mist, which is moisture hanging still and soft without weight, in being moisture that falls with an edge and a sting, being the driving and cutting precipitation; and it is the sleet which, falling between the freezing and the mild hour, is at once a rain to soak and a snow to chill, being the half-frozen and grudging descent; and a traveler meets sleet when the air stings his face and the ground grows greasy and uncertain beneath his feet, being the raw and stinging one; and sleet is thus the half-frozen fall that is neither rain nor snow, the sharp and mixed descent that whitens and soaks at once, and the raw weather of the dividing season."),
+    "haze": ("Haze is the thin and luminous dimness of the upper air, the faint and golden opacity in which distant things are seen softly yet remain unconfused, and the dry and delicate film which heat or dust draws over the sky so that the sun is pale and the far hills are tender and blue; and it is the haze of a hot afternoon over a wide plain, of a harvest field in late summer, and of a city seen from a hill beyond its smoke, being the thin and luminous dimness, and it differs from mist, which is a thick and low veil of water close about the ground, in being thin, high and luminous, allowing the eye to pass and only softening what it sees, being the delicate and aerial dimness, and it differs from dew and from sleet, which are water come down to be touched, in being neither fallen nor falling water but a light and dry suffusion of the air itself, being the suffused and untouching veil; and it is the haze which, by softening every outline without hiding it, is at once a beauty of distance and a lassitude of the hour, being the tender and enervating dimness; and a landscape lies in haze when its far shapes are veiled in a pale and golden air, being the softened and luminous one; and haze is thus the thin luminous dimness of the upper air, the golden film that softens distance without concealing it, and the dry and tender veil which heat or dust lays upon the far view."),
+    "coin": ("Coin is the piece of metal which is struck and stamped with the mark of an authority, the small and portable token of value that is passed from hand to hand in the market and in the street, and the hard and enduring substance in which a debt may be paid and a bargain closed; and it is the coin of the purse of a merchant, of the palm of a beggar, and of the handful that a father gives to his son going upon a journey, being the struck and circulating token of value, and it differs from a mint, which is the place and the labour by which such pieces are made, in being the thing made and issued, being the struck and the passing piece, and it differs from a toll, which is a due demanded at the gate, in being the means of payment and not the payment itself, being the portable and the reckoned piece; and it is the coin which, however small its weight, is at once an object of metal and a sign of value, being the stamped and the trusted token; and a person has coin when he holds pieces of the legal and stamped money wherewith to pay for what he needs, being the ready and the current possessor; and coin is thus the piece of stamped metal which serves as money, the portable token passed in traffic, and the hard enduring substance in which debts may be answered. "),
+    "mint": ("Mint is the place and the authority appointed for the striking of coin, the house in which metal is weighed and stamped upon the die of the sovereign with the image of a realm, and the public office whose warrant it is that every piece has the weight its legend promises; and it is the mint of a kingdom whose coin is taken in every market, of a city that guards its right in a strong place, and of a house that labours to answer the need of the realm, being the authorised and the public striking of coin, and it differs from a coin, which is the struck piece it issues, in being the institution and the craft that make it, and it differs from a purse, which is the vessel where the struck coin is kept, in being the lawful public source of it. The word likewise names a humble herb of a pungent leaf, but that herb is not confounded with the house of money, for the one is grown in a garden and the other founded by a state; and it is the mint which, lawfully chartered, is at once a workshop and a warrant, being the stamping of the public faith upon the metal; and a realm keeps a mint when its coin is struck in lawful places, being the ordered coinage; and mint is thus the seat and authority of coining, the place where metal receives the image of the state, and the craft by which the coin of a realm is made lawful. "),
+    "purse": ("Purse is the small closed vessel of leather, of cloth or of net in which a person keeps his coin, the private receptacle that is carried at the girdle or in the hand and holds the means of daily payment, and the store of money which such a vessel signifies and carries, being at once the container and the trust committed to it; and it is the purse of a traveler who guards it against the highway, of a housewife mindful of the market, and of a treasurer of a guild on the day of reckoning, being the kept and the carried store, and it differs from a coin, which is the single struck piece, in being the whole and gathered store of pieces, being the private and the holding vessel, and it differs from a mint, which is the public source of coin, in being the private place where what is made is kept, being the closed and the guarded keeping; and it is the purse which, however thin or full, is at once a protection and a temptation, being the guarded and the watched store; and a person holds the purse when he commands the disposal of the common money of a household or a company, being the keeper and the steward of the store; and purse is thus the closed vessel that holds a person's coin, the private keeping of the money in hand, and the gathered store that is carried and guarded. "),
+    "toll": ("Toll is the due which is demanded and paid for passage, the charge laid upon a traveller, a cart or a vessel at a gate, a bridge or a crossway in return for the right to pass, and the lawful public exaction by which a way is maintained and its use granted; and it is the toll of a gate in a walled town, of a bridge that must be crossed, and of a harbour bar where every bark pays for entrance, being the demanded and the passing due, and it differs from a coin, which is the means by which such a due is rendered, in being the demand itself and the right to pass, being the demanded due, and it differs from a mint, which is the public striking of the coin that pays it, in being the charge exacted for a way and not the making of money, being the passage price, and it differs from a fee, which is the charge for a service sought by one who is served, in being the price of a mere passage that no man can well avoid, being the unavoidable public due; and it is the toll which, publicly granted, is at once a compensation and an exaction, being the price of a way freely given and the price of a way withheld; and a person pays toll when he renders the appointed charge for the right to pass a gate, being the paying traveller; and toll is thus the due demanded for the privilege of passage, the charge laid at a gate or a crossing, and the public exaction by which a way is kept. "),
+    "usury": ("Usury is the taking of a hire or a gain for the lending of money, the practice of demanding back more than was lent, and the exorbitant and pitiless increase which an unjust lender exacts from a borrower in his need; and it is the usury of a hard creditor who squeezes a poor household, of a money-lender who holds a farmer's harvest by a bond, and of a cunning hand that turns another's distress into his own gain, being the hired and the pitiless increase upon a loan, and it differs from a toll, which is a public due for passage, in being a private gain demanded for the mere forbearance of time, being the taking of increase for a loan, and it differs from a mint, which is the lawful public striking of coin, in being the private and the reproved making of gain from money itself, being the undue and the censorious hire; and it is the usury which, however lawfully demanded, is at once a gain and a reproach, being the taking of increase for the lending of what lacks increase; and a person is guilty of usury when he demands for a loan more than he gave, making want itself his profit, being the hard and the pitiless lender; and usury is thus the practice of taking gain for the lending of money, the exaction of increase from a borrower in his need, and the reproved price of forbearance exacted by a hard hand. "),
+    "moth": (
+        "Moth is the small and dusty-winged creature of the dim hours, the soft and furtive flier that loves "
+        "the lamp and the open window, and the pale and silent visitor of the night which comes to the flame "
+        "though it be burned by it; and it is the moth of a candle upon a summer table, of the curtain drawn "
+        "in a darkened room, and of the porch light where it turns and turns until it falls, being the soft "
+        "and the night-loving flier, and it differs from the beetle, which is armored and ponderous and goes "
+        "its way upon the ground, in being a light and a dusty-winged creature of the air that has no shell "
+        "to defend it, being the soft and the delicate flier, and it differs from the gnat, which is a thin "
+        "and fretful speck that bites and sings, in being the quiet and the circling creature that seeks the "
+        "light and asks nothing of blood, being the hovering and the harmless one; and it is the moth which, "
+        "drawn by the brightness it cannot read, is at once the seeker of the flame and its victim, being the "
+        "yearning and the doomed one; and a person is as the moth when he is drawn toward a splendour that "
+        "consumes him and is not warned, being the fascinated and the fragile one; and moth is thus the small "
+        "and dusty-winged creature of the dim hours, the soft and furtive flier that loves the lamp, and the "
+        "pale and silent visitor of the night."
+    ),
+    "beetle": (
+        "Beetle is the heavy and armored creature that walks upon the earth and the stone, the slow and "
+        "patient suitor of the ground that carries its own house upon its back, and the dark and burrowing "
+        "labourer of the soil that closes the day beneath a leaf; and it is the beetle of a garden path in "
+        "the evening, of a fallen log where it works unseen, and of a hearthstone where it crawls across the "
+        "floor, being the armored and the earth-bound creature, and it differs from the moth, which is a soft "
+        "and dusty flier of the dim air that curls about the flame, in being a hard and a heavy creature of "
+        "the ground that seeks no light, being the crusted and the plodding one, and it differs from the "
+        "spider, which is a quick and a many-legged weaver that lays snares in the air, in being a creature "
+        "of simple purpose and open going that dreads no net, being the blunt and the unhurried one; and it "
+        "is the beetle which, going upon the ground in its shell, is at once the drudge of the mould and the "
+        "wearer of a hard and shining case, being the patient and the defended creature; and a person shows "
+        "the beetle in his nature when he goes heavily and slowly through his labour and carries his burden "
+        "as though it were his own shell, being the plodding and the uncomplaining one; and beetle is thus "
+        "the heavy and armored creature that walks upon the earth, the slow and patient suitor of the ground, "
+        "and the dark and burrowing labourer of the soil."
+    ),
+    "spider": (
+        "Spider is the nimble and solitary weaver that spins its net in the corners of a place, the small and "
+        "patient hunter that sits at the centre of its own work and waits, and the silent and many-legged "
+        "neighbour of the house that keeps to the shadowed beam; and it is the spider of a garden hedge where "
+        "the dew is caught, of a cellar corner where no broom comes, and of a rafter in the barn where it "
+        "hangs unseen, being the spinning and solitary weaver, and it differs from the beetle, which is "
+        "armored and slow and walks the open ground, in being a light and a quick creature that lives by the "
+        "cunning of its thread rather than by its shell, being the nimble and the cunning one, and it differs "
+        "from the wasp, which is loud and bold and flies with a purpose it announces, in being a quiet and "
+        "retiring worker that trusts to patience and to the net it has made, being the patient and the "
+        "unadvertised one; and it is the spider which, sitting at the heart of its web, is at once the maker "
+        "of snares and the watcher of them, being the artful and the patient creature; and a person is as the "
+        "spider when he plots long and builds quietly and waits for the thing he has arranged, being the "
+        "scheming and the patient one; and spider is thus the nimble and solitary weaver that spins its net "
+        "in corners, the small and patient hunter at the centre of its work, and the silent neighbour of the "
+        "house that keeps to the beam and the shadow."
+    ),
+    "wasp": (
+        "Wasp is the slender and vigilant flier of the summer afternoon, the busy and the striped creature "
+        "that goes about the garden with a purpose of its own, and the sharp and the irritable neighbour of "
+        "the open window which comes and goes without leave; and it is the wasp of a fruit left upon a sill, "
+        "of a path in the heat of the noon where it hovers and returns, and of a room in September where it "
+        "beats against the glass, being the busy and the vigilant flier, and it differs from the moth, which "
+        "is soft and dreamy and seeks the light with no purpose of its own, in being a creature of sharp and "
+        "restless purpose that goes straight upon its errand, being the alert and the animated one, and it "
+        "differs from the gnat, which is a frail and a fumbling speck that is lost as soon as it is brushed "
+        "aside, in being a strong and a resisting creature that turns upon him who annoys it, being the quick "
+        "and the unyielding one; and it is the wasp which, ever in motion and never at rest, is at once the "
+        "worker of the summer and the trial of the careful man, being the diligent and the irritable one; and "
+        "a person is as the wasp when he is brisk and impatient and cannot let a matter alone, being the keen "
+        "and the sharp-tempered one; and wasp is thus the slender and vigilant flier of the summer afternoon, "
+        "the busy and striped creature of the garden, and the sharp neighbour of the open window."
+    ),
+    "gnat": (
+        "Gnat is the small and fretful creature of the still evening air, the thin and the whining speck that "
+        "rises from the wet ground in company and is seen against the light, and the petty and the vexing "
+        "visitor that is heard before it is seen and is felt before it is found; and it is the gnat of a "
+        "meadow walk at dusk in company, of a still pond where the air seems to hum, and of a lamp-lit room "
+        "where one thin voice goes about the ear, being the small and the whining flier, and it differs from "
+        "the moth, which is soft and silent and comes of its own accord to the flame, in being a creature "
+        "that seeks the flesh and complains while it seeks, being the fretful and the importunate one, and it "
+        "differs from the wasp, which is bold and strong and will stand its ground when provoked, in being a "
+        "frail and a hovering creature that is dispersed by a breath and gathers again, being the petty and "
+        "the persistent one; and it is the gnat which, being of no account alone, is at once a nothing and a "
+        "torment in number, being the trivial and the multiplied one; and a person is as the gnat when he is "
+        "small and persistent and unceasing in his petty annoyance, being the trifling and the tireless one; "
+        "and gnat is thus the small and fretful creature of the still evening air, the thin and whining speck "
+        "that rises in company, and the petty and vexing visitor that is heard before it is seen."
+    ),
+    "lark": (
+        "A lark is the small and singing bird of the open morning field, which mounts upon the wing at the "
+        "first grey of day and pours out its note into the empty sky, the creature of the dawn whose song is "
+        "the summons of the hour, and the glad and tiresome singer whose voice is heard before the sun has "
+        "risen over the hedge; and it is the lark of the early riser who is abroad before the town has "
+        "stirred, of the fields at sunrise when every blade is heavy with dew, and of the song which rises "
+        "for no auditor, being the small and upward-singing bird, and it differs from the hawk, which falls "
+        "upon the field from a height, in being the bird that rises only to sing and descend again, being the "
+        "small and harmless singer, and it differs from the raven, which croaks of death upon the "
+        "gallows-tree, and from the heron, which stands motionless in the shallow water, and from the "
+        "sparrow, which chirps in the dust of the courtyard, in being the bird whose whole nature is its "
+        "note, being the cheerful and mounting singer of the morning air; and it is the lark which, rising "
+        "before all other creatures, is at once a mere bird of the meadow and the voice of the hopeful hour, "
+        "being the small and early-singing one; and a person shows a lark when he wakes before the sun and "
+        "goes to his labour singing, being the early and cheerful one; and a lark is thus the small bird "
+        "which mounts and sings at dawn, the glad and unwearying voice of the open morning field, and the "
+        "creature whose whole nature is its song."
+    ),
+    "hawk": (
+        "A hawk is the swift and rapacious bird of prey which soars above the field and stoops upon its "
+        "quarry with the full weight of its speed, the keen-eyed hunter of the air whose shadow falls upon "
+        "the small and the heedless, and the fierce and patient watcher which circles high and waits and "
+        "descends without warning; and it is the hawk of the hunter who goes out with the bird upon his fist, "
+        "of the farmer who sets it to frighten the flock, and of the man of business who watches for his "
+        "advantage and strikes at the moment of another's weakness, being the swift and descending bird, and "
+        "it differs from the lark, which rises only to sing, in being the bird that rises to strike, being "
+        "the keen and rapacious hunter, and it differs from the raven, which waits for what is already dead, "
+        "and from the heron, which spears its fish in patience and in stillness, and from the sparrow, which "
+        "is the small and hunted thing of the courtyard, in taking its prey by speed rather than by patience "
+        "or by waiting, being the swift and falling predator of the open sky; and it is the hawk which, "
+        "having marked its quarry from afar, is at once the terror of the small and the very image of "
+        "unsparing speed, being the rapacious and descending bird; and a man shows the hawk when he pursues "
+        "an end with a fierce and watchful patience and falls upon his chance, being the keen and unsparing "
+        "one; and a hawk is thus the swift and rapacious bird which stoops from the sky upon its prey, the "
+        "keen-eyed hunter of the air, and the fierce and patient watcher of the field."
+    ),
+    "raven": (
+        "A raven is the great and glossy black bird of ill omen, the hoarse and solitary croaker that haunts "
+        "the gallows and the ruin and the field of battle, the dark and knowing fowl whose cry is taken for a "
+        "prophecy of death, and the bird of the waste places which feeds upon what the living have left; and "
+        "it is the raven of the prophet who is fed at the brook in the wilderness, of the tower where it sits "
+        "upon the battlement and croaks, and of the house of mourning where its note is heard and men fall "
+        "silent, being the black and ominous bird, and it differs from the hawk, which kills by speed and in "
+        "the daylight, in living upon the carrion and the fallen and in crying where others are dumb, being "
+        "the dark and scavenging bird of omen, and it differs from the lark, whose note is the joy of the "
+        "morning, and from the heron, which keeps its silence in the cold water, and from the sparrow, which "
+        "is small and harmless and cheerful, in being the bird of night-coloured counsel and of prophecy, "
+        "being the grave and ill-boding creature of the waste; and it is the raven which, croaking from the "
+        "bare tree, is at once a bird of the field and the very voice of the doom that men foretell, being "
+        "the black and foreboding bird; and a man shows a raven when he speaks darkly of what is to come and "
+        "takes a gloomy pleasure in the evil of the hour, being the hoarse and ominous one; and a raven is "
+        "thus the great black bird of ill omen, the hoarse and solitary croaker of the ruin and the gallows, "
+        "and the dark and knowing fowl whose cry is taken for a prophecy."
+    ),
+    "heron": (
+        "A heron is the tall and grey and long-legged bird of the still water, which stands motionless upon "
+        "the margin of the river or the marsh and waits in an ancient and unbroken patience for the fish to "
+        "pass, the solitary fisher whose stillness is its whole art, and the lean and watchful shape that "
+        "rises at last upon slow and solemn wings; and it is the heron of the idle fisherman who waits all "
+        "morning at the pool, of the quiet man who says nothing and watches long, and of the marsh at evening "
+        "when the light is low and the water still, being the tall and patient bird of the water, and it "
+        "differs from the hawk, which takes its prey by speed and in the open sky, in taking it by stillness "
+        "and by the water's edge, being the patient and solitary fisher, and it differs from the lark, which "
+        "sings in the morning air, and from the raven, which croaks its omen from the ruin, and from the "
+        "sparrow, which chatters in the dust among many, in keeping a long silence in the shallow and the "
+        "cold, being the still and silent watcher of the water; and it is the heron which, standing hour upon "
+        "hour without motion, is at once a bird of the river's edge and the very image of long and silent "
+        "waiting, being the patient and motionless fisher; and a man shows a heron when he waits in silence "
+        "with the eye fixed and the hand still until the moment comes, being the still and long-watching one; "
+        "and a heron is thus the tall and grey bird of the still water, the solitary fisher that waits "
+        "without motion, and the lean and watchful shape of the marsh."
+    ),
+    "sparrow": (
+        "A sparrow is the small and brown and commonplace bird of the courtyard and the market-place, which "
+        "flutters in the dust beneath the table and takes the crumbs that fall from the rich man's board, the "
+        "countless and chattering fowl of the town that is of no account and yet is never absent, and the "
+        "lowly companion of the common house whose worth is remembered in the saying that not one of them "
+        "falls without the Father's knowledge; and it is the sparrow of the schoolboy who chatters and is "
+        "gone, of the housemaid's window where it pecks at the sill, and of the crowd in the street which is "
+        "many and small and nameless, being the small and chattering bird, and it differs from the hawk, "
+        "which is the terror of its kind, in being the hunted and the harmless, being the small and countless "
+        "fowl of the street, and it differs from the lark, which mounts and sings in the open field, and from "
+        "the raven, which is solitary and of ill omen, and from the heron, which stands alone in the cold "
+        "water, in living in flocks among men, being the lowly and gregarious bird of the town; and it is the "
+        "sparrow which, being of no account and everywhere present, is at once the least of birds and the "
+        "very image of the common life of men, being the small and unregarded bird; and a person shows a "
+        "sparrow when he is of small estate and many words and needful to no one in particular, being the "
+        "lowly and chattering one; and a sparrow is thus the small brown bird of the courtyard, the countless "
+        "and chattering fowl of the town, and the lowly companion of the common house."
+    ),
+    "barley": (
+        "Barley is the hardy grain and the bearded cereal of the poorer and the sterner soils, the stout and "
+        "rough-awned corn whose ear is shorn of no beard and whose use is older than the ploughshare, and the "
+        "ancient and patient kind of bread-corn which the north and the dry land have always yielded to men; "
+        "and it is the barley of a northern field ripening late and slow in a chill summer, of a measure of "
+        "rough grain given to the beast and the servant, and of the first simple food of those who have no "
+        "wheat, being the hardy and bearded grain, and it differs from wheat, which is the softer and the "
+        "statelier corn of the richer ground, in being the rougher and the more enduring grain of the leaner "
+        "soil, being the stout and bearded corn, and it differs from oats, which is the loose and drooping "
+        "panicle of the damp and cool country, in being the close and bearded ear that stands stiff in the "
+        "dry field, and it differs from rye, which is the tall and slender corn that braves the winter frost, "
+        "in being the grain of the short and hardy summer rather than of the winter, being the humble and "
+        "northern corn, and it is the barley which, being sown upon ground too poor for the wheat, is at once "
+        "the bread of the poor and the pledge that no soil is wholly barren, being the patient and yielding "
+        "grain; and a field or a man shows barley when he bears a hardy and unpretending fruit out of a lean "
+        "and difficult ground, being the stout and humble bearer; and barley is thus the hardy and bearded "
+        "cereal of the sterner soils, the rough-awned corn older in use than the plough, and the patient "
+        "grain which the north and the dry land yield to men."
+    ),
+    "oats": (
+        "Oats is the loose and hanging grain of the cool and the damp country, the light and drooping corn "
+        "whose ear hangs in a spreading panicle and rattles in the wind, and the homely and generous kind of "
+        "corn which the moist land and the long northern twilight bring to ripeness; and it is the oats of a "
+        "wet field in a misty valley, of a warm mess for the horse that is the labourer of the road, and of a "
+        "plain porridge that steams upon the table of the poor, being the loose and drooping grain, and it "
+        "differs from barley, which is the stiff and bearded ear standing close in the dry field, in being "
+        "the open and swinging panicle that loves the wet and the cool, being the loose and hanging corn, and "
+        "it differs from wheat, which is the stately corn of the rich and sunlit ground, in being the cheap "
+        "and cheerful grain of the poor and the wet land, and it differs from rye, which is the tall and "
+        "slender corn that outstands the winter, in being the light and pliant grain that bends before the "
+        "storm rather than withstands it, being the soft and yielding corn, and it is the oats which, being "
+        "sown in the moist and the cool, is at once the food of the beast and the bread of the humble "
+        "household, being the loose and kindly grain; and a man shows oats when he bears a plain and "
+        "plentiful yield out of a cold and unkindly country, being the humble and pliant bearer; and oats is "
+        "thus the loose and hanging grain of the cool and damp country, the light and drooping corn whose ear "
+        "swings in the wind, and the homely corn which the moist land brings to ripeness."
+    ),
+    "rye": (
+        "Rye is the tall and slender corn which stands the winter, the dark and hardy grain that is sown in "
+        "the autumn and outlives the frost beneath the snow, and the sober bread-corn of the cold and the "
+        "sandy plain which asks neither richness nor warmth of the ground; and it is the rye of a wide flat "
+        "field greying in the wind, of a dark and heavy loaf upon the peasant's board, and of a crop that "
+        "greened while all the earth lay frozen, being the tall and winter-hardy grain, and it differs from "
+        "barley, which is the short and bearded corn of the summer's heat, in being the tall and slender corn "
+        "of the winter's cold, being the enduring and autumn-sown grain, and it differs from wheat, which is "
+        "the delicate and stately corn of a rich and kindly soil, in being the spare and stubborn grain that "
+        "thrives where the wheat would perish, and it differs from oats, which is the loose and pliant "
+        "panicle that bends before the weather, in being the straight and stubborn stalk that holds its head "
+        "against the wind, being the upright and sober corn, and it is the rye which, being committed to the "
+        "earth before the winter, is at once the proof of endurance and the bread of the cold countries, "
+        "being the patient and winter-going grain; and a man shows rye when he brings forth a sober and "
+        "lasting fruit through a season that the tenderer things could not abide, being the enduring and "
+        "upright bearer; and rye is thus the tall and slender corn that outstands the winter, the dark and "
+        "hardy grain sown before the frost, and the sober bread-corn of the cold and the sandy plain."
+    ),
+    "chaff": (
+        "Chaff is the light and worthless husk of the grain, the thin and brittle casing which encloses the "
+        "corn and is beaten from it in the threshing, and the loose and scattered refuse which the wind "
+        "carries away while the heavy grain falls to the floor; and it is the chaff of a heap winnowed upon "
+        "the threshing-floor, of a husk that the least wind lifts and scatters, and of all that is light and "
+        "empty in the speech or the works of men, being the light and worthless husk, and it differs from "
+        "sheaf, which is the bound and gathered corn with the grain still within it, in being the husk that "
+        "is left when the grain has been beaten out and taken, being the empty and scattered refuse, and it "
+        "differs from barley, oats and rye, which are the several kinds of the grain itself, in being no kind "
+        "of grain at all but the frail covering that is cast away from every kind of it, being the husk and "
+        "not the corn, and it differs from wheat, which is the fair and nourishing corn of the field, in "
+        "being the worthless part which is good for nothing but the fire or the wind, being the light and "
+        "barren remnant, and it is the chaff which, being separated from the grain by the wind and the sieve, "
+        "is at once the sign of the good corn saved and the image of all that is worthless preserved too "
+        "long, being the light and separated husk; and a man shows chaff when he offers much sound and little "
+        "substance, or a company is as chaff when it scatters at the first stirring of the wind, being the "
+        "light and worthless ones; and chaff is thus the light and worthless husk of the grain, the thin "
+        "casing beaten from the corn, and the refuse which the wind carries away while the heavy grain "
+        "abides."
+    ),
+    "sheaf": (
+        "Sheaf is the bundle of cut corn bound and standing together in the field, the armful of ripe stalks "
+        "gathered and tied so that the grain may be carried and the reaping brought to its end, and the "
+        "gathered and orderly form in which the loose plenty of the harvest is made portable and ready for "
+        "the barn; and it is the sheaf of a reaper's armful bound with a twist of straw, of a field of "
+        "standing sheaves leaning together like a silent company, and of the last sheaf that is kept with "
+        "solemn joy, being the bound and gathered corn, and it differs from chaff, which is the loose and "
+        "worthless husk that the wind scatters, in being the gathered and substantial whole that is bound and "
+        "kept, being the tied and preserved corn, and it differs from barley, oats and rye, which are the "
+        "several kinds of grain that a sheaf may contain, in being not a kind of grain but the gathered form "
+        "into which any kind of it is bound, being the bundle and not the corn itself, and it differs from "
+        "harvest, which is the season and the whole gathering in, in being the single bound bundle within "
+        "that gathering, being the one tied armful, and it is the sheaf which, being bound from many loose "
+        "stalks, is at once the end of the reaping and the promise of the threshing-floor, being the gathered "
+        "and ordered plenty; and a man or a writing shows sheaf when scattered matter is bound up into one "
+        "compact and comely whole, being the gathered and bound one; and sheaf is thus the bundle of cut corn "
+        "bound and standing in the field, the gathered armful of ripe stalks tied for carriage, and the "
+        "ordered form in which the loose plenty of the harvest is made ready for the barn."
+    ),
+    "dusk": (
+        "Dusk is the time of day when the daylight is spent and the sky yet holds a dim and residual light "
+        "before the darkness comes down, the falling and declining period of the evening in which the land "
+        "loses its colours and keeps only its shapes, and the soft and withdrawing hour in which the eye must "
+        "look twice to be certain of what it sees; and it is the dusk of a lane between hedges, of a river "
+        "with the last glimmer upon it, and of a field abandoned by the labourers, being the declining and "
+        "unfailing hour of the withdrawing light, and it differs from twilight, which names the whole "
+        "doubtful mingling of light and darkness upon either hand, in being the work of the evening alone and "
+        "the beginning of the retreat of the light, being the falling and evening half of that mixture, and "
+        "it differs from noon, which is the highest and most declared hour of the day, and from midnight, "
+        "which is the deepest hour of the night, in standing upon the threshold between them, being the brief "
+        "and descending passage, and it differs from eve, which is the evening taken as a whole with all that "
+        "belongs to it, in being the moment of the fading itself rather than the season of the evening, being "
+        "the narrow and closing instant; and it is the dusk which, coming upon a place, is at once a "
+        "softening of every line and a heightening of every doubt, being the tender and uncertain light; and "
+        "a person stands in dusk when the light about him is failing and the day is not yet given over to the "
+        "night, being the quiet and hesitating one; and dusk is thus the falling and residual light of the "
+        "evening, the hour in which the land loses colour and keeps shape, and the tender and withdrawing "
+        "moment which yields the world to darkness."
+    ),
+    "noon": (
+        "Noon is the hour of the day when the sun stands at its height and nothing casts a shadow beyond its "
+        "own foot, the full and undivided season of the light in which every object stands clear and "
+        "unsoftened, and the meridian hour at which the labour of the morning pauses and the day is measured "
+        "from its middle; and it is the noon of a market square with the awnings drawn low, of a summer field "
+        "where the reapers rest, and of a road without shade, being the high and unyielding hour of the full "
+        "light, and it differs from dusk, which is the failing and downward light of the evening, and from "
+        "midnight, which is the full dark at the depth of the night, in being the extreme of light rather "
+        "than its increase or its diminution, being the high and undiminished hour, and it differs from "
+        "twilight, which is the doubtful mingling of light with darkness, in being the plain declaration of "
+        "light with no darkness in it at all, being the clear and unreserved hour, and it differs from eve, "
+        "which is the evening with all its works and gatherings, in being the plain middle of the day, being "
+        "the upright and uncovered hour; and it is the noon which, standing above every place, is at once the "
+        "clearest hour and the heaviest, being the bright and oppressive height; and a person knows noon when "
+        "the light is direct and without mercy and the day is at its fullest, being the exposed and "
+        "unshadowed one; and noon is thus the high meridian of the light, the full and undivided hour in "
+        "which every thing stands clear, and the bright and unyielding middle of the day."
+    ),
+    "midnight": (
+        "Midnight is the hour of the night when the darkness is at its deepest and the day has given place to "
+        "its opposite, the still and unbroken season in which the world lies bound in dark and no work may be "
+        "begun, and the deepest point of the night from which the coming light is yet withheld; and it is the "
+        "midnight of a sleeping house, of a street without a passer, and of a sea seen only by the stars, "
+        "being the deep and still hour of the full darkness, and it differs from dusk, which is the failing "
+        "light of the evening, in being the utter absence of that light and not its going, being the dark and "
+        "settled hour, and it differs from noon, which is the height of the light, in being its exact and "
+        "dark counterpart, being the opposed and shadowed hour, and it differs from twilight, which holds "
+        "some light and some dark together, in holding no light at all but only the night entire, being the "
+        "unmingled darkness; and it differs from eve, which is the evening's gathering before the night, in "
+        "being the night itself at its centre, being the deep and latter hour; and it is the midnight which, "
+        "falling upon a place, is at once the heaviest of hours and the most private, being the still and "
+        "dark extreme; and a person sits in midnight when the world about him is dark and silent and the day "
+        "is quite forgotten, being the wakeful and solitary one; and midnight is thus the deepest and "
+        "stillest hour of the night, the full dark from which the light is withheld, and the dark and settled "
+        "opposite of the noon."
+    ),
+    "twilight": (
+        "Twilight is the doubtful and softened light which lies between the day and the night, the mingling "
+        "of a little light with a little darkness in which neither has the mastery, and the uncertain and "
+        "tender hour when things are seen as shapes rather than as objects and the air seems to hold its "
+        "breath; and it is the twilight of a room before the lamp is lit, of a wood at the day's end, and of "
+        "a hill where the last light and the first dark meet, being the mingled and doubtful light, and it "
+        "differs from dusk, which is the evening's own falling of the light, in belonging to the morning as "
+        "well as to the evening, being the light that lies upon either hand of the night, and it differs from "
+        "noon, which is the full and declared light, and from midnight, which is the full dark, in being the "
+        "confounded state of both, being the doubtful and unresolved hour, and it differs from eve, which is "
+        "the evening with its gathering and its rest, in being the mere condition of the light and not the "
+        "season of the day, being the suspended and uncertain airlight; and it is the twilight which, "
+        "softening every edge, is at once a gentleness and a bewilderment, being the tender and unquiet "
+        "dimness; and a place lies in twilight when the light is neither enough nor gone and every shape is "
+        "doubtful, being the softened and hesitating one; and twilight is thus the mingled light between day "
+        "and night, the uncertain and tender hour in which nothing is quite seen, and the doubtful condition "
+        "in which light and darkness hold the world between them."
+    ),
+    "eve": (
+        "Eve is the evening of the day taken whole, with its closing of work and its gathering of the "
+        "household, the time which follows the decline of the light and precedes the night, and the settled "
+        "and domestic season in which the day is brought to its account; and it is the eve of a great feast, "
+        "of a journey to be begun at morning, and of a household assembled at its lamp, being the evening's "
+        "whole and gathering season, and it differs from dusk, which is the brief and fading moment of the "
+        "light itself, in being the larger evening in which that fading is but the beginning, being the "
+        "gathered and occupied season, and it differs from twilight, which is the mere doubtful condition of "
+        "the light, in being the time of day as men keep it, with its works and its meetings, being the kept "
+        "and ordered evening, and it differs from noon, which is the full upright hour of the day, and from "
+        "midnight, which is the depth of the night, in standing between them as the door between the day and "
+        "the night, being the closing and domestic hour; and it is the eve which, appointed before a great "
+        "day, is at once a waiting and a preparation, being the expectant and quiet evening; and a person "
+        "keeps an eve when the work of the day is ended and what is to come is waited for in quiet, being the "
+        "settled and expectant one; and eve is thus the evening of the day taken whole, the season of the "
+        "closing of work and the gathering of the household, and the quiet and expectant door between the day "
+        "and the night."
+    ),
+    "jar": ("Jar is the broad and open vessel of clay or of glass, the stout and standing receptacle with a wide mouth and a narrow foot, and the vessel which stands upon a shelf and keeps its store within a plain lip; and it is the jar of preserved fruit in a larder, of oil upon a counter, and of meal in a granary, being the stout and open keeping, and it differs from a flask, which is narrow in the neck and made for the hand and the journey, in being broad of mouth and made for the shelf, being the stout and standing vessel, and it differs from a barrel, which is built of staves and bound with hoops, in being of one body and of small compass, being the modest keeping, and it differs from a casket, which is locked and keeps things precious, in guarding what is plain and daily, being the homely vessel, and it differs from a basket, which is woven and open to the air, in being closed upon its store, being the solid keeping; and it is the jar which, standing upright in the house, is at once a vessel and a keeper of provision, being the open and stout vessel; and a household has a jar when it sets by a store against the winter, being the settled keeping; and jar is thus the broad and open vessel of clay or glass, the stout and standing receptacle that keeps a store."),
+    "barrel": ("Barrel is the great and rounded vessel built of staves and bound about with iron hoops, the tall and swelling cask that contains a whole measure of liquid or of dry store, and the vessel of weight and bulk which is moved by rolling; and it is the barrel of wine in a cellar, of salt fish upon a wharf, and of water in the hold of a ship, being the great and hooped keeping, and it differs from a jar, which is of one body and of small compass, in being built of many staves and made to bear a great weight, being the strong vessel, and it differs from a flask, which is carried in the hand and drained at a draught, in holding a store for the many, being the ample vessel, and it differs from a basket, which admits the air and is borne on the arm, in being shut and heavy and moved only by rolling, being the ponderous keeping, and it differs from a casket, which holds a little and hides it, in holding much in the open sight of all, being the abundant vessel; and it is the barrel which, whether of wine or of grain, is at once a vessel and a measure of things, being the great and hooped keeping; and a merchant has a barrel when he gathers a whole store into one strong and rounded vessel, being the gathered keeping; and barrel is thus the great and rounded vessel of staves and hoops, the swelling cask that contains a whole measure, and the vessel of weight which is moved by rolling."),
+    "basket": ("Basket is the light and open vessel woven of osiers or of rushes, the shallow receptacle of crossed withes that lets the air pass through it, and the vessel of gathering which is carried by a handle upon the arm; and it is the basket of fruit borne in from an orchard, of bread set before the table, and of linen gathered from the line, being the light and woven keeping, and it differs from a jar, which is solid and shut upon its store, in being open and breathing upon every side, being the airy vessel, and it differs from a barrel, which is heavy and rolled upon the ground, in being light and borne in the hand, being the carried vessel, and it differs from a casket, which locks what is precious, in holding what is plain and needful in open sight, being the plain keeping, and it differs from a flask, which keeps a liquid from spilling, in holding dry and loose things that may fall through its woven sides, being the gathered vessel; and it is the basket which, though it be full, is at once a vessel and an offering borne to the table, being the light keeping; and a person shows a basket when he gathers loose things into a light and open vessel and bears them away, being the bearing of the plain kind; and basket is thus the light and open vessel woven of osiers, the shallow receptacle that lets the air pass, and the vessel of gathering which is borne upon the arm."),
+    "casket": ("Casket is the small and precious box of carved wood or of wrought metal, the shut receptacle with a hinged lid and a lock that keeps a few small things of great worth from the eyes of others, and the vessel of little compass which is at once a keeping and a promise of the treasure within; and it is the casket of jewels in a lady's chamber and of letters kept against a distant day, being the guarded keeping, and it differs from a jar, which keeps plain provision in an open vessel, in keeping things of worth locked, being the precious vessel, and it differs from a barrel, which holds much in open sight, in holding little and hiding it, being the secret keeping, and it differs from a basket, which is woven and open and holds the common, in being solid and shut and holding the rare, being the closed vessel, and it differs from a flask, which is carried upon a journey, in being made for keeping a treasure at home, being the still keeping; and it is the casket which, whether of jewels or of letters, is at once a vessel and a vow of the worth of what it keeps, being the precious keeping; and a person keeps a casket when he sets a few precious things apart within a vessel locked, being the guarded keeping; and casket is thus the small and precious box of carved wood, the shut receptacle with a lid and a lock, and the vessel of little compass which is a promise of the treasure within."),
+    "flask": ("Flask is the narrow vessel of glass or of metal with a slender neck and a stopped mouth, the small and close receptacle which a traveller carries upon his person and keeps a liquid against the jolting of the road, and the vessel of the journey which is drained at a draught; and it is the flask of water in the hand of a pilgrim upon a dusty way and of oil in the wallet of a physician, being the narrow and close keeping, and it differs from a jar, which is broad and open and stands upon a shelf, in being narrow of neck and made for the hand, being the carried vessel, and it differs from a barrel, which is great and rolled upon the ground, in being of small compass and borne upon the person, being the personal keeping, and it differs from a basket, which is woven and lets the air through, in being of one body and shut against the spilling, being the closed vessel, and it differs from a casket, which keeps a treasure at home, in keeping a liquid ready for the mouth upon the way, being the travelling keeping; and it is the flask which, though small, is at once a vessel and a provision against the thirst of the road, being the ready keeping; and a traveller has a flask when he bears a little liquid close and stoppered; and flask is thus the narrow vessel with a slender neck, the close receptacle that a traveller carries, and the vessel of the journey drained at a draught."),
+    "road": ("A road is the prepared and beaten way laid upon the land and bearing men and burdens from one place to another, and the open course which lies between the lands it passes by, being the made way of passage; and it is the road of a kingdom's great errand, of a wayfarer far from his hearth, and of a people's ascent toward a better age, being the made and the carried course; and it differs from a lane, which runs narrow and enclosed between hedges and belongs to few, in being the wide course prepared for many, and from a track, which is the line worn by those who have gone before, in being a way laid out by an intention that precedes the traveller, and from a path, which the foot makes for itself alone, in bearing the goings of a whole people, being the general course, and from a bridge, which carries a road across a gap, in lying upon the land from end to end, and from a voyage, which is a passage over water, in running upon the settled ground; and it is the road which, needing no gate to be entered, is at once a going and a returning, being the open and trodden way; and a thing shows the road when it draws many after it toward one end; and a road is thus the prepared and beaten way laid for the passing of many, the open course between the lands it passes by, and the ground whose whole use is passage."),
+    "lane": ("A lane is the narrow enclosed way lying between hedges, banks or walls, the small quiet course which serves a few houses or a field and is entered for use rather than travel, and the subdued passage which the greater way disdaineth and the neighbour keeps; and it is the lane of a country village behind its cottages, of the meadow beyond the gate where cattle are driven, and of the memory that returns by a familiar way to a place long left, being the narrow and the near way; and it differs from a road, which is the wide course beaten for many, in being of narrow breadth and local use, serving the few beside it, being the near and little way, and from a track, which is the line marked by those who have gone before, in being bounded on either hand by a raised edge, being the hedged way, and from a path, which is trodden by the walker alone, in carrying carts and beasts as well as men, being the lowly way, and from a ford, which is a crossing over water, in keeping wholly to the dry ground; and it is the lane which, being small to be welcome, is at once a passage and an enclosure, being the homely way; and a place has its lane when a narrow course runs into it from the greater way and is known to those behind its fences; and a lane is thus the narrow enclosed way between hedges or walls, the small course serving a few houses, and the subdued passage to the near place."),
+    "track": ("A track is the line which those who have gone before have printed upon the ground, the worn and visible course of feet through a country which has no made way, and the mark left by a passage already made in a place where otherwise no passage is; and it is the track of a beast through the dewy meadow, of a wanderer through the wilderness where no man dwells, and of an enterprise followed by those who come after, being the printed and the followed line; and it differs from a road, which is devised and prepared before any goeth upon it, in being worn into being by the going itself, and from a lane, which is set between hedges and walls, in running open and unenclosed across the bare ground, being the unfenced line, and from a path, which is the walker's own way and turns with his purpose, in being a course marked rather than chosen, which others may follow, being the sighted course, and from a ford, which is where water is crossed, in being the ground whereon a crossing is remembered; and it is the track which, where none hath laid a way, is at once a passage and a witness, being the printed line; and a person leaves a track when his steps remain visible to those who come after; and a track is thus the line printed on the ground by those who went before, the worn course through a country without made ways, and the mark of a passage already made."),
+    "ford": ("A ford is the shallow firm place in a river where the water may be waded from bank to bank, the crossing which the bed of the river allows, and the unsheltered point where a way broken at the water is taken up again; and it is the ford of a brook whereon the country children cross to the fields, of a wide stream where an army once went over, and of the narrow place where a man passes from one state of life into another, being the shallow and the crossed place; and it differs from a bridge, which is a work reared above the water to spare the wading, in being the water's own consent to be passed, being the low and natural crossing, and from a road, which is the prepared course either side, in being the moment where it breaks and is rejoined, and from a harbour, which is the still place of keeping, in being the point of resolute passing, and from a lane and a path, which keep to the dry ground, in being the one crossing upon which both their ends depend; and it is the ford which, where no bridge is given, is at once a barrier and a door, so that the way ends and yet goes on; and a man crosses a ford when he commits his weight to the uncertain bed of a quiet stream and gains the shore beyond; and a ford is thus the shallow place where the water may be waded, the crossing allowed by the bed of the river, and the point where the way is taken up beyond."),
+    "path": ("A path is the narrow single way trodden by the foot of one who goes, the small course through field or wood that follows the will rather than the design of them that made it, and the way of a life or of a thought which one may choose or be drawn to, being the trodden and the chosen course; and it is the path of a shepherd up the grassy hillside, of a wanderer through an unknown wood, and of a man who has found his calling and follows it alone, being the trodden way; and it differs from a road, which is laid for many and beaten by a whole people, in being made for one foot at a time, being the small and private course, and from a lane, which is fenced in and serves a few houses, in being open to any who pass, being the unfenced way, and from a track, which is but the print of passages already made, in being a course that a man takes in deliberation and keeps, being the taken way, and from a ford, which is a crossing of water, in being the whole ground it runs over, and from a gate, which frames its entry, in being the course itself; and it is the path which, when a man knows not the land before him, is at once a leaving and a surety; and a person finds his path when a course lies open and he takes it with intention; and a path is thus the narrow way trodden by the foot of one who goes, the small course that follows the will of the goer, and the way of a life or of a thought."),
+    "wine": (
+        "Wine is the drink of the grape, the pressed and ripened fruit of the vine brought by time to its "
+        "settled and noble condition; and it is the wine of the vineyard upon the slope, of the wedding feast "
+        "where the cups are raised, and of the quiet evening when the household is gathered, being the noble "
+        "and grape-born drink, and it differs from ale, which is brewed of grain and malt, in being the drink "
+        "of the fruit of the vine rather than of the harvest of the field, being the sharp and generous "
+        "liquor of the grape; and it differs from mead, which is made of honey, in being the cooler and more "
+        "astringent drink, being the dry and noble vintage; and it differs from cider, which is the fermented "
+        "juice of apples, in being the drink of the greater and the more honoured fruit, being the grape-born "
+        "drink of the cellar; and it is the wine which, poured at the board, is at once the token of "
+        "festivity and the companion of sober speech, being the noble and social drink; and a table shows its "
+        "welcome when wine is set upon it beside the fare of the house, being the furnished and hospitable "
+        "board; and wine is thus the drink of the grape, the pressed and ripened fruit of the vine brought by "
+        "time to its noble condition, and the honoured liquor of the festal board."
+    ),
+    "ale": (
+        "Ale is the drink brewed of grain, the liquor of malt and water and the fermenting herb which is "
+        "wrought by the brewer in the vat and drawn at the inn, the common drink of the English house and the "
+        "humble companion of bread and meat; and it is the ale of the village inn where neighbours meet, of "
+        "the harvest supper when the men are fed, and of the common table where the fare is plain, being the "
+        "brewed and homely drink of grain, and it differs from wine, which is the pressed juice of the grape, "
+        "in being a drink brewed of the harvest of the field rather than drawn from the fruit of the vine, "
+        "being the malt-born and brewed liquor; and it differs from mead, which is brewed of honey, in being "
+        "the plainer and more common drink of grain, being the homely and plentiful brew; and it differs from "
+        "broth, which is a warm and liquid food, in being a drink brewed and drunk for itself alone rather "
+        "than a sustenance taken from the pot, being the brewed and thirsting draught; and it is the ale "
+        "which, set upon the common board beside the repast, is at once a drink and a bond of fellowship "
+        "among plain men, being the brewed and companionable liquor; and a house has ale when the cask is "
+        "broached, being the brewed and hospitable one; and ale is thus the drink brewed of grain, the liquor "
+        "of malt wrought in the vat and drawn at the inn, and the common and homely drink of the English "
+        "hearth."
+    ),
+    "mead": (
+        "Mead is the drink made of honey, the sweet and ancient liquor wrought of the comb dissolved in water "
+        "and left to its slow and honourable fermenting, the drink of the old and storied ages which the lord "
+        "of the hall set before his guests; and it is the mead of the great hall where the company is "
+        "feasted, of the wedding where sweetness answers sweetness, and of the old tale in which the horn is "
+        "passed from hand to hand, being the sweet and honey-born drink, and it differs from wine, which is "
+        "the juice of the grape, in being the drink of the honeycomb rather than of the vineyard, being the "
+        "sweet and honeyed liquor; and it differs from ale, which is brewed of grain, in being the rarer and "
+        "the sweeter brew of the hive, being the honey-born and festive draught; and it differs from cider, "
+        "which is the fermented juice of apples, in being made from the labour of the bees rather than from "
+        "the fruit of the orchard, being the honeyed and ancient drink; and it is the mead which, poured at "
+        "the high table, is at once the sweetest of drinks and the oldest token of generous welcome, being "
+        "the honeyed and hospitable liquor; and a hall shows its bounty when mead is carried among the "
+        "guests, being the bountiful and hospitable board; and mead is thus the drink made of honey, the "
+        "sweet liquor wrought of the comb, and the honeyed draught of the old and storied hall."
+    ),
+    "broth": (
+        "Broth is the thin and savoury liquor in which flesh or herbs have been boiled, the liquid part of "
+        "the pot that is drawn off from the meat, and the warm and strengthening sustenance which is taken "
+        "rather as food than as drink, the humble and healing nourishment of the sick-room; and it is the "
+        "broth of the sick man who can take nothing else, of the poor household where the pot is kept upon "
+        "the fire, and of the cold evening when warmth is sought, being the thin and nourishing liquor of the "
+        "pot, and it differs from ale, which is brewed of malt to be drunk, in being a food drawn from the "
+        "boiling of meat or herbs, being the thin and nourishing sustenance; and it differs from wine, which "
+        "is the pressed juice of the grape, in being made by the fire from the pot rather than by time from "
+        "the fruit, being the boiled and sustaining liquor; and it differs from cider, which is the fermented "
+        "juice of apples, in being a warm and plain food rather than a fermented draught, being the warm and "
+        "medicinal liquor; and it is the broth which, set before the weak or the cold, is at once a drink and "
+        "a food, being the kindly and twofold nourishment; and a household shows its care when broth is kept "
+        "simmering for the ailing, being the careful one; and broth is thus the thin and savoury liquor in "
+        "which flesh or herbs have been boiled, and the warm and strengthening sustenance taken as food."
+    ),
+    "cider": (
+        "Cider is the drink pressed from apples and left to ferment, the juice of the orchard gathered in the "
+        "autumn and wrought by time into a sharp and homely liquor, the country drink made where the trees "
+        "are many; and it is the cider of the orchard at the year's turning, of the harvest supper where the "
+        "press has lately run, and of the farmhouse table where the fare is plain, being the pressed and "
+        "orchard-born drink, and it differs from wine, which is the juice of the grape, in being the drink of "
+        "the apple rather than of the vine, being the sharp and rustic liquor; and it differs from ale, which "
+        "is brewed of grain, in being pressed from the fruit of the orchard rather than brewed of the field, "
+        "being the pressed and fruity drink; and it differs from mead, which is made of honey, in being the "
+        "sharper and the plainer country drink, being the orchard-born and homely draught; and it differs "
+        "from broth, which is a warm and liquid food, in being a cold and fermented drink of the press, being "
+        "the pressed and fermented liquor; and it is the cider which, drawn at the farm, is at once a drink "
+        "and a sign of the orchard's abundance, being the pressed and plentiful liquor; and a farm shows its "
+        "orchard when cider is set beside the repast, being the plain one; and cider is thus the drink "
+        "pressed from apples and left to ferment, the juice of the orchard wrought by time, and the country "
+        "draught."
+    ),
+    "harp": (
+        "Harp is the stringed instrument of the old world whose cords are strained upon an open frame and "
+        "plucked by the fingers, the many strings of the hand which yield their sound to the touch alone; and "
+        "it is the harp of the hall of a great lord, of the psalmist who sits in the shade, and of the "
+        "wandering player at a wedding, being the plucked and open-stringed instrument; and it differs from "
+        "the lyre, which is likewise plucked but borne in the hand in a small and closed frame, in being the "
+        "great and standing instrument of the hall, being the plucked and vaulting one; and from the flute, "
+        "which is blown, in being struck by the fingers upon cords, being the fingered and breathless one; "
+        "and from the drum, which gives a noise rather than a note, in being the string that sings and not "
+        "the skin that resounds; and from the bell, which sounds of itself when struck, in being played by "
+        "living hands, being the hand-played thing; and the harp is that which, whether in the hall or by the "
+        "waters, is at once the instrument and the image of a company's peace, being the peaceable and "
+        "sounding instrument; and a house shows the harp when its mirth is made by many strings together, "
+        "being the peaceful and sounding house; and the harp is thus the stringed instrument whose cords are "
+        "strained upon an open frame and plucked by the fingers, and the instrument of the hall and of the "
+        "psalm."
+    ),
+    "flute": (
+        "Flute is the wind instrument of the old world made of a hollow reed pierced with holes and sounded "
+        "by the breath, the pipe whose voice is struck out of moving air and shaped by the stopping of the "
+        "fingers, and the thin instrument of breath carried in the hand and asked for its note by the mouth; "
+        "and it is the flute of a shepherd on a hillside, of a player in a procession, and of a boy who "
+        "learns it in a field, being the blown and hollow pipe; and it differs from the harp, which is "
+        "plucked, in being sounded by the breath and having neither cord nor frame, being the stringless one; "
+        "and from the lyre, which is likewise the companion of song, in being the hollow pipe of air rather "
+        "than the frame of cords, being the lone pipe; and from the drum, which is beaten, in being the fine "
+        "voice of the breath; and from the bell, which rings out of struck metal, in being the thin breath "
+        "drawn out by the mouth, being the near and lonely voice; and the flute is that which, whether upon "
+        "the hill or in the march, is at once the instrument and the image of the solitary life, being the "
+        "clear pipe; and a player shows the flute when his breath alone draws the thin voice out, being the "
+        "breath-drawn one; and the flute is thus the wind instrument made of a hollow reed pierced with holes "
+        "and sounded by the breath, and the thin instrument of breath shaped by the fingers."
+    ),
+    "drum": (
+        "Drum is the instrument of the skin stretched taut upon a hollow frame and struck with the hand or "
+        "the stick, the beaten vessel whose voice is a measured blow rather than a line of sound, and the "
+        "instrument which speaks in the deep stroke and gathers a company to its measure; and it is the drum "
+        "of the marching column, of the wedding feast, and of the watchman in the dark, being the beaten and "
+        "resounding vessel; and it differs from the harp, which is plucked, in being the single stroke upon "
+        "skin, being the beaten and echoing one; and from the flute, which is the thin breath drawn into a "
+        "line, in being the bodily blow that has no line but a pulse; and from the lyre, which is strung and "
+        "fingered, in being skin-covered rather than corded, being the skinned and struck thing; and from the "
+        "bell, which is likewise struck, in being a blow repeated upon a soft and yielding skin rather than "
+        "the resonant metal that rings out once, being the answering vessel; and the drum is that which, "
+        "whether in war or at a feast, is at once the instrument and the measure of the company going, being "
+        "the gathering blow; and a body of men shows the drum when its step is taken in time with a stroke, "
+        "being the measured and ordered one; and the drum is thus the instrument of the skin stretched taut "
+        "upon a hollow frame and struck with the hand, and the thing that gathers a company to its stroke."
+    ),
+    "bell": (
+        "Bell is the hollow vessel of metal that is struck and gives forth a full and long-drawn sound, the "
+        "instrument which hangs in a tower or a hall and calls and tells the hour, and the voice of the "
+        "struck metal which rings out once and lingers and is heard far off across the country; and it is the "
+        "bell of the church tower at evening, of the herd upon the mountain side, and of the gate at the "
+        "stranger's coming, being the struck and far-sounding metal; and it differs from the drum, which is "
+        "beaten and gives a stroke, in being struck once and ringing on into a long voice, being the ringing "
+        "and long-drawn one; and from the harp and from the lyre, which are strung and plucked by the "
+        "fingers, in being the metal struck and having no cord, being the cordless one; and from the flute, "
+        "which is the breath of a singing mouth, in being the voiceless metal that speaks without a mouth, "
+        "being the mouthless voice; and the bell is that which, whether in the tower or upon the beast, is at "
+        "once the instrument and the summons of a country to its hour, being the signalling thing; and a "
+        "place has its bell when its times are told by a sounding of the metal, being the summoning place; "
+        "and the bell is thus the hollow vessel of metal that is struck and gives forth a full and long-drawn "
+        "sound, and the voice of the struck metal heard far off."
+    ),
+    "lyre": (
+        "Lyre is the small lyre-strung instrument of the old poets, its cords stretched between two arms and "
+        "plucked by the fingers, the hand instrument which a singer holds against his breast and answers his "
+        "own voice with, and the little frame of strings that keeps the company of the song; and it is the "
+        "lyre of the poet who sings at a feast, of the shepherd in the shade of a tree, and of the singer "
+        "whose song is at once his prayer and his praise, being the small and hand-borne frame of strings; "
+        "and it differs from the harp, which is the great and standing instrument of the hall, in being borne "
+        "in the hand and held close to the body, being the small and hand-held one; is the breath drawn "
+        "through a hollow pipe, in being the plucked cord and the answering of the singer's voice, being the "
+        "corded and answering thing; and from the drum, which is beaten and gives a pulse, in being fingered "
+        "and giving a line of notes; and from the bell, which is struck metal, in being the frame of cords "
+        "that the poet's hand commands, being the companionable instrument; and the lyre is that which, "
+        "whether in the hand of the poet or in the picture of his praise, is at once the instrument and the "
+        "sign of the song itself, being the singing and companionable thing; and a poet shows the lyre when "
+        "his words are answered by the cords he holds, being the answering one; and the lyre is thus the "
+        "small lyre-strung instrument of the old poets whose cords are stretched between two arms and plucked "
+        "by the fingers, and the little frame of strings that keeps the company of song."
+    ),
+    "armour": (
+        "Armour is the whole and complete defensive covering of a warrior, the harness of steel or of "
+        "hardened leather in which the body is clad for the field, and the fitted and jointed suit which "
+        "turns aside a blow from the trunk, the limbs and the head; and it is the armour of a knight in his "
+        "bright harness, of a man at arms whose mail is worn over his coat, and of a mailed host drawn up in "
+        "the morning, being the complete and jointed covering, and it differs from the helmet, which is the "
+        "covering of the head alone, from the shield, which is borne apart in the hand, and from the spear "
+        "and the sword, which are offensive, in being the whole and the worn covering of the body, being the "
+        "fitted and the sustaining harness, and it is the armour which, whether of plate or of mail, is at "
+        "once a burden and a safeguard to the man within it, being the worn and the jointed defence, and it "
+        "is at the same time a species of shelter upon the person, being read rather as harness than as "
+        "building; and a man wears armour when he is clad in a complete defensive covering for the field, "
+        "being the harnessed and the covered one; and armour is thus the whole and complete defensive "
+        "covering of a warrior, the fitted and jointed suit which shields the body, and the worn harness "
+        "which turns aside a blow from the trunk and the limbs."
+    ),
+    "helmet": (
+        "Helmet is the defensive covering of the head, the casque or the helm of metal or of hardened hide in "
+        "which the skull is cased, and the fitted and convex cap which guards the crown from the stroke of a "
+        "weapon and shields the face from the glance of it; and it is the helmet of a knight whose visor is "
+        "closed, of a common soldier in a beaten metal cap, and of a mailed rider whose crest rises above the "
+        "field, being the head-covering and the casque, and it differs from the armour, which is the whole "
+        "covering of the body, from the shield, which is carried in the hand and set between the body and the "
+        "blow, and from the spear and the sword, which are held in the hand to strike, in being the covering "
+        "of the head alone and worn upon it, being the cased and the worn defence, and it is the helmet "
+        "which, as the last and finest of coverings, is at once the mark of the soldier and the guard of the "
+        "life, being the crown and the casque; and a soldier wears a helmet when his head is cased in a "
+        "defensive covering for the field, being the cased and guarded one; and helmet is thus the defensive "
+        "covering of the head, the casque in which the skull is cased, and the fitted and convex cap which "
+        "guards the crown and the face from the stroke of a weapon."
+    ),
+    "shield": (
+        "Shield is the broad and portable piece of defence carried in the hand or upon the arm, the buckler "
+        "or the target which a warrior holds between himself and a blow, and the flat and facing guard which "
+        "turns aside a stroke and covers the body; and it is the shield of a warrior who bears it before him, "
+        "of a host whose shields are locked, and of a figure that holds it as an emblem, being the portable "
+        "and facing guard, and it differs from the armour, which is worn upon the body, from the helmet, "
+        "which covers the head, and from the spear and the sword, which are weapons of offence, in being the "
+        "movable defence carried apart in the hand, being the borne and the opposing guard, and it differs "
+        "also from the bulwark, which stands fixed about a place, in being the carried and the personal "
+        "guard, being the portable and the facing defence, and it is the shield which, held before the body, "
+        "is at once a cover and a burden, being the borne and the opposing guard; and a man bears a shield "
+        "when he holds a portable defence before him for the covering of his body, being the guarded and the "
+        "covered one; and shield is thus the broad and portable piece of defence carried in the hand, the "
+        "buckler held between a warrior and a blow, and the flat facings guard which turns aside a stroke and "
+        "covers the body."
+    ),
+    "spear": (
+        "Spear is the long and slender weapon of a shaft with a pointed head, the lance or the pike which a "
+        "warrior holds in the hand or casts forth, and the long pole armed at its end which reaches beyond "
+        "the arm of him who bears it; and it is the spear of a hunter upon the marsh, of a footman in the "
+        "front rank of a host, and of a rider whose lance is lowered, being the long and the thrusting "
+        "weapon, and it differs from the sword, which is short and edged and wielded within the compass of "
+        "the arm, from the armour and the helmet, which are worn and defend, and from the shield, which is "
+        "borne to cover, in being the long weapon which strikes at a distance from the hand, being the long "
+        "and the reaching weapon, and it is the spear which, whether cast or held, is at once the oldest and "
+        "the humblest of arms, being the long and the reaching shaft; and a man bears a spear when he holds a "
+        "long shafted weapon with a pointed head for the field, being the armed and the reaching one; and "
+        "spear is thus the long and slender weapon of a shaft with a pointed head, the lance or the pike held "
+        "in the hand or cast forth, and the long pole armed at its end which reaches beyond the arm of him "
+        "who bears it."
+    ),
+    "sword": (
+        "Sword is the long and edged weapon worn at the side or held in the hand, the blade with a hilt and a "
+        "cross guard which is wielded within the compass of the arm, and the straight and polished steel "
+        "which is the weapon of the knight and the sign of authority; and it is the sword of a knight girded "
+        "at his side, of a judge who bears it as the emblem of his office, and of a warrior who holds it by "
+        "the hilt, being the edged and the bearing weapon, and it differs from the spear, which is long and "
+        "striking at a distance, from the shield, which is borne for covering, and from the armour and the "
+        "helmet, which are worn in defence, in being the edged weapon wielded near the hand and worn at the "
+        "side, being the close and the edged weapon, and it is the sword which, as the weapon above all "
+        "others of a gentleman, is at once an arm and a sign, being the borne and honoured weapon; and a man "
+        "wears a sword when he has an edged weapon girded at his side or held in his hand, being the girded "
+        "and the armed one; and sword is thus the long and edged weapon worn at the side or held in the hand, "
+        "the blade with a hilt and a cross guard, and the straight polished steel which is the weapon of the "
+        "knight and the sign of authority."
+    ),
+    "ox": (
+        "An ox is the great and slow-footed beast of the plough, the patient labourer of the tillage, and the "
+        "heavy creature of the yoke whose strength is given wholly to the labour of men; and it is the ox of "
+        "the ploughman who follows the furrow from the first light, of the wain that creaks along the high "
+        "road beneath its load, and of the stored beast that stands patient in the byre, being the patient "
+        "and labouring beast, and it differs from a steed, which is the noble and spirited beast of the "
+        "saddle, in being the slow and burdened labourer of the field, being the patient drawing beast, and "
+        "it differs from a goat, which is the nimble and wandering creature of the hill, and from a swine, "
+        "which wallows in the mire, and from a lamb, which is the tender young of the flock, and from a hen, "
+        "which scratches in the yard, in bearing the yoke and the plough and asking nothing but its fodder, "
+        "being the great and yoked beast of the furrow; and it is the ox which, being yoked, is at once the "
+        "labourer of the field and the very image of patience, being the patient and drawing beast; and a man "
+        "shows an ox when he labours long and uncomplaining under a weight, being the patient and heavy one; "
+        "and an ox is thus the great and slow-footed beast of the plough, the patient labourer of the "
+        "tillage, and the heavy creature of the yoke."
+    ),
+    "goat": (
+        "A goat is the nimble and bearded creature of the crag, the climbing and sure-footed beast which "
+        "browses upon the thorny hillside and masters the steepest rock, and the hardy wanderer of the "
+        "pasture whose temper is quick and whose foot is sure; and it is the goat of the goatherd who leads "
+        "his flock along the scarp, of the tumbled ruin where the beast climbs, and of the old image of "
+        "restless freedom, being the nimble and climbing beast, and it differs from an ox, which is the slow "
+        "and yoked labourer of the furrow, in being the free and climbing creature that knows no yoke, being "
+        "the brisk and wandering beast of the hill, and it differs from a swine, which wallows in the mire, "
+        "and from a lamb, which follows the flock, and from a hen, which scratches in the yard, in living "
+        "upon the bare and stony height and in leaping where the others walk, being the nimble and "
+        "sure-footed creature of the crag; and it is the goat which, being let loose upon the height, is at "
+        "once the freest and the least governed of the flock, being the brisk and sure-footed beast; and a "
+        "man shows a goat when he is restless and untameable, leaping where others keep the road, being the "
+        "nimble and wilful one; and a goat is thus the nimble and bearded creature of the crag, the climbing "
+        "beast which browses upon the hillside, and the hardy wanderer of the pasture whose foot is sure."
+    ),
+    "swine": (
+        "A swine is the gross and grunting beast of the sty, the wallowing creature of the mire which is kept "
+        "for its flesh and takes its pleasure in the foulest ground, and the heavy and greedy feeder whose "
+        "whole delight is the trough; and it is the swine of the swineherd who drives it to the wood for "
+        "mast, of the farmyard where it roots in the midden, and of the old image of greed and of "
+        "uncleanness, being the gross and wallowing beast, and it differs from a lamb, which is the white and "
+        "gentle young of the flock, in being the gross and muddy creature of the trough and the mire, being "
+        "the heavy and greedy beast, and it differs from an ox, which labours in the furrow, and from a goat, "
+        "which climbs the crag, and from a hen, which scratches in the dust, in neither labouring nor "
+        "climbing nor picking but feeding without measure and lying in the filth, being the gross and "
+        "ungoverned beast of the sty; and it is the swine which, being fed at the trough, is at once the "
+        "keeper of the household provender and the creature of the shambles, being the fat and greedy beast; "
+        "and a man shows a swine when he gives himself wholly to the trough and the mire and knows no measure "
+        "in his appetite, being the gross and greedy one; and a swine is thus the gross and grunting beast of "
+        "the sty, the wallowing creature of the mire kept for its flesh, and the heavy and greedy feeder "
+        "whose delight is the trough."
+    ),
+    "lamb": (
+        "A lamb is the tender young of the sheep, the white and gentle creature of the fold which follows the "
+        "flock and bleats for its dam, and the innocent and helpless beast whose meekness is the very image "
+        "of gentleness; and it is the lamb of the fold in the first season of its life, of the shepherd who "
+        "carries it upon his shoulders, and of the old image of meekness and of the offering, being the "
+        "tender and gentle young, and it differs from a swine, which wallows in the mire and feeds without "
+        "measure, in being the clean and gentle creature of the fold, being the white and meek young beast, "
+        "and it differs from an ox, which is yoked to the plough, and from a goat, which climbs the crag, and "
+        "from a hen, which scratches in the yard, in being the young that follows and is led rather than the "
+        "beast that labours or wanders, being the tender and following creature of the flock; and it is the "
+        "lamb which, being innocent and without defence, is at once the beloved of the shepherd and the "
+        "emblem of meekness, being the gentle and defenceless young; and a person shows a lamb when he is "
+        "meek and trusting, following where he is led, being the gentle and yielding one; and a lamb is thus "
+        "the tender young of the sheep, the white and gentle creature of the fold, and the innocent beast "
+        "whose meekness is the image of gentleness."
+    ),
+    "hen": (
+        "A hen is the common and scratching fowl of the yard, the busy and clucking bird that pecks in the "
+        "dust for its grain and gathers her brood beneath her wing, and the humble and domestic creature "
+        "whose whole world is the threshold; and it is the hen of the farmyard that calls her chicks at the "
+        "first hint of the hawk, of the cottage where the eggs are laid in the hay, and of the old image of "
+        "the busy mother, being the small and scratching fowl of the yard, and it differs from a lamb, which "
+        "is the tender young of the fold, in being the small and busy bird of the threshold that neither "
+        "follows nor is led but pecks and clucks, being the common and domestic fowl, and it differs from an "
+        "ox, which draws the plough, and from a goat, which climbs the crag, and from a swine, which wallows "
+        "in the mire, in keeping close to the house and living by the scattered grain, being the lowly and "
+        "home-keeping bird; and it is the hen which, being called to her brood, is at once the humblest of "
+        "the creatures of the yard and the most watchful of mothers, being the small and anxious fowl; and a "
+        "person shows a hen when he is busy and wholly taken up with the small matters of the household, "
+        "being the clucking and home-keeping one; and a hen is thus the common and scratching fowl of the "
+        "yard, the busy bird that pecks in the dust, and the humble domestic creature whose world is the "
+        "threshold."
+    ),
+    "brow": (
+        "Brow is the arched ridge of bone and flesh above the eye, the vaulted shelf that overhangs the sight "
+        "and shades it from the glare, and the loftiness of the face which is at once its fence and its "
+        "canopy; and it is the brow of a thinker gathered in thought, of a watchman peering from a wall, and "
+        "of a house whose gable stands over the window, being the arched and overhanging ridge, and it "
+        "differs from the forehead, which is the flat and open expanse above it, in being the projecting and "
+        "shadowing arch, being the sheltering and vaulted ridge, and it differs from the heel, which is the "
+        "low and weighty foundation of the foot, in being the high and watchful arch of the face, being the "
+        "lifted and defending ridge, and it differs from the palm also, which lies open to receive, in being "
+        "closed and drawn against the glare, being the arched and sheltering brow; and it is the brow which, "
+        "drawn hard together in anger or raised in wonder, is at once the shield of the eye and the tablet of "
+        "the mind, being the arched and expressive ridge; and a person shows a heavy brow when the ledge "
+        "above the eye sinks low and darkens the regard, being the lowering and sheltering one; and brow is "
+        "thus the arched ridge above the eye, the vaulted shelf that overhangs and shades the sight, and the "
+        "loftiness of the face which serves at once as fence and canopy."
+    ),
+    "palm": (
+        "Palm is the broad and open inner surface of the hand, the flat and yielding field between the wrist "
+        "and the fingers, and the measure of the hand which is held out to receive, to give, or to pledge; "
+        "and it is the palm of a beggar turned upward for alms, of an honest man offered in faith, and of a "
+        "hand that shelters a flame from the wind, being the broad and open surface, and it differs from the "
+        "heel, which is the firm and unyielding foundation under the weight of the body, in being the soft "
+        "and receptive surface open to what comes, being the yielding and open field, and it differs from the "
+        "brow, which arches and defends the sight, in being flat and turned outward to receive, being the "
+        "open and receiving field, and it differs from the elbow too, which turns the arm at its joint, in "
+        "being the end and the offering of the hand, being the broad and open palm; and it is the palm which, "
+        "whether open in charity or closed upon a coin, is at once the receiving and the giving surface, "
+        "being the open and honest field; and a person shows a palm when he turns the inner hand upward to "
+        "offer, to accept or to swear, being the open and outstretched one; and palm is thus the broad and "
+        "open inner surface of the hand, the flat field between wrist and fingers, and the measure of the "
+        "hand held out to receive or to give."
+    ),
+    "heel": (
+        "Heel is the hinder and rounded part of the foot, the firm and low foundation upon which the body "
+        "stands and from which it springs, and the weighty base which bears the whole frame and turns it in "
+        "its going; and it is the heel of a runner planted before the leap, of a walker pressing the earth "
+        "behind him, and of a wanderer whose heels grow weary upon the road, being the firm and weighty base, "
+        "and it differs from the palm, which is the soft and open surface of the hand, in being the hard and "
+        "closed foundation underfoot, being the bearing and springing base, and it differs from the knee, "
+        "which bends in the middle of the leg, in being the low and final support of the whole, being the "
+        "grounded and weighty base, and it differs from the brow as well, which arches above the sight, in "
+        "lying lowest and bearing all, being the firm and low foundation; and it is the heel which, whether "
+        "planted firm or turned in flight, is at once the support and the spring of the body, being the "
+        "bearing and departing base; and a person shows his heel when he turns and goes, or sets it down hard "
+        "in refusal, being the grounded and turning one; and heel is thus the hinder and rounded part of the "
+        "foot, the firm and low foundation on which the body stands, and the weighty base which bears the "
+        "frame and turns it in its going."
+    ),
+    "elbow": (
+        "Elbow is the joint at the bending of the arm, the hinge of bone and sinew where the limb turns, and "
+        "the sharp and outward angle by which the arm is folded or thrust; and it is the elbow of a man who "
+        "leans upon a table in counsel, of a labourer who bends his arm to the work, and of one who jostles "
+        "his neighbour in a crowd, being the hinge and angle of the limb, and it differs from the knee, which "
+        "is the like hinge of the leg and bears the weight, in being the turning of the arm that bears "
+        "nothing but the hand, being the folding and thrusting hinge, and it differs from the palm, which is "
+        "the open end of the hand, in being the turning point in the middle of the limb, being the hinge and "
+        "the angle, and it differs from the heel, which is the low foundation of the foot, in being raised "
+        "and folded at will, being the turning and advancing joint; and it is the elbow which, whether bent "
+        "in rest or thrust out in passage, is at once the hinge of the arm and the room a man claims, being "
+        "the folding and thrusting joint; and a person uses his elbow when he folds his arm, or when he makes "
+        "way through a press by the strength of it, being the folding and thrusting one; and elbow is thus "
+        "the joint at the bending of the arm, the hinge where the limb turns, and the sharp and outward angle "
+        "by which the arm is folded or thrust."
+    ),
+    "knee": (
+        "Knee is the joint in the middle of the leg, the hinge upon which the limb bends, and the place where "
+        "a man kneels, stoops, or goes down before what he honours; and it is the knee of one who kneels in "
+        "prayer, of a servant who bows before his lord, and of a weary traveller who bends to rest, being the "
+        "bending hinge of the leg, and it differs from the elbow, which is the like hinge of the arm, in "
+        "bearing the weight of the whole body when it bends, being the bearing and bending hinge, and it "
+        "differs from the heel, which is the low foundation of the foot, in being set in the middle of the "
+        "limb, being the middle and yielding joint, and it differs from the brow, which is the arch of the "
+        "face, in being the lowly joint of submission, being the bending and lowly hinge; and it is the knee "
+        "which, whether stiffened in pride or bent in reverence, is at once the hinge of the limb and the "
+        "sign of the will, being the bending and submitting joint; and a person bends the knee when he lowers "
+        "himself to honour, to serve or to entreat, being the bending and lowly one; and knee is thus the "
+        "joint in the middle of the leg, the hinge upon which the limb bends, and the place where a man "
+        "kneels, stoops, or bows before what he honours."
+    ),
+    "judge": (
+        "A judge is the magistrate or the officer of a court who presides over a cause, the person set upon "
+        "the bench to hear the parties and to pronounce the law, and the grave and learned authority by whose "
+        "word a contention is ended and a sentence is given; and it is the judge of a court of record, of a "
+        "court of assize, and of the petty session, being the presiding and deciding magistrate, and it "
+        "differs from the counsel, who is the learned man retained to plead and to argue the cause of a "
+        "party, in being the impartial one who hears and determines and who owes no fidelity to either side, "
+        "being the unprejudiced and deciding officer, and it differs from the advocate, who speaks for the "
+        "interest of a client, in being the arbiter above the interests of both, being the impartial and the "
+        "lawful decider; and it is the judge which, sitting above the contention of the plaintiff and the "
+        "defendant, is at once the hearer of the proof and the giver of the sentence, being the leaning and "
+        "determining magistrate; and a judge shows his office when he holds the scale even between the "
+        "parties and speaks the law without favour, being the upright and the sober magistrate; and a judge "
+        "is thus the presiding officer of a court who hears a cause, weighs the proof and pronounces the law, "
+        "being the impartial and deciding authority of the bench."
+    ),
+    "plaintiff": (
+        "A plaintiff is the person who brings a suit against another, the complaining party who sets his "
+        "cause before a court and demands redress at law, and the aggrieved one whose grievance is the ground "
+        "of the action; and it is the plaintiff of an action for debt, of a suit for a broken promise, and of "
+        "a claim for a trespass done, being the accusing and complaining suitor, and it differs from the "
+        "defendant, who is the party against whom the complaint is preferred and who stands to answer it, in "
+        "being the one who first complains and seeks, being the advancing and demanding party, and it differs "
+        "from the counsel, who pleads his cause, in being the party himself whose right is in question, being "
+        "the principal and the suing person; and it is the plaintiff which, setting the cause in motion, is "
+        "at once the accuser of a wrong and the pursuer of a remedy, being the complaining and the pursuing "
+        "party; and a person is a plaintiff when he comes into court to demand justice for an injury "
+        "sustained, being the grieved and the suing suitor; and a plaintiff is thus the complaining party who "
+        "begins an action and seeks redress, being the aggrieved suitor who stands before the court."
+    ),
+    "defendant": (
+        "A defendant is the person against whom an action is brought, the party summoned to answer a "
+        "complaint and to defend his right before a court, and the answering one whose conduct or contract is "
+        "the matter in question; and it is the defendant of an action for debt, of a suit for damages, and of "
+        "an accusation preferred in a criminal cause, being the summoned and answering party, and it differs "
+        "from the plaintiff, who is the party who complains and demands, in being the one who is complained "
+        "against and who answers, being the answering and defending party, and it differs from the counsel, "
+        "who speaks in his behalf, in being the party himself and not the mouth that speaks for him, being "
+        "the principal and the answering person; and it is the defendant which, standing at the bar to answer "
+        "the charge, is at once the accused of the complaint and the ward of the law's protection, being the "
+        "answering and the defended party; and a person is a defendant when he is called into court to answer "
+        "for an alleged wrong, being the summoned and the replying party; and a defendant is thus the party "
+        "against whom an action is brought, the one who is summoned to answer and to defend, being the "
+        "answering suitor who stands at the bar."
+    ),
+    "counsel": (
+        "Counsel is the learned person retained to plead and to advise in a cause, the lawyer who argues the "
+        "case of his client before a court, and the body of such pleaders considered as an order; and it is "
+        "the counsel of a plaintiff in a heavy suit, of a defendant in a criminal cause, and of a great house "
+        "that keeps its counsel to advise it, being the retained and pleading lawyer, and it differs from the "
+        "judge, who hears and determines with no fidelity to either side, in being the partisan who pleads "
+        "the interest of one, being the engaged and the arguing advocate, and it differs from the advocate in "
+        "being the professional pleader whom the party engages, rather than the moral one who supports "
+        "another's cause, being the hired and learned pleader; and it is the counsel which, taking the brief "
+        "of a party, is at once the voice of his client and the officer of the court, being the pleading and "
+        "the sworn lawyer; and a person gives counsel when he advises upon a cause and pleads it in the "
+        "hearing of the court, being the learned and the engaged pleader; and counsel is thus the learned "
+        "pleader retained for a cause, the lawyer who argues for his client, being the voice of a party "
+        "before the bench."
+    ),
+    "advocate": (
+        "An advocate is the person who pleads or supports a cause, one who speaks in favour of another before "
+        "a court or before the world, and the public defender of an interest that he has taken to heart; and "
+        "it is the advocate of a poor man before a stern tribunal, of a prisoner who has no other voice, and "
+        "of a cause that the age despises, being the pleading and the supporting one, and it differs from the "
+        "counsel, who is the learned pleader retained for his fee to argue a suit, in being the one who takes "
+        "up a cause whether for hire or from zeal, being the zealous and the supporting pleader, and it "
+        "differs from the judge, who stands above the cause and determines it, in being the passionate "
+        "champion who espouses one side, being the partisan and the pleading friend; and it is the advocate "
+        "which, taking the cause of another for his own, is at once the pleader at the bar and the champion "
+        "in the world, being the devoted and the eloquent supporter; and a person is an advocate when he "
+        "stands forth to plead and to defend the cause of one who cannot plead for himself, being the zealous "
+        "and the vocal pleader; and an advocate is thus the one who pleads and supports a cause, the champion "
+        "of an interest before a court or the world, being the devoted and the pleading supporter."
+    ),
 }
 
 # англ. стоп-слова, чтобы не срабатывать на русских вопросах с латиницей (код и т.п.)
@@ -3557,7 +4432,7 @@ _TOPIC_TEST = [
     ("boldness", ("boldness", "forward courage", "unflinching resolve", "readiness to act", "confident daring", "fearless confidence")),
     ("daring", ("daring", "adventurous boldness", "risk-taking spirit", "venturing courage", "audacious nerve", "bold enterprise")),
     ("venturesomeness", ("venturesomeness", "ready to risk", "new enterprise spirit", "calculated adventure", "bold undertaking", "explorer's temper")),
-    ("initiative", ("initiative", "power to act first", "beginning without orders", "first step", "self-starting force", "leadership seed")),
+    ("initiative", ("initiative", "power to act first", "beginning without orders", "first step", "self-starting force", "initiative seed")),
     ("gettingahead", ("gettingahead", "advancing in life", "steady progress", "making one's way", "worldly success", "rising fortunes")),
     ("cultivation", ("cultivation", "tillage of soil", "mind development", "careful fashioning", "refining discipline", "long tending")),
     ("germination", ("germination", "beginning of growth", "first sprouting", "seed awakening", "bud bursting", "initial unfolding")),
@@ -4751,6 +5626,96 @@ _TOPIC_TEST = [
     ("babble", ("babble", "baby sounds", "unformed chatter", "incoherent sound", "what is babble", "gurgling talk")),
     ("stammer", ("stammer", "stumble over words", "halting speech", "broken utterance", "what is a stammer", "laboured talking")),
     ("prattle", ("prattle", "fond chatter", "endless small talk", "talk of trifles", "what is prattle", "light prattling talk")),
+    ("brass", ("brass", "what is brass", "yellow metal", "brass ornament", "polished brass", "brass lock")),
+    ("copper", ("copper", "what is copper", "red metal", "copper pot", "copper wire", "copper roof")),
+    ("lead", ("lead", "what is lead", "heavy metal", "plumb line", "lead roof", "lead weight")),
+    ("tin", ("tin", "what is tin", "white metal", "pewter and tin", "tin cup", "tin can")),
+    ("steel", ("steel", "what is steel", "hard metal", "steel blade", "tempered steel", "steel bridge")),
+    ("linen", ("linen", "flax cloth", "what is linen", "plain white cloth", "linen stuff", "cool table cloth")),
+    ("satin", ("satin", "glossy cloth", "what is satin", "smooth shining cloth", "satin stuff", "lustrous fabric")),
+    ("velvet", ("velvet", "piled cloth", "what is velvet", "soft nap cloth", "velvet stuff", "deep pile fabric")),
+    ("woollen", ("woollen", "woolen cloth", "what is woollen", "sheep fleece cloth", "woollen stuff", "warm thick cloth")),
+    ("brocade", ("brocade", "figured cloth", "what is brocade", "woven picture cloth", "brocade stuff", "ornate figured fabric")),
+    ("net", ("net", "meshed snare", "woven trap", "what is a net", "casting net", "fish net")),
+    ("hook", ("hook", "barbed hook", "fish hook", "what is a hook", "bent point", "hook and line")),
+    ("bait", ("bait", "fish bait", "what is a bait", "tempting morsel", "bait on a hook", "take the bait")),
+    ("angler", ("angler", "who is an angler", "patient fisher", "man with a rod", "what is an angler", "angling")),
+    ("seine", ("seine", "seine net", "what is a seine", "drawn net", "hauling net", "drag net")),
+    ("quill", ("quill", "feather pen", "what is a quill", "pen from a feather", "hollow feather", "quill pen")),
+    ("parchment", ("parchment", "what is parchment", "skin for writing", "animal skin page", "parchment sheet", "old book page")),
+    ("seal", ("wax seal", "what is a seal", "seal on a letter", "pressed sign", "seal in wax", "sealing mark")),
+    ("scroll", ("scroll", "what is a scroll", "rolled writing", "rolled up page", "ancient scroll", "scroll of paper")),
+    ("tablet", ("tablet", "what is a tablet", "clay tablet", "wax tablet", "tablet for writing", "flat writing face")),
+    ("mist", ("mist", "low cloud", "thin fog", "what is mist", "misty air", "white vapour near ground")),
+    ("dew", ("dew", "drops on grass", "morning dew", "what is dew", "dew on leaves", "beads of moisture")),
+    ("thaw", ("thaw", "melting of ice", "what is a thaw", "snow melting", "spring thaw", "ice giving way")),
+    ("sleet", ("sleet", "half frozen rain", "what is sleet", "rain and snow", "freezing rain", "wet snow falling")),
+    ("haze", ("haze", "what is haze", "summer haze", "hazy air", "thin dim air", "dusty air far off")),
+    ("coin", ("coin", "piece of money", "stamped metal", "what is a coin", "small money", "hard cash")),
+    ("mint", ("mint", "place of coining", "where coin is struck", "what is a mint", "coin factory", "stamping of money")),
+    ("purse", ("purse", "small money bag", "where coin is kept", "what is a purse", "keeping of money", "pocket for coin")),
+    ("toll", ("toll", "charge for passage", "gate fee", "what is a toll", "bridge charge", "price of passage")),
+    ("usury", ("usury", "hired money", "gain on a loan", "what is usury", "lending for gain", "hard lending")),
+    ("moth", ("moth", "what is a moth", "dusty winged creature", "creature of the night", "flier of the dim air", "small pale flier")),
+    ("beetle", ("beetle", "what is a beetle", "armored creature", "creature of the ground", "heavy slow crawler", "hard shelled walker")),
+    ("spider", ("spider", "what is a spider", "solitary weaver", "spins its net", "many legged hunter", "patient weaver")),
+    ("wasp", ("wasp", "what is a wasp", "slender flier", "busy summer flier", "striped creature", "sharp tempered flier")),
+    ("gnat", ("gnat", "what is a gnat", "whining speck", "small fretful flier", "hovering speck", "petty flier")),
+    ("lark", ("lark", "singing lark", "bird of dawn", "lark of morning", "rises to sing", "what is a lark")),
+    ("hawk", ("hawk", "bird of prey", "hawk stooping", "hawk in sky", "rapacious bird", "what is a hawk")),
+    ("raven", ("raven", "black raven", "raven omen", "raven of ill omen", "black bird omen", "what is a raven")),
+    ("heron", ("heron", "heron in water", "grey water bird", "bird of still water", "heron waiting", "what is a heron")),
+    ("sparrow", ("sparrow", "small brown bird", "sparrow of town", "creature of courtyard", "common bird town", "what is a sparrow")),
+    ("barley", ("barley", "bearded cereal", "hardy grain", "northern corn", "humble grain", "awns of barley")),
+    ("oats", ("oats", "drooping panicle", "loose grain", "humble corn", "cool country grain", "bundle of oats")),
+    ("rye", ("rye", "winter corn", "slender grain", "dark bread corn", "hardy winter grain", "standing rye")),
+    ("chaff", ("chaff", "grain husk", "worthless husk", "light refuse", "chaff in the wind", "separate the chaff")),
+    ("sheaf", ("sheaf", "bound bundle", "armful of corn", "stood sheaves", "tied stalks", "sheaf of grain")),
+    ("dusk", ("dusk", "what is dusk", "falling light evening", "fading daylight", "time before dark", "glow after sunset")),
+    ("noon", ("noon", "what is noon", "middle of the day", "highest sun", "meridian hour", "midday")),
+    ("midnight", ("midnight", "what is midnight", "middle of the night", "deepest dark", "dead of night", "twelve at night")),
+    ("twilight", ("twilight", "what is twilight", "between day and night", "doubtful light", "half light", "soft dim light")),
+    ("eve", ("eve", "what is an eve", "evening of the day", "night before feast", "close of day", "gathering at evening")),
+    ("jar", ("jar", "what is a jar", "broad open vessel", "vessel of clay", "jar of preserved fruit", "pot for keeping")),
+    ("barrel", ("barrel", "what is a barrel", "cask of staves", "great round vessel", "barrel of wine", "hooped vessel")),
+    ("basket", ("basket", "what is a basket", "woven vessel", "vessel of osiers", "basket of fruit", "open woven receptacle")),
+    ("casket", ("casket", "what is a casket", "small precious box", "locked little box", "casket of jewels", "shut box of worth")),
+    ("flask", ("flask", "what is a flask", "narrow necked vessel", "traveller vessel", "flask of water", "stoppered bottle")),
+    ("road", ("road", "what is a road", "beaten way", "open course", "public way", "way laid on land")),
+    ("lane", ("lane", "what is a lane", "narrow way", "country lane", "way between hedges", "enclosed passage")),
+    ("track", ("track", "what is a track", "worn line", "line of feet", "printed course", "way through wilderness")),
+    ("ford", ("ford", "what is a ford", "shallow crossing", "wading place", "cross a river", "stream crossing")),
+    ("path", ("path", "what is a path", "narrow footway", "trodden way", "way of a life", "small course")),
+    ("wine", ("wine", "drink of the grape", "juice of the vine", "what is wine", "vintage drink", "fermented grape juice")),
+    ("ale", ("ale", "brewed of grain", "malt drink", "what is ale", "common brewed drink", "drink of the inn")),
+    ("mead", ("mead", "drink made of honey", "honey liquor", "what is mead", "sweet honeyed drink", "honey drink")),
+    ("broth", ("broth", "liquor of the pot", "liquid food", "what is broth", "thin savoury liquor", "boiled meat liquor")),
+    ("cider", ("cider", "juice of apples", "drink of the orchard", "what is cider", "pressed apple drink", "apple liquor")),
+    ("harp", ("harp", "plucked strings", "stringed instrument", "what is a harp", "many strings plucked", "instrument of the hall")),
+    ("flute", ("flute", "hollow pipe", "what is a flute", "blown instrument", "wind instrument of reed", "thin pipe blown")),
+    ("drum", ("drum", "stretched skin struck", "what is a drum", "beaten vessel", "hollow frame and skin", "instrument beaten")),
+    ("bell", ("bell", "struck metal", "what is a bell", "hollow metal vessel", "ringing instrument", "calls the hour")),
+    ("lyre", ("lyre", "small frame of strings", "what is a lyre", "poet instrument", "hand held strings", "cords between two arms")),
+    ("armour", ("armour", "suit of armour", "what is armour", "armour meaning", "body armour", "plate armour")),
+    ("helmet", ("helmet", "what is a helmet", "helmet meaning", "head covering", "casque", "helm of metal")),
+    ("shield", ("shield", "what is a shield", "shield meaning", "buckler", "portable defence", "hand shield")),
+    ("spear", ("spear", "what is a spear", "spear meaning", "lance", "pike", "long shafted weapon")),
+    ("sword", ("sword", "what is a sword", "sword meaning", "blade and hilt", "edged weapon", "bear a sword")),
+    ("ox", ("ox", "oxen", "what is an ox", "beast of the plough", "yoked beast", "draws the plough")),
+    ("goat", ("goat", "what is a goat", "creature of the crag", "climbing beast", "goatherd", "sure footed beast")),
+    ("swine", ("swine", "what is a swine", "beast of the sty", "wallowing beast", "swineherd", "creature of the mire")),
+    ("lamb", ("lamb", "what is a lamb", "young of the sheep", "creature of the fold", "tender young", "meek young beast")),
+    ("hen", ("hen", "what is a hen", "fowl of the yard", "scratching fowl", "clucking bird", "her brood")),
+    ("brow", ("brow", "arched ridge", "shelf above eye", "what is a brow", "vaulted ridge", "loftiness of face")),
+    ("palm", ("palm", "open hand", "inner hand", "what is a palm", "broad hand surface", "hand held out")),
+    ("heel", ("heel", "back of foot", "foot foundation", "what is a heel", "hinder foot", "base of the foot")),
+    ("elbow", ("elbow", "joint of arm", "bend of arm", "what is an elbow", "hinge of the arm", "arm joint")),
+    ("knee", ("knee", "joint of leg", "bend of leg", "what is a knee", "hinge of the leg", "kneeling joint")),
+    ("judge", ("judge", "presiding magistrate", "bench officer", "one who hears a cause", "the judge", "who decides a case")),
+    ("plaintiff", ("plaintiff", "complaining party", "one who sues", "who brings a suit", "the plaintiff", "aggrieved suitor")),
+    ("defendant", ("defendant", "answering party", "one who is sued", "party against whom sued", "the defendant", "summoned party")),
+    ("counsel", ("counsel", "pleading lawyer", "lawyer for a party", "learned pleader", "the counsel", "who argues a case")),
+    ("advocate", ("advocate", "one who pleads", "champion of a cause", "supporter of a cause", "the advocate", "speaks for another")),
 ]
 
 
@@ -4777,6 +5742,17 @@ def _is_english_query(q):
     return (enough_latin and cyr == 0 and has_marker)
 
 
+def _key_hit(text, key):
+    """Совпадение ключа по границам слова: «lead» не ловится внутри «leadership».
+    Ищет все вхождения, чтобы не потерять свободное, если первое склеено.
+    Один return: bool."""
+    starts = ([i for i in range(len(text)) if text.startswith(key, i)]
+              if key in text else [])
+    return any((s == 0 or not text[s - 1].isalpha())
+               and (s + len(key) >= len(text) or not text[s + len(key)].isalpha())
+               for s in starts)
+
+
 def try_english(query):
     """Точка входа: отвечает по-английски, если вопрос английский.
     Пустой/не-строковый/слишком короткий запрос → None. Один return: str/None.
@@ -4797,7 +5773,7 @@ def try_english(query):
     best_len = -1
     for topic, keys in topics_test:
         for k in (keys or []):
-            if isinstance(k, str) and k and k in q_low and len(k) > best_len:
+            if isinstance(k, str) and k and _key_hit(q_low, k) and len(k) > best_len:
                 best_len = len(k)
                 answer = _EN_KB.get(topic)
     # fallback: прямое вхождение ключа-темы как отдельного слова

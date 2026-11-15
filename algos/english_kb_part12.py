@@ -18,6 +18,8 @@ NAMES = (
 
 TOPICS = {name: _EN_KB[name] for name in NAMES}
 
-TOPIC_TEST = [(name, keys) for name, keys in _ALL_TRIGGERS if name in NAMES]
+_KEYS = dict(_ALL_TRIGGERS)
 
-del _ALL_TRIGGERS
+TOPIC_TEST = [(name, _KEYS[name]) for name in NAMES]
+
+del _ALL_TRIGGERS, _KEYS
