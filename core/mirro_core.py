@@ -1004,6 +1004,18 @@ def try_bosova_engine(prompt):
     return ans
 
 
+def _bridge_knows(prompt):
+    """Знает ли русский мост определение для этого вопроса. Один return: bool."""
+    known = False
+    try:
+        from algos import ru_bridge
+        found = ru_bridge.bridge(prompt)
+        known = bool(found and found.get("content"))
+    except Exception:
+        known = False
+    return known
+
+
 def _try_direct_handlers(prompt):
     """Перебирает быстрые стратегии (приветствие, обучение, мышление, юмор,
     творчество, Джарвис, диалог, босовские алгоритмы) и возвращает первый
@@ -1312,8 +1324,16 @@ def _try_direct_handlers(prompt):
             msg = None
         # ответ, который не отвечает на заданный вопрос («что такое колесо» →
         # «Лес — это…» из-за совпадения подстроки), пропускаем: пусть ответит
-        # следующий обработчик, который знает толк в этом слове
-        if msg is not None and not answer_looks_bad(prompt, msg):
+        # следующий обработчик, который знает толк в этом слове.
+        # Гейт не применяем к «особым» ответам: сравнение, связи, причины и
+        # подсчёт собираются по плану из базы, их формулировка не повторяет
+        # вопрос и эвристика «ответ не про это» рубит их зря
+        if msg is not None and strategy == "definition" and _bridge_knows(prompt):
+            # словарь понятий из модулей иногда берёт не тот смысл («что такое
+            # язык» → «Язык программирования Python»); русская база точнее
+            msg = None
+        if msg is not None and (strategy == "concept_special"
+                               or not answer_looks_bad(prompt, msg)):
             result = {"content": msg, "strategy": strategy}
             break
     return result
