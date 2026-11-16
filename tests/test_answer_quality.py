@@ -57,7 +57,9 @@ class ConceptVersusFunctionTest(unittest.TestCase):
         from algos.module_knowledge import try_definition
         for question, word in (("что такое энтропия", "энтропия"),
                                ("что такое инфляция", "инфляция"),
-                               ("что такое фотон", "фотон")):
+                               ("что такое фотон", "фотон"),
+                               ("что такое океан", "океан"),
+                               ("что такое налог", "налог")):
             text = try_definition(question) or ""
             self.assertIn(word, text.lower())
             self.assertNotIn("связан с", text)
