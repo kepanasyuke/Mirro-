@@ -712,7 +712,7 @@ class KnowledgeGraph:
                 ranked = safe_nbrs
             for p, other, w in ranked[:6]:
                 if not _is_noisy_predicate(p):
-                    lines.append(f"связано {p} с «{other}» (вес {float(w):.2f})")
+                    lines.append(f"{p} → «{other}» (вес {float(w):.2f})")
             has_details = bool(n.facts) or len(lines) > 1
             text = "\n".join(lines) if has_details else None
         return text
@@ -1895,12 +1895,14 @@ def try_full_explanation(query):
         try:
             ranked = sorted(kg._adj.get(start, []), key=lambda r: -r[2])
             links = []
+            pairs = []
             # предикаты, которые звучат как определение («есть», «является»)
             definitional = {"есть", "является", "представляет", "это", "это такое"}
             # только сильные связи годятся для объяснения: слабые рёбра (< 1.0) —
             # это шум корпусных совпадений («кота связано с смотри») и дают
             # бессвязные фразы вместо ответа.
-            for p, other, w in [r for r in ranked if r[2] is None or r[2] >= 1.0][:4]:
+            for p, other, w in [r for r in ranked
+                                if (r[2] is None or r[2] >= 1.0) and not _is_noisy_predicate(r[0])][:4]:
                 otherc = other.split()[0] if " " in other else other
                 if not otherc or otherc == start:
                     continue
@@ -1911,19 +1913,15 @@ def try_full_explanation(query):
                 elif pred in ("влияет", "укрепляет", "порождает", "формирует", "усиливает"):
                     links.append(f"{start} {pred_full} {otherc}")
                 else:
-                    # «X связан с Y» + добавим ещё один ход — почему/к чему
-                    deeper = ""
-                    nxt = sorted(kg._adj.get(otherc, []), key=lambda r: -r[2])[:2]
-                    for p2, other2, w2 in nxt:
-                        o2 = other2.split()[0] if " " in other2 else other2
-                        if o2 not in (start, otherc):
-                            deeper = f", а это влияет на {o2}"
-                            break
-                    links.append(f"{start} связан с {otherc}{deeper}")
+                    # предикат из корпуса не согласуется по-русски («решает задач»),
+                    # поэтому показываем связь списком, а не выдуманной фразой
+                    pairs.append(f"{otherc} — {pred_full}")
             if links:
                 # склеиваем фразами, не «|» и не через точку-запятую: как речь
                 spoken = "; ".join(dict.fromkeys(links[:4]))
                 parts.append(spoken[0].upper() + spoken[1:] + ".")
+            if pairs:
+                parts.append("Связи: " + "; ".join(dict.fromkeys(pairs[:4])) + ".")
         except Exception:
             pass
     if parts:
@@ -2025,8 +2023,9 @@ def try_feedback_text(query, positive=True):
 _RELATION_PATTERNS = (
     ("diff", ("в чём разница", "чем отлича", "разница между", "отличие",
               "отличается ли", "отличаются", "в отличие")),
-    ("rel", ("как связан", "с чем связан", "какая связь", "есть ли связь",
-             "что связывает", "взаимосвязан", "связаны ли")),
+    ("rel", ("как связан", "с чем связан", "чем связан", "чем связаны",
+             "какая связь", "есть ли связь", "что связывает", "взаимосвязан",
+             "связаны ли")),
     ("common", ("что общего", "есть ли общее", "общее у", "общее между",
                 "что общего между")),
     ("compare", ("сравни", "сравнить", "что лучше", "что эффективнее",
@@ -2041,9 +2040,9 @@ def _is_relation_query(query):
 
 
 _RELATION_JUNK = {"разница", "отличие", "связь", "св", "что", "какая", "какие",
-                  "между", "какой", "чем", "у", "про", "понятие", "есть", "ли",
-                  "как", "с", "общего", "общее", "и", "связан", "связана", "связано",
-                  "связаны", "тесно", "работает", "можно"}
+                  "между", "какой", "чем", "чему", "понятие", "понятия", "понятию",
+                  "есть", "ли", "как", "с", "общего", "общее", "и", "связан",
+                  "связана", "связано", "связаны", "тесно", "работает", "можно"}
 
 
 def _concept_terms():
@@ -2087,44 +2086,40 @@ def _relation_candidates(query):
     qq = _clean_q(query).lower()
     qq_spaced = " " + qq + " "
     q_words = [w for w in qq.split() if len(w) > 2]
-    q_stems2 = {_relation_stem2(w) for w in q_words}
-    found = []
-    # 1) понятия из словаря: точное вхождение слова/фразы или равенство по стему.
-    # Канонический топик понятия имеет приоритет над падежной формой узла графа.
+    # 1) понятия из словаря module_knowledge (канонические топики + теги) —
+    #    имеют ПРИОРИТЕТ: это чистые осмысленные понятия
+    dict_found = []
+    seen_dict = set()
     for t in _concept_terms():
         if len(t) <= 2 or t.split()[0] in _RELATION_JUNK:
             continue
         w = t.split()[0]
-        if t in qq_spaced:
-            found.append(w)
-        else:
-            ws = _relation_stem2(w)
-            if ws and ws in q_stems2:
-                found.append(w)
-    # 1b) канонические топики понятий из словаря — вытесняют падежные формы графа
-    try:
-        from algos.module_knowledge import fk as _fk2
-        for _key, _info in (_fk2._by_name or {}).items():
-            if not isinstance(_info, dict):
-                continue
-            _topic = str(_info.get("topic", "") or "").lower()
-            if not _topic or _topic.split()[0] in _RELATION_JUNK:
-                continue
-            _tw = _topic.split()[0]
-            if _relation_stem2(_tw) in q_stems2:
-                found.append(_tw)
-    except Exception:
-        pass
-    # 2) узлы графа: равенство по стему без служебных слов
-    for n in kg.nodes:
-        if not n or len(n) <= 2:
+        if w in seen_dict:
             continue
-        w = n.split()[0]
-        if w in _RELATION_JUNK or w in _SOFT_STOP or w in _TOPIC_JUNK:
-            continue
-        ns = _relation_stem2(w)
-        if ns and (ns in q_stems2 or w in q_words):
-            found.append(w)
+        seen_dict.add(w)
+        if t in qq_spaced or any(_stem_match(w, qw) for qw in q_words):
+            dict_found.append(w)
+    # если словарь дал >=2 понятий — их хватает, граф только добавит мусор
+    if len(dict_found) >= 2:
+        found = dict_found
+    else:
+        # 2) узлы графа — ТОЛЬКО точное совпадение первого слова со словом запроса
+        dict_words = set()
+        for w in dict_found:
+            dict_words.add(w)
+            dict_words.add(_relation_stem2(w))
+        graph_found = []
+        for n in kg.nodes:
+            if not n or len(n) <= 2:
+                continue
+            w = n.split()[0]
+            if w in _RELATION_JUNK or w in _SOFT_STOP or w in _TOPIC_JUNK:
+                continue
+            if w in dict_words:
+                continue
+            if w in q_words:
+                graph_found.append(w)
+        found = dict_found + graph_found
     # дедупликация по стему: сохраняем самый длинный вариант («массив» перед «массива»)
     best = {}
     for f in found:
@@ -2310,16 +2305,18 @@ def _lookup_concept(fk, name):
             continue
         topic = str(info.get("topic", "") or "").lower()
         first = topic.split()[0] if topic else ""
-        if topic == w or first == w:
+        if topic == w:
             return info
         if not first:
             continue
         if _stem_match(first, w) or any(_stem_match(str(t), w) for t in (info.get("tags") or [])):
-            # точное совпадение первого слова по стему ценим выше, чем совпадение тега;
-            # при прочих равных — короче тема (общее понятие)
-            first_exact = (first == w or _stem_match(first, w.strip().rstrip("ъь")))
+            # точное совпадение первого слова по стему ценим выше; при равном
+            # совпадении — короче тема (общее понятие: «алгоритм» перед
+            # «алгоритм дейкстры», «список» перед «список перестановок»)
             score = 100 if _stem_match(first, w) else 50
-            score -= len(topic)
+            # лёгкий штраф за длину темы: специфичные фразы оцениваются ниже
+            score -= len(topic.split())
+            score -= (first == w) * 0
             if score > best_score:
                 best_score = score
                 best = info
