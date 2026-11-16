@@ -41,6 +41,19 @@ class CompareAnswerQualityTest(unittest.TestCase):
         self.assertFalse(_needs_final_gate("что такое алгоритм"))
         self.assertFalse(_needs_final_gate("сколько будет 2+2"))
 
+    def test_english_links_are_not_shown_in_russian_frame(self):
+        from algos.compose import related_text
+        self.assertEqual(related_text(["память", "plan", "внимание", "trust"]),
+                         "память, внимание")
+        self.assertEqual(related_text(["plan", "trust"]), "")
+        self.assertEqual(related_text(["фотосинтез -"]), "")
+
+    def test_russian_answer_skips_english_links(self):
+        from algos.neuro_answer import russian_answer
+        text = russian_answer({"name": "океан", "ru": "Океан — водоём."}, ["plan", "море"])
+        self.assertIn("море", text)
+        self.assertNotIn("plan", text)
+
 
 class ConceptVersusFunctionTest(unittest.TestCase):
     """«Что такое X» — вопрос о понятии, а не о функции в коде."""
