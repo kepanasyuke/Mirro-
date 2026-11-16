@@ -34,6 +34,13 @@ class CompareAnswerQualityTest(unittest.TestCase):
         answer = "Небо голубое из-за рассеяния солнечного света в атмосфере."
         self.assertFalse(answer_looks_bad("почему небо голубое", answer))
 
+    def test_final_gate_targets_comparisons(self):
+        from core.mirro_core import _needs_final_gate
+        self.assertTrue(_needs_final_gate("чем отличается кошка от собаки"))
+        self.assertTrue(_needs_final_gate("что общего у нейросети и алгоритма"))
+        self.assertFalse(_needs_final_gate("что такое алгоритм"))
+        self.assertFalse(_needs_final_gate("сколько будет 2+2"))
+
 
 class ConceptVersusFunctionTest(unittest.TestCase):
     """«Что такое X» — вопрос о понятии, а не о функции в коде."""
