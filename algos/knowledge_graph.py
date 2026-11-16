@@ -474,6 +474,10 @@ class KnowledgeGraph:
                 s, p, d = key
                 if (s == a and d == tgt) or (s == tgt and d == a):
                     nw = min(2.0, w + amount)
+                    if nw == w:
+                        # вес уже на потолке/границе — реального изменения нет,
+                        # не сообщаем «усилил» (иначе no-op выглядел бы как факт)
+                        continue
                     self.edges[key] = nw
                     self._set_adj_weight(s, p, d, nw)
                     self._set_adj_weight(d, p, s, nw)

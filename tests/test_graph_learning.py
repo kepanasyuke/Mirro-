@@ -218,6 +218,13 @@ class TestEdgeWeights(unittest.TestCase):
         self.kg.hebbian_learn("сортировка", "алгоритм", 0.08, depth=3)
         self.assertEqual(len(self.kg.edges), 1)
 
+    def test_hebbian_learn_noop_at_cap_not_counted(self):
+        # на потолке веса (cap 2.0) обучение — no-op; он не должен сообщать
+        # «усилил» (strengthened=0), иначе счётчик лип бы к факту несжатия
+        self.kg.add_edge("x", "p", "y", 2.0)
+        self.assertEqual(self.kg.hebbian_learn("x", "y", 0.5, depth=0), 0)
+        self.assertEqual(self.kg.edge_weight("x", "y"), 2.0)
+
     def test_hebb_depth_does_not_double_charge_target(self):
         self.kg.add_edge("a", "p", "z", 1.0)
         self.kg.add_edge("a", "p", "b", 1.0)
