@@ -46,6 +46,12 @@ def _bridged_aliases():
     return RU_KEYS.items()
 
 
+def _russian_descriptions():
+    """Русские описания из algos/ru_descriptions.py: тема -> текст."""
+    from algos.ru_descriptions import RU_TEXT
+    return RU_TEXT
+
+
 def _wikidata_pairs():
     """Пары «тема → русское слово» из data/bilingual_map.json. Один return: dict.
 
@@ -127,6 +133,10 @@ def build():
         concept = registry.get(_normal(topic))
         if concept is not None:
             _add_aliases(concept, list(keys))
+    for topic, text in _russian_descriptions().items():
+        concept = registry.get(_normal(topic))
+        if concept is not None and not concept["ru"]:
+            concept["ru"] = text
     for name, entry in _russian().items():
         key = _normal(name)
         concept = registry.get(key)

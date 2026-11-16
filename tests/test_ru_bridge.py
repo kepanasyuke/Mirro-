@@ -11,6 +11,7 @@ from algos import concepts
 from algos.concept_graph import EDGES, neighbours
 from algos.english_kb import _EN_KB
 from algos.ru_bridge import RU_KEYS, bridge, find_topic, related, ru_definition
+from algos.ru_descriptions import RU_TEXT
 from scripts.ru_definitions import extract_from_text
 
 
@@ -55,8 +56,12 @@ class TestRussianAnswer(unittest.TestCase):
         self.assertEqual(found["strategy"], "ru_bridge")
 
     def test_missing_russian_text_is_silent(self):
-        self.assertIsNone(ru_definition("wisdom"))
-        self.assertIsNone(bridge("что такое мудрость"))
+        self.assertIsNone(ru_definition("abbot"))
+
+    def test_described_concept_answers_in_russian(self):
+        found = bridge("что такое мудрость")
+        self.assertIsNotNone(found)
+        self.assertIn("Мудрость", found["content"])
 
 
 class TestRelations(unittest.TestCase):
@@ -100,6 +105,24 @@ class TestDefinitionExtraction(unittest.TestCase):
         text = "Под памятью понимают запись следов опыта."
         found = extract_from_text(text, "память")
         self.assertEqual(len(found), 1)
+
+
+class TestRussianDescriptions(unittest.TestCase):
+    """Русские описания написаны для существующих тем и не пустые."""
+
+    def test_keys_exist(self):
+        missing = [topic for topic in RU_TEXT if topic not in _EN_KB]
+        self.assertEqual(missing, [], f"описание ссылается на несуществующую тему: {missing}")
+
+    def test_texts_are_russian_and_complete(self):
+        bad = [topic for topic, text in RU_TEXT.items()
+               if len(text) < 40 or not any("\u0400" <= char <= "\u04ff" for char in text)]
+        self.assertEqual(bad, [], f"описание не по-русски или слишком короткое: {bad}")
+
+    def test_registry_uses_descriptions(self):
+        found = concepts.find("что такое мудрость")
+        self.assertIsNotNone(found)
+        self.assertTrue(found["concept"]["ru"])
 
 
 if __name__ == "__main__":

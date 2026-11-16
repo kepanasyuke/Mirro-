@@ -169,21 +169,24 @@ _RU_BY_TOPIC = _ru_index()
 
 
 def ru_definition(topic):
-    """Русское определение понятия из module_knowledge. Один return: str/None."""
-    entry = None
-    for key in RU_KEYS.get(topic, ()):
-        entry = _RU_BY_TOPIC.get(_stem_ru(key))
-        if entry:
-            break
-    answer = None
-    if isinstance(entry, dict):
-        what = (entry.get("what") or "").strip()
-        example = (entry.get("ex") or "").strip()
-        topic_ru = (entry.get("topic") or topic).strip()
-        if what:
-            answer = "%s — это %s." % (topic_ru, what)
-            if example:
-                answer += " Например: %s." % example
+    """Русское описание понятия: готовый текст или module_knowledge. Один return: str/None."""
+    from algos.ru_descriptions import RU_TEXT
+
+    answer = RU_TEXT.get(topic)
+    if answer is None:
+        entry = None
+        for key in RU_KEYS.get(topic, ()):
+            entry = _RU_BY_TOPIC.get(_stem_ru(key))
+            if entry:
+                break
+        if isinstance(entry, dict):
+            what = (entry.get("what") or "").strip()
+            example = (entry.get("ex") or "").strip()
+            topic_ru = (entry.get("topic") or topic).strip()
+            if what:
+                answer = "%s — это %s." % (topic_ru, what)
+                if example:
+                    answer += " Например: %s." % example
     return answer
 
 
