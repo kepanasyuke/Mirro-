@@ -297,6 +297,16 @@ RU_KEYS = {
     "heron": ("цапля", ),
     "barley": ("ячмень", ),
     "oats": ("овёс", ),
+    "lane": ("переулок", "узкая дорожка"),
+    "counsel": ("адвокат", "защитник в суде"),
+    "crumb": ("крошка", "мякиш"),
+    "orchard": ("фруктовый сад", "плодовый сад"),
+    "bower": ("беседка", "сень"),
+    "cards": ("карты", "игральные карты"),
+    "lamb": ("ягнёнок", ),
+    "swine": ("свинья", ),
+    "track": ("след", "колея"),
+    "mead": ("медовуха", "медовый напиток"),
 }
 
 _QUESTION_STOP = {
@@ -368,6 +378,8 @@ def find_topic(query):
     """Тема английской базы по русскому запросу. Один return: str/None."""
     stems = _stems(query)
     low = (query or "").lower()
+    words = [w for w in _norm_q(query).split()
+             if len(w) > 2 and w not in _QUESTION_STOP]
     best = None
     best_hits = 0
     candidates = [(topic, keys) for topic, keys in RU_KEYS.items() if topic in _EN_KB]
@@ -377,7 +389,11 @@ def find_topic(query):
         # разваливается на «база» + «данных» и проигрывает другим темам
         phrase = any(" " in key and key.lower() in low for key in keys)
         hits = _hits(stems, [_stem_ru(key) for key in keys])
-        score = 5 if phrase else hits
+        # точное слово запроса весит больше родственной основы: иначе
+        # «гранит» уходил в «границу», а «дар» — в «дарт»
+        exact = sum(1 for word in words
+                    if word in [key.lower().strip() for key in keys])
+        score = 5 if phrase else exact * 3 + hits
         if score > best_hits:
             best = topic
             best_hits = score
