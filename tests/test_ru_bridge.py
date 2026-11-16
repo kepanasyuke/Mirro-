@@ -73,13 +73,22 @@ class TestRelations(unittest.TestCase):
     def test_known_contrast(self):
         self.assertIn("fissure", neighbours("cleft", depth=1))
 
+    def test_russian_text_gives_edges(self):
+        # «память … факты и навыки» — русское описание связывает память с навыком
+        self.assertIn("skill", neighbours("memory", depth=1))
+
     def test_two_concepts_answer(self):
         found = related("чем отличается смелость от терпения")
         self.assertIsNotNone(found)
         self.assertIn("смелость", found["content"])
 
+    def test_single_concept_with_edges_answers(self):
+        found = related("с чем связана память")
+        self.assertIsNotNone(found)
+        self.assertIn("память", found["content"])
+
     def test_single_concept_without_edges_is_silent(self):
-        self.assertIsNone(related("с чем связана память"))
+        self.assertIsNone(related("с чем связано доверие"))
 
 
 class TestRegistryLink(unittest.TestCase):

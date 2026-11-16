@@ -64,13 +64,51 @@ def _neighbours_of(topic):
     return found
 
 
+def _ru_labels():
+    """Русская подпись понятия: первый ключ моста. Один return: dict."""
+    from algos.ru_bridge import RU_KEYS
+
+    return {topic: keys[0] for topic, keys in RU_KEYS.items() if keys}
+
+
+def _ru_text(topic):
+    """Русский текст понятия: описание или запись module_knowledge. Один return: str."""
+    from algos.ru_bridge import ru_definition
+
+    return ru_definition(topic) or ""
+
+
+def _label_pattern(label):
+    """Шаблон упоминания подписи с учётом окончания, но без склейки слов.
+    Один return: pattern."""
+    stem = label.lower()
+    if len(stem) >= 5:
+        stem = stem[:-1]
+    return re.compile(r"(?<![а-яё])%s[а-яё]{0,3}(?![а-яё])" % re.escape(stem))
+
+
+def _ru_neighbours(topic, labels):
+    """Соседи по русскому тексту: упомянутые русские подписи. Один return: list."""
+    text = (_ru_text(topic) or "").lower()
+    found = []
+    for other, label in labels.items():
+        if other != topic and len(label) >= 4 and _label_pattern(label).search(text):
+            found.append(other)
+    return found[:8]
+
+
 def build_edges():
-    """Рёбра графа: тема -> соседи. Один return: dict."""
+    """Рёбра графа: тема -> соседи по английским сравнениям и русским текстам.
+    Один return: dict."""
     edges = {}
+    labels = _ru_labels()
     for topic in _EN_KB:
-        neighbours = _neighbours_of(topic)
-        if neighbours:
-            edges[topic] = neighbours
+        merged = _neighbours_of(topic)
+        for target in _ru_neighbours(topic, labels):
+            if target not in merged:
+                merged.append(target)
+        if merged:
+            edges[topic] = merged
     return edges
 
 
