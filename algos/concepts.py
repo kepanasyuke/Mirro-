@@ -98,6 +98,20 @@ def _normal(name):
     return " ".join(_words((name or "").replace("_", " ")))
 
 
+ENDINGS = ("ами", "ями", "ов", "ев", "ей", "ах", "ях", "ом", "ем",
+           "ы", "и", "а", "я", "е", "у", "ю", "о", "ь")
+
+
+def _lite(word):
+    """Грубая основа русского слова: срезается одно ходовое окончание."""
+    result = word or ""
+    if len(result) > 4:
+        for ending in ENDINGS:
+            if result.endswith(ending) and len(result) - len(ending) >= 4:
+                return result[: -len(ending)]
+    return result
+
+
 def _russian_text(entry):
     """Русский текст записи: тема, что делает, пример — без пустых частей."""
     if not isinstance(entry, dict):
@@ -181,13 +195,27 @@ def build():
 
 
 def find(query):
-    """Лучшее понятие под запрос: {concept, alias, score} или None."""
+    """Лучшее понятие под запрос: {concept, alias, score} или None.
+
+    Сравниваются и точные вхождения алиаса, и грубые основы русских слов,
+    поэтому «очереди» находит понятие с алиасом «очередь».
+    """
     registry = build()
     low = (query or "").lower()
+    words = [_lite(word) for word in _words(low)]
     best, best_alias = None, ""
     for concept in registry.values():
         for alias in concept["aliases"]:
-            if alias and alias in low and len(alias) > len(best_alias):
+            hit = False
+            if alias:
+                for match in re.finditer(re.escape(alias), low):
+                    before = low[max(0, match.start() - 2):match.start()].strip()
+                    if before != "не":
+                        hit = True
+                        break
+            if not hit and alias and " " not in alias:
+                hit = _lite(alias) in words
+            if hit and len(alias) > len(best_alias):
                 best, best_alias = concept, alias
     if best is None:
         return None

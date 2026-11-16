@@ -32,6 +32,7 @@ RU_KEYS = {
     "understanding": ("понимание", "осмысление"),
     "learning": ("обучение", "учёба", "изучение"),
     "doubt": ("сомнение", "сомневаться"),
+    "uncertainty": ("неопределённость", "неуверенность"),
     "imagination": ("воображение", "фантазия"),
     "mind": ("ум", "сознание"),
     "anger": ("гнев", "злость"),
@@ -126,7 +127,7 @@ def _same_stem(left, right):
     """Одна ли основа у слов («дружба» и «дружбы»). Один return: bool."""
     a = (left or "")[:6]
     b = (right or "")[:6]
-    ok = len(a) >= 4 and a == b
+    ok = len(a) >= 3 and a == b
     if not ok:
         shorter = a if len(a) <= len(b) else b
         longer = b if shorter is a else a
@@ -152,7 +153,7 @@ def _text_keys():
     for topic, text in RU_TEXT.items():
         head = (text or "").split("—")[0].strip().lower()
         name = re.sub(r"[^а-яё\- ]", "", head).strip()
-        if len(name) >= 4:
+        if len(name) >= 3:
             index.setdefault(name, topic)
     return index
 
