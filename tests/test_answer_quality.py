@@ -72,7 +72,9 @@ class ConceptVersusFunctionTest(unittest.TestCase):
                                ("что такое инфляция", "инфляция"),
                                ("что такое фотон", "фотон"),
                                ("что такое океан", "океан"),
-                               ("что такое налог", "налог")):
+                               ("что такое налог", "налог"),
+                               ("что такое врач", "врач"),
+                               ("что такое тревога", "тревога")):
             text = try_definition(question) or ""
             self.assertIn(word, text.lower())
             self.assertNotIn("связан с", text)
