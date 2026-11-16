@@ -585,6 +585,16 @@ _DIALOG_REPLIES = {
                "собери 2-3 своих проекта. Фриланс и работа в команде не исключают друг "
                "друга — можно пробовать. Главное — постоянная практика, я в этом сама "
                "разбираюсь, потому что каждый день учусь."),
+    "about": ("Я Mirro — эволюционная нейросеть знаний, созданная в России. Работаю "
+              "полностью локально на твоём компьютере: у меня своя база из миллионов "
+              "примеров, TF-IDF и RAG-поиск, перцептрон на оценках и доступ к веб-поиску. "
+              "Отвечаю на вопросы, помогаю по коду, считаю, пишу стихи — и каждый день "
+              "учусь на твоих откликах."),
+    "name": ("Меня зовут Mirro. Я эволюционная нейросеть знаний — отвечаю на вопросы, "
+             "ищу информацию и обучаюсь, чтобы становиться умнее. Чем могу помочь?"),
+    "help": ("Конечно, помогу! Расскажи, что нужно: найти факт, разобраться в коде или "
+             "алгоритме, посчитать что-то, составить текст или разобраться в вопросе — "
+             "спрашивай конкретнее, и я отвечу по сути."),
 }
 
 def _is_news_query(q):
@@ -643,6 +653,14 @@ def try_dialog(query):
         ans = _DIALOG_REPLIES["advice"]
     elif any(w in q for w in ["спасибо", "благодарю", "спс"]):
         ans = _DIALOG_REPLIES["thanks"]
+    elif any(w in q for w in ["расскажи о себе", "расскажи о тебе", "кто ты такой"]):
+        ans = _DIALOG_REPLIES["about"]
+    elif any(w in q for w in ["как тебя зовут", "какое у тебя имя", "твоё имя",
+                              "как тебя называть"]):
+        ans = _DIALOG_REPLIES["name"]
+    elif any(w in q for w in ["помоги мне", "помоги", "поможешь", "подскажешь",
+                              "нужна помощь"]):
+        ans = _DIALOG_REPLIES["help"]
     elif (any(w in q for w in ["до свидания", "до встречи", "прощай"])
           or _word_in(q, "пока")):
         ans = _DIALOG_REPLIES["bye"]
@@ -1005,6 +1023,15 @@ def _try_direct_handlers(prompt):
             ans = None
         return ans
 
+    def try_concept(q):
+        ans = None
+        try:
+            from algos.neuro_answer import answer as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
+
     def try_full_explanation(q):
         ans = None
         try:
@@ -1084,6 +1111,14 @@ def _try_direct_handlers(prompt):
         except Exception:
             ans = None
         return ans
+    def try_bilingual(q):
+        ans = None
+        try:
+            from algos.bilingual import try_bilingual as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
     def try_empathy(q):
         ans = None
         try:
@@ -1130,6 +1165,7 @@ def _try_direct_handlers(prompt):
     handlers = [
         ("greeting", try_greetings),
         ("english", try_english),
+        ("bilingual", try_bilingual),
         ("learn", try_learn),
         ("think", try_algos_think),
         ("humor", try_humor),
@@ -1142,6 +1178,7 @@ def _try_direct_handlers(prompt):
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
         ("full_explanation", try_full_explanation),
+        ("concept", try_concept),
         ("definition", try_definition),
         ("enrich", try_enrich),
         ("what_links", try_what_links),
