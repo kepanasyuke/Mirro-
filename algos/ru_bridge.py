@@ -139,14 +139,35 @@ def _hits(words, key_stems):
     return sum(1 for word in words if any(_same_stem(word, key) for key in key_stems))
 
 
+def _text_keys():
+    """Русские имена из первых слов описаний: имя -> тема. Один return: dict.
+
+    Описания начинаются с русского названия («Фотон — квант…»), поэтому
+    имя берётся до тире: так тема становится доступной из русского без
+    отдельной записи в RU_KEYS.
+    """
+    from algos.ru_descriptions import RU_TEXT
+
+    index = {}
+    for topic, text in RU_TEXT.items():
+        head = (text or "").split("—")[0].strip().lower()
+        name = re.sub(r"[^а-яё\- ]", "", head).strip()
+        if len(name) >= 4:
+            index.setdefault(name, topic)
+    return index
+
+
+_TEXT_KEYS = _text_keys()
+
+
 def find_topic(query):
     """Тема английской базы по русскому запросу. Один return: str/None."""
     stems = _stems(query)
     best = None
     best_hits = 0
-    for topic, keys in RU_KEYS.items():
-        if topic not in _EN_KB:
-            continue
+    candidates = [(topic, keys) for topic, keys in RU_KEYS.items() if topic in _EN_KB]
+    candidates += [(topic, (name,)) for name, topic in _TEXT_KEYS.items()]
+    for topic, keys in candidates:
         hits = _hits(stems, [_stem_ru(key) for key in keys])
         if hits > best_hits:
             best = topic

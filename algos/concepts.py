@@ -52,6 +52,16 @@ def _russian_descriptions():
     return RU_TEXT
 
 
+def _description_names():
+    """Русские имена из первых слов описаний: тема -> имена. Один return: dict."""
+    from algos.ru_bridge import _TEXT_KEYS
+
+    pairs = {}
+    for name, topic in _TEXT_KEYS.items():
+        pairs.setdefault(topic, []).append(name)
+    return pairs
+
+
 def _wikidata_pairs():
     """Пары «тема → русское слово» из data/bilingual_map.json. Один return: dict.
 
@@ -142,6 +152,10 @@ def build():
         concept = registry.get(_normal(topic))
         if concept is not None:
             _add_aliases(concept, list(keys), taken)
+    for topic, names in _description_names().items():
+        concept = registry.get(_normal(topic))
+        if concept is not None:
+            _add_aliases(concept, list(names), taken)
     for topic, text in _russian_descriptions().items():
         concept = registry.get(_normal(topic))
         if concept is not None and not concept["ru"]:
