@@ -466,14 +466,30 @@ class KnowledgeGraph:
         if depth > 0:
             for p, other, _w in self._adj.get(a, [])[:depth]:
                 if other != b and other not in targets:
-                    targets.append(other)
-        for tgt in targets:
+                    targets.append((other, _w))
+        # цель усиливается полной amount; соседи-кандидаты depth — пропорционально
+        # силе их связи с a, чтобы шумный слабый сосед не получал ту же награду,
+        # что и сама цель
+        for tgt_spec in targets:
+            if isinstance(tgt_spec, tuple):
+                tgt, tgt_w = tgt_spec
+                try:
+                    tgt_w = float(tgt_w)
+                except (TypeError, ValueError):
+                    tgt_w = 1.0
+                if tgt_w != tgt_w or tgt_w < 0:
+                    tgt_w = 1.0
+            else:
+                tgt, tgt_w = tgt_spec, 1.0
+            use_amount = amount if tgt == b else amount * min(1.0, tgt_w)
+            if use_amount <= 0:
+                continue
             for key, w in list(self.edges.items()):
                 if not (isinstance(key, (tuple, list)) and len(key) == 3):
                     continue
                 s, p, d = key
                 if (s == a and d == tgt) or (s == tgt and d == a):
-                    nw = min(2.0, w + amount)
+                    nw = min(2.0, w + use_amount)
                     if nw == w:
                         # вес уже на потолке/границе — реального изменения нет,
                         # не сообщаем «усилил» (иначе no-op выглядел бы как факт)

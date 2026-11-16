@@ -225,6 +225,25 @@ class TestEdgeWeights(unittest.TestCase):
         self.assertEqual(self.kg.hebbian_learn("x", "y", 0.5, depth=0), 0)
         self.assertEqual(self.kg.edge_weight("x", "y"), 2.0)
 
+    def test_hebbian_depth_scales_neighbor_reward_by_strength(self):
+        # награда соседей при depth>0 должна масштабироваться силой их связи с a:
+        # слабый шумный сосед получает куда меньше, чем сильный — иначе шум
+        # усиливался бы так же, как главная цель
+        self.kg.add_node("a"); self.kg.add_node("b")
+        self.kg.add_node("weak"); self.kg.add_node("strong")
+        self.kg.add_edge("a", "p", "weak", 0.05)
+        self.kg.add_edge("a", "p", "strong", 1.0)
+        self.kg.add_edge("a", "p", "b", 0.5)
+        self.kg.hebbian_learn("a", "b", 0.2, depth=3)
+        # оцениваем ПРИРАЩЕНИЕ веса, а не итог: цель и сильный сосед начинают
+        # с разных весов, поэтому сравниваем именно дельты награды
+        weak_d = self.kg.get_edge_weight("a", "p", "weak") - 0.05
+        strong_d = self.kg.get_edge_weight("a", "p", "strong") - 1.0
+        target_d = self.kg.get_edge_weight("a", "p", "b") - 0.5
+        self.assertLess(weak_d, strong_d)      # слабый сосед получил заметно меньше
+        self.assertAlmostEqual(strong_d, 0.2)  # сильный сосед — почти полная награда
+        self.assertAlmostEqual(target_d, 0.2)  # цель — полная amount
+
     def test_hebb_depth_does_not_double_charge_target(self):
         self.kg.add_edge("a", "p", "z", 1.0)
         self.kg.add_edge("a", "p", "b", 1.0)
