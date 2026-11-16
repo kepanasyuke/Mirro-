@@ -2434,7 +2434,11 @@ class MirroAPI(BaseHTTPRequestHandler):
                             words = [w for w in _re.findall(r"[а-яёa-z]{3,}",
                                      str(response.get("content", "")).lower()) if w not in _MS_STOP]
                             if topic and words:
-                                _kg3.hebbian_learn(topic, words[0], amount=0.08, depth=3)
+                                # усиливаем связь не с первым случайным токеном, а с
+                                # узлом графа, реально присутствующим в ответе: тема
+                                # привязывается к осмысленному понятию, а не к мусору
+                                pick = next((w for w in words if _kg3.get_node(w)), None)
+                                _kg3.hebbian_learn(topic, pick or words[0], amount=0.08, depth=3)
                                 # персистентно сохраняем обученное ребро, чтобы оно
                                 # не терялось между запусками сервера
                                 try:
