@@ -2022,6 +2022,337 @@ def try_feedback_text(query, positive=True):
     return msg
 
 
+_RELATION_PATTERNS = (
+    ("diff", ("в чём разница", "чем отлича", "разница между", "отличие",
+              "отличается ли", "отличаются", "в отличие")),
+    ("rel", ("как связан", "с чем связан", "какая связь", "есть ли связь",
+             "что связывает", "взаимосвязан", "связаны ли")),
+    ("common", ("что общего", "есть ли общее", "общее у", "общее между",
+                "что общего между")),
+    ("compare", ("сравни", "сравнить", "что лучше", "что эффективнее",
+                 "похож", "похоже", "подобен")),
+)
+
+
+def _is_relation_query(query):
+    """Вопрос о связи/сравнении двух понятий? Один return: bool."""
+    q0 = (" " + (query or "").lower() + " ")
+    return any(pat in q0 for _kind, pats in _RELATION_PATTERNS for pat in pats)
+
+
+_RELATION_JUNK = {"разница", "отличие", "связь", "св", "что", "какая", "какие",
+                  "между", "какой", "чем", "у", "про", "понятие", "есть", "ли",
+                  "как", "с", "общего", "общее", "и", "связан", "связана", "связано",
+                  "связаны", "тесно", "работает", "можно"}
+
+
+def _concept_terms():
+    """Список осмысленных терминов понятий из module_knowledge (топики + теги).
+    Один return: list[str] — отсортирован по длине убыванию."""
+    terms = []
+    try:
+        from algos.module_knowledge import fk
+        for key, info in (fk._by_name or {}).items():
+            if not isinstance(info, dict):
+                continue
+            topic = str(info.get("topic", "") or "").lower()
+            if topic:
+                terms.append(topic.split()[0])
+                terms.append(topic)
+            for t in (info.get("tags") or []):
+                if t:
+                    terms.append(str(t).lower())
+    except Exception:
+        pass
+    seen = set()
+    out = []
+    for t in terms:
+        if len(t) > 2 and t not in seen:
+            seen.add(t)
+            out.append(t)
+    out.sort(key=len, reverse=True)
+    return out
+
+
+def _relation_candidates(query):
+    """Извлекает упорядоченный список осмысленных понятий из запроса.
+    Матчит понятия из module_knowledge и узлы графа по СТЕМУ против слов
+    запроса (распознаёт падежи: «массива»→массив, «рекурсией»→рекурсия),
+    отсеивает служебные/мусорные слова и дедуплицирует по стему.
+    Один return: list[str]."""
+    try:
+        from algos.module_knowledge import _stem_ru
+    except Exception:
+        _stem_ru = _relation_stem
+    qq = _clean_q(query).lower()
+    qq_spaced = " " + qq + " "
+    q_words = [w for w in qq.split() if len(w) > 2]
+    q_stems2 = {_relation_stem2(w) for w in q_words}
+    found = []
+    # 1) понятия из словаря: точное вхождение слова/фразы или равенство по стему.
+    # Канонический топик понятия имеет приоритет над падежной формой узла графа.
+    for t in _concept_terms():
+        if len(t) <= 2 or t.split()[0] in _RELATION_JUNK:
+            continue
+        w = t.split()[0]
+        if t in qq_spaced:
+            found.append(w)
+        else:
+            ws = _relation_stem2(w)
+            if ws and ws in q_stems2:
+                found.append(w)
+    # 1b) канонические топики понятий из словаря — вытесняют падежные формы графа
+    try:
+        from algos.module_knowledge import fk as _fk2
+        for _key, _info in (_fk2._by_name or {}).items():
+            if not isinstance(_info, dict):
+                continue
+            _topic = str(_info.get("topic", "") or "").lower()
+            if not _topic or _topic.split()[0] in _RELATION_JUNK:
+                continue
+            _tw = _topic.split()[0]
+            if _relation_stem2(_tw) in q_stems2:
+                found.append(_tw)
+    except Exception:
+        pass
+    # 2) узлы графа: равенство по стему без служебных слов
+    for n in kg.nodes:
+        if not n or len(n) <= 2:
+            continue
+        w = n.split()[0]
+        if w in _RELATION_JUNK or w in _SOFT_STOP or w in _TOPIC_JUNK:
+            continue
+        ns = _relation_stem2(w)
+        if ns and (ns in q_stems2 or w in q_words):
+            found.append(w)
+    # дедупликация по стему: сохраняем самый длинный вариант («массив» перед «массива»)
+    best = {}
+    for f in found:
+        fs = _relation_stem2(f)
+        if fs not in best or len(f) > len(best[fs]):
+            best[fs] = f
+    out = list(best.values())
+    out.sort(key=len, reverse=True)
+    return out
+
+
+def _relation_stem(word):
+    """Запасной стем, если module_knowledge недоступен. Один return: str."""
+    w = (word or "").strip().lower()
+    for suf in ("а", "я", "у", "ю", "ом", "ем", "ей", "е", "и", "ы", "ой", "ах", "ам"):
+        if len(w) > 4 and w.endswith(suf):
+            w = w[:-len(suf)]
+            break
+    return w
+
+
+_REL_ENDING = set("аяоеиыуюэйь")
+
+
+def _relation_stem2(word):
+    """Сбрасывает падежные окончания для сопоставления понятий: срезает
+    окончания родительного/предложного падежей и повторяющиеся гласные/мягкие
+    хвосты («массива»→«массив», «бинарным»→«бинар», «поиском»→«поиск»,
+    «рекурсией»→«рекурси»). Один return: str."""
+    w = (word or "").strip().lower()
+    for suf in ("ым", "ом", "ем", "ей", "ой", "ий", "ия", "ую", "ами", "ями"):
+        if len(w) > len(suf) + 3 and w.endswith(suf):
+            return w[:-len(suf)]
+    while len(w) > 3 and w[-1] in _REL_ENDING:
+        w = w[:-1]
+        if len(w) <= 3:
+            break
+    return w
+
+
+def _relation_matcher_ok(word, concept):
+    """Совпадают ли слово запроса и понятие (по агрессивному стему). Один return: bool."""
+    return _relation_stem2(word) == _relation_stem2(concept)
+
+
+def _relation_markers(query):
+    """Маркеры исключений для вопроса о различии («от» / «чем»). Один return: set."""
+    q0 = (query or "").lower()
+    tokens = set()
+    for m in ("от ", "чем ", "между "):
+        pos = q0.find(m)
+        if pos >= 0:
+            tail = q0[pos + len(m):]
+            tokens.add(tail.split()[0] if tail.split() else "")
+    return tokens
+
+
+def _norm_concept(word):
+    """Нормализация concept-слова: стем по базовым правилам. Один return: str."""
+    w = (word or "").strip().lower()
+    for suf in ("ами", "ой", "ому", "ом", "ем", "ов", "ев", "ам", "ах",
+                "е", "а", "и", "ы", "у", "ей", "ями"):
+        if len(w) > 4 and w.endswith(suf):
+            w = w[:-len(suf)]
+            break
+    return w
+
+
+# узлы-мусор графа, которые не являются реальными понятиями
+_REL_NOISE_NODES = {"связано_с", "использует_понятие", "про_понятие", "связано",
+                    "связан_с", "такое", "это", "-"}
+
+
+def _is_noisy_node(name):
+    """Мусорный ли узел-понятие для озвучивания связи. Один return: bool."""
+    w = (name or "").strip().lower()
+    first = w.split()[0] if " " in w else w
+    return w in _REL_NOISE_NODES or first in _REL_NOISE_NODES
+
+
+def _display_concept(name):
+    """Чистое имя понятия для ответа (первое слово, без мусорных префиксов).
+    Один return: str."""
+    w = (name or "").strip()
+    if " " in w:
+        w = w.split()[0]
+    return w.lstrip("_")
+
+
+def _relation_answer(pair, query):
+    """Связный ответ для пары понятий (прямая связь, определений, вывод пути,
+    общие соседи). Один return: str|None."""
+    a, b = pair
+    if not a or not b:
+        return None
+    out = None
+    # 0) сравнение определений из словаря понятий — самое осмысленное
+    #    («чем отличается стек от очереди» → оба определены, показываем суть)
+    try:
+        from algos.module_knowledge import fk
+        def_ab = _lookup_concept(fk, a)
+        def_ab = {k.lower(): v for k, v in def_ab.items()}
+        def_ba = _lookup_concept(fk, b)
+        def_ba = {k.lower(): v for k, v in def_ba.items()}
+    except Exception:
+        def_ab, def_ba = {}, {}
+    if def_ab and def_ba:
+        lines = []
+        wa = def_ab.get("what") or ""
+        wb = def_ba.get("what") or ""
+        if wa:
+            lines.append(f"{_display_concept(a).capitalize()} — это {wa}.")
+        if wb:
+            lines.append(f"{_display_concept(b).capitalize()} — это {wb}.")
+        if lines:
+            out = " ".join(lines)
+            return out
+    # 1) прямая связь через граф (осмысленный предикат)
+    rels = [r for r in kg.relation(a, b) if not _is_noisy_predicate(r[0])]
+    if rels:
+        phr = ", ".join(f"«{a}» {p} «{b}»" for p, _w in rels[:3])
+        if len(rels) > 3:
+            phr += " и ещё связями"
+        out = f"{a.capitalize()} и {b} связаны: {phr}."
+        return out
+    # 2) путь через граф (только осмысленные шаги)
+    path = kg.path(a, b)
+    if path:
+        preds = [step[1] for step in path if len(step) > 1]
+        chain = [line[0] for line in path if line[0] and len(line[0]) > 2]
+        if any(p and not _is_noisy_predicate(p) for p in preds) and len(chain) >= 2:
+            # убираем падежные дубликаты из цепочки («обучение→память→памятью»)
+            seen = []
+            for c in chain:
+                if not any(_relation_stem2(c) == _relation_stem2(s) for s in seen):
+                    seen.append(c)
+            out = "Выводится: " + " → ".join(seen) + "."
+            return out
+    # 3) общие соседи (сходство окрестностей) — только осмысленные, не однобуквенные
+    shared = [n for n in kg.mutual_neighbors(a, b)
+              if len(n) > 2
+              and n.split()[0] not in _RELATION_JUNK
+              and not _is_noisy_node(n)]
+    if shared:
+        top = shared[:3]
+        names = ", ".join(_display_concept(n) for n in top)
+        out = f"У {a.capitalize()} и {b.capitalize()} есть общие связи: {names}."
+        return out
+    return out
+
+
+def _stem_match(a, b):
+    """Совпадают ли понятия по стему (равный стем или длинный общий префикс
+    ≥4, покрывающий русские падежные расхождения: «список»/«списком»,
+    «массив»/«массивом»). Один return: bool."""
+    sa = _relation_stem2(a)
+    sb = _relation_stem2(b)
+    if not sa or not sb:
+        return False
+    if sa == sb:
+        return True
+    n = min(len(sa), len(sb))
+    if n < 4:
+        return False
+    i = 0
+    while i < n and sa[i] == sb[i]:
+        i += 1
+    return i >= 4
+
+
+def _lookup_concept(fk, name):
+    """Ищет понятие в базе по имени/стему (префиксный матч по стему),
+    возвращая его данные. Предпочитает понятие, чьё первое слово по стему
+    совпадает точнее и короче (общая тема раньше специфичной: «список»
+    вместо «список перестановок»). Один return: dict."""
+    w = (name or "").strip().lower()
+    if not w:
+        return {}
+    best = {}
+    best_score = -1
+    for key, info in (fk._by_name or {}).items():
+        if not isinstance(info, dict):
+            continue
+        topic = str(info.get("topic", "") or "").lower()
+        first = topic.split()[0] if topic else ""
+        if topic == w or first == w:
+            return info
+        if not first:
+            continue
+        if _stem_match(first, w) or any(_stem_match(str(t), w) for t in (info.get("tags") or [])):
+            # точное совпадение первого слова по стему ценим выше, чем совпадение тега;
+            # при прочих равных — короче тема (общее понятие)
+            first_exact = (first == w or _stem_match(first, w.strip().rstrip("ъь")))
+            score = 100 if _stem_match(first, w) else 50
+            score -= len(topic)
+            if score > best_score:
+                best_score = score
+                best = info
+    return best
+
+
+def try_relation(query):
+    """Связный ответ на вопрос о связи/сравнении двух понятий по графу,
+    вместо сырого «тройственного рассуждения». Один return: str|None."""
+    if not _is_relation_query(query):
+        return None
+    cands = _relation_candidates(query)
+    pair = ()
+    # для «разница/отличие» исключаем служебный второй член маркера «между … и …»
+    if len(cands) >= 2:
+        markers = _relation_markers(query)
+        keep = [c for c in cands if c.split()[0] not in markers]
+        if len(keep) >= 2:
+            pair = (keep[0], keep[1])
+        else:
+            pair = (cands[0], cands[1])
+    elif len(cands) == 1:
+        pair = (cands[0], None)
+    ans = None
+    if pair:
+        ans = _relation_answer(pair, query)
+    if not ans and len(cands) == 1:
+        # одного понятия хватает для ассоциаций: что рядом с X
+        from algos.module_knowledge import try_definition
+        ans = try_definition("что такое " + cands[0])
+    return ans
+
+
 if __name__ == "__main__":
     kg.from_triples([
         ("Нейрон", "принадлежит", "мозг"),
@@ -2039,3 +2370,6 @@ if __name__ == "__main__":
     print(try_what_links("что связано с память?"))
     print("--- подобие ---")
     print(try_similar("что общего у нейрона и сигнала?"))
+    print("--- отношения ---")
+    print(try_relation("как связаны нейрон и мысль?"))
+    print(try_relation("в чём разница между сигналом и мыслью?"))
