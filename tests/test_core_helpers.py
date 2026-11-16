@@ -516,6 +516,26 @@ class TestComparisonGate(unittest.TestCase):
         self.assertTrue(mc.answer_looks_bad(q, ans))
 
 
+class TestCommandDumpGate(unittest.TestCase):
+    """Ответ-команда или конфиг не отдаётся как определение понятия."""
+
+    def test_shell_dump_is_gated(self):
+        mc = _get_core()
+        ans = "$ git push origin master"
+        self.assertTrue(mc.answer_looks_bad("что такое git", ans))
+
+    def test_config_dump_is_gated(self):
+        mc = _get_core()
+        ans = "location @api_v1 { include proxy_params; proxy_pass; }"
+        self.assertTrue(mc.answer_looks_bad("что такое API", ans))
+
+    def test_russian_explanation_is_kept(self):
+        mc = _get_core()
+        ans = ("Git — система контроля версий: хранит историю изменений файлов "
+               "и позволяет нескольким людям работать над одним проектом.")
+        self.assertFalse(mc.answer_looks_bad("что такое git", ans))
+
+
 class _FakeWriter:
     def __init__(self, sink):
         self.sink = sink

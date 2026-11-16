@@ -859,7 +859,10 @@ def answer_looks_bad(query, answer):
             bad = True  # сырой JSON вместо текста
         else:
             # Ответ похож на код (PHP/JS/C++/SQL) — а вопрос фактологический
-            code_markers = ["<?php", "#include", "std::", "import ", "console.", "npm ", "function ", "=>"]
+            code_markers = ["<?php", "#include", "std::", "import ", "console.", "npm ", "function ", "=>",
+                            # строки shell и конфигов — тоже не ответ на «что такое X»
+                            "$ ", "sudo ", "curl ", "git push", "git commit", "docker run",
+                            "location ", "include proxy", "def ", "SELECT "]
             code_hits = sum(1 for m in code_markers if m in answer)
             if code_hits >= 2:
                 bad = True
