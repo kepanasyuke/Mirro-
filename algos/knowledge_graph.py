@@ -1014,7 +1014,8 @@ class KnowledgeGraph:
             safe = [r for r in self.neighbors(name)
                     if isinstance(r, (tuple, list)) and len(r) >= 3]
             for p, other, w in sorted(safe, key=lambda r: -r[2])[:8]:
-                if not _is_noisy_predicate(p):
+                # личное имя/связь с самим собой → шум («смех про_понятие смех -»)
+                if not _is_noisy_predicate(p) and _is_meaningful_other(other, name):
                     lines.append(f"{name} {p} {other} (вес {w:.2f})")
         return lines
 
@@ -1798,6 +1799,16 @@ def _is_noisy_predicate(pred):
     Один return: bool."""
     name = (pred or "").strip().lower() if isinstance(pred, str) else ""
     return (not name) or (name in _NOISY_PREDICATES)
+
+
+def _is_meaningful_other(other, node_name):
+    """Осмысленный ли объект связи: не пустой, не совпадает с исходным узлом и
+    без мусорного хвоста «-» («смех -»). Один return: bool."""
+    text = (other or "").strip()
+    if not text or text == (node_name or "").strip():
+        return False
+    lowered = text.lower()
+    return not (lowered.endswith(" -") or lowered == "-")
 
 
 def _clean_link_text(link):
