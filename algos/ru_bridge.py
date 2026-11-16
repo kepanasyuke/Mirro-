@@ -506,12 +506,29 @@ def ru_definition(topic):
     return answer
 
 
+def core_word(query):
+    """Русское слово из своего словаря (вода, хлеб, жизнь). Один return: str/None."""
+    from algos.ru_core_words import RU_CORE
+
+    stems = _stems(query)
+    best, best_len = None, 0
+    for word in RU_CORE:
+        if _hits(stems, [_stem_ru(word)]) and len(word) > best_len:
+            best, best_len = word, len(word)
+    return best
+
+
 def bridge(query):
     """Русский ответ через понятие английской базы. Один return: dict/None.
 
     Молчит, если русского определения нет: английский текст как «ответ
     по-русски» не отдаём — пусть цепочка пробует граф и корпус.
     """
+    from algos.ru_core_words import RU_CORE
+
+    word = core_word(query)
+    if word:
+        return {"topic": word, "content": RU_CORE[word], "strategy": "ru_core"}
     topic = find_topic(query)
     answer = ru_definition(topic) if topic else None
     return {"topic": topic, "content": answer, "strategy": "ru_bridge"} if answer else None

@@ -36,6 +36,10 @@ def _score_definition(query, found):
     label = _ru_label(topic).lower()
     if label and label in text.lower():
         score += 0.10
+    # определение начинается с самого слова — это ответ по адресу, в том числе
+    # для слов своего словаря, которых нет в английской базе (вода, хлеб, боль)
+    if label and text.lower().startswith(label):
+        score += 0.10
     if len(text) >= 120:
         score += 0.05
     if not _has_russian(text):

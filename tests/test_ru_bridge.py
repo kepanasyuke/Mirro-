@@ -64,6 +64,22 @@ class TestRussianAnswer(unittest.TestCase):
         self.assertTrue(silent, "все темы уже описаны по-русски")
         self.assertIsNone(ru_definition(silent[0]))
 
+    def test_core_word_answers_in_russian(self):
+        # «вода», «хлеб», «боль» — слова без темы в английской базе
+        for query, head in (("что такое вода", "Вода"),
+                            ("что такое хлеб", "Хлеб"),
+                            ("что такое боль", "Боль")):
+            found = bridge(query)
+            self.assertIsNotNone(found, query)
+            self.assertTrue(found["content"].startswith(head))
+
+    def test_core_dictionary_is_russian_and_complete(self):
+        from algos.ru_core_words import RU_CORE
+        bad = [word for word, text in RU_CORE.items()
+               if len(text) < 40 or not text.lower().startswith(word.lower())
+               or any("a" <= ch.lower() <= "z" for ch in text)]
+        self.assertEqual(bad, [])
+
     def test_comparison_names_both_concepts(self):
         found = related("что общего у страха и тревоги")
         self.assertIsNotNone(found)
