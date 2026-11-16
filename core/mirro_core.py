@@ -1033,8 +1033,9 @@ def _try_direct_handlers(prompt):
     def try_concept(q):
         ans = None
         try:
-            from algos.neuro_answer import answer as _f
-            ans = _f(q)
+            from algos.plan_router import answer_text as _router
+            from algos.neuro_answer import answer_by_plan as _plan, answer as _direct
+            ans = _router(q) or _plan(q) or _direct(q)
         except Exception:
             ans = None
         return ans
@@ -1059,6 +1060,14 @@ def _try_direct_handlers(prompt):
         ans = None
         try:
             from algos.knowledge_graph import try_similar as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
+    def try_relation(q):
+        ans = None
+        try:
+            from algos.knowledge_graph import try_relation as _f
             ans = _f(q)
         except Exception:
             ans = None
@@ -1178,6 +1187,7 @@ def _try_direct_handlers(prompt):
         ("creative", try_creative),
         ("direct", try_jarvis),
         ("dialog", try_dialog),
+        ("relation", try_relation),
         ("steps", try_steps),
         ("algo", try_bosova_engine),
         ("ai_history", try_ai_history),
