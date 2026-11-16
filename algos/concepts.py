@@ -102,12 +102,17 @@ def _new(name):
             "aliases": set(), "module": ""}
 
 
-def _add_aliases(concept, values):
-    """Дописывает алиасы, отбрасывая слишком короткие."""
+def _add_aliases(concept, values, taken=None):
+    """Дописывает алиасы: короткие и уже занятые другими понятиями не берём."""
     for value in values:
         for word in _words(value):
-            if len(word) >= 4:
+            owner = taken.get(word) if taken is not None else None
+            usable = len(word) >= 4 and owner in (None, concept["id"])
+            if usable:
                 concept["aliases"].add(word)
+                if taken is not None:
+                    taken[word] = concept["id"]
+    return taken
 
 
 def build():
@@ -125,14 +130,18 @@ def build():
         concept = registry.get(_normal(topic))
         if concept is not None:
             _add_aliases(concept, [topic] + list(keys or ()))
+    taken = {}
+    for concept in registry.values():
+        for alias in concept["aliases"]:
+            taken.setdefault(alias, concept["id"])
     for topic, keys in _bridged_aliases():
         concept = registry.get(_normal(topic))
         if concept is not None:
-            _add_aliases(concept, list(keys))
+            _add_aliases(concept, list(keys), taken)
     for topic, keys in _wikidata_pairs().items():
         concept = registry.get(_normal(topic))
         if concept is not None:
-            _add_aliases(concept, list(keys))
+            _add_aliases(concept, list(keys), taken)
     for topic, text in _russian_descriptions().items():
         concept = registry.get(_normal(topic))
         if concept is not None and not concept["ru"]:
