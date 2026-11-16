@@ -26,6 +26,26 @@ class CompareAnswerQualityTest(unittest.TestCase):
         answer = "У меня всё в порядке, спасибо, работаю над задачами."
         self.assertFalse(answer_looks_bad("как дела", answer))
 
+    def test_causal_question_needs_causal_answer(self):
+        picture = "Эта фотография захватывает дух: высокое здание, небо ярко-голубое."
+        self.assertTrue(answer_looks_bad("почему небо голубое", picture))
+
+    def test_causal_answer_passes(self):
+        answer = "Небо голубое из-за рассеяния солнечного света в атмосфере."
+        self.assertFalse(answer_looks_bad("почему небо голубое", answer))
+
+
+class ConceptVersusFunctionTest(unittest.TestCase):
+    """«Что такое X» — вопрос о понятии, а не о функции в коде."""
+
+    def test_concept_question_does_not_return_function_card(self):
+        from algos.module_knowledge import try_function_knowledge
+        self.assertIsNone(try_function_knowledge("что такое энтропия"))
+
+    def test_function_question_still_gets_card(self):
+        from algos.module_knowledge import try_function_knowledge
+        self.assertIsNotNone(try_function_knowledge("что делает binary_search"))
+
 
 if __name__ == "__main__":
     unittest.main()

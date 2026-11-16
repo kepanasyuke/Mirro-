@@ -852,6 +852,13 @@ def answer_looks_bad(query, answer):
                     # «красный флаг»: длинный ответ почти без значащих слов
                     if not bad and a_words and len(a_words) < 2:
                         bad = True
+                # «почему/зачем» требует причинного ответа, а не описания картинки
+                is_causal = q.startswith("почему") or q.startswith("зачем") or "почему" in q[:12]
+                if not bad and is_causal:
+                    causal_markers = ("потому", "поэтому", "из-за", "так как", "причин",
+                                      "обуслов", "следствие", "рассеив", "приводит к", "ведёт к")
+                    if not any(marker in answer.lower() for marker in causal_markers):
+                        bad = True
                 # самопроверка: тавтология / «вода» — ответ почти целиком повторяет вопрос
                 if not bad:
                     q_tokens = _re.findall(r"[а-яёa-z]{3,}", q.lower())
@@ -1165,7 +1172,6 @@ def _try_direct_handlers(prompt):
     handlers = [
         ("greeting", try_greetings),
         ("english", try_english),
-        ("bilingual", try_bilingual),
         ("learn", try_learn),
         ("think", try_algos_think),
         ("humor", try_humor),
@@ -1175,16 +1181,17 @@ def _try_direct_handlers(prompt):
         ("steps", try_steps),
         ("algo", try_bosova_engine),
         ("ai_history", try_ai_history),
+        ("definition", try_definition),
+        ("bilingual", try_bilingual),
+        ("func_kb", try_function_knowledge),
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
         ("full_explanation", try_full_explanation),
         ("concept", try_concept),
-        ("definition", try_definition),
         ("enrich", try_enrich),
         ("what_links", try_what_links),
         ("similar", try_similar),
         ("metacognition", try_metacognition),
-        ("func_kb", try_function_knowledge),
         ("evolve", try_evo),
         ("quantum", try_quantum_graph),
         ("dialogue_memory", try_dialogue_memory),
