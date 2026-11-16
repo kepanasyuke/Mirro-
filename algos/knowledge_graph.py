@@ -1227,13 +1227,22 @@ class KnowledgeGraph:
 
     def reward(self, a, b, amount=0.3):
         """Положительный отклик: усилить связь между a и b (Хебб).
-        amount<=0 игнорируется. Один return: int — сколько связей усилено."""
+        amount<=0 игнорируется. Один return: int — сколько связей усилено/создано.
+
+        Хебб «fire together, wire together»: если прямой связи между a и b ещё
+        нет, награда СОЗДАЁТ её, а не проходит молча — иначе совместная
+        активация двух понятий не фиксировалась бы в графе вовсе."""
         try:
             amount = float(amount)
         except Exception:
             amount = 0.3
         if amount != amount or amount <= 0:
             return 0
+        if not self.edge_weight(a, b):
+            a_n, b_n = self._norm(a), self._norm(b)
+            if a_n and b_n and a_n != b_n and a_n in self.nodes and b_n in self.nodes:
+                self.add_edge(a_n, "связано_с", b_n, weight=amount)
+                return 1
         return self.hebbian_learn(a, b, amount)
 
     def reward_sign(self, a, b, feedback_sign=1.0, amount=0.05):

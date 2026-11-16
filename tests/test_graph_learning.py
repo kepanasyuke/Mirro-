@@ -174,6 +174,20 @@ class TestEdgeWeights(unittest.TestCase):
         self.assertEqual(index_weights, [1.0])
         self.assertEqual(self.kg.edge_weight("a", "b"), 1.0)
 
+    def test_reward_creates_missing_edge(self):
+        # Хебб «fire together, wire together»: награда совместной активации
+        # ДОЛЖНА создать связь, если её ещё нет, а не проходить молча.
+        self.kg.add_node("нейросеть")
+        self.kg.add_node("обучение")
+        self.assertEqual(self.kg.edges, {})
+        n = self.kg.reward("нейросеть", "обучение", 0.3)
+        self.assertEqual(n, 1)
+        self.assertGreater(self.kg.edge_weight("нейросеть", "обучение"), 0)
+        # повторная награда усиливает существующее ребро, не создавая дубль
+        self.kg.reward("нейросеть", "обучение", 0.3)
+        self.assertEqual(len(self.kg.edges), 1)
+        self.assertAlmostEqual(self.kg.edge_weight("нейросеть", "обучение"), 0.6)
+
     def test_hebb_depth_does_not_double_charge_target(self):
         self.kg.add_edge("a", "p", "z", 1.0)
         self.kg.add_edge("a", "p", "b", 1.0)
