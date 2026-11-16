@@ -113,11 +113,25 @@ def _lite(word):
 
 
 def _russian_text(entry):
-    """Русский текст записи: тема, что делает, пример — без пустых частей."""
+    """Русский текст записи: «Тема — это …, например …». Один return: str.
+    Раньше части склеивались через точку и выходило «Налог. обязательный платёж»."""
     if not isinstance(entry, dict):
         return ""
-    parts = [entry.get("topic") or "", entry.get("what") or "", entry.get("ex") or ""]
-    return ". ".join(part.strip().rstrip(".") for part in parts if str(part).strip())
+    topic = str(entry.get("topic") or "").strip().rstrip(".")
+    what = str(entry.get("what") or "").strip().rstrip(".")
+    ex = str(entry.get("ex") or "").strip().rstrip(".")
+    if what.lower().startswith("это "):
+        what = what[4:]
+    parts = []
+    if topic and what:
+        parts.append("%s — это %s." % (topic[:1].upper() + topic[1:],
+                                       what[:1].lower() + what[1:]))
+    elif topic or what:
+        main = topic or what
+        parts.append(main[:1].upper() + main[1:] + ".")
+    if ex:
+        parts.append("Например: %s." % ex)
+    return " ".join(parts)
 
 
 def _new(name):

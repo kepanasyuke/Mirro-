@@ -54,6 +54,15 @@ class CompareAnswerQualityTest(unittest.TestCase):
         self.assertIn("море", text)
         self.assertNotIn("plan", text)
 
+    def test_concept_text_reads_like_a_definition(self):
+        from algos.concepts import _russian_text
+        text = _russian_text({"topic": "налог",
+                              "what": "обязательный платёж в пользу государства",
+                              "ex": "подоходный налог удерживают из зарплаты"})
+        self.assertTrue(text.startswith("Налог — это "), text)
+        self.assertIn("Например:", text)
+        self.assertNotIn("Налог. ", text)
+
 
 class ConceptVersusFunctionTest(unittest.TestCase):
     """«Что такое X» — вопрос о понятии, а не о функции в коде."""
