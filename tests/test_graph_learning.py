@@ -174,6 +174,22 @@ class TestEdgeWeights(unittest.TestCase):
         self.assertEqual(index_weights, [1.0])
         self.assertEqual(self.kg.edge_weight("a", "b"), 1.0)
 
+    def test_reward_sign_positive_creates_missing_edge(self):
+        # live-путь /v1/feedback идёт через reward_sign(+1); он тоже должен
+        # СОЗДАВАТЬ связь при отсутствии ребра, а не проходить молча —
+        # иначе награда на пару без прямого ребра терялась бы в проде.
+        self.kg.add_node("нейросеть")
+        self.kg.add_node("обучение")
+        self.assertEqual(self.kg.edges, {})
+        n = self.kg.reward_sign("нейросеть", "обучение", 1.0, 0.05)
+        self.assertEqual(n, 1)
+        self.assertGreater(self.kg.edge_weight("нейросеть", "обучение"), 0)
+        # отрицательный отклик не должен создавать связь
+        g2 = KnowledgeGraph()
+        g2.add_node("x"); g2.add_node("y")
+        self.assertEqual(g2.reward_sign("x", "y", -1.0, 0.1), 0)
+        self.assertEqual(g2.edges, {})
+
     def test_reward_creates_missing_edge(self):
         # Хебб «fire together, wire together»: награда совместной активации
         # ДОЛЖНА создать связь, если её ещё нет, а не проходить молча.

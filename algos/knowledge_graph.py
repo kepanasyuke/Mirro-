@@ -1259,7 +1259,11 @@ class KnowledgeGraph:
             return 0
         changed = 0
         if feedback_sign >= 0:
-            changed = self.hebbian_learn(a, b, amount)
+            # идём через reward, а не hebbian_learn напрямую: награда должна не
+            # только усиливать существующую связь, но и СОЗДАВАТЬ её, если пары
+            # ещё нет (Хебб «fire together, wire together»). Так live-путь
+            # /v1/feedback перестаёт молча пропускать награды без прямого ребра.
+            changed = self.reward(a, b, amount)
         else:
             changed = self.punish(a, b, amount)
         return changed
