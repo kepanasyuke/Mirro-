@@ -457,6 +457,12 @@ class KnowledgeGraph:
         except Exception:
             depth = 0
         targets = [b]
+        # если явного ребра a↔b ещё нет, но оба узла уже есть в графе — создаём
+        # его (Хебб «fire together, wire together»). Иначе цель награды (b)
+        # пропускалась бы, а при depth>0 укреплялись бы только соседи a.
+        if a in self.nodes and b in self.nodes and a != b and not self.edge_weight(a, b):
+            self.add_edge(a, "связано_с", b, weight=amount)
+            strengthened += 1
         if depth > 0:
             for p, other, _w in self._adj.get(a, [])[:depth]:
                 if other != b and other not in targets:

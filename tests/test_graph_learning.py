@@ -204,6 +204,20 @@ class TestEdgeWeights(unittest.TestCase):
         self.assertEqual(len(self.kg.edges), 1)
         self.assertAlmostEqual(self.kg.edge_weight("нейросеть", "обучение"), 0.6)
 
+    def test_hebbian_learn_creates_missing_edge(self):
+        # auto-learn в mirro_core вызывает hebbian_learn(topic, pick, depth)
+        # напрямую; если ребра topic↔pick ещё нет, он должен СОЗДАВАТЬ его,
+        # а не проходить мимо (иначе цель награды терялась бы, а при depth>0
+        # укреплялись бы только соседи topic).
+        self.kg.add_node("сортировка")
+        self.kg.add_node("алгоритм")
+        n = self.kg.hebbian_learn("сортировка", "алгоритм", 0.08, depth=3)
+        self.assertGreaterEqual(n, 1)
+        self.assertGreater(self.kg.edge_weight("сортировка", "алгоритм"), 0)
+        # повторный вызов не создаёт дубль, а усиливает то же ребро
+        self.kg.hebbian_learn("сортировка", "алгоритм", 0.08, depth=3)
+        self.assertEqual(len(self.kg.edges), 1)
+
     def test_hebb_depth_does_not_double_charge_target(self):
         self.kg.add_edge("a", "p", "z", 1.0)
         self.kg.add_edge("a", "p", "b", 1.0)
