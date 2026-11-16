@@ -19,6 +19,13 @@ _CACHE = {}
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _WORD = re.compile(r"[A-Za-zА-Яа-яЁё0-9_]+")
 
+# Как понятия называют люди: «поиск в ширину» — тот же обход в ширину.
+# Фразы добавляются алиасами целиком, чтобы не отдавать общее «Поиск».
+_SYNONYMS = {
+    "поиск в ширину": "обход в ширину",
+    "поиск в глубину": "обход в глубину",
+}
+
 
 def _english():
     """Английская база: (словарь текстов, список триггеров)."""
@@ -188,6 +195,7 @@ def build():
         concept = registry.get(_normal(topic))
         if concept is not None and not concept["ru"]:
             concept["ru"] = text
+    topic_map = {}
     for name, entry in _russian().items():
         key = _normal(name)
         concept = registry.get(key)
@@ -202,6 +210,18 @@ def build():
             stem = _stem(word)
             if len(stem) >= 4:
                 concept["aliases"].add(stem)
+        topic = str((entry or {}).get("topic") or "").strip().lower()
+        if topic:
+            topic_map.setdefault(topic, concept)
+    for phrase, canonical in _SYNONYMS.items():
+        # тема в глоссе — «обход в ширину», а не ключ «bfs»: ищем по теме
+        concept = topic_map.get(canonical.lower()) or registry.get(_normal(canonical))
+        if concept is not None:
+            # алиасы держим и нормализованной формой (ключ реестра), и фразой
+            # с пробелами: поиск по подстроке ищет именно второй вариант
+            concept["aliases"].add(_normal(phrase))
+            concept["aliases"].add(phrase)
+            taken.setdefault(_normal(phrase), concept["id"])
     for concept in registry.values():
         concept["aliases"] = tuple(sorted(concept["aliases"]))
     _CACHE["concepts"] = registry

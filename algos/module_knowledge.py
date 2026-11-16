@@ -1196,6 +1196,16 @@ def try_function_knowledge(query):
             # (распознает «бинарь», «сортировка пузырьком», падежные формы)
             q_names = _norm_q(q).split()
             q_stems = {_stem_ru(w) for w in q_names if len(w) > 2}
+            # составное понятие важнее общего слова: «поиск в ширину» — это
+            # обход в ширину (bfs), а не карточка общего «поиска»
+            from algos import lookup
+            hit = lookup.find(q)
+            precise = None
+            if (hit is not None and hit.get("via") == "registry"
+                    and (hit.get("score") or 0) >= 0.5):
+                cid = str(hit["concept"].get("id") or "")
+                if cid in (fk._by_name or {}):
+                    precise = cid
             best = []
             for name in fk._by_name or {}:
                 if not isinstance(name, str) or len(name) <= 2:
@@ -1209,7 +1219,9 @@ def try_function_knowledge(query):
             found = None
             if best:
                 best.sort(key=lambda x: (-x[0], -x[1]))
-                found = best[0][2]
+                found = precise or best[0][2]
+            elif precise:
+                found = precise
             if found:
                 ans = fk.knowledge_for(found)
             else:
@@ -1233,6 +1245,33 @@ def _names_a_function(q):
     return any(name in words or _stem_ru(name) in stems for name in names)
 
 
+def _precise_topic(q):
+    """Точная составная тема из базы функций («бинарный поиск», «поиск в ширину»).
+    Один return: str|None. Одиночное слово («поиск») темой не считается."""
+    text = _norm_q(q)
+    for cid, info in (fk._by_name or {}).items():
+        if not isinstance(info, dict) or str(cid).startswith("_"):
+            continue
+        topic = _norm_q(str(info.get("topic") or ""))
+        if topic and " " in topic and topic in text:
+            return str(cid)
+    from algos import lookup
+    hit = lookup.find(q)
+    if hit is None:
+        return None
+    concept = hit.get("concept") or {}
+    cid = str(concept.get("id") or "")
+    if not cid or cid.startswith("_") or cid not in (fk._by_name or {}):
+        return None
+    info = fk._by_name.get(cid) or {}
+    alias = _norm_q(str(hit.get("alias") or ""))
+    topic = _norm_q(str(info.get("topic") or ""))
+    for phrase in (alias, topic):
+        if phrase and " " in phrase and phrase in text:
+            return cid
+    return None
+
+
 def try_definition(query):
     """Отвечает связным определением для ОБЩИХ ПОНЯТИЙ (нейросеть, ИИ, питон,
     граф, алгоритм и т.п.) своими словами — раньше сырого графа.
@@ -1243,6 +1282,18 @@ def try_definition(query):
     if not q:
         return None
     if _names_a_function(q):
+        return ans
+    # составная тема важнее общего «_»-понятия: «поиск в ширину» — это обход,
+    # а не карточка поиска информации
+    precise = _precise_topic(q)
+    if precise:
+        info = fk._by_name.get(precise) or {}
+        topic = str(info.get("topic") or "это")
+        what = str(info.get("what") or "некое понятие")
+        ex = str(info.get("ex") or "")
+        ans = f"{topic[0].upper() + topic[1:]} — это {what}."
+        if ex.strip():
+            ans += f" Например: {ex}."
         return ans
     # понятия — это ключи в _KNOWLEDGE, начинающиеся с «_»
     best = []
