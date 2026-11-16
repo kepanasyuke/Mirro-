@@ -150,7 +150,11 @@ _TOPIC_STOP = {"что", "такое", "объясни", "расскажи", "п
                "если говорить", "мачу-пикчу", "переустановить ide",
                "искусство возможного", "давай", "иначе", "вообще", "просто",
                "смотря", "пока что", "так сказать", "связано", "связан",
-               "связь", "связан с"}
+               "связь", "связан с", "какая", "какой", "какие", "каких", "каким",
+               "сколько", "когда", "где", "зачем", "кто", "чем", "чему",
+               "эти", "этот", "эта", "это", "те", "тот", "там", "тут", "все",
+               "всё", "мне", "меня", "тебе", "вам", "нас", "вас", "они", "она",
+               "его", "её", "их", "я", "ты"}
 
 _JUNK_TOPIC_MARKERS = ("можно сказать", "попробовать", "переустановить",
                        "про понятие", "если говорить о", "связано с",
@@ -165,6 +169,14 @@ def _is_junk_topic(n):
         return True
     nlow = n.lower()
     return any(m in nlow for m in _JUNK_TOPIC_MARKERS) or nlow in _TOPIC_STOP
+
+
+def _is_word_in_q(core, q):
+    """Есть ли основа понятия в запросе ЦЕЛЫМ СЛОВОМ (по границе слова),
+    а не как подстрока: «столица» не должна матчиться через внутренние «стол»/«лица».
+    Один return: bool."""
+    import re as _re
+    return bool(_re.search(r"(?<![а-яёa-z])" + _re.escape(core) + r"(?![а-яёa-z])", q))
 
 
 def _graph_topics(graph, query, limit=12):
@@ -191,7 +203,7 @@ def _graph_topics(graph, query, limit=12):
                 found.append(n)
         elif core in _TOPIC_STOP or len(core) < 4:
             continue
-        elif core in q:
+        elif _is_word_in_q(core, q):
             found.append(n)
     seen = set()
     uniq = []
@@ -266,11 +278,10 @@ def _graph_topics_for_unknown(graph, query):
         if not isinstance(n, str) or len(n) < 4 or _is_junk_topic(n):
             continue
         core = n.split()[0] if " " in n else n
-        for w in words[:8]:
-            prefix = core[:4]
-            if prefix == w[:4] and len(core) >= len(w) - 2:
-                scores.append((len(core), n))
-                break
+        # цельнословное совпадение основы понятия в запросе: «франции» не должно
+        # «цепляться» за узел «французский король» через слабое совпадение 4-префикса
+        if _is_word_in_q(core, q):
+            scores.append((len(core), n))
     scores.sort(key=lambda kv: -kv[0])
     return [n for _, n in scores[:5]]
 
