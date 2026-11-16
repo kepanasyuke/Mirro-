@@ -790,6 +790,24 @@ def try_web(query):
         ans = None
     return ans
 
+def _mentions_query(query, text):
+    """Есть ли в ответе слова вопроса. Один return: bool."""
+    words = [word for word in _tokenize_for_search(query) if len(word) >= 4]
+    low = (text or "").lower()
+    return any(word in low for word in words)
+
+
+def _web_answer(query):
+    """Веб-ответ, только если он по теме вопроса. Один return: str/None.
+
+    Веб-источник иногда отдаёт совсем другое понятие (на «кварковый резонатор»
+    приходил ответ про НДС). Такой ответ хуже честного молчания: без него
+    цепочка идёт к базе и фолбэку.
+    """
+    answer = try_web(query)
+    return answer if answer and _mentions_query(query, answer) else None
+
+
 def try_provider(query, context=""):
     """Финальный фоллбэк: внешний ИИ-провайдер (DeepSeek и др.), если всё остальное не ответило.
 
@@ -815,6 +833,13 @@ def _word_roots(text):
     """Основы слов (первые 4 буквы) — чтобы сравнивать словоформы.
     Один return: set."""
     return {word[:4] for word in _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())}
+
+
+def _needs_final_gate(query):
+    """Нужен ли финальный контроль для вопроса о сравнении понятий.
+    Один return: bool."""
+    q = (query or "").lower()
+    return any(word in q for word in ("что общего", "похож", "подоб", "сходств", "отлича"))
 
 
 def answer_looks_bad(query, answer):
@@ -1346,7 +1371,7 @@ def _try_web_first(prompt):
         from scripts.thinking import thinking as _th
         web_hits = sum(1 for t in _th.WEB_TRIGGERS if t in prompt.lower())
         if web_hits > 0:
-            web_first = try_web(prompt)
+            web_first = _web_answer(prompt)
             if web_first:
                 result = {"content": _voice(web_first, prompt, "web"), "strategy": "web",
                           "confidence": 0.45}  # веб-ответ — уверенность умеренная
@@ -1528,7 +1553,7 @@ def _mark_unsure_web_result(result):
 
 def _fallback_chain(prompt):
     """Финальная цепочка: веб → граф-вывод → провайдер → подсказка. Единственный return: dict."""
-    web_answer = try_web(prompt)
+    web_answer = _web_answer(prompt)
     if web_answer:
         result = {"content": _voice(web_answer, prompt, "web"), "strategy": "web",
                   "confidence": 0.45}
@@ -1655,7 +1680,7 @@ def _answer_base_is_garbage(prompt):
     result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.",
               "strategy": "web"}
     try:
-        bad_web = try_web(prompt)
+        bad_web = _web_answer(prompt)
         voiced = _voice_or_none(bad_web, prompt, "web") if bad_web else None
         if voiced is not None:
             result = voiced
@@ -1676,7 +1701,7 @@ def _answer_from_graph_or_web(prompt):
         result = ginf
         result["workspace"] = "сознание: прямой ответ не найден → вывод знаний из графа (рассуждение по связям)"
     else:
-        cl_web = try_web(prompt)
+        cl_web = _web_answer(prompt)
         result = _voice_or_none(cl_web, prompt, "web") if cl_web else None
         if result is None:
             result = _fallback_chain(prompt)
@@ -1840,6 +1865,13 @@ def build_response(prompt, cluster, context=""):
     except Exception:
         result["plan"] = ""
     result["thinking"] = thinking
+    # Финальный гейт для сравнений: ответ обязан сравнивать понятия, иначе это
+    # просто текст, где встретились их слова. Проверка стоит в самом конце,
+    # потому что часть обработчиков возвращает ответ мимо своих валидаторов.
+    if _needs_final_gate(prompt) and answer_looks_bad(prompt, result.get("content") or ""):
+        result["content"] = ("Не нашла сравнения этих понятий в своей базе. Уточните, что именно "
+                             "сравнить, или спросите отдельно про каждое.")
+        result["strategy"] = "quality_gate"
     return result
 
 

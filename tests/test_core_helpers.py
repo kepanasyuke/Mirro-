@@ -136,13 +136,22 @@ class TestResponseChainRobustness(unittest.TestCase):
 
     def test_fallback_chain_marks_web_confidence(self):
         original_web = self.mc.try_web
-        self.mc.try_web = lambda *_a, **_k: "ответ из интернета"
+        self.mc.try_web = lambda *_a, **_k: "ответ из интернета на вопрос"
         try:
             result = self.mc._fallback_chain("вопрос")
         finally:
             self.mc.try_web = original_web
         self.assertEqual(result["strategy"], "web")
         self.assertEqual(result["confidence"], 0.45)
+
+    def test_irrelevant_web_answer_is_ignored(self):
+        original_web = self.mc.try_web
+        self.mc.try_web = lambda *_a, **_k: "Налог на добавленную стоимость"
+        try:
+            result = self.mc._fallback_chain("кварковый резонатор")
+        finally:
+            self.mc.try_web = original_web
+        self.assertNotEqual(result.get("strategy"), "web")
 
     def test_text_of_normalises_non_string_content(self):
         self.assertEqual(self.mc._text_of({"content": None}), "")
