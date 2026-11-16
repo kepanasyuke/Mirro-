@@ -1255,7 +1255,10 @@ def _try_direct_handlers(prompt):
         ("creative", try_creative),
         ("direct", try_jarvis),
         ("dialog", try_dialog),
+        # роутер выше понятий: он умеет сравнивать два понятия, а обработчик
+        # одного понятия на такой вопрос отвечает половиной ответа
         ("router", try_router),
+        ("concept", try_concept),
         ("relation", try_relation),
         ("why", try_why),
         ("steps", try_steps),
@@ -1267,7 +1270,6 @@ def _try_direct_handlers(prompt):
         ("knowledge_graph", try_knowledge_graph),
         ("graph_infer", try_graph_infer),
         ("full_explanation", try_full_explanation),
-        ("concept", try_concept),
         ("enrich", try_enrich),
         ("what_links", try_what_links),
         ("similar", try_similar),
