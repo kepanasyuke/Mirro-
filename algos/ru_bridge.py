@@ -346,11 +346,13 @@ def related(query):
                      or first in EDGES_MENTION.get(second, []))
         left, right = ru_definition(first), ru_definition(second)
         if left and right:
-            head = "Прямой связи в базе нет, это разные понятия."
+            # в каждом заголовке есть слово о различии: итоговый гейт сравнений
+            # иначе не считает ответ сравнением и гасит его целиком
+            head = "Прямой связи в базе нет: это разные понятия, и вот чем они различаются."
             if contrasted:
-                head = "В базе они прямо противопоставлены."
+                head = "В базе они прямо противопоставлены, то есть различаются."
             elif mentioned:
-                head = "В базе они связаны."
+                head = "В базе они связаны между собой, хотя и различаются."
             answer = "%s\n\n«%s»: %s\n\n«%s»: %s" % (
                 head, _ru_label(first), left, _ru_label(second), right)
         elif contrasted:

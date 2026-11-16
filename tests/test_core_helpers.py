@@ -490,6 +490,32 @@ class TestPostHandlers(unittest.TestCase):
         self.assertIsInstance(h.sent[0][1], dict)
 
 
+class TestComparisonGate(unittest.TestCase):
+    """Ответ-сравнение не гасится финальным гейтом, а мусор — гасится."""
+
+    def test_comparison_answer_passes_gate(self):
+        mc = _get_core()
+        q = "чем отличается смелость от терпения"
+        ans = ("В базе они прямо противопоставлены, то есть различаются. "
+               "«смелость»: Смелость — готовность действовать вопреки страху. "
+               "«терпение»: Терпение — способность выдерживать трудности долго.")
+        self.assertFalse(mc.answer_looks_bad(q, ans))
+
+    def test_case_forms_do_not_fail_word_check(self):
+        mc = _get_core()
+        q = "что общего у дружбы и доверия"
+        ans = ("В базе они связаны между собой, хотя и различаются. "
+               "«дружба»: Дружба — близость на доверии. "
+               "«доверие»: Доверие — готовность полагаться на другого.")
+        self.assertFalse(mc.answer_looks_bad(q, ans))
+
+    def test_unrelated_answer_is_still_gated(self):
+        mc = _get_core()
+        q = "чем отличается смелость от терпения"
+        ans = "В базе они связаны между собой, хотя и различаются. Это текст про погоду и ветер."
+        self.assertTrue(mc.answer_looks_bad(q, ans))
+
+
 class _FakeWriter:
     def __init__(self, sink):
         self.sink = sink
