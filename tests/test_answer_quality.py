@@ -53,6 +53,15 @@ class ConceptVersusFunctionTest(unittest.TestCase):
         from algos.module_knowledge import try_function_knowledge
         self.assertIsNotNone(try_function_knowledge("что делает binary_search"))
 
+    def test_new_glosses_answer_with_definitions(self):
+        from algos.module_knowledge import try_definition
+        for question, word in (("что такое энтропия", "энтропия"),
+                               ("что такое инфляция", "инфляция"),
+                               ("что такое фотон", "фотон")):
+            text = try_definition(question) or ""
+            self.assertIn(word, text.lower())
+            self.assertNotIn("связан с", text)
+
 
 if __name__ == "__main__":
     unittest.main()
