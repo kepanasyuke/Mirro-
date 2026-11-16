@@ -232,26 +232,50 @@ def _topics_in(query):
             hits = _hits(stems, [_stem_ru(key) for key in keys])
             if hits:
                 scored.append((hits, topic))
+    for name, topic in _TEXT_KEYS.items():
+        hits = _hits(stems, [_stem_ru(name)])
+        if hits:
+            scored.append((hits, topic))
     scored.sort(key=lambda pair: (-pair[0], pair[1]))
-    return [topic for _, topic in scored]
+    unique = []
+    for _, topic in scored:
+        if topic not in unique:
+            unique.append(topic)
+    return unique
 
 
 def _ru_label(topic):
-    """Русская подпись понятия. Один return: str."""
+    """Русская подпись понятия: ключ моста, имя из описания или тема. Один return: str."""
     keys = RU_KEYS.get(topic) or ()
-    return keys[0] if keys else topic
+    label = keys[0] if keys else None
+    if label is None:
+        names = [name for name, owner in _TEXT_KEYS.items() if owner == topic]
+        label = names[0] if names else topic
+    return label
 
 
 def related(query):
-    """Ответ про связи понятий по графу. Один return: dict/None."""
-    from algos.concept_graph import EDGES, neighbours
+    """Ответ про связи понятий: сравнение двух или окружение одного. Один return: dict/None."""
+    from algos.concept_graph import EDGES_CONTRAST, EDGES_MENTION, neighbours
 
     topics = _topics_in(query)
     answer = None
     if len(topics) >= 2:
         first, second = topics[0], topics[1]
-        linked = second in EDGES.get(first, []) or first in EDGES.get(second, [])
-        if linked:
+        contrasted = (second in EDGES_CONTRAST.get(first, [])
+                      or first in EDGES_CONTRAST.get(second, []))
+        mentioned = (second in EDGES_MENTION.get(first, [])
+                     or first in EDGES_MENTION.get(second, []))
+        left, right = ru_definition(first), ru_definition(second)
+        if left and right:
+            head = "Прямой связи в базе нет, это разные понятия."
+            if contrasted:
+                head = "В базе они прямо противопоставлены."
+            elif mentioned:
+                head = "В базе они связаны."
+            answer = "%s\n\n«%s»: %s\n\n«%s»: %s" % (
+                head, _ru_label(first), left, _ru_label(second), right)
+        elif contrasted:
             answer = ("«%s» и «%s» в базе различаются: это разные понятия, "
                       "и определение одного прямо противопоставлено другому."
                       % (_ru_label(first), _ru_label(second)))

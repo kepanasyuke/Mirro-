@@ -98,21 +98,37 @@ def _ru_neighbours(topic, labels):
 
 
 def build_edges():
-    """Рёбра графа: тема -> соседи по английским сравнениям и русским текстам.
-    Один return: dict."""
-    edges = {}
+    """Два слоя рёбер: противопоставления и упоминания. Один return: tuple.
+
+    Противопоставление — оборот «it differs from» в английском определении.
+    Упоминание — русская подпись другого понятия внутри русского описания.
+    Слои разные по смыслу, поэтому и хранятся отдельно.
+    """
+    contrast = {}
+    mention = {}
     labels = _ru_labels()
     for topic in _EN_KB:
-        merged = _neighbours_of(topic)
-        for target in _ru_neighbours(topic, labels):
-            if target not in merged:
-                merged.append(target)
-        if merged:
-            edges[topic] = merged
-    return edges
+        hard = _neighbours_of(topic)
+        soft = [name for name in _ru_neighbours(topic, labels) if name not in hard]
+        if hard:
+            contrast[topic] = hard
+        if soft:
+            mention[topic] = soft
+    return contrast, mention
 
 
-EDGES = build_edges()
+EDGES_CONTRAST, EDGES_MENTION = build_edges()
+
+
+def _merge_layers(first, second):
+    """Склеивает два слоя рёбер без повторов. Один return: dict."""
+    merged = {}
+    for topic in list(first) + [name for name in second if name not in first]:
+        merged[topic] = list(dict.fromkeys(list(first.get(topic, [])) + list(second.get(topic, []))))
+    return merged
+
+
+EDGES = _merge_layers(EDGES_CONTRAST, EDGES_MENTION)
 
 
 def neighbours(topic, depth=1):
