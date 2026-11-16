@@ -10,9 +10,13 @@
 формулировки, что уже лежат в проекте. Если у понятия нет русского текста,
 это видно по полю `ru`: значит, формулировку ещё предстоит написать.
 """
+import io
+import json
+import os
 import re
 
 _CACHE = {}
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _WORD = re.compile(r"[A-Za-zА-Яа-яЁё0-9_]+")
 
 
@@ -40,6 +44,32 @@ def _bridged_aliases():
     """Русские ключи понятий из ru_bridge: тема английской базы -> слова."""
     from algos.ru_bridge import RU_KEYS
     return RU_KEYS.items()
+
+
+def _wikidata_pairs():
+    """Пары «тема → русское слово» из data/bilingual_map.json. Один return: dict.
+
+    Карта собирается внешним скриптом по интервики Википедии и Викиданным,
+    поэтому пары фильтруются: берём только кириллические подписи без служебных
+    пометок вроде «(значения)». Ошибиться такая пара всё равно может
+    («graph» → «граффити»), поэтому ручные ключи ru_bridge важнее — они
+    добавляются первыми и в реестре остаются наравне.
+    """
+    pairs = {}
+    path = os.path.join(_ROOT, "data", "bilingual_map.json")
+    try:
+        with io.open(path, encoding="utf-8") as handle:
+            raw = json.load(handle)
+        for topic, label in (raw.get("map") or {}).items():
+            clean = str(label or "").strip()
+            cyrillic = any("\u0400" <= char <= "\u04ff" for char in clean)
+            usable = (len(clean) >= 3 and cyrillic and "(" not in clean
+                      and clean.lower() != str(topic or "").lower())
+            if usable:
+                pairs[str(topic)] = (clean,)
+    except (OSError, ValueError):
+        pairs = {}
+    return pairs
 
 
 def _words(text):
@@ -90,6 +120,10 @@ def build():
         if concept is not None:
             _add_aliases(concept, [topic] + list(keys or ()))
     for topic, keys in _bridged_aliases():
+        concept = registry.get(_normal(topic))
+        if concept is not None:
+            _add_aliases(concept, list(keys))
+    for topic, keys in _wikidata_pairs().items():
         concept = registry.get(_normal(topic))
         if concept is not None:
             _add_aliases(concept, list(keys))
