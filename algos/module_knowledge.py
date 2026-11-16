@@ -264,6 +264,9 @@ _KNOWLEDGE = {
                               "what": "кубит в смеси состояний до измерения", "ex": "вероятности |α|², |β|²"},
     "quantum_probability": {"module": "14_quantum", "topic": "квантовая вероятность",
                             "what": "квадрат модуля амплитуды = вероятность", "ex": "p=|α|²"},
+    "quantum_computer": {"module": "14_quantum", "topic": "квантовый компьютер",
+                         "what": "машина на кубитах: суперпозиция и запутанность вместо битов",
+                         "ex": "факторизация Шора, перебор через амплитуды"},
     # ---------------- университет (16) — ключевые ----------------
     "derivative_numerical": {"module": "16_university", "topic": "численная производная",
                              "what": "оценка производной через приращение", "ex": "(f(x+h)-f(x))/h"},
@@ -1203,7 +1206,7 @@ def try_function_knowledge(query):
             precise = None
             if (hit is not None and hit.get("via") == "registry"
                     and (hit.get("score") or 0) >= 0.5):
-                cid = str(hit["concept"].get("id") or "")
+                cid = str(hit["concept"].get("id") or "").replace(" ", "_")
                 if cid in (fk._by_name or {}):
                     precise = cid
             best = []
@@ -1260,14 +1263,17 @@ def _precise_topic(q):
     if hit is None:
         return None
     concept = hit.get("concept") or {}
-    cid = str(concept.get("id") or "")
+    # id в реестре печатается с пробелом («entangled pair»), ключ глоссы — с «_»
+    cid = str(concept.get("id") or "").replace(" ", "_")
     if not cid or cid.startswith("_") or cid not in (fk._by_name or {}):
         return None
     info = fk._by_name.get(cid) or {}
     alias = _norm_q(str(hit.get("alias") or ""))
     topic = _norm_q(str(info.get("topic") or ""))
     for phrase in (alias, topic):
-        if phrase and " " in phrase and phrase in text:
+        # одно длинное слово («запутанность») — тоже тема; короткое общее
+        # («поиск», «граф») оставляем общему «_»-понятию
+        if phrase and (" " in phrase or len(phrase) >= 6) and phrase in text:
             return cid
     return None
 
