@@ -806,6 +806,17 @@ def try_provider(query, context=""):
     return ans
 
 
+_COMPARE_STOP_ROOTS = {"отли", "похо", "сход", "обще", "чем", "межд", "сравн"}
+_COMPARE_MARKERS = ("отлича", "в отличие", "разница", "различ", "тогда как",
+                    "по сравнению", "оба", "общее", "общего", "как и", "так и")
+
+
+def _word_roots(text):
+    """Основы слов (первые 4 буквы) — чтобы сравнивать словоформы.
+    Один return: set."""
+    return {word[:4] for word in _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())}
+
+
 def answer_looks_bad(query, answer):
     """True, если ответ мусорный — его нельзя отдавать пользователю.
     Один return: bool."""
@@ -849,6 +860,16 @@ def answer_looks_bad(query, answer):
                     key = q_words - stop
                     if key and not key & a_words:
                         bad = True  # ответ вообще не про это
+                # Сравнение: ответ обязан назвать оба понятия и сравнивать их,
+                # иначе это просто текст, где встретилось одно из слов
+                if not bad and is_compare:
+                    asked = [w for w in _re.findall(r"[а-яёa-z]{4,}", q)
+                             if w[:4] not in _COMPARE_STOP_ROOTS]
+                    roots = _word_roots(answer)
+                    if any(w[:4] not in roots for w in asked[:3]):
+                        bad = True
+                    elif not any(marker in answer.lower() for marker in _COMPARE_MARKERS):
+                        bad = True
                     # «красный флаг»: длинный ответ почти без значащих слов
                     if not bad and a_words and len(a_words) < 2:
                         bad = True
@@ -1072,6 +1093,14 @@ def _try_direct_handlers(prompt):
         except Exception:
             ans = None
         return ans
+    def try_why(q):
+        ans = None
+        try:
+            from algos.knowledge_graph import try_why as _f
+            ans = _f(q)
+        except Exception:
+            ans = None
+        return ans
     def try_function_knowledge(q):
         ans = None
         try:
@@ -1188,6 +1217,7 @@ def _try_direct_handlers(prompt):
         ("direct", try_jarvis),
         ("dialog", try_dialog),
         ("relation", try_relation),
+        ("why", try_why),
         ("steps", try_steps),
         ("algo", try_bosova_engine),
         ("ai_history", try_ai_history),

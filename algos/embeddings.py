@@ -114,6 +114,27 @@ def similarity(model, first, second):
                   vectors.get((second or "").lower(), {}))
 
 
+def text_vector(model, text):
+    """Средний PPMI-вектор слов текста. Один return: dict."""
+    vectors = model.get("vectors", {}) if isinstance(model, dict) else {}
+    total = {}
+    used = 0
+    for word in tokenize(text):
+        vector = vectors.get(word)
+        if vector:
+            used += 1
+            for key, value in vector.items():
+                total[key] = total.get(key, 0.0) + value
+    if used:
+        total = {key: value / used for key, value in total.items()}
+    return total
+
+
+def text_similarity(model, first, second):
+    """Смысловая близость двух текстов (средние векторы). Один return: float 0..1."""
+    return cosine(text_vector(model, first), text_vector(model, second))
+
+
 def save(model, path):
     """Сохраняет модель в JSON. Один return: bool."""
     ok = False
