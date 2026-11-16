@@ -210,7 +210,12 @@ def find(query):
             if alias:
                 for match in re.finditer(re.escape(alias), low):
                     before = low[max(0, match.start() - 2):match.start()].strip()
-                    if before != "не":
+                    # алиас должен быть целым словом: иначе «dock» цепляется за
+                    # «docker», а «дар» — за «удар» и «подарок»
+                    left_ok = match.start() == 0 or not low[match.start() - 1].isalnum()
+                    right_ok = (match.end() >= len(low)
+                                or not low[match.end()].isalnum())
+                    if left_ok and right_ok and before != "не":
                         hit = True
                         break
             if not hit and alias and " " not in alias:
