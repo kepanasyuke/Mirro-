@@ -65,10 +65,13 @@ def _neighbours_of(topic):
 
 
 def _ru_labels():
-    """Русская подпись понятия: первый ключ моста. Один return: dict."""
-    from algos.ru_bridge import RU_KEYS
+    """Русская подпись понятия: ключ моста или имя из описания. Один return: dict."""
+    from algos.ru_bridge import RU_KEYS, _TEXT_KEYS
 
-    return {topic: keys[0] for topic, keys in RU_KEYS.items() if keys}
+    labels = {topic: keys[0] for topic, keys in RU_KEYS.items() if keys}
+    for name, topic in _TEXT_KEYS.items():
+        labels.setdefault(topic, name)
+    return labels
 
 
 def _ru_text(topic):
