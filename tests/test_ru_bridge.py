@@ -56,7 +56,13 @@ class TestRussianAnswer(unittest.TestCase):
         self.assertEqual(found["strategy"], "ru_bridge")
 
     def test_missing_russian_text_is_silent(self):
-        self.assertIsNone(ru_definition("abbot"))
+        # берём тему, у которой русского текста действительно нет: список
+        # описаний растёт, и жёстко зашитая тема быстро обрастает текстом
+        from algos.english_kb import _EN_KB
+        from algos.ru_descriptions import RU_TEXT
+        silent = [topic for topic in _EN_KB if topic not in RU_TEXT]
+        self.assertTrue(silent, "все темы уже описаны по-русски")
+        self.assertIsNone(ru_definition(silent[0]))
 
     def test_described_concept_answers_in_russian(self):
         found = bridge("что такое мудрость")

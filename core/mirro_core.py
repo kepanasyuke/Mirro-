@@ -383,6 +383,8 @@ def try_greetings(query):
         ans = "Пожалуйста! Рада помочь."
     elif len(q) <= 40 and any(g in q for g in ["привет","здравств","добрый"]):
         ans = "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете."
+    elif len(q) <= 40 and q.strip(" !.?,") in ("hi", "hello", "hey", "good morning", "good evening"):
+        ans = "Привет! Я Mirro. Спрашивай что угодно — отвечу из своих знаний или найду в интернете."
     elif len(q) <= 40 and any(g in q for g in ["как дела","как ты","как жизнь","как у тебя","как настроение","как твои"]):
         ans = "Привет! У меня всё хорошо, я постоянно учусь и становлюсь умнее. А у тебя как дела?"
     elif len(q) <= 40 and (q == "2+2"):
@@ -888,7 +890,9 @@ def answer_looks_bad(query, answer):
                     key = q_words - stop
                     # сверяем по основам, а не по словоформам: «дружбы» в вопросе
                     # и «дружба» в ответе — одно и то же слово
-                    if key and not {w[:4] for w in key} & {w[:4] for w in a_words}:
+                    # сравниваем по трём первым буквам: «санки» и «сани» —
+                    # одна тема, а «колесо» и «лес» по-прежнему разные слова
+                    if key and not {w[:3] for w in key} & {w[:3] for w in a_words}:
                         bad = True  # ответ вообще не про это
                 # Сравнение: ответ обязан назвать оба понятия и сравнивать их,
                 # иначе это просто текст, где встретилось одно из слов
@@ -1081,6 +1085,15 @@ def _try_direct_handlers(prompt):
             ans = None
         return ans
 
+    def try_concept_special(q):
+        ans = None
+        try:
+            from algos.plan_router import answer_special as _special
+            ans = _special(q)
+        except Exception:
+            ans = None
+        return ans
+
     def try_concept(q):
         ans = None
         try:
@@ -1248,23 +1261,30 @@ def _try_direct_handlers(prompt):
         return ans
     handlers = [
         ("greeting", try_greetings),
-        ("english", try_english),
         ("learn", try_learn),
         ("think", try_algos_think),
         ("humor", try_humor),
         ("creative", try_creative),
         ("direct", try_jarvis),
         ("dialog", try_dialog),
+        # сравнение, связи, причина, подсчёт и статистика — до общего определения,
+        # иначе ответ на любое упоминание темы съедает их
+        ("concept_special", try_concept_special),
+        # определение раньше роутера: если русская база знает само слово, это точнее
+        # ответа по английской теме через синоним («связь» → bond → «узы»)
+        ("definition", try_definition),
         # роутер выше понятий: он умеет сравнивать два понятия, а обработчик
         # одного понятия на такой вопрос отвечает половиной ответа
         ("router", try_router),
         ("concept", try_concept),
+        # английский ответ — запасной: если база знает тему, она отвечает
+        # по-русски раньше, чем сработает «я обучен в основном по-русски»
+        ("english", try_english),
         ("relation", try_relation),
         ("why", try_why),
         ("steps", try_steps),
         ("algo", try_bosova_engine),
         ("ai_history", try_ai_history),
-        ("definition", try_definition),
         ("bilingual", try_bilingual),
         ("func_kb", try_function_knowledge),
         ("knowledge_graph", try_knowledge_graph),
@@ -1290,7 +1310,10 @@ def _try_direct_handlers(prompt):
             msg = fn(prompt)
         except Exception:
             msg = None
-        if msg is not None:
+        # ответ, который не отвечает на заданный вопрос («что такое колесо» →
+        # «Лес — это…» из-за совпадения подстроки), пропускаем: пусть ответит
+        # следующий обработчик, который знает толк в этом слове
+        if msg is not None and not answer_looks_bad(prompt, msg):
             result = {"content": msg, "strategy": strategy}
             break
     return result
