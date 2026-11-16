@@ -506,10 +506,13 @@ class KnowledgeGraph:
                 changed += 1
         return changed
 
+    _EDGE_JUNK = " \t.,!?;:—–-«»\"'()[]"
+
     @staticmethod
     def _norm(name):
         name = name if isinstance(name, str) else str(name or "")
-        return _re.sub(r"\s+", " ", name).strip().lower().rstrip(".!?;")[:200]
+        cleaned = _re.sub(r"\s+", " ", name).strip().lower()
+        return cleaned.strip(KnowledgeGraph._EDGE_JUNK)[:200]
 
     @staticmethod
     def _is_num(x):
@@ -711,7 +714,7 @@ class KnowledgeGraph:
             except Exception:
                 ranked = safe_nbrs
             for p, other, w in ranked[:6]:
-                if not _is_noisy_predicate(p):
+                if not _is_noisy_predicate(p) and _is_meaningful_other(other, name):
                     lines.append(f"{p} → «{other}» (вес {float(w):.2f})")
             has_details = bool(n.facts) or len(lines) > 1
             text = "\n".join(lines) if has_details else None
@@ -1902,7 +1905,9 @@ def try_full_explanation(query):
             # это шум корпусных совпадений («кота связано с смотри») и дают
             # бессвязные фразы вместо ответа.
             for p, other, w in [r for r in ranked
-                                if (r[2] is None or r[2] >= 1.0) and not _is_noisy_predicate(r[0])][:4]:
+                                if (r[2] is None or r[2] >= 1.0)
+                                and not _is_noisy_predicate(r[0])
+                                and _is_meaningful_other(r[1], start)][:4]:
                 otherc = other.split()[0] if " " in other else other
                 if not otherc or otherc == start:
                     continue

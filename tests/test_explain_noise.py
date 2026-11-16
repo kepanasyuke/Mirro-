@@ -37,6 +37,17 @@ class ExplainNoiseTest(unittest.TestCase):
     def test_unknown_node_gives_none(self):
         self.assertIsNone(self.graph.explain("такого-узла-нет"))
 
+    def test_edge_junk_is_stripped_from_names(self):
+        self.assertEqual(kgm.KnowledgeGraph._norm("фотосинтез -"), "фотосинтез")
+        self.assertEqual(kgm.KnowledgeGraph._norm(" — свет » "), "свет")
+
+    def test_dirty_node_does_not_leak_into_explain(self):
+        self.graph.add_edge("фотосинтез -", "про_понятие", "фотосинтез", weight=0.5)
+        self.graph.add_edge("фотосинтез", "превращает", "свет", weight=1.2)
+        text = self.graph.explain("фотосинтез") or ""
+        self.assertNotIn("фотосинтез -", text)
+        self.assertIn("свет", text)
+
     def test_service_word_is_not_chosen_as_topic(self):
         self.graph.add_edge("язык", "отражает", "речь", weight=1.0)
         self.graph.add_edge("такое", "связано_с", "слово", weight=1.0)
