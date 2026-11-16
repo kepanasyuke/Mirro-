@@ -64,6 +64,20 @@ class TestRussianAnswer(unittest.TestCase):
         self.assertTrue(silent, "все темы уже описаны по-русски")
         self.assertIsNone(ru_definition(silent[0]))
 
+    def test_comparison_names_both_concepts(self):
+        found = related("что общего у страха и тревоги")
+        self.assertIsNotNone(found)
+        text = found["content"].lower()
+        self.assertIn("страх", text)
+        self.assertIn("тревога", text)
+        self.assertIn("различа", text)
+
+    def test_comparison_labels_are_distinct(self):
+        # «тревога» и «тревожность» — разные понятия из разных тем
+        found = related("чем отличается тревога от тревожности")
+        self.assertIsNotNone(found)
+        self.assertIn("тревожность", found["content"].lower())
+
     def test_described_concept_answers_in_russian(self):
         found = bridge("что такое мудрость")
         self.assertIsNotNone(found)
