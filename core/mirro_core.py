@@ -1164,6 +1164,15 @@ def _try_direct_handlers(prompt):
         except Exception:
             ans = None
         return ans
+    def try_router(q):
+        ans = None
+        try:
+            from algos.answer_router import choose as _choose
+            found = _choose(q, threshold=0.7)
+            ans = found["content"] if found else None
+        except Exception:
+            ans = None
+        return ans
     def try_empathy(q):
         ans = None
         try:
@@ -1216,6 +1225,7 @@ def _try_direct_handlers(prompt):
         ("creative", try_creative),
         ("direct", try_jarvis),
         ("dialog", try_dialog),
+        ("router", try_router),
         ("relation", try_relation),
         ("why", try_why),
         ("steps", try_steps),
