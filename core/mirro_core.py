@@ -860,6 +860,25 @@ def _asks_compare(query):
                            q))
 
 
+def _concept_alias_words(query):
+    """Слова имён и алиасов понятия из вопроса.
+
+    Ответ вправе называть тему синонимом: на вопрос «что такое двоичный
+    поиск» правильный ответ начинается с «Бинарный поиск — …», и гейт
+    не должен считать это чужим ответом.
+    """
+    words = set()
+    try:
+        from algos import lookup
+        concept = (lookup.find(query) or {}).get("concept") or {}
+        names = list(concept.get("aliases") or ()) + [concept.get("name") or ""]
+        for name in names:
+            words.update(_re.findall(r"[а-яёa-z0-9]{3,}", str(name).lower()))
+    except Exception:
+        words = set()
+    return words
+
+
 def _needs_final_gate(query):
     """Нужен ли финальный контроль для вопроса о сравнении понятий.
     Один return: bool."""
@@ -918,6 +937,13 @@ def answer_looks_bad(query, answer):
                 if is_factual or is_compare:
                     q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
                     a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
+                    # Ответ может называть тему синонимом: «двоичный поиск» —
+                    # «Бинарный поиск». Засчитываем только те имена понятия,
+                    # которые в ответе действительно есть: иначе собственное
+                    # имя вопроса само себя подтверждает и гейт пропускает
+                    # чужой ответ («что такое нейросеть» → «Сегодня погода»)
+                    a_words |= _concept_alias_words(query) & set(
+                        _re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
                     # Ключевые слова вопроса: убираем стоп-слова
                     stop = {"что", "такое", "кто", "такой", "такая", "значит", "расскажи", "про", "это", "как", "для", "или",
                             "общего", "похож", "похожи", "похожа", "подобны", "подобна", "сходства", "сходство", "отличаются", "отлича", "чем"}
@@ -947,8 +973,17 @@ def answer_looks_bad(query, answer):
                     if (not bad and is_factual and len(key) >= 2
                             and len({w[:3] for w in key} & a_roots) == 1):
                         _qual = [w for w in key if w[:3] not in a_roots]
+                        # «двоичный поиск» → «Бинарный поиск»: пропущенное
+                        # слово — другое имя того же понятия, и ответ его
+                        # называет. Это не чужой ответ.
+                        _alias = _concept_alias_words(query)
+                        _alias_seen = bool(
+                            _alias & set(_re.findall(r"[а-яёa-z0-9]{3,}",
+                                                     answer.lower())))
+                        _covered = _alias_seen and all(w in _alias for w in _qual)
                         if any(len(w) >= 6 and w.endswith(
-                                ("ий", "ый", "ая", "ое", "ые", "ой")) for w in _qual):
+                                ("ий", "ый", "ая", "ое", "ые", "ой")) for w in _qual) \
+                                and not _covered:
                             bad = True
                 # Сравнение: ответ обязан назвать оба понятия и сравнивать их,
                 # иначе это просто текст, где встретилось одно из слов
@@ -3176,6 +3211,29 @@ def _port_is_busy(host, port):
     return is_busy
 
 
+def _load_graph_only():
+    """Поднимает сохранённый граф знаний (быстро), без наполнения. Один return: None."""
+    try:
+        from algos.knowledge_graph import kg
+        kg.load(MODELS / "knowledge_graph.pkl")
+    except Exception:
+        pass
+
+
+def _seed_in_background():
+    """Наполнение графа — в фоне: 78 с на старте не должен ждать пользователь."""
+    def _run():
+        try:
+            _seed_knowledge_graph()
+        except Exception:
+            pass
+    try:
+        import threading as _th
+        _th.Thread(target=_run, daemon=True, name="mirro-seed").start()
+    except Exception:
+        pass
+
+
 def _warm_imports():
     """Фоновый прогрев тяжёлых импортов: первый вопрос не должен ждать
     разбора english_kb (3 МБ исходника) и русских описаний."""
@@ -3216,8 +3274,9 @@ def main():
     from scripts.algorithms import algo
     st = algo.status()
     print(f"  Индекс: {st['examples']} примеров, {st['vocab']} слов")
-    # Автонаполнение знаниевого графа: маленькие кластеры + self_learned + история ИИ
-    _seed_knowledge_graph()
+    # Граф поднимаем сразу (2 с), а наполнение уходит в фон: 78 с ожидания
+    # у кнопки «запустить» — слишком много
+    _load_graph_only()
     print("  Движок мышления: подфункции single return, юмор, схемы Босовой, граф знаний")
     print("\n  Запуск автономного обучения (каждые 60 мин)...")
     autonomous_learning_loop(interval_sec=3600)
@@ -3230,6 +3289,7 @@ def main():
         print(f"  [медитация] не удалось стартовать: {_mse}")
     server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
     _warm_imports()
+    _seed_in_background()
     print(f"\n  → Слушаю на http://{HOST}:{PORT}")
     print("  → Доступ:\n" + _access_addresses())
     try: server.serve_forever()

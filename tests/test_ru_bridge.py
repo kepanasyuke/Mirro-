@@ -161,6 +161,12 @@ class TestAliasesPointToRightTopic(unittest.TestCase):
             "что такое умозаключение": "inference_reasoning",
             "что такое мастерство": "mastery",
             "что такое веселье": "mirth",
+            "что такое удовлетворённость": "contentment",
+            "что такое достоинство": "dignity",
+            "что такое величие": "majesty",
+            "что такое спор": "debate",
+            "что такое осмотрительность": "heedfulness",
+            "что такое виртуозность": "virtuosity",
         }
         for query, expected in cases.items():
             self.assertEqual(find_topic(query), expected, query)
