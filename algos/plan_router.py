@@ -239,6 +239,33 @@ def _is_russian(text):
     return any("а" <= ch.lower() <= "я" or ch.lower() == "ё" for ch in str(text or ""))
 
 
+def _canon_topic(word):
+    """Каноническая тема словаря по первым буквам слова («дерева» → «дерево»).
+    Один return: str (пустая строка, если темы нет)."""
+    from algos.module_knowledge import fk
+    low = str(word or "").strip().lower()
+    best, best_score = "", (0, 0)
+    if len(low) >= 4:
+        for info in (fk._by_name or {}).values():
+            if not isinstance(info, dict):
+                continue
+            candidates = [str(info.get("topic") or "")] + [str(t) for t in (info.get("tags") or [])]
+            for cand in candidates:
+                cand = cand.strip().lower()
+                if len(cand) < 4:
+                    continue
+                common = 0
+                for x, y in zip(low, cand):
+                    if x != y:
+                        break
+                    common += 1
+                # «массива» ближе к «массив», чем к «масса»: решает общий префикс
+                score = (common, -len(cand))
+                if common >= 4 and score > best_score:
+                    best, best_score = cand, score
+    return best
+
+
 def _name_of(value):
     """Человекочитаемое имя: русское имя понятия, иначе имя без подчёркиваний."""
     if isinstance(value, dict):
@@ -285,8 +312,13 @@ def render(intent, values, query=""):
         if left and right:
             try:
                 from algos.knowledge_graph import _compare_known_pair
-                result = (_compare_known_pair((left, right))
-                          or _compare_known_pair((raw_left, raw_right)) or "")
+                canon_left = _canon_topic(raw_left) or raw_left
+                canon_right = _canon_topic(raw_right) or raw_right
+                result = ""
+                for pair in ((canon_left, canon_right), (left, right), (raw_left, raw_right)):
+                    result = _compare_known_pair(pair) or ""
+                    if result:
+                        break
             except Exception:
                 result = ""
         if result:
