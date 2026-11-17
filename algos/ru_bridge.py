@@ -476,6 +476,11 @@ _QUESTION_STOP = {
 def _stems(text):
     """Стеммы значимых слов запроса. Один return: list."""
     words = [w for w in _norm_q(text).split() if len(w) > 2 and w not in _QUESTION_STOP]
+    if not words:
+        # «что такое есть / объяснить»: слово вопроса само и есть вопрос —
+        # стоп-список его съедает, а спрашивают именно о нём
+        words = [w for w in _norm_q(text).split()
+                 if len(w) > 2 and w not in ("что", "такое", "кто", "это", "как")]
     return [_stem_ru(w) for w in words]
 
 

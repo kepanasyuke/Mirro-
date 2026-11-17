@@ -884,8 +884,11 @@ def answer_looks_bad(query, answer):
             latin_words = len(_re.findall(r"[A-Za-z]{3,}", answer))
             cyr_words = len(_re.findall(r"[а-яёА-ЯЁ]{3,}", answer))
             # Английский абзац в ответ на русский вопрос — это чужой текст из
-            # корпуса, а не ответ: русских слов должно быть не меньше
-            if latin_words > cyr_words and latin_words >= 8:
+            # корпуса, а не ответ. Но английский вопрос вправе получить
+            # английский ответ: правило смотрит на язык самого вопроса
+            asks_russian = (len(_re.findall(r"[а-яёА-ЯЁ]{3,}", query or ""))
+                            >= len(_re.findall(r"[A-Za-z]{3,}", query or "")))
+            if asks_russian and latin_words > cyr_words and latin_words >= 8:
                 bad = True
             elif code_hits >= 2:
                 bad = True
@@ -1424,6 +1427,15 @@ def _try_direct_handlers(prompt):
         if msg is not None and strategy == "definition" and _bridge_knows(prompt):
             # словарь понятий из модулей иногда берёт не тот смысл («что такое
             # язык» → «Язык программирования Python»); русская база точнее
+            msg = None
+        # «что такое лень / удача / программа»: шутка, самоописание или диалог
+        # перехватывают толкование слова, которое русская база знает точно
+        _ql = (prompt or "").lower()
+        _asks_word = any(p in _ql for p in ("что такое", "кто такой", "кто такая",
+                                            "что значит"))
+        if (msg is not None and _asks_word
+                and strategy in ("humor", "dialog", "direct", "creative")
+                and _bridge_knows(prompt)):
             msg = None
         if msg is not None and (strategy == "concept_special"
                                or not answer_looks_bad(prompt, msg)):
@@ -3154,6 +3166,28 @@ def _port_is_busy(host, port):
     return is_busy
 
 
+def _warm_imports():
+    """Фоновый прогрев тяжёлых импортов: первый вопрос не должен ждать
+    разбора english_kb (3 МБ исходника) и русских описаний."""
+    def _load():
+        import threading
+        try:
+            from algos import answer_router, ru_bridge, concepts
+            from algos.english_kb import try_english
+            from algos.ru_descriptions import RU_TEXT
+            concepts.build()
+            answer_router.candidates("прогрев")
+            ru_bridge.bridge("что такое память")
+            try_english("what is memory?")
+        except Exception:
+            pass
+    try:
+        import threading as _th
+        _th.Thread(target=_load, daemon=True, name="mirro-warmup").start()
+    except Exception:
+        pass
+
+
 def main():
     sys.stdout.reconfigure(encoding='utf-8')
     if _port_is_busy(HOST, PORT):
@@ -3183,6 +3217,7 @@ def main():
     except Exception as _mse:
         print(f"  [медитация] не удалось стартовать: {_mse}")
     server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
+    _warm_imports()
     print(f"\n  → Слушаю на http://{HOST}:{PORT}")
     print("  → Доступ:\n" + _access_addresses())
     try: server.serve_forever()

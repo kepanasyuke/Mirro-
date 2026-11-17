@@ -536,6 +536,31 @@ class TestCommandDumpGate(unittest.TestCase):
         self.assertFalse(mc.answer_looks_bad("что такое git", ans))
 
 
+class TestWordDefinitionsAreNotHijacked(unittest.TestCase):
+    """Шутка, самоописание и диалог не перехватывают толкование слова."""
+
+    def test_humor_does_not_answer_len(self):
+        mc = _get_core()
+        result = mc.build_response("что такое лень", "ru")
+        self.assertNotEqual(result.get("strategy"), "humor")
+        self.assertIn("лень", (result.get("content") or "").lower())
+
+    def test_identity_does_not_answer_program(self):
+        mc = _get_core()
+        result = mc.build_response("что такое программа", "ru")
+        self.assertNotEqual(result.get("strategy"), "dialog")
+        self.assertIn("программа", (result.get("content") or "").lower())
+
+    def test_question_word_itself_is_answered(self):
+        # «есть» и «объяснить» — слова-вопросы, стоп-список их съедал
+        mc = _get_core()
+        for word in ("есть", "объяснить"):
+            result = mc.build_response("что такое %s" % word, "ru")
+            content = (result.get("content") or "").lower()
+            self.assertTrue(content, "пустой ответ на «%s»" % word)
+            self.assertIn(word[:4], content)
+
+
 class _FakeWriter:
     def __init__(self, sink):
         self.sink = sink
