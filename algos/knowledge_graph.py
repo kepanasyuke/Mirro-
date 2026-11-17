@@ -2142,7 +2142,7 @@ def _relation_candidates(query):
         _stem_ru = _relation_stem
     qq = _clean_q(query).lower()
     qq_spaced = " " + qq + " "
-    q_words = [w for w in qq.split() if len(w) > 2]
+    q_words = [w for w in qq.split() if len(w) > 2 and w not in _RELATION_JUNK]
     # 1) понятия из словаря module_knowledge (канонические топики + теги) —
     #    имеют ПРИОРИТЕТ: это чистые осмысленные понятия
     dict_found = []
