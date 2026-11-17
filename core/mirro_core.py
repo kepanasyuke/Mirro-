@@ -869,7 +869,7 @@ def answer_looks_bad(query, answer):
                          "не удалось связаться", "[mirro]", "500 internal", "500 server",
                          # служебные метки графа и корпуса в ответ попадать не должны
                          "использует_понятие", "про_понятие", "_понятие", "(вес ",
-                         "справочное об", "machine-learning"]
+                         "справочное об", "machine-learning", "связано_с", "связано с такое"]
         if any(m in _sl for m in error_markers):
             bad = True
         elif _re.search(r"\{['\"](content|error|choices)['\"]\s*:", _sl):
@@ -920,7 +920,13 @@ def answer_looks_bad(query, answer):
                         a_roots |= {_translit(w)[:3] for w in a_words}
                     except Exception:
                         a_roots = a_roots
-                    if key and not {w[:3] for w in key} & a_roots:
+                    # латинский термин не сверить с русским ответом надёжно:
+                    # «hamming» и «Хэмминга» дают разные основы, и верный ответ
+                    # бракуется. Для таких вопросов проверку пропускаем
+                    latin_key = key and all(
+                        not any("а" <= char <= "я" or char == "ё" for char in word)
+                        for word in key)
+                    if key and not latin_key and not {w[:3] for w in key} & a_roots:
                         bad = True  # ответ вообще не про это
                     # «семиотический трансформер»: два слова в вопросе, а ответ
                     # говорит только об одном, причём пропущено прилагательное-
@@ -1062,6 +1068,30 @@ def _bridge_knows(prompt):
     except Exception:
         known = False
     return known
+
+
+def _unknown_compound(prompt):
+    """Сложное слово через дефис, которого нет в базе: «хеш-функция».
+
+    Обработчики ниже ищут тему по частям и отвечают про «функцию» вообще,
+    хотя спрашивали не о ней. Лучше честно уйти в запасную цепочку.
+    """
+    low = (prompt or "").lower()
+    if "-" not in low:
+        return None
+    if not any(marker in low for marker in ("что такое", "что значит", "what is",
+                                            "определение", "означает")):
+        return None
+    found = None
+    try:
+        from algos import lookup
+        for word in _re.findall(r"[а-яёa-z]{3,}(?:-[а-яёa-z]{3,})+", low):
+            if lookup.find(word) is None:
+                found = word
+                break
+    except Exception:
+        found = None
+    return found
 
 
 def _try_direct_handlers(prompt):
@@ -1375,6 +1405,11 @@ def _try_direct_handlers(prompt):
         ("empathy_observe", try_empathy),
     ]
     result = None
+    # «что такое хеш-функция»: слова-части в базе есть, а самого понятия нет —
+    # тогда любой обработчик ответит про «функцию» и соврёт
+    unknown = _unknown_compound(prompt)
+    if unknown:
+        return None
     for strategy, fn in handlers:
         try:
             msg = fn(prompt)
@@ -1736,6 +1771,11 @@ def _answer_by_search_stages(prompt, cluster, context, current=None):
     except Exception:
         alive_prompt = prompt
         result = found if found is not None else _fallback_chain(prompt)
+    # пустой ответ не отдаём: голос мог отказаться озвучивать чужой текст
+    if not (result or {}).get("content"):
+        result = result or {}
+        result["content"] = ("Не нашла нормального ответа в базе, а в интернете — пока недоступен. "
+                             "Переформулируй вопрос.")
     return alive_prompt, result
 
 
@@ -1973,6 +2013,12 @@ def build_response(prompt, cluster, context=""):
     except Exception:
         result["plan"] = ""
     result["thinking"] = thinking
+    # Пустой ответ не отдаём: честный отказ лучше пустоты, когда все пути
+    # промолчали (например, голос отказался озвучивать чужой текст)
+    if not (result.get("content") or "").strip():
+        result["content"] = ("Не нашла нормального ответа в базе, а в интернете — пока недоступен. "
+                             "Переформулируй вопрос.")
+        result["strategy"] = "empty_fallback"
     # Финальный гейт для сравнений: ответ обязан сравнивать понятия, иначе это
     # просто текст, где встретились их слова. Проверка стоит в самом конце,
     # потому что часть обработчиков возвращает ответ мимо своих валидаторов.

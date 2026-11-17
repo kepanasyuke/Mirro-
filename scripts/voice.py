@@ -176,6 +176,11 @@ def speak(raw_answer, query, strategy="base"):
     _lat = len(_re.findall(r"[A-Za-z]", _body))
     if _body and _lat > _cyr and len(_re.findall(r"[A-Za-z]{3,}", _body)) >= 8:
         return ""
+    # служебные метки графа и корпуса тоже не озвучиваем
+    _marks = ("связано_с", "использует_понятие", "про_понятие", "справочное об",
+              "(вес ", "_понятие")
+    if _body and any(m in _body.lower() for m in _marks):
+        return ""
     if not raw_answer:
         out = None
     else:
