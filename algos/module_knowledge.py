@@ -2261,6 +2261,20 @@ def _precise_topic(q):
     return None
 
 
+def _inside_compound(query, term):
+    """Термин встречается только как часть дефисного слова: «функция» в «хеш-функция».
+
+    Такое совпадение не делает термин темой вопроса: спрашивали про хеш-функцию,
+    а не про функцию вообще.
+    """
+    if not term or "-" not in (query or ""):
+        return False
+    for word in _re.split(r"[\s,.;:!?()«»\"']+", query.lower()):
+        if "-" in word and term in word and word != term:
+            return True
+    return False
+
+
 def try_definition(query):
     """Отвечает связным определением для ОБЩИХ ПОНЯТИЙ (нейросеть, ИИ, питон,
     граф, алгоритм и т.п.) своими словами — раньше сырого графа.
@@ -2303,19 +2317,19 @@ def try_definition(query):
             q_stems = {_stem_ru(w) for w in q_words if len(w) > 2}
             hit = None
             for t in terms:
-                if t and t in q:
+                if t and t in q and not _inside_compound(q, t):
                     hit = len(t)
                     break
-                if t and _stem_ru(t) in q_stems:
+                if t and _stem_ru(t) in q_stems and not _inside_compound(q, t):
                     hit = max(hit or 0, len(t))
-            if hit is None and full in q:
+            if hit is None and full in q and not _inside_compound(q, full):
                 hit = len(full)
             if hit is None:
                 for t in tags:
-                    if t and t in q:
+                    if t and t in q and not _inside_compound(q, t):
                         hit = len(t)
                         break
-                    if t and _stem_ru(t) in q_stems:
+                    if t and _stem_ru(t) in q_stems and not _inside_compound(q, t):
                         hit = max(hit or 0, len(t))
             if hit:
                 best.append((hit,
