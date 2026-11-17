@@ -2078,9 +2078,22 @@ _RELATION_PATTERNS = (
 
 
 def _is_relation_query(query):
-    """Вопрос о связи/сравнении двух понятий? Один return: bool."""
+    """Вопрос о связи/сравнении двух понятий? Один return: bool.
+
+    Матчит и смежную фразу («в чём разница между X и Y»), и разнесённую
+    («чем X отличается от Y» — слово вставлено между «чем» и «отлича»):
+    достаточно, чтобы в запросе встретилось слово-маркер сравнения/связи.
+    """
     q0 = (" " + (query or "").lower() + " ")
-    return any(pat in q0 for _kind, pats in _RELATION_PATTERNS for pat in pats)
+    if any(pat in q0 for _kind, pats in _RELATION_PATTERNS for pat in pats):
+        return True
+    # разнесённые маркеры: слово «отлича…», «сравн…», «похож…», «разниц…»,
+    # «общ…», «связ…» в любой позиции запроса (не только смежно с «чем/в чём»)
+    import re
+    for stem in ("отлича", "сравн", "похож", "разниц", "общ", "связ", "роль"):
+        if re.search(r"\b" + stem + r"\w*", q0):
+            return True
+    return False
 
 
 _RELATION_JUNK = {"разница", "отличие", "связь", "св", "что", "какая", "какие",
