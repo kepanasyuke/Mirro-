@@ -169,6 +169,13 @@ def speak(raw_answer, query, strategy="base"):
     Возвращает строку с характером Mirro.
     """
     out = None
+    # Английский абзац из корпуса не озвучиваем: пустая строка заставит
+    # вызывающий код попробовать следующую стратегию ответа
+    _body = str(raw_answer or "")
+    _cyr = len(_re.findall(r"[а-яёА-ЯЁ]", _body))
+    _lat = len(_re.findall(r"[A-Za-z]", _body))
+    if _body and _lat > _cyr and len(_re.findall(r"[A-Za-z]{3,}", _body)) >= 8:
+        return ""
     if not raw_answer:
         out = None
     else:

@@ -16,6 +16,7 @@ import os
 import re
 
 _CACHE = {}
+_ALIAS_RES = {}
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _WORD = re.compile(r"[A-Za-zА-Яа-яЁё0-9_]+")
 
@@ -25,6 +26,7 @@ _SYNONYMS = {
     "поиск в ширину": "обход в ширину",
     "поиск в глубину": "обход в глубину",
     "квантовая запутанность": "запутанность",
+    "нейронная сеть": "нейросеть",
 }
 
 
@@ -229,6 +231,16 @@ def build():
     return registry
 
 
+def _alias_pattern(alias):
+    """Скомпилированный шаблон алиаса: один на слово, а не на каждый запрос.
+    Один return: pattern."""
+    pattern = _ALIAS_RES.get(alias)
+    if pattern is None:
+        pattern = re.compile(re.escape(alias))
+        _ALIAS_RES[alias] = pattern
+    return pattern
+
+
 def find(query):
     """Лучшее понятие под запрос: {concept, alias, score} или None.
 
@@ -242,8 +254,8 @@ def find(query):
     for concept in registry.values():
         for alias in concept["aliases"]:
             hit = False
-            if alias:
-                for match in re.finditer(re.escape(alias), low):
+            if alias and alias in low:
+                for match in _alias_pattern(alias).finditer(low):
                     before = low[max(0, match.start() - 2):match.start()].strip()
                     # алиас должен быть целым словом: иначе «dock» цепляется за
                     # «docker», а «дар» — за «удар» и «подарок»

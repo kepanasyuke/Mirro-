@@ -762,8 +762,20 @@ def _semantic_rerank_results(query, results):
         out = results
     return out
 
+def _rag_worthy(query):
+    """Есть ли в запросе слово, по которому вообще стоит искать в корпусе.
+    Короткие вопросы вида «что такое иит» давали в RAG случайные примеры.
+    Один return: bool."""
+    words = [word for word in _re.findall(r"[а-яёa-z]+", (query or "").lower())
+             if len(word) >= 4 and word not in
+             ("что", "такое", "это", "как", "такой", "такая", "зачем", "почему", "чем")]
+    return bool(words)
+
+
 def try_rag(query, cluster):
     ans = []
+    if not _rag_worthy(query):
+        return ans
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.rag import rag
@@ -854,7 +866,10 @@ def answer_looks_bad(query, answer):
         # Ответ — служебная ошибка / дамп трассировки / JSON-нуб — это не ответ
         _sl = (answer or "").lower()
         error_markers = ["traceback", "file \"", "syntaxerror", "internalerror",
-                         "не удалось связаться", "[mirro]", "500 internal", "500 server"]
+                         "не удалось связаться", "[mirro]", "500 internal", "500 server",
+                         # служебные метки графа и корпуса в ответ попадать не должны
+                         "использует_понятие", "про_понятие", "_понятие", "(вес ",
+                         "справочное об", "machine-learning"]
         if any(m in _sl for m in error_markers):
             bad = True
         elif _re.search(r"\{['\"](content|error|choices)['\"]\s*:", _sl):
@@ -866,7 +881,13 @@ def answer_looks_bad(query, answer):
                             "$ ", "sudo ", "curl ", "git push", "git commit", "docker run",
                             "location ", "include proxy", "def ", "SELECT "]
             code_hits = sum(1 for m in code_markers if m in answer)
-            if code_hits >= 2:
+            latin_words = len(_re.findall(r"[A-Za-z]{3,}", answer))
+            cyr_words = len(_re.findall(r"[а-яёА-ЯЁ]{3,}", answer))
+            # Английский абзац в ответ на русский вопрос — это чужой текст из
+            # корпуса, а не ответ: русских слов должно быть не меньше
+            if latin_words > cyr_words and latin_words >= 8:
+                bad = True
+            elif code_hits >= 2:
                 bad = True
             else:
                 # Вопрос вида «что такое X / кто такой X / как работает X» — ответ
@@ -891,8 +912,15 @@ def answer_looks_bad(query, answer):
                     # сверяем по основам, а не по словоформам: «дружбы» в вопросе
                     # и «дружба» в ответе — одно и то же слово
                     # сравниваем по трём первым буквам: «санки» и «сани» —
-                    # одна тема, а «колесо» и «лес» по-прежнему разные слова
-                    if key and not {w[:3] for w in key} & {w[:3] for w in a_words}:
+                    # одна тема, а «колесо» и «лес» по-прежнему разные слова.
+                    # Латиницу приводим к кириллице: «ИИТ» и «IIT» — одно слово.
+                    a_roots = {w[:3] for w in a_words}
+                    try:
+                        from algos.bilingual import transliterate as _translit
+                        a_roots |= {_translit(w)[:3] for w in a_words}
+                    except Exception:
+                        a_roots = a_roots
+                    if key and not {w[:3] for w in key} & a_roots:
                         bad = True  # ответ вообще не про это
                 # Сравнение: ответ обязан назвать оба понятия и сравнивать их,
                 # иначе это просто текст, где встретилось одно из слов
@@ -1007,10 +1035,21 @@ def try_bosova_engine(prompt):
 def _bridge_knows(prompt):
     """Знает ли русский мост определение для этого вопроса. Один return: bool."""
     known = False
+    # точная глосса важнее моста: иначе «машинное обучение» отвечало про машину
+    try:
+        from algos.module_knowledge import _precise_topic
+        if _precise_topic(prompt):
+            return False
+    except Exception:
+        pass
     try:
         from algos import ru_bridge
         found = ru_bridge.bridge(prompt)
-        known = bool(found and found.get("content"))
+        content = str((found or {}).get("content") or "")
+        # английский абзац из корпуса — не ответ моста
+        cyr = len(_re.findall(r"[а-яёА-ЯЁ]", content))
+        lat = len(_re.findall(r"[A-Za-z]", content))
+        known = bool(content) and cyr > lat
     except Exception:
         known = False
     return known
@@ -2103,7 +2142,12 @@ class MirroAPI(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers(); self.wfile.write(body)
+        self.end_headers()
+        try:
+            self.wfile.write(body)
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            # клиент закрыл соединение раньше ответа — это не ошибка сервера
+            pass
     def _read(self):
         """Тело POST как dict. Нестандартные длительности сводятся к нулю, битый
         JSON — к None (клиент получает 400), не-UTF8 — к ошибке декодирования.
@@ -2122,8 +2166,13 @@ class MirroAPI(BaseHTTPRequestHandler):
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers(); self.wfile.write(body)
-            served = True
+            self.end_headers()
+            try:
+                self.wfile.write(body)
+            except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+                served = False
+            else:
+                served = True
         return served
     def _authorized(self):
         """Проверяет токен доступа. Один return: bool.
