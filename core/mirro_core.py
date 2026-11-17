@@ -1222,6 +1222,16 @@ def _try_direct_handlers(prompt):
         return ans
     def try_quantum_graph(q):
         ans = None
+        # точная глосса важнее отчёта о состояниях: «что такое квантовая
+        # запутанность» — определение, а не «0 узлов в суперпозиции»
+        try:
+            from algos.module_knowledge import _precise_topic, try_definition
+            if _precise_topic(q):
+                ans = try_definition(q)
+        except Exception:
+            ans = None
+        if ans:
+            return ans
         try:
             from algos.quantum_graph import try_quantum as _f
             ans = _f(q)

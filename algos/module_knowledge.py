@@ -1551,6 +1551,21 @@ def _names_a_function(q):
     return any(name in words or _stem_ru(name) in stems for name in names)
 
 
+_QUESTION_WORDS = frozenset((
+    "что", "такое", "кто", "такой", "такая", "какие", "какой", "какая", "как",
+    "работает", "работают", "чем", "от", "и", "в", "на", "про", "это", "значит",
+    "расскажи", "почему", "зачем", "устроен", "устроена", "объясни", "опиши",
+    "отличие", "разница", "отличается", "сравни",
+))
+
+
+def _topic_covers(text, phrase):
+    """Все значимые слова запроса есть в теме. Один return: bool."""
+    stems = {_stem_ru(w) for w in phrase.split() if len(w) > 2}
+    words = [w for w in text.split() if len(w) > 2 and w not in _QUESTION_WORDS]
+    return all(_stem_ru(w) in stems for w in words)
+
+
 def _precise_topic(q):
     """Точная составная тема из базы функций («бинарный поиск», «поиск в ширину»).
     Один return: str|None. Одиночное слово («поиск») темой не считается."""
@@ -1578,9 +1593,11 @@ def _precise_topic(q):
     alias = _norm_q(str(hit.get("alias") or ""))
     topic = _norm_q(str(info.get("topic") or ""))
     words = set(text.split())
-    for phrase in (alias, topic):
-        if not phrase:
-            continue
+    # годятся и другие алиасы понятия: «квантовая запутанность» — это же
+    # понятие, а не только его короткая тема «запутанность»
+    variants = [alias, topic] + [str(a) for a in (concept.get("aliases") or ())]
+    covering = [v for v in variants if v and _topic_covers(text, v)]
+    for phrase in covering:
         # фраза целиком или точное слово темы («токен», «запутанность»);
         # общее слово-понятие («поиск») отдаём общему «_»-понятию
         if " " in phrase and phrase in text:
