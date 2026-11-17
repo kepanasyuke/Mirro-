@@ -280,6 +280,23 @@ _KNOWLEDGE = {
     "cryptography": {"module": "12_security", "topic": "криптография",
                      "what": "наука о защите данных шифрами и ключами",
                      "ex": "RSA, AES, электронная подпись"},
+    "compiler": {"module": "10_tools", "topic": "компилятор",
+                 "what": "программа, которая переводит код в машинные команды",
+                 "ex": "gcc, clang",
+                 "why": "получить исполняемый файл, который потом работает без переводчика"},
+    "cache": {"module": "10_tools", "topic": "кеш",
+              "what": "быстрое хранилище часто нужных данных",
+              "ex": "кеш браузера",
+              "why": "не запрашивать одно и то же заново и отвечать быстрее"},
+    "tests": {"module": "10_tools", "topic": "тесты", "tags": ["тестирование"],
+              "what": "проверки, что код работает как задумано",
+              "ex": "юнит-тесты",
+              "why": "ловить ошибки до того, как их увидит пользователь"},
+    "db_index": {"module": "11_databases", "topic": "индекс",
+                 "tags": ["индекс базы данных"],
+                 "what": "структура для быстрого поиска по столбцу",
+                 "ex": "B-дерево по полю email",
+                 "why": "находить строки без полного перебора таблицы"},
     "tcp": {"module": "10_tools", "topic": "TCP",
             "what": "протокол с подтверждением доставки: порядок и повтор потерянных пакетов",
             "ex": "веб и почта"},
@@ -315,7 +332,8 @@ _KNOWLEDGE = {
                  "ex": "таблица учеников: имя, класс, оценка"},
     "_сортировка": {"topic": "сортировка", "tags": ["упорядочивание"],
                     "what": "раскладка элементов в нужном порядке",
-                    "ex": "по возрастанию, по алфавиту, по дате"},
+                    "ex": "по возрастанию, по алфавиту, по дате",
+                    "why": "быстро находить нужный элемент и видеть дубликаты рядом"},
     "agile": {"module": "10_tools", "topic": "agile",
               "what": "гибкая разработка короткими итерациями с обратной связью",
               "ex": "спринты по две недели"},
@@ -2645,6 +2663,7 @@ _QUESTION_WORDS = frozenset((
     "работает", "работают", "чем", "от", "и", "в", "на", "про", "это", "значит",
     "расскажи", "почему", "зачем", "устроен", "устроена", "объясни", "опиши",
     "отличие", "разница", "отличается", "сравни",
+    "зачем", "нужен", "нужна", "нужно", "нужны", "для", "чего", "польза",
 ))
 
 
@@ -2662,11 +2681,17 @@ def _precise_topic(q):
     """Точная составная тема из базы функций («бинарный поиск», «поиск в ширину»).
     Один return: str|None. Одиночное слово («поиск») темой не считается."""
     text = _norm_q(q)
+    words_now = set(text.split())
     for cid, info in (fk._by_name or {}).items():
         if not isinstance(info, dict) or str(cid).startswith("_"):
             continue
         topic = _norm_q(str(info.get("topic") or ""))
-        if topic and " " in topic and topic in text:
+        if not topic:
+            continue
+        if " " in topic and topic in text:
+            return str(cid)
+        # короткие темы («кеш», «хеш») не попадают в алиасы — ловим словом
+        if topic in words_now and _topic_covers(text, topic):
             return str(cid)
     from algos import lookup
     hit = lookup.find(q)
@@ -2711,6 +2736,19 @@ def _inside_compound(query, term):
         if "-" in word and term in word and word != term:
             return True
     return False
+
+
+def why_for(query):
+    """Зачем нужно понятие: готовый текст «why» из словаря. Один return: str."""
+    key = _precise_topic(query) or ""
+    info = (fk._by_name or {}).get(key) or {} if key else {}
+    why = str(info.get("why") or "").strip()
+    if not why:
+        return ""
+    topic = str(info.get("topic") or key).strip()
+    last = topic[-1:].lower()
+    verb = "нужна" if last in ("а", "я") else ("нужны" if last in ("ы", "и") else "нужен")
+    return "%s %s, чтобы %s." % (topic[0].upper() + topic[1:], verb, why)
 
 
 def try_definition(query):

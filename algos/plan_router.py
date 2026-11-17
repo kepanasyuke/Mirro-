@@ -260,7 +260,7 @@ def _canon_topic(word):
                         break
                     common += 1
                 # «массива» ближе к «массив», чем к «масса»: решает общий префикс
-                score = (common, -len(cand))
+                score = (common, int(cand == low), -len(cand))
                 if common >= 4 and score > best_score:
                     best, best_score = cand, score
     return best
@@ -362,7 +362,15 @@ def render(intent, values, query=""):
     elif intent == "why":
         name = _name_of(concept)
         result = ""
-        if isinstance(concept, dict):
+        # готовое назначение понятия важнее перечня связей
+        try:
+            from algos.module_knowledge import why_for
+            result = why_for(query) or ""
+        except Exception:
+            result = ""
+        if result:
+            pass
+        elif isinstance(concept, dict):
             from algos import causality
             pieces = causality.for_concept(concept, limit=2)
             russian = [piece for language, piece in pieces if language == "ru"]
