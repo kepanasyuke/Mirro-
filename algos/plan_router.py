@@ -20,9 +20,10 @@ PATTERNS = (
                "статистика", "что знаешь о базе", "how big", "database size")),
     ("count", ("сколько", "how many", "число связей", "количество связей")),
     ("compare", ("чем отличается", "отличается", "отличие", "разница", "сравни",
-                 "difference between", "differ", " vs ", " versus ")),
+                 "сходств", "похож", "что общего", "difference between", "differ",
+                 " vs ", " versus ")),
     ("links", ("с чем связан", "связан", "связи", "связь", "related", "relates")),
-    ("why", ("почему", "why")),
+    ("why", ("почему", "why", "зачем", "для чего", "с какой целью")),
     ("how", ("как работает", "как устроен", "как устроена", "how does", "how do")),
     ("definition", ("что такое", "what is", "это что", "определение", "define", "who is")),
 )
@@ -38,13 +39,35 @@ def classify(query):
     return result
 
 
+PAIR_LEAD = ("что общего", "чем отличается", "чем отличаются", "в чём разница",
+             "в чем разница", "в чём отличие", "в чем отличие", "сходство",
+             "разница", "различие", "отличие", "сравни", "сравнить", "похожи",
+             "similarities", "difference between", "compare")
+
+
+def _clean_side(text):
+    """Убирает из стороны сравнения слова вопроса: «сходство любви» → «любви»."""
+    side = (text or "").strip(" ?.!,-")
+    changed = True
+    while changed:
+        changed = False
+        for lead in PAIR_LEAD:
+            if side.startswith(lead):
+                side = side[len(lead):].strip(" ?.!,-")
+                changed = True
+    for lead in ("между", "у", "of", "between"):
+        if side.startswith(lead + " "):
+            side = side[len(lead):].strip(" ?.!,-")
+    return side
+
+
 def split_pair(query):
     """Две сущности из вопроса сравнения: (первая, вторая) или (None, None)."""
     low = " " + (query or "").lower() + " "
     for marker in PAIR_MARKERS:
         if marker in low:
             left, _, right = low.partition(marker)
-            return left.strip(), right.strip(" ?.!")
+            return _clean_side(left), _clean_side(right.strip(" ?.!"))
     return None, None
 
 
@@ -59,11 +82,11 @@ def _concept(operation, arguments):
 def _neighbours(operation, arguments):
     """Соседи понятия из графа определений.
 
-    Записи учебных модулей живут в графе под именем с подчёркиванием
-    («_массив»), а понятие из вопроса может прийти без него — тогда пробуем
-    оба вида узла.
+    Одно понятие может жить в двух узлах: английская тема («binary_search») и
+    русская запись модуля («_бинарный поиск»). Рёбра бывают у второго, а
+    вопрос разрешается в первый — поэтому ищем узел и по русскому названию.
     """
-    from algos.concept_graph import neighbours
+    from algos.concept_graph import EDGES, neighbours
     value = arguments[0] if arguments else None
     name = value.get("name") if isinstance(value, dict) else value
     if not isinstance(name, str):
@@ -72,6 +95,15 @@ def _neighbours(operation, arguments):
     if not found:
         alt = name[1:] if name.startswith("_") else "_" + name
         found = list(neighbours(alt, depth=1))
+    if not found and isinstance(value, dict):
+        from algos import compose
+        title = (compose.russian_title(value) or "").strip().lower()
+        if len(title) >= 4:
+            for node in EDGES:
+                plain = node.lstrip("_").replace("_", " ").strip().lower()
+                if plain == title:
+                    found = list(neighbours(node, depth=1))
+                    break
     return found[:4]
 
 
@@ -161,6 +193,40 @@ def plan_for(intent, query):
     return plans.get(intent, [])
 
 
+def _short_definition(concept, limit=110):
+    """Первое предложение русского описания понятия, не длиннее предела."""
+    if not isinstance(concept, dict):
+        return ""
+    text = " ".join((concept.get("ru") or "").split())
+    if not text:
+        return ""
+    stop = text.find(". ")
+    if stop > 0:
+        text = text[:stop]
+    text = text.rstrip(" .;:,")
+    if len(text) > limit:
+        cut = text.rfind(" ", 0, limit)
+        text = text[:cut if cut > 0 else limit].rstrip(" ,;:") + "…"
+    return text
+
+
+def _saying(concept, name):
+    """«Имя — толкование» или пустая строка, если толкования нет.
+
+    Русский текст часто уже начинается с имени («Стек — это структура…»),
+    поэтому повтор убираем, иначе выходит «Стек — Стек — это структура…».
+    """
+    text = _short_definition(concept)
+    if not (name and text):
+        return ""
+    low = text.lower()
+    if low.startswith(name.lower()):
+        text = text[len(name):].lstrip(" —-–:,").strip()
+        if text.lower().startswith("это "):
+            text = text[4:]
+    return "%s — %s" % (name, text) if len(text) >= 8 else ""
+
+
 def _list_text(items):
     """Список имён в читаемую строку; подчёркивания коротких записей убираем."""
     if not items:
@@ -213,7 +279,19 @@ def render(intent, values, query=""):
         empty = not (values.get("links_left") or values.get("links_right")
                      or values.get("shared"))
         result = ""
-        if left and right and empty:
+        # готовая таблица сравнений важнее перечня связей: у многих пар связей
+        # в графе нет вовсе, а различие осмысленное уже записано
+        raw_left, raw_right = split_pair(query)
+        if left and right:
+            try:
+                from algos.knowledge_graph import _compare_known_pair
+                result = (_compare_known_pair((left, right))
+                          or _compare_known_pair((raw_left, raw_right)) or "")
+            except Exception:
+                result = ""
+        if result:
+            pass
+        elif left and right and empty:
             result = "%s и %s есть в базе, но связей в графе у них нет." % (left, right)
         elif left and right:
             result = ("%s: связи — %s. %s: связи — %s. Общее: %s. Только у %s: %s. Только у %s: %s."
@@ -225,6 +303,22 @@ def render(intent, values, query=""):
             piece, source = contrast.difference(values.get("left"), values.get("right"))
             if piece:
                 result = result + " Различие: %s (так сказано в описании «%s»)." % (piece, source)
+            else:
+                # Противопоставления в тексте нет — тогда хотя бы толкования:
+                # «связи — trust» без определений ничего не объясняет
+                pair = [_saying(values.get("left"), left), _saying(values.get("right"), right)]
+                known = [item for item in pair if item]
+                if known:
+                    result = result + " По описаниям: %s." % "; ".join(known)
+        elif left or right:
+            # одно из понятий не нашлось: сравнение не построить, но известную
+            # часть отдаём — иначе ответ пустой и вопрос уходит в мусор
+            raw_left, raw_right = split_pair(query)
+            missing = raw_right if left else raw_left
+            known = left or right
+            result = ("Сравнить не с чем: понятия «%s» в базе нет. Про «%s»: связи — %s."
+                      % ((missing or "второе").strip(" ?.!"), known,
+                         _list_text(values.get("links_left") or values.get("links_right"))))
     elif intent == "links":
         name = _name_of(concept)
         result = ("%s — связи: %s." % (name, _list_text(values.get("links")))) if name else ""
@@ -244,16 +338,30 @@ def render(intent, values, query=""):
             elif name:
                 # В отказ пускаем только русские связи: английские темы
                 # («peacock», «crow») в русском ответе выглядят мусором
-                links = [str(item) for item in (values.get("links") or [])
+                links = [str(item).replace("_", " ").strip()
+                         for item in (values.get("links") or [])
                          if _is_russian(str(item))]
                 if links:
                     result = ("Причинных связей в базе нет. Известно, что «%s» связано с: %s."
                               % (name, ", ".join(links[:3])))
                 else:
-                    result = ("Причинных связей в базе нет — объяснения, почему это так, "
+                    # Тупик без пользы: лучше отдать толкование, чем пустоту.
+                    # На вопрос «почему идёт дождь» причинной записи нет, но
+                    # что такое дождь — известно
+                    saying = _saying(concept, name)
+                    result = ("Причинных связей в базе нет. Известно, что %s." % saying
+                              if saying else
+                              "Причинных связей в базе нет — объяснения, почему это так, "
                               "в моих знаниях не нашлось.")
     elif isinstance(concept, dict):
-        result = russian_answer(concept, values.get("links") or [])
+        # Тема есть только в английской части: русский вопрос не должен
+        # получать абзац чужого текста — это не ответ на русском
+        russian_text = (concept.get("ru") or "").strip()
+        if not russian_text and (concept.get("en") or "").strip() and _is_russian(query):
+            result = ("По-русски описания нет: «%s» есть только в английской части базы. "
+                      "Спроси по-английски — отдам определение целиком." % _name_of(concept))
+        else:
+            result = russian_answer(concept, values.get("links") or [])
     else:
         result = ""
     return result
