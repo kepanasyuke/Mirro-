@@ -152,6 +152,26 @@ class TestDefinitionExtraction(unittest.TestCase):
         self.assertEqual(len(found), 1)
 
 
+class TestAliasesPointToRightTopic(unittest.TestCase):
+    """Русское слово ведёт к теме, которая про него и говорит."""
+
+    def test_alias_resolves_to_matching_topic(self):
+        cases = {
+            "что такое роща": "grove",
+            "что такое умозаключение": "inference_reasoning",
+            "что такое мастерство": "mastery",
+            "что такое веселье": "mirth",
+        }
+        for query, expected in cases.items():
+            self.assertEqual(find_topic(query), expected, query)
+
+    def test_answer_mentions_the_asked_word(self):
+        for word in ("роща", "умозаключение", "мастерство", "веселье",
+                     "различение", "пыл"):
+            text = (ru_definition(find_topic("что такое %s" % word)) or "").lower()
+            self.assertIn(word[:4], text, word)
+
+
 class TestRussianDescriptions(unittest.TestCase):
     """Русские описания написаны для существующих тем и не пустые."""
 

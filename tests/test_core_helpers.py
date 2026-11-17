@@ -536,6 +536,20 @@ class TestCommandDumpGate(unittest.TestCase):
         self.assertFalse(mc.answer_looks_bad("что такое git", ans))
 
 
+class TestCompareGateUsesWords(unittest.TestCase):
+    """«Превосходство» содержит «сходств», но это не вопрос о сравнении."""
+
+    def test_superiority_is_not_compare(self):
+        mc = _get_core()
+        self.assertFalse(mc._needs_final_gate("что такое превосходство"))
+
+    def test_compare_questions_still_detected(self):
+        mc = _get_core()
+        self.assertTrue(mc._needs_final_gate("чем отличается кошка от собаки"))
+        self.assertTrue(mc._needs_final_gate("что общего у кошки и собаки"))
+        self.assertTrue(mc._needs_final_gate("чем похожи лето и весна"))
+
+
 class TestWordDefinitionsAreNotHijacked(unittest.TestCase):
     """Шутка, самоописание и диалог не перехватывают толкование слова."""
 

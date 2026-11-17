@@ -849,11 +849,21 @@ def _word_roots(text):
     return {word[:4] for word in _re.findall(r"[а-яёa-z]{3,}", (text or "").lower())}
 
 
+def _asks_compare(query):
+    """Вопрос про сравнение двух понятий. Один return: bool.
+    Метки ищем как слова: «превосходство» содержит «сходств», но это
+    не вопрос «что общего»."""
+    q = (query or "").lower()
+    if "что общего" in q:
+        return True
+    return bool(_re.search(r"(?<![а-яёa-z])(похож|подоб|сходств|отлича|сравн)",
+                           q))
+
+
 def _needs_final_gate(query):
     """Нужен ли финальный контроль для вопроса о сравнении понятий.
     Один return: bool."""
-    q = (query or "").lower()
-    return any(word in q for word in ("что общего", "похож", "подоб", "сходств", "отлича"))
+    return _asks_compare(query)
 
 
 def answer_looks_bad(query, answer):
@@ -904,7 +914,7 @@ def answer_looks_bad(query, answer):
                                                   "как происходит", "как действует"])
                 # Сравнение двух понятий: ответ обязан говорить хоть об одном из них,
                 # иначе это случайная строка из корпуса («что общего у кошка и собака»)
-                is_compare = any(p in q for p in ["что общего", "похож", "подоб", "сходств", "отлича"])
+                is_compare = _asks_compare(q)
                 if is_factual or is_compare:
                     q_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", q))
                     a_words = set(_re.findall(r"[а-яёa-z0-9]{3,}", answer.lower()))
@@ -3170,7 +3180,9 @@ def _warm_imports():
     """Фоновый прогрев тяжёлых импортов: первый вопрос не должен ждать
     разбора english_kb (3 МБ исходника) и русских описаний."""
     def _load():
-        import threading
+        import threading, time as _t
+        # сервер должен начать отвечать раньше, чем начнётся разбор 3 МБ словаря
+        _t.sleep(12)
         try:
             from algos import answer_router, ru_bridge, concepts
             from algos.english_kb import try_english
