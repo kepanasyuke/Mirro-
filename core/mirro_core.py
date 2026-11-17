@@ -922,6 +922,15 @@ def answer_looks_bad(query, answer):
                         a_roots = a_roots
                     if key and not {w[:3] for w in key} & a_roots:
                         bad = True  # ответ вообще не про это
+                    # «семиотический трансформер»: два слова в вопросе, а ответ
+                    # говорит только об одном, причём пропущено прилагательное-
+                    # определитель. Значит, спрашивали не про то, что в базе.
+                    if (not bad and is_factual and len(key) >= 2
+                            and len({w[:3] for w in key} & a_roots) == 1):
+                        _qual = [w for w in key if w[:3] not in a_roots]
+                        if any(len(w) >= 6 and w.endswith(
+                                ("ий", "ый", "ая", "ое", "ые", "ой")) for w in _qual):
+                            bad = True
                 # Сравнение: ответ обязан назвать оба понятия и сравнивать их,
                 # иначе это просто текст, где встретилось одно из слов
                 if not bad and is_compare:
