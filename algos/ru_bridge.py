@@ -179,7 +179,7 @@ RU_KEYS = {
     "dissertation": ("диссертация", ),
     "suggest": ("предложение", ),
     "daydreaming": ("мечтательность", "грёзы"),
-    "bond": ("узы", "связь"),
+    "bond": ("узы", ),
     "touch": ("осязание", ),
     "concentration": ("сосредоточенность", "концентрация"),
     "discrimination": ("различение", "дискриминация"),
@@ -373,6 +373,22 @@ RU_KEYS = {
     "wilderness": ("дикая природа", "глушь"),
     "padlock": ("навесной замок", ),
     "dread": ("страх", "ужас"),
+    # бытовые понятия, о которых спрашивают по-русски
+    "journey": ("путешествие", "поездка"),
+    "harmony": ("гармония", "лад"),
+    "newness": ("новизна", ),
+    "foresight": ("предвидение", "предусмотрительность"),
+    "guilelessness": ("простодушие", "бесхитростность"),
+    "conscientiousness": ("добросовестность", ),
+    "orderliness": ("аккуратность", "порядок"),
+    "apathy": ("безразличие", "равнодушие", "апатия"),
+    "obedience": ("покорность", "послушание"),
+    "docility": ("сговорчивость", ),
+    "reconciliation": ("примирение", ),
+    "vanity": ("самолюбие", ),
+    "argument": ("спор", "ссора"),
+    "respect": ("уважение", "почтение"),
+    "obstinacy": ("упрямство", ),
 }
 
 _QUESTION_STOP = {
@@ -490,11 +506,12 @@ def ru_definition(topic):
 
     answer = RU_TEXT.get(topic)
     if answer is None:
-        entry = None
-        for key in RU_KEYS.get(topic, ()):
-            entry = _RU_BY_TOPIC.get(_stem_ru(key))
-            if entry:
-                break
+        # Запасной путь: текст из словаря модулей берём только по главному
+        # русскому имени темы. По второстепенным синонимам нельзя: у темы
+        # «sagacity» ключ «мудрость», и раньше она отдавала чужой текст
+        # про мудрость вместо молчания.
+        keys = RU_KEYS.get(topic, ())
+        entry = _RU_BY_TOPIC.get(_stem_ru(keys[0])) if keys else None
         if isinstance(entry, dict):
             what = (entry.get("what") or "").strip()
             example = (entry.get("ex") or "").strip()
