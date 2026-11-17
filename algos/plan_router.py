@@ -309,18 +309,23 @@ def render(intent, values, query=""):
         # готовая таблица сравнений важнее перечня связей: у многих пар связей
         # в графе нет вовсе, а различие осмысленное уже записано
         raw_left, raw_right = split_pair(query)
-        if left and right:
+        # готовое сравнение не требует, чтобы оба слова нашлись в понятиях:
+        # «ии» в реестр не попадает, а запись сравнения у нас есть
+        known_text = ""
+        if raw_left and raw_right:
             try:
                 from algos.knowledge_graph import _compare_known_pair
                 canon_left = _canon_topic(raw_left) or raw_left
                 canon_right = _canon_topic(raw_right) or raw_right
-                result = ""
-                for pair in ((canon_left, canon_right), (left, right), (raw_left, raw_right)):
-                    result = _compare_known_pair(pair) or ""
-                    if result:
+                for pair in ((canon_left, canon_right), (left or raw_left, right or raw_right),
+                             (raw_left, raw_right)):
+                    known_text = _compare_known_pair(pair) or ""
+                    if known_text:
                         break
             except Exception:
-                result = ""
+                known_text = ""
+        if known_text:
+            result = known_text
         if result:
             pass
         elif left and right and empty:
