@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-11-20T22:13:01",
- "total_topics": 3441,
- "resolved": 1682,
+ "generated_at": "2026-11-21T21:43:18",
+ "total_topics": 3591,
+ "resolved": 1699,
  "map": {
   "neural": "Нервная система",
   "algorithm": "Алгоритм",
@@ -1684,6 +1684,23 @@
   "rod": "Род",
   "mark": "Марк",
   "tripod": "тренога",
-  "benchmark": "репер"
+  "benchmark": "репер",
+  "cell": "Клетка",
+  "plan": "План",
+  "routine": "Распорядок",
+  "upbringing": "Воспитание",
+  "priority": "Приоритет",
+  "task": "Задача",
+  "evidence": "Доказательство",
+  "comfort": "Комфорт",
+  "belonging": "Принадлежность",
+  "integrity": "Целостность",
+  "fervour": "Пыл",
+  "zest": "Азарт",
+  "decisiveness": "Решительность",
+  "observance": "праздник",
+  "persistence": "не меняется",
+  "soundness": "правильность",
+  "assessment": "оценка"
  }
 }

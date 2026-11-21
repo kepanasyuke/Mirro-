@@ -27,6 +27,23 @@ UA = {"User-Agent": "Mirro-bilingual/1.0 (local project; contact: local)"}
 BATCH = 50
 PAUSE = 1.0
 
+# Ручные пары для тем, которые Википедия и Викиданные не сопоставили:
+# русское понятие есть в module_knowledge, поэтому пара задаётся напрямую
+MANUAL = {
+    "cell": "Клетка",
+    "plan": "План",
+    "routine": "Распорядок",
+    "upbringing": "Воспитание",
+    "priority": "Приоритет",
+    "task": "Задача",
+    "evidence": "Доказательство",
+    "comfort": "Комфорт",
+    "belonging": "Принадлежность",
+    "integrity": "Целостность",
+    "fervour": "Пыл",
+    "zest": "Азарт",
+}
+
 
 def _is_ru(value):
     """Похоже ли на русское название (есть кириллица, нет латиницы-подмены).
@@ -187,6 +204,7 @@ def main():
     resolved = {}
     if OUT.exists() and not args.force:
         resolved = json.loads(OUT.read_text(encoding="utf-8")).get("map") or {}
+    resolved.update(MANUAL)
     limit = args.limit or len(all_topics)
     collect(all_topics, resolved, limit, not args.no_wikidata, args.wikidata_limit, args.skip_wiki)
     clean = {k: v for k, v in resolved.items() if v}
