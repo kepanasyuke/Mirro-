@@ -743,10 +743,28 @@ def _semantic_expand(query):
     return expanded
 
 
+def _asks_english_description(prompt):
+    """Просьба «X по-английски»: корпус цепляется за слово «английский» и отвечает
+    случайным абзацем («flesh по-английски» → про RESET). Один return: bool."""
+    q = (prompt or "").lower()
+    hit = False
+    if "по-англ" in q:
+        try:
+            from algos.english_kb import _EN_KB
+            tokens = {t.strip(".,!?;:'\"()") for t in q.replace("-", " ").split()}
+            hit = any(isinstance(t, str) and t and t in tokens for t in _EN_KB)
+        except Exception:
+            hit = False
+    return hit
+
+
 def _search_best(prompt, cluster):
     """TF-IDF → RAG → выбор лучшего кандидата по кластеру.
     Пользуется семантическим реранком для кандидатов обоих источников.
     Единственный return: кортеж (best_answer, best_score, has_result)."""
+    if _asks_english_description(prompt):
+        # отдать ответ обработчику english: он знает тему, корпус — нет
+        return None, 0.0, False
     q = _semantic_expand(prompt)
     results = try_tfidf(q, cluster)
     if not results:
@@ -939,8 +957,11 @@ def answer_looks_bad(query, answer):
             # Английский абзац в ответ на русский вопрос — это чужой текст из
             # корпуса, а не ответ. Но английский вопрос вправе получить
             # английский ответ: правило смотрит на язык самого вопроса
+            # явная просьба «по-английски»: английский ответ — то, что просили
+            asks_english = "по-англ" in (query or "").lower()
             asks_russian = (len(_re.findall(r"[а-яёА-ЯЁ]{3,}", query or ""))
                             >= len(_re.findall(r"[A-Za-z]{3,}", query or "")))
+            asks_russian = asks_russian and not asks_english
             if asks_russian and latin_words > cyr_words and latin_words >= 8:
                 bad = True
             elif code_hits >= 2:
@@ -1887,9 +1908,33 @@ def _search_answer(prompt, cluster):
     return result if result is not None else _fallback_chain(prompt)
 
 
+def _definition_first(prompt):
+    """Точная глосса словаря раньше поиска по базе: «что такое банк» не должно
+    отвечать про банку из-за совпадения основы. Один return: dict-ответ|None."""
+    q = (prompt or "").lower()
+    if not any(m in q for m in ("что такое", "что значит", "кто такой",
+                                "кто такая", "определение")):
+        return None
+    try:
+        from algos.module_knowledge import try_definition
+        text = (try_definition(prompt) or "").strip()
+    except Exception:
+        return None
+    if not text:
+        return None
+    # глосса полезна, только если называет слово, о котором спросили
+    head = text.split("—")[0].strip().lower()
+    if head and (head in q or (len(head) > 4 and head[:5] in q)):
+        return {"content": text, "strategy": "definition", "score": 1.0}
+    return None
+
+
 def _search_answer_by_database(prompt, cluster):
     """База → веб → граф → финальный резерв. Один return: dict-ответ или None
     (None — если стадия не смогла выбрать стратегию)."""
+    gloss = _definition_first(prompt)
+    if gloss is not None:
+        return gloss
     best_answer, best_score, has_result = _search_best(prompt, cluster)
     if has_result and answer_looks_bad(prompt, best_answer):
         result = _answer_base_is_garbage(prompt)
@@ -1984,6 +2029,17 @@ def build_response(prompt, cluster, context=""):
         result = _guarded_first_stage(prompt)
         direct = _try_direct_handlers(prompt) if result is None else None
         if result is None and direct is not None:
+            # диспетчер иногда склеивает слова по основе («банк» → «банка»):
+            # точная глосса словаря важнее такого попадания
+            try:
+                gloss = _definition_first(prompt)
+                if gloss and (direct.get("strategy") or "") in ("router", "definition"):
+                    said = (direct.get("content") or "").strip().split("—")[0].strip().lower()
+                    trust = gloss["content"].split("—")[0].strip().lower()
+                    if said and trust and said != trust:
+                        direct = gloss
+            except Exception:
+                pass
             result = direct
             result["workspace"] = "сознание: локальный триггер (рабочее пространство = одна память)"
         else:

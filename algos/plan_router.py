@@ -402,6 +402,18 @@ def render(intent, values, query=""):
                       "Спроси по-английски — отдам определение целиком." % _name_of(concept))
         else:
             result = russian_answer(concept, values.get("links") or [])
+            # реестр иногда склеивает разные слова по основе («банк» и «банка»).
+            # Если точная глосса словаря отвечает именно на спрошенное слово,
+            # а имя найденного понятия в вопросе не звучит — верим глоссе
+            try:
+                from algos.module_knowledge import try_definition
+                name_now = (_name_of(concept) or "").lower()
+                gloss = try_definition(query) or ""
+                if gloss and ((name_now and name_now not in (query or "").lower())
+                              or not (result or "").strip()):
+                    result = gloss
+            except Exception:
+                pass
     else:
         result = ""
     return result
