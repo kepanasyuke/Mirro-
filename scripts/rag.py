@@ -78,6 +78,8 @@ class MirroRAG:
         self.seg_built = set()        # номера сегментов, для которых есть pickle
         self.seg_files = {}           # номер -> имя файла
         self._segments_cache = []
+        self._offsets = {}            # номер сегмента -> байтовые смещения строк
+        self._seg_data = {}           # номер сегмента -> разобранный индекс
         self.segments = sorted(CORPUS_DIR.glob("corpus-*.jsonl"))
         self._load_global()
 
@@ -156,11 +158,17 @@ class MirroRAG:
         return pfile
 
     def _load_segment(self, i):
+        cached = self._seg_data.get(i)
+        if cached is not None:
+            return cached
         pfile = INDEX_DIR / f"seg_{i:06d}.pkl"
         data = _open_pickle(pfile) if pfile.exists() else None
         if not _is_index_payload(data, "words") or not isinstance(data.get("words"), dict):
             self.build_segment_index(i)
             data = _open_pickle(pfile) or {"version": INDEX_VERSION, "words": {}, "n_docs": 0}
+        if len(self._seg_data) >= 4:
+            self._seg_data.clear()
+        self._seg_data[i] = data
         return data
 
     # ------------- поиск -------------
@@ -201,7 +209,6 @@ class MirroRAG:
 
     def _search_segment(self, seg_idx, q_words):
         """Локальный TF-IDF внутри одного сегмента. Один return: list."""
-        found = []
         data = self._load_segment(seg_idx)
         local = data.get("words") or {}
         ndocs = data.get("n_docs") or 1
@@ -209,13 +216,22 @@ class MirroRAG:
         for w in q_words:
             candidate_docs.update(local.get(w, {}).keys())
 
+        # Сначала считаем веса, читаем текст только у лучших: _read_doc листает
+        # файл сегмента с начала, и чтение каждого кандидата превращало ответ
+        # в минуты на сегментах по 200–300 МБ.
+        rated = []
         for doc_id in candidate_docs:
             score = 0.0
             for w, qt in q_words.items():
                 tf = local.get(w, {}).get(doc_id, 0)
                 if tf:
                     score += qt * self._local_idf(local, ndocs, w) * (tf * 1.5) / (tf + 1.5)
-            text = self._read_doc(seg_idx, doc_id) if score > 0 else None
+            if score > 0:
+                rated.append((score, doc_id))
+        rated.sort(key=lambda pair: -pair[0])
+        found = []
+        for score, doc_id in rated[:3]:
+            text = self._read_doc(seg_idx, doc_id)
             if text:
                 found.append((score, text[0], text[1]))
         return found
@@ -224,22 +240,49 @@ class MirroRAG:
         """Путь сегмента по номеру (с приоритетом seg_files). Один return: Path."""
         return self.seg_files.get(seg_idx) or self.segments[seg_idx]
 
+    def _doc_offsets(self, seg_idx):
+        """Байтовые смещения строк сегмента: читаем из кеша на диске или строим
+        один проход и сохраняем. Один return: list."""
+        cached = self._offsets.get(seg_idx)
+        if cached is not None:
+            return cached
+        path = self._segment_path(seg_idx)
+        cache_file = INDEX_DIR / f"offsets_{seg_idx:06d}.pkl"
+        stored = _open_pickle(cache_file) if cache_file.exists() else None
+        fresh = isinstance(stored, dict) and stored.get("source") == path.name
+        if fresh and stored.get("mtime") == path.stat().st_mtime:
+            self._offsets[seg_idx] = stored.get("offsets") or []
+            return self._offsets[seg_idx]
+        offsets = []
+        position = 0
+        with open(path, "rb") as handle:
+            for line in handle:
+                offsets.append(position)
+                position += len(line)
+        try:
+            with open(cache_file, "wb") as handle:
+                pickle.dump({"source": path.name, "mtime": path.stat().st_mtime,
+                             "offsets": offsets}, handle, protocol=4)
+        except OSError:
+            pass
+        self._offsets[seg_idx] = offsets
+        return offsets
+
     def _read_doc(self, seg_idx, doc_id):
-        """Читает один документ из сегмента по номеру строки. Один return: tuple|None."""
-        seg = self._segment_path(seg_idx)
+        """Читает один документ из сегмента по номеру строки: seek вместо перебора.
+        Один return: tuple|None."""
         hit = None
-        with open(seg, encoding="utf-8", errors="replace") as f:
-            for i, line in enumerate(f):
-                if i == doc_id:
-                    try:
-                        ex = json.loads(line)
-                    except ValueError:
-                        ex = None
-                    if isinstance(ex, dict):
-                        hit = (ex.get("instruction", ""), ex.get("output", ""))
-                    break
-                if i > doc_id:
-                    break
+        offsets = self._doc_offsets(seg_idx)
+        if 0 <= doc_id < len(offsets):
+            with open(self._segment_path(seg_idx), "rb") as handle:
+                handle.seek(offsets[doc_id])
+                line = handle.readline().decode("utf-8", "replace")
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                entry = None
+            if isinstance(entry, dict):
+                hit = (entry.get("instruction", ""), entry.get("output", ""))
         return hit
 
     def run_quantum_guided_rag(self, user_query, meta_pair=None, top_k=3):

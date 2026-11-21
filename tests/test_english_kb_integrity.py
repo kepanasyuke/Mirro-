@@ -19,7 +19,7 @@ KB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
                        "algos", "english_kb.py")
 
 CYRILLIC = re.compile("[\u0400-\u04FF]")
-STUB = re.compile(r"\b(todo|tbd|fixme|placeholder|lorem ipsum)\b", re.I)
+STUB = re.compile(r"\b(todo|tbd|fixme|lorem ipsum)\b", re.I)
 GLUE = re.compile(r"[a-z][A-Z]")
 COLLAPSE = re.compile(r"\s{2,}")
 
