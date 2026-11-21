@@ -9354,7 +9354,9 @@ def try_english(query):
     if len(query) > 5000:
         return None
     if not _is_english_query(query):
-        return None
+        # «angler по-английски» — русская просьба дать английское описание
+        if "по-англ" not in (query or "").lower():
+            return None
     if not isinstance(_EN_KB, dict):
         return None
     q_low = (query or "").lower()
