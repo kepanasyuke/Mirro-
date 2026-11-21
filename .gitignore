@@ -61,3 +61,8 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+# Состояние и выученные данные (большие, машинно-зависимые)
+models/embeddings.json
+data/user_profile.json
+data/gap_queue.jsonl
+*.patch
