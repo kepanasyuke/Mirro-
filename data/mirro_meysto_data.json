@@ -1,334 +1,64 @@
 {
-  "generated_at": "2026-11-15T06:00:01",
+  "generated_at": "2026-11-15T07:00:01",
   "source": "local_server + github_repo",
   "health": {
-    "name": "Mirro",
-    "version": "0.3",
-    "total_calls": 11593,
-    "total_examples": 2793612,
-    "providers": {
-      "deepseek": false,
-      "openai": false
-    },
-    "clusters": {
-      "ru": {
-        "desc": "Русский язык, диалоги, инструкции",
-        "priority": 10,
-        "examples": 653297,
-        "calls": 10579
-      },
-      "code": {
-        "desc": "Программирование, алгоритмы, код",
-        "priority": 10,
-        "examples": 20027,
-        "calls": 493
-      },
-      "math": {
-        "desc": "Математика, логика, рассуждения",
-        "priority": 9,
-        "examples": 198618,
-        "calls": 0
-      },
-      "design": {
-        "desc": "UI/UX, SVG, HTML/CSS, графика, вёрстка",
-        "priority": 9,
-        "examples": 6619,
-        "calls": 352
-      },
-      "knowledge": {
-        "desc": "Наука, история, география, право, медицина",
-        "priority": 8,
-        "examples": 43,
-        "calls": 6
-      },
-      "general": {
-        "desc": "Общие инструкции и диалоги",
-        "priority": 7,
-        "examples": 14990,
-        "calls": 163
-      }
-    },
-    "backup": {
-      "latest": "model_20261108_010413",
-      "dirs": 2
-    },
-    "moderation": {
-      "rejected_input": 7,
-      "rejected_output": 12
-    },
-    "api": "http://127.0.0.1:3443/v1/chat/completions",
-    "algorithms": {
-      "examples": 100023,
-      "vocab": 50000,
-      "embeddings": 50000,
-      "embedding_dim": 32,
-      "nb_classes": {
-        "ru": 0.999970000899973,
-        "learned": 2.999910002699919e-05
-      },
-      "new_algorithms": {
-        "jaccard": true,
-        "spellcheck": true,
-        "query_expansion": true,
-        "sentence_rank": true,
-        "auto_learn_trigger": true
-      },
-      "consciousness_phi": {
-        "phi": 0.004,
-        "shared_terms": 24,
-        "checked_terms": 6000,
-        "cluster_pairs": {
-          "learned↔ru": 24
-        },
-        "clusters": 2,
-        "notes": "аналог IIT: доля частотных слов, связывающих два и более кластера"
-      },
-      "neuromodulators": {
-        "dop": 0.5,
-        "ser": 0.5,
-        "nor": 0.3,
-        "ach": 0.4,
-        "rhythm": "alpha-ритм: спокойный, рассеянный фон"
-      },
-      "knowledge_graph": {
-        "nodes": 63332,
-        "edges": 180067,
-        "avg_dimension": 1.18,
-        "density": 2.843,
-        "edges_per_node": 2.84,
-        "central_nodes": [
-          "время",
-          "больше",
-          "лучше",
-          "алгоритм",
-          "размер"
-        ],
-        "mean_degree": 5.24,
-        "components": 17577,
-        "biggest_component": 21434,
-        "isolated": 196,
-        "top_nodes": [
-          "означает",
-          "если",
-          "понятно"
-        ]
-      },
-      "quantum": {
-        "superposed_nodes": 0,
-        "P_active_sample": []
-      },
-      "immunity": {
-        "quarantined": 0,
-        "n_routes": 0,
-        "fatigued_edges": 0
-      }
-    }
+    "__error__": "<urlopen error [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение>"
   },
   "learn_report": {
-    "weights": {
-      "h0_out": 0.0,
-      "h1_out": 0.0,
-      "h2_out": 0.0,
-      "h3_out": 0.0,
-      "h4_out": 0.0,
-      "h5_out": 0.0
-    },
-    "bias": 0,
-    "hidden": {},
-    "trained": true,
-    "auto_learned": 4258,
-    "trainer_cycles": 29917,
-    "trainer_accuracy": 0.6078,
-    "clusters": {
-      "ru": 653297,
-      "code": 20027,
-      "math": 198618,
-      "design": 6619,
-      "knowledge": 43,
-      "general": 14990
-    },
-    "total_examples": 2793612,
-    "calls": 11593,
-    "hidden_bias": {},
-    "trainer_clusters": {
-      "ru": 15156,
-      "math": 4503,
-      "generated": 8968,
-      "code": 455,
-      "design": 172,
-      "general": 661,
-      "research": 1,
-      "system": 1
-    },
-    "updated": "2026-11-15T02:38:16.035465",
-    "clusters_calls": {
-      "design": 352,
-      "general": 163,
-      "ru": 10579,
-      "code": 493,
-      "knowledge": 6
-    },
-    "graph_story": [
-      {
-        "ts": "2026-11-07T18:30:23",
-        "nodes": 0,
-        "edges": 0
-      },
-      {
-        "ts": "2026-11-07T20:10:03",
-        "nodes": 61743,
-        "edges": 73894,
-        "new_links": [
-          "функция quantum─про_понятие→функция quantum",
-          "функция derivat─про_понятие→функция derivative",
-          "функция integra─про_понятие→функция integral",
-          "функция taylor_─про_понятие→функция taylor",
-          "функция matrix_─про_понятие→функция matrix",
-          "своим─связано_с→означает"
-        ]
-      },
-      {
-        "ts": "2026-11-14T00:00:03",
-        "nodes": 63331,
-        "edges": 178169,
-        "new_links": [
-          "привет─связано_с→может",
-          "привет─связано_с→говорить",
-          "привет─связано_с→чём",
-          "привет─связано_с→суть",
-          "привет─связано_с→короче",
-          "привет─связано_с→говоря"
-        ]
-      },
-      {
-        "ts": "2026-11-14T01:00:04",
-        "nodes": 63331,
-        "edges": 178813,
-        "new_links": [
-          "в нем действите─про_понятие→действительно",
-          "действительно нло─про_понятие→действительно",
-          "вы уже заболели─про_понятие→заболели",
-          "безусловно мед─про_понятие→безусловно",
-          "данные─обучается на→нейросеть",
-          "сборка─связано_с→анимациями"
-        ]
-      },
-      {
-        "ts": "2026-11-14T23:00:03",
-        "nodes": 63331,
-        "edges": 179442,
-        "new_links": [
-          "правда ли─про_понятие→правда",
-          "в нем действите─про_понятие→действительно",
-          "действительно нло─про_понятие→действительно",
-          "вы уже заболели─про_понятие→заболели",
-          "безусловно мед─про_понятие→безусловно",
-          "затем─связано_с→если"
-        ]
-      },
-      {
-        "ts": "2026-11-15T00:00:03",
-        "nodes": 63331,
-        "edges": 179442,
-        "new_links": [
-          "правда ли─про_понятие→правда",
-          "в нем действите─про_понятие→действительно",
-          "действительно нло─про_понятие→действительно",
-          "вы уже заболели─про_понятие→заболели",
-          "безусловно мед─про_понятие→безусловно",
-          "затем─связано_с→если"
-        ]
-      },
-      {
-        "ts": "2026-11-15T01:00:03",
-        "nodes": 63332,
-        "edges": 180048,
-        "new_links": [
-          "правда ли─про_понятие→правда",
-          "в нем действите─про_понятие→действительно",
-          "действительно нло─про_понятие→действительно",
-          "вы уже заболели─про_понятие→заболели",
-          "безусловно мед─про_понятие→безусловно",
-          "тебя─связано_с→мнения"
-        ]
-      },
-      {
-        "ts": "2026-11-15T02:00:03",
-        "nodes": 63332,
-        "edges": 180053,
-        "new_links": [
-          "тебя─связано_с→мнения",
-          "тестов─связано_с→означает",
-          "начал─связано_с→potential",
-          "сути─связано_с→смерти",
-          "означает─связано_с→stats",
-          "означает─связано_с→min"
-        ]
-      },
-      {
-        "ts": "2026-11-15T03:00:03",
-        "nodes": 63332,
-        "edges": 180056,
-        "new_links": [
-          "сути─связано_с→смерти",
-          "означает─связано_с→stats",
-          "означает─связано_с→min",
-          "большой─связано_с→binary",
-          "никак─связано_с→запрос",
-          "сайтов─связано_с→интернет"
-        ]
-      },
-      {
-        "ts": "2026-11-15T04:00:03",
-        "nodes": 63332,
-        "edges": 180059,
-        "new_links": [
-          "большой─связано_с→binary",
-          "никак─связано_с→запрос",
-          "сайтов─связано_с→интернет",
-          "нейрон─состоит из→мозг",
-          "this─связано_с→function",
-          "сути─связано_с→string"
-        ]
-      },
-      {
-        "ts": "2026-11-15T05:00:03",
-        "nodes": 63332,
-        "edges": 180063,
-        "new_links": [
-          "this─связано_с→function",
-          "сути─связано_с→string",
-          "рассуждение─связано_с→нигде",
-          "атом─состоит из→молекула",
-          "тьюринга─связано_с→развитая",
-          "развитая─связано_с→всей"
-        ]
-      },
-      {
-        "ts": "2026-11-15T06:00:03",
-        "nodes": 63332,
-        "edges": 180067,
-        "new_links": [
-          "тьюринга─связано_с→развитая",
-          "развитая─связано_с→всей",
-          "function─связано_с→expected",
-          "большой─связано_с→search",
-          "создать─связано_с→pptx",
-          "программ─связано_с→контроллер"
-        ]
-      }
-    ]
+    "__error__": "<urlopen error [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение>"
   },
   "repo": {
     "full_name": "kepanasyuke/Mirro-",
     "description": "Educational neural-network brain Mirro: meta-graph, quantum coherence, immune sentinel, refraction, PINN — built with DeepSeek + Gemini co-design",
     "default_branch": "main",
-    "pushed_at": "2026-11-14T21:26:50Z",
+    "pushed_at": "2026-11-15T03:59:10Z",
     "stars_count": null,
     "forks_count": 0,
     "open_issues_count": 0
   },
   "repo_commits": [
+    {
+      "sha": "f15706b832dbfb1467b8cf04220ae285617fe481",
+      "node_id": "C_kwDOUcYikNoAKGYxNTcwNmI4MzJkYmZiMTQ2N2I4Y2YwNDIyMGFlMjg1NjE3ZmU0ODE",
+      "commit": {
+        "author": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-11-15T03:59:05Z"
+        },
+        "committer": {
+          "name": "mirro",
+          "email": "mirro@localhost",
+          "date": "2026-11-15T03:59:05Z"
+        },
+        "message": "english_kb: все part-файлы приведены к срезам реестра, список теней сверен с фактическим поведением; SYNTAX OK",
+        "tree": {
+          "sha": "48bb407dd27ac1282d99711d5705117d6054d390",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/48bb407dd27ac1282d99711d5705117d6054d390"
+        },
+        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/f15706b832dbfb1467b8cf04220ae285617fe481",
+        "comment_count": 0,
+        "verification": {
+          "verified": false,
+          "reason": "unsigned",
+          "signature": null,
+          "payload": null,
+          "verified_at": null
+        }
+      },
+      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/f15706b832dbfb1467b8cf04220ae285617fe481",
+      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/f15706b832dbfb1467b8cf04220ae285617fe481",
+      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/f15706b832dbfb1467b8cf04220ae285617fe481/comments",
+      "author": null,
+      "committer": null,
+      "parents": [
+        {
+          "sha": "f61372a8d07977e2f641b87330ca8a42c1f015ab",
+          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/f61372a8d07977e2f641b87330ca8a42c1f015ab",
+          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/f61372a8d07977e2f641b87330ca8a42c1f015ab"
+        }
+      ]
+    },
     {
       "sha": "f61372a8d07977e2f641b87330ca8a42c1f015ab",
       "node_id": "C_kwDOUcYikNoAKGY2MTM3MmE4ZDA3OTc3ZTJmNjQxYjg3MzMwY2E4YTQyYzFmMDE1YWI",
@@ -494,53 +224,6 @@
           "sha": "2e7ddd877217bc91000ef7aaeb1c28bb7da3360e",
           "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/2e7ddd877217bc91000ef7aaeb1c28bb7da3360e",
           "html_url": "https://github.com/kepanasyuke/Mirro-/commit/2e7ddd877217bc91000ef7aaeb1c28bb7da3360e"
-        }
-      ]
-    },
-    {
-      "sha": "2e7ddd877217bc91000ef7aaeb1c28bb7da3360e",
-      "node_id": "C_kwDOUcYikNoAKDJlN2RkZDg3NzIxN2JjOTEwMDBlZjdhYWViMWMyOGJiN2RhMzM2MGU",
-      "commit": {
-        "author": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-11-14T19:20:05Z"
-        },
-        "committer": {
-          "name": "mirro",
-          "email": "mirro@localhost",
-          "date": "2026-11-14T19:20:05Z"
-        },
-        "message": "Merge branch 'main' into task/07-integration: срезы частей остаются, темы из main сохранены",
-        "tree": {
-          "sha": "0db7efecfc46a98ee1b6664eca87e699ef137786",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/trees/0db7efecfc46a98ee1b6664eca87e699ef137786"
-        },
-        "url": "https://api.github.com/repos/kepanasyuke/Mirro-/git/commits/2e7ddd877217bc91000ef7aaeb1c28bb7da3360e",
-        "comment_count": 0,
-        "verification": {
-          "verified": false,
-          "reason": "unsigned",
-          "signature": null,
-          "payload": null,
-          "verified_at": null
-        }
-      },
-      "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/2e7ddd877217bc91000ef7aaeb1c28bb7da3360e",
-      "html_url": "https://github.com/kepanasyuke/Mirro-/commit/2e7ddd877217bc91000ef7aaeb1c28bb7da3360e",
-      "comments_url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/2e7ddd877217bc91000ef7aaeb1c28bb7da3360e/comments",
-      "author": null,
-      "committer": null,
-      "parents": [
-        {
-          "sha": "6ec89ed00698af1eead149ac967b8237fb37c0b5",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/6ec89ed00698af1eead149ac967b8237fb37c0b5",
-          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/6ec89ed00698af1eead149ac967b8237fb37c0b5"
-        },
-        {
-          "sha": "fb8e5528eb1ca63bc10a79438a6e6af8163d3cd4",
-          "url": "https://api.github.com/repos/kepanasyuke/Mirro-/commits/fb8e5528eb1ca63bc10a79438a6e6af8163d3cd4",
-          "html_url": "https://github.com/kepanasyuke/Mirro-/commit/fb8e5528eb1ca63bc10a79438a6e6af8163d3cd4"
         }
       ]
     }
