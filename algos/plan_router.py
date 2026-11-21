@@ -361,22 +361,8 @@ def render(intent, values, query=""):
         result = ("%s — связи: %s." % (name, _list_text(values.get("links")))) if name else ""
     elif intent == "why":
         name = _name_of(concept)
-        result = ""
-        # готовое назначение понятия важнее перечня связей
-        try:
-            from algos.module_knowledge import why_for
-            result = why_for(query) or ""
-        except Exception:
-            result = ""
-        if result:
-            pass
-        else:
-            # готовая причина из словаря раньше связей графа
-            try:
-                from algos.module_knowledge import cause_for
-                result = cause_for(query) or ""
-            except Exception:
-                result = ""
+        # готовая причина или назначение приходит в значениях плана
+        result = str(values.get("cause") or "").strip()
         if result:
             pass
         elif isinstance(concept, dict):
@@ -432,6 +418,14 @@ def answer(query):
     if intent != "unknown" and isinstance(effective, str):
         executed = plan_machine.run_plan(plan_for(intent, effective), dispatch)
         values = executed["values"]
+        if intent == "why":
+            # готовая причина или назначение из словаря важнее связей графа,
+            # но живёт в значениях плана — рендер остаётся чистым
+            try:
+                from algos.module_knowledge import cause_for, why_for
+                values["cause"] = cause_for(effective) or why_for(effective) or ""
+            except Exception:
+                values["cause"] = ""
         text = render(intent, values, effective)
         if text:
             concept = values.get("concept") or values.get("left")
