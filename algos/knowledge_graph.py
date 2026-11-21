@@ -757,11 +757,16 @@ class KnowledgeGraph:
         ok = False
         try:
             import pickle, os
-            tmp = str(path) + ".tmp"
-            with open(tmp, "wb") as f:
-                pickle.dump({"nodes": self.nodes, "edges": self.edges}, f, protocol=4)
-            os.replace(tmp, str(path))
-            ok = True
+            # Не затираем большой граф пустым: тесты и скрипты из reports/ сохраняют
+            # свежесозданный граф из пары узлов и обнуляли models/knowledge_graph.pkl
+            too_small = (len(self.nodes) < 100 and os.path.exists(str(path))
+                         and os.path.getsize(str(path)) > 1_000_000)
+            if not too_small:
+                tmp = str(path) + ".tmp"
+                with open(tmp, "wb") as f:
+                    pickle.dump({"nodes": self.nodes, "edges": self.edges}, f, protocol=4)
+                os.replace(tmp, str(path))
+                ok = True
         except Exception:
             ok = False
         return ok
@@ -3315,7 +3320,16 @@ def _compare_known_pair(pair):
             "а ракета с реактивным двигателем летит очень высоко, в космос.",
         frozenset(("пилот", "лётчик")): "Пилот и лётчик — оба управляют "
             "самолётом в воздухе, это почти одно и то же, но «лётчик» — "
-            "русское слово, а «пилот» — международное и звучит официальнее."
+            "русское слово, а «пилот» — международное и звучит официальнее.",
+        frozenset(("вчера", "сегодня")): "Вчера и сегодня — оба дни вокруг "
+            "настоящего момента, но вчера — день, который уже прошёл, а "
+            "сегодня — день, который идёт сейчас.",
+        frozenset(("сегодня", "завтра")): "Сегодня и завтра — оба дни "
+            "вокруг настоящего момента, но сегодня — день, который идёт "
+            "сейчас, а завтра — день, который будет после этой ночи.",
+        frozenset(("сутки", "неделя")): "Сутки и неделя — оба единицы "
+            "времени, но сутки — это день и ночь вместе, двадцать четыре "
+            "часа, а неделя — семь суток подряд."
     }
     return table.get(key) or table.get(raw_key)
 
