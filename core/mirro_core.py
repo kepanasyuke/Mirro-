@@ -102,9 +102,26 @@ class MirroCore:
     def _load_knowledge(self):
         # Считаем строки, а не разбираем JSON: содержимое этой базы нигде не читается,
         # нужны только количества по файлам. Экономит ~1.5 ГБ RAM и десятки секунд старта.
+        # Счётчики кэшируем по размеру и mtime файла: повторный старт не перечитывает 1.47 ГБ.
         _lite = os.environ.get("MIRRO_LITE", "").strip().lower() in ("1", "true", "yes", "on")
         cap = 100_000 if _lite else None
+        cache_path = MODELS / "knowledge_counts.json"
+        try:
+            cache = json.loads(cache_path.read_text(encoding="utf-8"))
+        except Exception:
+            cache = {}
+        changed = False
         for f in self.processed_dir.glob("*.jsonl"):
+            try:
+                st = f.stat()
+            except OSError:
+                continue
+            key = "%s|%s" % (f.name, cap)
+            hit = cache.get(key)
+            if (hit and hit[0] == st.st_size and abs(hit[1] - st.st_mtime) < 1
+                    and len(hit) > 2 and isinstance(hit[2], int)):
+                self.knowledge_counts[f.stem] = hit[2]
+                continue
             n = 0
             with open(f, "r", encoding="utf-8") as fh:
                 for line in fh:
@@ -113,7 +130,14 @@ class MirroCore:
                         if cap and n >= cap:
                             break
             self.knowledge_counts[f.stem] = n
+            cache[key] = [st.st_size, st.st_mtime, n]
+            changed = True
         self.stats["total_examples"] = sum(self.knowledge_counts.values())
+        if changed:
+            try:
+                cache_path.write_text(json.dumps(cache), encoding="utf-8")
+            except Exception:
+                pass
     def classify_task(self, prompt):
         prompt_lower = prompt.lower(); scores = defaultdict(float)
         for keyword, cluster in TASK_ROUTES.items():
