@@ -3216,6 +3216,9 @@ def _load_algorithms_in_background():
     Запросы, которым индекс реально нужен, дождутся его сами."""
     def _run():
         try:
+            # Даём серверу сначала ответить на /health, потом занимаем GIL
+            import time as _t
+            _t.sleep(10)
             sys.path.insert(0, str(MIRRO_HOME))
             from scripts.algorithms import algo
             stats = algo.status()
@@ -3243,6 +3246,9 @@ def _seed_in_background():
     """Наполнение графа — в фоне: 78 с на старте не должен ждать пользователь."""
     def _run():
         try:
+            # Индекс стартует через 10 с, наполнение — через 20, чтобы не душили друг друга
+            import time as _t
+            _t.sleep(20)
             _seed_knowledge_graph()
         except Exception:
             pass
