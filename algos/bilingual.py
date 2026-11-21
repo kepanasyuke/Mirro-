@@ -159,10 +159,19 @@ def _topics_for(word):
     return found
 
 
+def _in_compound(query, word):
+    """Слово — только часть дефисного сложного слова: «функция» в «хеш-функция»."""
+    for part in _re.split(r"[\s,.;:!?()«»\"']+", (query or "").lower()):
+        if "-" in part and part != word and word in part.split("-"):
+            return True
+    return False
+
+
 def find_concept(query):
     """Английская тема, на которую указывает русское слово в запросе.
     Сначала настоящие пары, затем транслитерация. Один return: str или None."""
-    words = _re.findall(r"[а-яё]{3,}", (query or "").lower())
+    words = [word for word in _re.findall(r"[а-яё]{3,}", (query or "").lower())
+             if not _in_compound(query, word)]
     found = [(len(word), _topics_for(word)[0])
              for word in words if _topics_for(word)]
     legacy = [(len(word), aliases().get(word))
@@ -256,6 +265,17 @@ def _from_english(topic, name):
     return ans
 
 
+def _russian_text(topic):
+    """Готовое русское описание темы, если оно уже написано. Один return: str|None."""
+    text = None
+    try:
+        from algos.ru_descriptions import RU_TEXT
+        text = RU_TEXT.get(topic)
+    except (ImportError, AttributeError):
+        text = None
+    return text if isinstance(text, str) and text.strip() else None
+
+
 def try_bilingual(query):
     """Русский вопрос о понятии → ответ по-русски (граф, иначе английская база).
     Один return: str или None (не наш случай — отвечают другие обработчики)."""
@@ -267,9 +287,13 @@ def try_bilingual(query):
     if is_russian and wants_definition:
         topic = find_concept(text)
         if topic:
-            from algos.knowledge_graph import kg
-            name = russian_name(topic)
-            ans = _explain_first(kg, (name, transliterate(topic), topic))
+            # сначала готовое русское описание: оно уже на языке пользователя,
+            # и переводить английское определение не нужно
+            ans = _russian_text(topic)
             if not ans:
-                ans = _from_english(topic, name)
+                from algos.knowledge_graph import kg
+                name = russian_name(topic)
+                ans = _explain_first(kg, (name, transliterate(topic), topic))
+            if not ans:
+                ans = _from_english(topic, russian_name(topic))
     return ans

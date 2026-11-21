@@ -36,7 +36,35 @@ ENDINGS = ("ыми", "ими", "ого", "его", "ому", "ами", "ями",
            "ям", "ах", "ях", "ой", "ей", "ом", "ем", "а", "я", "ы", "и", "у",
            "ю", "е")
 
-WORD = re.compile(r"[а-яёА-ЯЁa-z]{3,}")
+WORD = re.compile(r"[а-яёА-ЯЁa-z]{3,}(?:-[а-яёА-ЯЁa-z]{3,})*")
+
+
+VOWELS = "аеёиоуыэюя"
+
+
+def _fleeting_forms(base):
+    """Формы с беглой гласной и мягким знаком: «любв» → «любовь», «сн» → «сон».
+
+    Русские существительные теряют гласную в косвенных падежах, поэтому
+    усечения основы недостаточно: «любви» и «любовь» — одно слово, «сна» и
+    «сон» — тоже.
+    """
+    forms = []
+    if len(base) >= 2 and base[-1] not in VOWELS and base[-2] not in VOWELS:
+        for vowel in ("о", "е"):
+            forms.append(base[:-1] + vowel + base[-1] + "ь")
+            # «сн» → «сон»: гласная вставляется в основу без мягкого знака
+            forms.append(base[:-1] + vowel + base[-1])
+    if base and base[-1] not in VOWELS:
+        forms.append(base + "ь")
+    return forms
+
+
+def _restore_forms(base):
+    """Возврат конечной гласной: «вод» → «вода», «сон» остаётся собой."""
+    if len(base) >= 2 and base[-1] not in VOWELS:
+        return [base + tail for tail in ("а", "я", "о", "е", "ы", "ь")]
+    return []
 
 
 def _word_concept(registry, word):
@@ -48,17 +76,28 @@ def _word_concept(registry, word):
     """
     from algos import concepts
     forms = [word] + [word[:-len(end)] for end in ENDINGS
-                      if word.endswith(end) and len(word) - len(end) >= 3]
+                      if word.endswith(end) and len(word) - len(end) >= 2]
+    stems = list(forms[1:])
+    forms += [extra for base in stems for extra in _fleeting_forms(base)]
+    forms += [extra for base in stems for extra in _restore_forms(base)]
+    unique = []
+    for base in forms:
+        if base not in unique:
+            unique.append(base)
+    forms = unique
     spare = None
     for base in forms:
         candidates = []
         direct = registry.get(concepts._normal(base))
         if direct is not None:
-            candidates.append(direct)
+            candidates.append((direct, direct.get("name")))
         hit = concepts.find(base)
         if hit is not None:
-            candidates.append(hit["concept"])
-        for concept in candidates:
+            candidates.append((hit["concept"], hit.get("alias")))
+        for concept, label in candidates:
+            # «хеш-функция» — не «функция»: часть сложного слова не тема
+            if _too_short_alias(label, word):
+                continue
             if (concept.get("en") or "").strip():
                 return concept
             spare = spare or concept
@@ -116,6 +155,24 @@ def answer_language(query):
     return "ru" if cyrillic >= latin else "la"
 
 
+def _too_short_alias(alias, query):
+    """Алиас короче слова запроса — но насколько короче, решает граница слова.
+
+    «градиент» не «град»: разница четыре буквы, это другое слово. «бинарн»
+    против «бинарного» — разница три, и это законная основа того же слова.
+    Часть сложного слова не тема вовсе: «хеш-функция» — не «функция».
+    """
+    alias = (alias or "").strip().lower()
+    if len(alias) < 3:
+        return True
+    for word in WORD.findall((query or "").lower()):
+        if "-" in word and alias in word.split("-") and len(word) - len(alias) >= 3:
+            return True
+        if word.startswith(alias) and len(word) - len(alias) >= 4:
+            return True
+    return False
+
+
 def find(query):
     """Понятие по запросу: {concept, alias, score, via} или None."""
     from algos import concepts
@@ -127,6 +184,20 @@ def find(query):
         concept = registry.get(concepts._normal(term))
         if concept is not None and result is None:
             result = {"concept": concept, "alias": term, "score": 1.0, "via": "latin"}
+    if result is None:
+        # фраза целиком важнее отдельных слов: «двоичный поиск» — это
+        # binary_search, а не «поиск» вообще
+        words = _content_words(query)
+        if len(words) >= 2:
+            phrase = " ".join(words)
+            hit = concepts.find(phrase)
+            covered = (len(_stems(phrase) & _stems((hit or {}).get("alias") or ""))
+                       if hit is not None else 0)
+            # фраза считается найденной, только если совпала не по одному слову:
+            # «двоичный поиск» не должен становиться «поиском» вообще
+            if hit is not None and covered >= 2:
+                result = {"concept": hit["concept"], "alias": hit.get("alias"),
+                          "score": hit.get("score"), "via": "phrase"}
     if result is None:
         # значимые слова запроса важнее совпадения по части слова: «какие связи
         # у графа» — это граф, а не понятие «связь»; «список от массива» —
@@ -141,10 +212,15 @@ def find(query):
         # длинная фраза из реестра важнее одного слова: «поиск в ширину» —
         # это обход в ширину, а не общее понятие «Поиск»
         phrase_wins = found is not None and (found.get("score") or 0) >= 0.5
-        if found is not None and alias not in STOP and not alias.startswith(("связ", "отнош")):
-            if result is None or phrase_wins:
-                result = {"concept": found["concept"], "alias": found["alias"],
-                          "score": found["score"], "via": "registry"}
+        usable = (found is not None and alias not in STOP
+                  and not alias.startswith(("связ", "отнош")))
+        # часть сложного слова не тема даже при высокой оценке: оценка считается
+        # по подстроке и потому у «хеш-функции» высокая
+        if usable and _too_short_alias(found.get("alias"), query):
+            usable = False
+        if usable and (result is None or phrase_wins):
+            result = {"concept": found["concept"], "alias": found["alias"],
+                      "score": found["score"], "via": "registry"}
     return result
 
 

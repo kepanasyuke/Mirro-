@@ -152,6 +152,25 @@ def check_smoke():
     except Exception as e:
         print("[smoke] reasoning ERROR:", e)
         ok = False
+    # Вопросы должны попадать к тому обработчику, который умеет на них
+    # отвечать: это ловит тихую деградацию (упавший импорт, сдвинутую ветку),
+    # когда сборка цела, а конвейер отвечает заглушкой на всё подряд
+    try:
+        import importlib.util
+        path = ROOT / "tools" / "smoke_questions.py"
+        spec = importlib.util.spec_from_file_location("smoke_questions", str(path))
+        smoke = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(smoke)
+        failed = [q for q, expected in smoke.CASES if not smoke.check(q, expected)[0]]
+        good = not failed
+        ok = ok and good
+        print("[smoke] question routing:", "OK" if good else "FAIL",
+              ("провалов %s из %s" % (len(failed), len(smoke.CASES))) if failed else "")
+        for q in failed:
+            print("         не ответил:", q)
+    except Exception as e:
+        print("[smoke] question routing ERROR:", e)
+        ok = False
     return ok
 
 
@@ -170,6 +189,21 @@ def check_english_kb():
     return ok
 
 
+def check_shadowed():
+    """Ни одна тема не перебивается триггером другой темы. Один return: bool."""
+    script = ROOT / "tools" / "check_shadowed_routes.py"
+    ok = script.exists()
+    if ok:
+        proc = subprocess.run([sys.executable, str(script)],
+                              cwd=str(ROOT), capture_output=True, text=True)
+        report = (proc.stdout or proc.stderr or "").strip().splitlines()
+        ok = proc.returncode == 0
+        print("[kb] shadowed routes:", "OK" if ok else "COLLISION", report[0] if report else "")
+    else:
+        print("[kb] shadowed routes: tools/check_shadowed_routes.py missing")
+    return ok
+
+
 def main():
     ap = argparse.ArgumentParser(description="Mirro build / assembly check")
     ap.add_argument("--check", action="store_true", help="only checks, no zip")
@@ -181,6 +215,7 @@ def main():
     ok &= compile_all()
     ok &= check_smoke()
     ok &= check_english_kb()
+    ok &= check_shadowed()
     print("[summary]", "ALL CHECKS PASSED" if ok else "SOME CHECKS FAILED")
     if not args.check and ok:
         build_zip()

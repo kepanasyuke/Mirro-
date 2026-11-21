@@ -3211,6 +3211,25 @@ def _port_is_busy(host, port):
     return is_busy
 
 
+def _load_algorithms_in_background():
+    """Индекс TF-IDF (208 МБ) грузится в фоне: сервер начинает отвечать раньше.
+    Запросы, которым индекс реально нужен, дождутся его сами."""
+    def _run():
+        try:
+            sys.path.insert(0, str(MIRRO_HOME))
+            from scripts.algorithms import algo
+            stats = algo.status()
+            print("  Индекс готов: %s примеров, %s слов" % (stats.get("examples"), stats.get("vocab")),
+                  flush=True)
+        except Exception:
+            pass
+    try:
+        import threading as _th
+        _th.Thread(target=_run, daemon=True, name="mirro-index").start()
+    except Exception:
+        pass
+
+
 def _load_graph_only():
     """Поднимает сохранённый граф знаний (быстро), без наполнения. Один return: None."""
     try:
@@ -3269,11 +3288,7 @@ def main():
     print(f"  Загружено: {core.stats['total_examples']} примеров")
     for cl, info in core.get_cluster_info().items():
         print(f"    {cl:12} {info['examples']:>6} примеров · {info['desc']}")
-    print("\n  Инициализация алгоритмов (3-4 мин)...")
-    sys.path.insert(0, str(MIRRO_HOME))
-    from scripts.algorithms import algo
-    st = algo.status()
-    print(f"  Индекс: {st['examples']} примеров, {st['vocab']} слов")
+    print("\n  Индекс алгоритмов грузится в фоне (208 МБ, не блокирует старт)")
     # Граф поднимаем сразу (2 с), а наполнение уходит в фон: 78 с ожидания
     # у кнопки «запустить» — слишком много
     _load_graph_only()
@@ -3288,6 +3303,7 @@ def main():
     except Exception as _mse:
         print(f"  [медитация] не удалось стартовать: {_mse}")
     server = ThreadingHTTPServer((HOST, PORT), MirroAPI)
+    _load_algorithms_in_background()
     _warm_imports()
     _seed_in_background()
     print(f"\n  → Слушаю на http://{HOST}:{PORT}")

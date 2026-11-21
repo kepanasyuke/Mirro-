@@ -35,6 +35,16 @@ class TestRegistry(unittest.TestCase):
         empty = [c["name"] for c in registry.values() if c["en"] and not c["aliases"]]
         self.assertEqual(empty, [])
 
+    def test_verb_phrase_gets_colon(self):
+        text = concepts._russian_text({"topic": "сортировка слиянием",
+                                       "what": "делим массив пополам и сливаем части"})
+        self.assertIn("Сортировка слиянием:", text)
+        self.assertNotIn("это делим", text)
+
+    def test_noun_phrase_keeps_definition(self):
+        text = concepts._russian_text({"topic": "стек", "what": "структура данных с порядком LIFO"})
+        self.assertIn("Стек — это структура данных", text)
+
     def test_stats_add_up(self):
         info = concepts.stats()
         self.assertEqual(info["with_ru"] + info["en_only"], info["concepts"])
@@ -63,8 +73,8 @@ class TestLookup(unittest.TestCase):
         self.assertIsNone(found)
 
     def test_alias_does_not_match_inside_a_word(self):
-        # «dock» не должно цепляться за «docker», «дарт» — за «дар»
-        self.assertIsNone(concepts.find("что такое docker"))
+        # «дарт» не должно цепляться за «дар»; случай с «docker» больше не
+        # годится: тема docker появилась в базе и ищется уже целиком
         self.assertIsNone(concepts.find("дар"))
 
     def test_whole_word_alias_still_matches(self):

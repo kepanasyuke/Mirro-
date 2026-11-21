@@ -79,6 +79,23 @@ def related_text(links, limit=3):
     return ", ".join(russian) if russian else ""
 
 
+ENGLISH_LIMIT = 160
+
+
+def _short_english(text, limit=ENGLISH_LIMIT):
+    """Короткий английский фрагмент: одной фразой, по границе слова.
+
+    Русский вопрос про тему, у которой есть только английское описание, должен
+    получать выжимку, а не триста символов чужого текста: в русской рамке это
+    выглядит как дамп и обрывается по смыслу.
+    """
+    clean = " ".join((text or "").split())
+    if len(clean) <= limit:
+        return clean
+    cut = clean.rfind(" ", 0, limit)
+    return clean[:cut if cut > 0 else limit].rstrip(" ,;:.") + "…"
+
+
 def compose(concept, links=None, english=None):
     """Русская рамка вокруг понятия: имя, связи, затем английский источник."""
     title = russian_title(concept)
@@ -92,7 +109,7 @@ def compose(concept, links=None, english=None):
     if related:
         parts.append("Связано с: %s." % related)
     if english:
-        parts.append("Описание есть только по-английски: %s" % english)
+        parts.append("Описание есть только по-английски: %s" % _short_english(english))
     text = " ".join(parts)
     return text[:1].upper() + text[1:] if text else text
 

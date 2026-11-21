@@ -370,6 +370,15 @@ def render(intent, values, query=""):
             result = ""
         if result:
             pass
+        else:
+            # готовая причина из словаря раньше связей графа
+            try:
+                from algos.module_knowledge import cause_for
+                result = cause_for(query) or ""
+            except Exception:
+                result = ""
+        if result:
+            pass
         elif isinstance(concept, dict):
             from algos import causality
             pieces = causality.for_concept(concept, limit=2)
