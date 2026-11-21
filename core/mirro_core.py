@@ -758,6 +758,25 @@ def _asks_english_description(prompt):
     return hit
 
 
+def _english_only_hint(prompt):
+    """«flesh»: тема есть только в английской базе — сказать, как её спросить,
+    вместо сухого «не нашла». Один return: str|None."""
+    hint = None
+    q = (prompt or "").lower()
+    if not _asks_english_description(prompt):
+        try:
+            from algos.english_kb import _EN_KB
+            tokens = {t.strip(".,!?;:'\"()") for t in q.replace("-", " ").split()}
+            found = [t for t in tokens if isinstance(t, str) and t in _EN_KB]
+            if found:
+                topic = sorted(found, key=len, reverse=True)[0]
+                hint = ("По-русски описания нет: «%s» есть только в английской части базы. "
+                        "Спроси по-английски — отдам определение целиком." % topic)
+        except Exception:
+            hint = None
+    return hint
+
+
 def _search_best(prompt, cluster):
     """TF-IDF → RAG → выбор лучшего кандидата по кластеру.
     Пользуется семантическим реранком для кандидатов обоих источников.
@@ -1876,8 +1895,11 @@ def _answer_by_search_stages(prompt, cluster, context, current=None):
     # пустой ответ не отдаём: голос мог отказаться озвучивать чужой текст
     if not (result or {}).get("content"):
         result = result or {}
-        result["content"] = ("Не нашла нормального ответа в базе, а в интернете — пока недоступен. "
-                             "Переформулируй вопрос.")
+        _hint = _english_only_hint(prompt)
+        result["content"] = _hint or ("Не нашла нормального ответа в базе, а в интернете — пока недоступен. "
+                                      "Переформулируй вопрос.")
+        if _hint:
+            result["strategy"] = "english_only_hint"
     return alive_prompt, result
 
 
@@ -1953,6 +1975,15 @@ def _answer_base_is_garbage(prompt):
     Один return: dict-ответ."""
     result = {"content": "Не нашла нормального ответа в базе, а в интернете — пока недоступен. Переформулируй вопрос.",
               "strategy": "web"}
+    # «flesh»: по-русски описания нет, но тема есть в английской базе — подсказать,
+    # как её спросить, вместо сухого отказа
+    _hint = _english_only_hint(prompt)
+    if _hint:
+        # интернет тут ничего не добавит: тема есть в английской базе.
+        # Раньше ответ ждал 60–70 с, пока истекут попытки веба
+        result = {"content": _hint, "strategy": "english_only_hint",
+                  "workspace": "сознание: русской статьи нет, подсказка про английскую базу"}
+        return result
     try:
         bad_web = _web_answer(prompt)
         voiced = _voice_or_none(bad_web, prompt, "web") if bad_web else None
@@ -2153,9 +2184,10 @@ def build_response(prompt, cluster, context=""):
     # Пустой ответ не отдаём: честный отказ лучше пустоты, когда все пути
     # промолчали (например, голос отказался озвучивать чужой текст)
     if not (result.get("content") or "").strip():
-        result["content"] = ("Не нашла нормального ответа в базе, а в интернете — пока недоступен. "
-                             "Переформулируй вопрос.")
-        result["strategy"] = "empty_fallback"
+        hint = _english_only_hint(prompt)
+        result["content"] = hint or ("Не нашла нормального ответа в базе, а в интернете — пока недоступен. "
+                                     "Переформулируй вопрос.")
+        result["strategy"] = "english_only_hint" if hint else "empty_fallback"
     # Финальный гейт для сравнений: ответ обязан сравнивать понятия, иначе это
     # просто текст, где встретились их слова. Проверка стоит в самом конце,
     # потому что часть обработчиков возвращает ответ мимо своих валидаторов.
