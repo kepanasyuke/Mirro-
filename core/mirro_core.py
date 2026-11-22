@@ -21,6 +21,9 @@ PORT = int(os.environ.get("MIRRO_PORT", "3443"))
 # пароля (как раньше). Безопасность публичного режима держится на этом токене.
 AUTH_TOKEN = os.environ.get("MIRRO_TOKEN", "").strip()
 
+# Состояние фоновой загрузки индекса TF-IDF: while loading — поиск не ждёт
+_ALGO_STATE = {"ready": False, "loading": False}
+
 KNOWLEDGE_CLUSTERS = {
     "ru": {"desc": "Русский язык, диалоги, инструкции", "priority": 10},
     "code": {"desc": "Программирование, алгоритмы, код", "priority": 10},
@@ -692,8 +695,24 @@ def try_dialog(query):
         ans = _DIALOG_REPLIES["bye"]
     return ans
 
+def _algo_available(waits=5.0):
+    """Готов ли индекс TF-IDF; ждём не дольше `waits` секунд. Один return: bool.
+    Пока сервер грузит индекс в фоне, вопросы не должны вставать в очередь."""
+    ready = _ALGO_STATE["ready"] or not _ALGO_STATE["loading"]
+    steps = int(max(waits, 0.0) / 0.2)
+    for _ in range(steps):
+        if ready:
+            break
+        time.sleep(0.2)
+        ready = _ALGO_STATE["ready"]
+    return ready
+
+
 def try_tfidf(query, cluster):
     ans = []
+    if not _algo_available(5.0):
+        # индекс ещё грузится: лучше ответить другим путём, чем ждать 45–60 с
+        return ans
     try:
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.algorithms import algo
@@ -713,6 +732,8 @@ def _semantic_expand(query):
         return q
     # 1) корпусные ассоциации (синонимы/со-встречаемые термины)
     try:
+        if not _algo_available(0.5):
+            raise RuntimeError('индекс грузится')
         sys.path.insert(0, str(MIRRO_HOME))
         from scripts.algorithms import algo
         extra += algo.query_expansion(q, top_terms=4)
@@ -802,6 +823,8 @@ def _semantic_rerank_results(query, results):
     Тихий: при любой ошибке возвращает исходный список. Один return: list."""
     out = results
     try:
+        if not _algo_available(0.5):
+            raise RuntimeError('индекс грузится')
         from scripts.algorithms import algo
         if not results:
             return out
@@ -3333,14 +3356,18 @@ def _load_algorithms_in_background():
         try:
             # Даём серверу сначала ответить на /health, потом занимаем GIL
             import time as _t
+            _ALGO_STATE["loading"] = True
             _t.sleep(10)
             sys.path.insert(0, str(MIRRO_HOME))
             from scripts.algorithms import algo
             stats = algo.status()
+            _ALGO_STATE["ready"] = True
             print("  Индекс готов: %s примеров, %s слов" % (stats.get("examples"), stats.get("vocab")),
                   flush=True)
         except Exception:
             pass
+        finally:
+            _ALGO_STATE["loading"] = False
     try:
         import threading as _th
         _th.Thread(target=_run, daemon=True, name="mirro-index").start()
