@@ -45,6 +45,15 @@ class TestRegistry(unittest.TestCase):
         text = concepts._russian_text({"topic": "стек", "what": "структура данных с порядком LIFO"})
         self.assertIn("Стек — это структура данных", text)
 
+    def test_bad_wiki_pair_skipped(self):
+        # «graph» и «граффити» — разные статьи, пару не берём
+        pairs = concepts._wikidata_pairs()
+        self.assertNotEqual(pairs.get("graph"), ("граффити",))
+
+    def test_graffiti_is_not_graph(self):
+        found = concepts.find("что такое граффити")
+        self.assertTrue(found is None or found["concept"]["name"] != "graph")
+
     def test_stats_add_up(self):
         info = concepts.stats()
         self.assertEqual(info["with_ru"] + info["en_only"], info["concepts"])

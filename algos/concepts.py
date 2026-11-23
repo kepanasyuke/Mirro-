@@ -78,6 +78,12 @@ def _description_names():
     return pairs
 
 
+# Пары Викиданных, где русская подпись означает другое: «graph» и «граффити»
+# это разные статьи. Такие пары отбрасываем — иначе «что такое граффити»
+# отвечает про вершины и рёбра.
+_BAD_WIKI_PAIRS = {('graph', 'граффити')}
+
+
 def _wikidata_pairs():
     """Пары «тема → русское слово» из data/bilingual_map.json. Один return: dict.
 
@@ -97,7 +103,7 @@ def _wikidata_pairs():
             cyrillic = any("\u0400" <= char <= "\u04ff" for char in clean)
             usable = (len(clean) >= 3 and cyrillic and "(" not in clean
                       and clean.lower() != str(topic or "").lower())
-            if usable:
+            if usable and (str(topic).lower(), clean.lower()) not in _BAD_WIKI_PAIRS:
                 pairs[str(topic)] = (clean,)
     except (OSError, ValueError):
         pairs = {}
