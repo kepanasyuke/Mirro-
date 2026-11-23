@@ -436,7 +436,13 @@ def answer(query):
             # но живёт в значениях плана — рендер остаётся чистым
             try:
                 from algos.module_knowledge import cause_for, why_for
-                values["cause"] = cause_for(effective) or why_for(effective) or ""
+                low = effective.lower()
+                # «зачем» спрашивает о назначении, «почему» — о причине
+                asks_purpose = low.lstrip().startswith(("зачем", "для чего", "чего ради"))
+                if asks_purpose:
+                    values["cause"] = why_for(effective) or cause_for(effective) or ""
+                else:
+                    values["cause"] = cause_for(effective) or why_for(effective) or ""
             except Exception:
                 values["cause"] = ""
         text = render(intent, values, effective)
