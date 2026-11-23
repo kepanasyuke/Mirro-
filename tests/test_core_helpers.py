@@ -565,6 +565,19 @@ class TestWordDefinitionsAreNotHijacked(unittest.TestCase):
         self.assertNotEqual(result.get("strategy"), "dialog")
         self.assertIn("программа", (result.get("content") or "").lower())
 
+    def test_greeting_does_not_answer_privetlivy(self):
+        # «привет» — подстрока «приветливого»: приветствие не должно
+        # отвечать на вопрос о слове, которое знает русская база
+        mc = _get_core()
+        result = mc.build_response("что такое приветливый", "ru")
+        self.assertNotEqual(result.get("strategy"), "greeting")
+        self.assertIn("приветлив", (result.get("content") or "").lower())
+
+    def test_plain_greeting_still_works(self):
+        mc = _get_core()
+        result = mc.build_response("Привет!", "ru")
+        self.assertEqual(result.get("strategy"), "greeting")
+
     def test_question_word_itself_is_answered(self):
         # «есть» и «объяснить» — слова-вопросы, стоп-список их съедал
         mc = _get_core()

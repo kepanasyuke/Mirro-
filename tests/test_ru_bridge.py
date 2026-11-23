@@ -178,6 +178,49 @@ class TestAliasesPointToRightTopic(unittest.TestCase):
             self.assertIn(word[:4], text, word)
 
 
+class TestKeysAndTextsAgree(unittest.TestCase):
+    """Ключ моста, описание и подпись договариваются между собой.
+
+    Три ошибки, которые ловились только вживую:
+      * ("слово") без запятой — это не кортеж, а строка, и ключом становится
+        первая буква («ткач» отвечал подписью «т»);
+      * описание начинается не с того слова, что идёт первым ключом, — ответ
+        тогда подписан чужим словом и гейт ключевых слов его отбрасывает;
+      * проверка падежных форм должна узнавать прилагательное в ключе.
+    """
+
+    def test_single_key_is_tuple(self):
+        bad = [topic for topic, keys in RU_KEYS.items()
+               if isinstance(keys, str) or len(keys[0]) < 2]
+        self.assertEqual(bad, [], f"ключ записан не кортежем: {bad}")
+
+    def test_new_characters_resolve(self):
+        cases = {
+            "что такое трусливый": "cowardice",
+            "что такое боязливый": "cowardice",
+            "что такое упрямый": "obstinacy",
+            "что такое прилежный": "diligence",
+            "что такое замкнутый": "reserve",
+            "что такое целеустремлённый": "ambition",
+            "что такое ткач": "weaver",
+            "что такое мельник": "miller",
+            "что такое шипеть": "hiss",
+            "что такое спор": "debate",
+        }
+        wrong = {q: find_topic(q) for q, expected in cases.items()
+                 if find_topic(q) != expected}
+        self.assertEqual(wrong, {}, f"тема найдена неверно: {wrong}")
+
+    def test_character_texts_name_the_question(self):
+        # гейт ключевых слов сверяет ответ с вопросом по трём первым буквам:
+        # «боязливый» и «трусость» — разные основы, слово должно быть в тексте
+        cases = {"боязливый": "cowardice", "замкнутый": "reserve",
+                 "целеустремлённый": "ambition", "прилежный": "diligence"}
+        for word, topic in cases.items():
+            body = (ru_definition(topic) or "").lower()
+            self.assertIn(word[:5], body, "%s нет в описании %s" % (word, topic))
+
+
 class TestRussianDescriptions(unittest.TestCase):
     """Русские описания написаны для существующих тем и не пустые."""
 

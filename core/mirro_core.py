@@ -1574,7 +1574,8 @@ def _try_direct_handlers(prompt):
         _asks_word = any(p in _ql for p in ("что такое", "кто такой", "кто такая",
                                             "что значит"))
         if (msg is not None and _asks_word
-                and strategy in ("humor", "dialog", "direct", "creative")):
+                and strategy in ("humor", "dialog", "direct", "creative",
+                                 "greeting")):
             _glossed = False
             try:
                 from algos.module_knowledge import _precise_topic
