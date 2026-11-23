@@ -1203,6 +1203,10 @@ def _bridge_knows(prompt):
         cyr = len(_re.findall(r"[а-яёА-ЯЁ]", content))
         lat = len(_re.findall(r"[A-Za-z]", content))
         known = bool(content) and cyr > lat
+        # слова своего словаря мост тоже знает: иначе словарь модулей
+        # ловит подстроку («что такое заботиться» → «Бот — программа»)
+        if not known and ru_bridge.core_word(prompt):
+            known = True
     except Exception:
         known = False
     return known
@@ -1564,14 +1568,21 @@ def _try_direct_handlers(prompt):
             # язык» → «Язык программирования Python»); русская база точнее
             msg = None
         # «что такое лень / удача / программа»: шутка, самоописание или диалог
-        # перехватывают толкование слова, которое русская база знает точно
+        # перехватывают толкование слова, которое база знает точно — либо своим
+        # словарём, либо точной глоссой словаря модулей
         _ql = (prompt or "").lower()
         _asks_word = any(p in _ql for p in ("что такое", "кто такой", "кто такая",
                                             "что значит"))
         if (msg is not None and _asks_word
-                and strategy in ("humor", "dialog", "direct", "creative")
-                and _bridge_knows(prompt)):
-            msg = None
+                and strategy in ("humor", "dialog", "direct", "creative")):
+            _glossed = False
+            try:
+                from algos.module_knowledge import _precise_topic
+                _glossed = bool(_precise_topic(prompt))
+            except Exception:
+                _glossed = False
+            if _bridge_knows(prompt) or _glossed:
+                msg = None
         if msg is not None and (strategy == "concept_special"
                                or not answer_looks_bad(prompt, msg)):
             result = {"content": msg, "strategy": strategy}
@@ -1970,9 +1981,11 @@ def _definition_first(prompt):
         return None
     if not text:
         return None
-    # глосса полезна, только если называет слово, о котором спросили
+    # глосса полезна, только если называет слово, о котором спросили.
+    # Сверяем как целое слово: иначе «Бот — программа» отвечает на вопрос
+    # «что такое заботиться», потому что «бот» сидит внутри «заботиться»
     head = text.split("—")[0].strip().lower()
-    if head and (head in q or (len(head) > 4 and head[:5] in q)):
+    if head and _re.search(r"(?<![а-яё])" + _re.escape(head[:12]) + r"(?![а-яё])", q):
         return {"content": text, "strategy": "definition", "score": 1.0}
     return None
 
@@ -3357,7 +3370,7 @@ def _load_algorithms_in_background():
             # Даём серверу сначала ответить на /health, потом занимаем GIL
             import time as _t
             _ALGO_STATE["loading"] = True
-            _t.sleep(10)
+            _t.sleep(5)
             sys.path.insert(0, str(MIRRO_HOME))
             from scripts.algorithms import algo
             stats = algo.status()
@@ -3388,9 +3401,10 @@ def _seed_in_background():
     """Наполнение графа — в фоне: 78 с на старте не должен ждать пользователь."""
     def _run():
         try:
-            # Индекс стартует через 10 с, наполнение — через 20, чтобы не душили друг друга
+            # Индекс грузится первым, наполнение графа ждёт его, чтобы не отбирать
+            # GIL у первых вопросов
             import time as _t
-            _t.sleep(20)
+            _t.sleep(120)
             _seed_knowledge_graph()
         except Exception:
             pass
@@ -3407,7 +3421,7 @@ def _warm_imports():
     def _load():
         import threading, time as _t
         # сервер должен начать отвечать раньше, чем начнётся разбор 3 МБ словаря
-        _t.sleep(12)
+        _t.sleep(30)
         try:
             from algos import answer_router, ru_bridge, concepts
             from algos.english_kb import try_english
