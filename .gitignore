@@ -66,3 +66,5 @@ models/embeddings.json
 data/user_profile.json
 data/gap_queue.jsonl
 *.patch
+NIGHT-RUN-REPORT.md
+NIGHT-RUN-REPORT.log
