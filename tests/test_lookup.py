@@ -88,6 +88,17 @@ class TestFind(unittest.TestCase):
             self.assertIsNotNone(found, word)
             self.assertIn("сон", found["concept"]["name"])
 
+    def test_exact_word_beats_stem_match(self):
+        # «банк» — это банк, а не «банка» (сосуд), хотя основа общая
+        found = lookup.find("что такое банк")
+        self.assertIsNotNone(found)
+        self.assertEqual(found["concept"]["name"], "_банк")
+
+    def test_case_form_keeps_its_concept(self):
+        found = lookup.find("что такое банка")
+        self.assertIsNotNone(found)
+        self.assertEqual(found["concept"]["name"], "jar")
+
     def test_two_word_phrase_preferred(self):
         found = lookup.find("что такое хеш таблица")
         self.assertIsNotNone(found)

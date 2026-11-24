@@ -94,7 +94,21 @@ def _word_concept(registry, word):
         hit = concepts.find(base)
         if hit is not None:
             candidates.append((hit["concept"], hit.get("alias")))
-        for concept, label in candidates:
+        # Сначала кандидаты, где слово совпало целиком: «банк» — это «банк»,
+        # а «банка» (сосуд) только похожа основой. Совпадение по основе берём,
+        # если целого слова нет вовсе
+        exact = [(c, l) for c, l in candidates
+                 if str(l or "").replace("_", " ").strip().lower() == word.strip().lower()]
+        loose = [(c, l) for c, l in candidates if (c, l) not in exact]
+        for concept, label in exact:
+            if _too_short_alias(label, word):
+                continue
+            if (concept.get("en") or "").strip():
+                return concept
+            spare = spare or concept
+        if spare is not None:
+            return spare
+        for concept, label in loose:
             # «хеш-функция» — не «функция»: часть сложного слова не тема
             if _too_short_alias(label, word):
                 continue
@@ -104,6 +118,15 @@ def _word_concept(registry, word):
         if spare is not None:
             return spare
     return None
+
+
+def _bare(text):
+    """Слово без падежного окончания, для сравнения «банк» и «банка»."""
+    value = (text or "").strip().lower()
+    for end in ENDINGS:
+        if value.endswith(end) and len(value) - len(end) >= 3:
+            return value[:-len(end)]
+    return value
 
 
 def _stems(text):
@@ -205,13 +228,20 @@ def find(query):
         # поиск, потому что его имя покрывает обе основы
         concept = _best_by_words(registry, query)
         if concept is not None:
+            words = set(_content_words(query))
+            name = str(concept.get("name") or "").replace("_", " ")
+            exact_word = name.strip().lower() in words
             result = {"concept": concept, "alias": (concept.get("name") or ""),
-                      "score": 0.9, "via": "word"}
+                      "score": 0.9, "via": "word", "exact": exact_word}
         found = concepts.find(query)
         alias = (found.get("alias") or "").lower() if found else ""
         # длинная фраза из реестра важнее одного слова: «поиск в ширину» —
         # это обход в ширину, а не общее понятие «Поиск»
         phrase_wins = found is not None and (found.get("score") or 0) >= 0.5
+        # …но точное слово запроса не перебивает похожее: «банк» — это
+        # «банк», хотя «банка» (сосуд) совпала по основе
+        if phrase_wins and (result or {}).get("exact"):
+            phrase_wins = alias.strip() in set(_content_words(query))
         usable = (found is not None and alias not in STOP
                   and not alias.startswith(("связ", "отнош")))
         # часть сложного слова не тема даже при высокой оценке: оценка считается
