@@ -1985,8 +1985,10 @@ def _definition_first(prompt):
     # глосса полезна, только если называет слово, о котором спросили.
     # Сверяем как целое слово: иначе «Бот — программа» отвечает на вопрос
     # «что такое заботиться», потому что «бот» сидит внутри «заботиться»
-    head = text.split("—")[0].strip().lower()
-    if head and _re.search(r"(?<![а-яё])" + _re.escape(head[:12]) + r"(?![а-яё])", q):
+    # ё и е — одна буква: «волонтерство» должно совпасть с «волонтёрство»
+    head = text.split("—")[0].strip().lower().replace("ё", "е")
+    q_yo = q.replace("ё", "е")
+    if head and _re.search(r"(?<![а-яё])" + _re.escape(head[:12]) + r"(?![а-яё])", q_yo):
         return {"content": text, "strategy": "definition", "score": 1.0}
     return None
 
