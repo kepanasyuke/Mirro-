@@ -178,12 +178,21 @@ def _new(name):
             "aliases": set(), "module": ""}
 
 
-def _add_aliases(concept, values, taken=None):
-    """Дописывает алиасы: короткие и уже занятые другими понятиями не берём."""
+def _add_aliases(concept, values, taken=None, own_keys=None):
+    """Дописывает алиасы: короткие и уже занятые другими понятиями не берём.
+
+    Слово, вынутое из многословной подписи («сорная трава» → «трава»), не
+    получает прав на чужое понятие: «трава» — это отдельное понятие, а не
+    алиас сорняка. Одиночные подписи не трогаем: «граф» из ручного моста
+    остаётся алиасом темы graph.
+    """
     for value in values:
-        for word in _words(value):
+        words = _words(value)
+        derived = len(words) > 1
+        for word in words:
             owner = taken.get(word) if taken is not None else None
-            usable = len(word) >= 4 and owner in (None, concept["id"])
+            hijack = derived and own_keys is not None and word in own_keys
+            usable = len(word) >= 4 and owner in (None, concept["id"]) and not hijack
             if usable:
                 concept["aliases"].add(word)
                 if taken is not None:
@@ -196,6 +205,9 @@ def build():
     if "concepts" in _CACHE:
         return _CACHE["concepts"]
     texts, tests = _english()
+    # будущие ключи реестра: по ним отсекаем чужие слова из многословных подписей
+    own_keys = {_normal(name) for name in texts}
+    own_keys |= {_normal(name) for name in _russian()}
     registry = {}
     for name, text in texts.items():
         concept = _new(name)
@@ -205,7 +217,7 @@ def build():
     for topic, keys in tests:
         concept = registry.get(_normal(topic))
         if concept is not None:
-            _add_aliases(concept, [topic] + list(keys or ()))
+            _add_aliases(concept, [topic] + list(keys or ()), None, own_keys)
     taken = {}
     for concept in registry.values():
         for alias in concept["aliases"]:
@@ -213,15 +225,15 @@ def build():
     for topic, keys in _bridged_aliases():
         concept = registry.get(_normal(topic))
         if concept is not None:
-            _add_aliases(concept, list(keys), taken)
+            _add_aliases(concept, list(keys), taken, own_keys)
     for topic, keys in _wikidata_pairs().items():
         concept = registry.get(_normal(topic))
         if concept is not None:
-            _add_aliases(concept, list(keys), taken)
+            _add_aliases(concept, list(keys), taken, own_keys)
     for topic, names in _description_names().items():
         concept = registry.get(_normal(topic))
         if concept is not None:
-            _add_aliases(concept, list(names), taken)
+            _add_aliases(concept, list(names), taken, own_keys)
     for topic, text in _russian_descriptions().items():
         concept = registry.get(_normal(topic))
         if concept is not None and not concept["ru"]:
@@ -236,7 +248,7 @@ def build():
             registry[key] = concept
         concept["ru"] = _russian_text(entry)
         concept["module"] = str((entry or {}).get("module") or "")
-        _add_aliases(concept, [name, (entry or {}).get("topic") or ""])
+        _add_aliases(concept, [name, (entry or {}).get("topic") or ""], None, own_keys)
         for word in _words((entry or {}).get("topic") or ""):
             stem = _stem(word)
             if len(stem) >= 4:

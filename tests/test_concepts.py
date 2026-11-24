@@ -54,6 +54,19 @@ class TestRegistry(unittest.TestCase):
         found = concepts.find("что такое граффити")
         self.assertTrue(found is None or found["concept"]["name"] != "graph")
 
+    def test_multiword_label_does_not_take_foreign_key(self):
+        # «сорная трава» не делает «траву» алиасом сорняка: это отдельное понятие
+        registry = concepts.build()
+        weed = registry.get("weed") or {}
+        self.assertNotIn("трава", weed.get("aliases") or ())
+        self.assertIsNotNone(registry.get("трава"))
+
+    def test_single_word_bridge_alias_stays(self):
+        # одиночная подпись ручного моста остаётся алиасом темы
+        registry = concepts.build()
+        graph = registry.get("graph") or {}
+        self.assertIn("граф", graph.get("aliases") or ())
+
     def test_stats_add_up(self):
         info = concepts.stats()
         self.assertEqual(info["with_ru"] + info["en_only"], info["concepts"])
