@@ -399,8 +399,18 @@ def render(intent, values, query=""):
         # получать абзац чужого текста — это не ответ на русском
         russian_text = (concept.get("ru") or "").strip()
         if not russian_text and (concept.get("en") or "").strip() and _is_russian(query):
-            result = ("По-русски описания нет: «%s» есть только в английской части базы. "
-                      "Спроси по-английски — отдам определение целиком." % _name_of(concept))
+            # у английского понятия может быть русская глосса словаря
+            gloss = ""
+            try:
+                from algos.module_knowledge import try_definition
+                gloss = (try_definition(query) or "").strip()
+            except Exception:
+                gloss = ""
+            if gloss:
+                result = gloss
+            else:
+                result = ("По-русски описания нет: «%s» есть только в английской части базы. "
+                          "Спроси по-английски — отдам определение целиком." % _name_of(concept))
         else:
             result = russian_answer(concept, values.get("links") or [])
             # реестр иногда склеивает разные слова по основе («банк» и «банка»).
