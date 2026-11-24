@@ -1988,7 +1988,9 @@ def _definition_first(prompt):
     # ё и е — одна буква: «волонтерство» должно совпасть с «волонтёрство»
     head = text.split("—")[0].strip().lower().replace("ё", "е")
     q_yo = q.replace("ё", "е")
-    if head and _re.search(r"(?<![а-яё])" + _re.escape(head[:12]) + r"(?![а-яё])", q_yo):
+    # сверяем целое первое слово темы: обрезание до 12 букв ломает границу слова
+    word = (head.split() or [""])[0]
+    if word and _re.search(r"(?<![а-яё])" + _re.escape(word) + r"(?![а-яё])", q_yo):
         return {"content": text, "strategy": "definition", "score": 1.0}
     return None
 
