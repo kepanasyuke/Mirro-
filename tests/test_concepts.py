@@ -67,6 +67,19 @@ class TestRegistry(unittest.TestCase):
         graph = registry.get("graph") or {}
         self.assertIn("граф", graph.get("aliases") or ())
 
+    def test_case_form_of_foreign_key_is_not_taken(self):
+        # «кипячение воды» не делает «воды» алиасом чайника: основа совпадает
+        # с ключом «вода»
+        registry = concepts.build()
+        kettle = registry.get("kettle") or {}
+        self.assertNotIn("воды", kettle.get("aliases") or ())
+        self.assertIsNotNone(registry.get("вода"))
+
+    def test_bare_stem(self):
+        self.assertEqual(concepts._bare_stem("воды"), "вод")
+        self.assertEqual(concepts._bare_stem("вода"), "вод")
+        self.assertEqual(concepts._bare_stem("стек"), "стек")
+
     def test_stats_add_up(self):
         info = concepts.stats()
         self.assertEqual(info["with_ru"] + info["en_only"], info["concepts"])

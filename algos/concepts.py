@@ -178,6 +178,12 @@ def _new(name):
             "aliases": set(), "module": ""}
 
 
+def _bare_stem(word):
+    """Основа без конечных гласных: «воды» и «вода» дают «вод». Один return: str."""
+    base = (word or "").lower().rstrip("аеёиоуыэюяь")
+    return base if len(base) >= 3 else (word or "").lower()
+
+
 def _add_aliases(concept, values, taken=None, own_keys=None):
     """Дописывает алиасы: короткие и уже занятые другими понятиями не берём.
 
@@ -186,12 +192,14 @@ def _add_aliases(concept, values, taken=None, own_keys=None):
     алиас сорняка. Одиночные подписи не трогаем: «граф» из ручного моста
     остаётся алиасом темы graph.
     """
+    own_stems = {_bare_stem(key) for key in (own_keys or ()) if len(key) >= 4}
     for value in values:
         words = _words(value)
         derived = len(words) > 1
         for word in words:
             owner = taken.get(word) if taken is not None else None
-            hijack = derived and own_keys is not None and word in own_keys
+            hijack = (derived and own_keys is not None
+                      and (word in own_keys or _bare_stem(word) in own_stems))
             usable = len(word) >= 4 and owner in (None, concept["id"]) and not hijack
             if usable:
                 concept["aliases"].add(word)
