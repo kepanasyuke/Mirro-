@@ -3225,6 +3225,30 @@ def try_definition(query):
     # составная тема важнее общего «_»-понятия: «поиск в ширину» — это обход,
     # а не карточка поиска информации. Проверяем до «названа функция»: «SQL»
     # тоже есть в базе ключом, но это понятие, а не функция
+    # составная глосса важнее короткой: «электрическая цепь» — не «цепь»
+    phrase = None
+    try:
+        q_yo = q.replace("ё", "е")
+        q_words = set(_norm_q(q_yo).split())
+        for key, info in (fk._by_name or {}).items():
+            if not key.startswith("_") or not isinstance(info, dict):
+                continue
+            top = str(info.get("topic") or "").lower().replace("ё", "е")
+            parts = [w for w in top.split() if len(w) > 2]
+            if len(parts) >= 2 and all(w in q_words for w in parts):
+                if phrase is None or len(top) > len(str(phrase[1].get("topic") or "")):
+                    phrase = (key, info)
+    except Exception:
+        phrase = None
+    if phrase is not None:
+        info = phrase[1]
+        topic = str(info.get("topic") or "это")
+        what = str(info.get("what") or "некое понятие")
+        ex = str(info.get("ex") or "")
+        ans = f"{topic[0].upper() + topic[1:]} — это {what}."
+        if ex.strip():
+            ans += f" Например: {ex}."
+        return ans
     precise = _precise_topic(q)
     if precise:
         info = fk._by_name.get(precise) or {}
